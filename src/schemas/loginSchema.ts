@@ -2,10 +2,7 @@ import { z } from 'zod';
 
 export const createLoginSchema = (t: (key: string) => string) =>
 	z.object({
-		email: z
-			.string()
-			.min(1, t('emailRequired'))
-			.email(t('emailInvalid')),
+		userName: z.string().min(1, t('userNameRequired')),
 		password: z
 			.string()
 			.min(1, t('passwordRequired'))
@@ -13,10 +10,7 @@ export const createLoginSchema = (t: (key: string) => string) =>
 	});
 
 export const loginSchema = z.object({
-	email: z
-		.string()
-		.min(1, 'Email is required')
-		.email('Please enter a valid email address'),
+	userName: z.string().min(1, 'Username is required'),
 	password: z
 		.string()
 		.min(1, 'Password is required')
