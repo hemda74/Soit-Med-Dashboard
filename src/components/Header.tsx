@@ -1,4 +1,4 @@
-import { Moon, Sun, Languages, User, LogOut } from 'lucide-react';
+import { Moon, Sun, Languages, User, LogOut, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -15,7 +15,7 @@ import logoImage from '@/assets/Logo.png';
 
 export function Header() {
     const { theme, language, toggleLanguage, setTheme } = useThemeStore();
-    const { user, isAuthenticated, logout } = useAuthStore();
+    const { user, isAuthenticated, logout, hasRole } = useAuthStore();
     const { t } = useTranslation();
 
     const handleThemeChange = (newTheme: 'light' | 'dark') => {
@@ -126,6 +126,23 @@ export function Header() {
                                             {t('profile')}
                                         </Link>
                                     </DropdownMenuItem>
+
+                                    {/* Admin-only menu items */}
+                                    {(hasRole('SuperAdmin') || hasRole('Admin')) && (
+                                        <>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem asChild>
+                                                <Link
+                                                    to="/admin/create-user"
+                                                    className="flex items-center gap-2 cursor-pointer w-full"
+                                                >
+                                                    <UserPlus className="h-4 w-4" />
+                                                    {t('createNewUser')}
+                                                </Link>
+                                            </DropdownMenuItem>
+                                        </>
+                                    )}
+
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onClick={logout}

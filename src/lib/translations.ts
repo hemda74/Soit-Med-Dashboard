@@ -79,6 +79,49 @@ export const translations = {
 		passwordRequired: 'Password is required',
 		passwordMinLength:
 			'Password must be at least 6 characters long',
+
+		// User Creation Flow
+		selectUserRole: 'Select User Role',
+		selectRoleDescription:
+			'Choose the role for the new user. This will determine their permissions and required information.',
+		selectRole: 'Select Role',
+		loadingRoles: 'Loading available roles...',
+		noRolesAvailable: 'No roles available for selection',
+		createNewUser: 'Create New User',
+		createNewUserDescription:
+			'Add a new user to the system with role-specific information',
+		selectRoleStep: 'Select Role',
+		fillDetailsStep: 'Fill Details',
+		completeStep: 'Complete',
+		fillUserDetails: 'Fill in the user details below',
+		basicInformation: 'Basic Information',
+		basicInformationDescription:
+			'Essential user account information',
+		roleSpecificInformation: 'Role-Specific Information',
+		roleSpecificInformationDescription:
+			'Additional information required for this role',
+		validationErrors: 'Validation Errors',
+		creating: 'Creating...',
+		creatingUser: 'Creating User',
+		pleaseWait: 'Please wait while we create the user account...',
+		userCreatedSuccessfully: 'User Created Successfully',
+		createAnother: 'Create Another User',
+		viewUsers: 'View All Users',
+		creationFailed: 'Creation Failed',
+		userCreationError:
+			'There was an error creating the user. Please try again.',
+		tryAgain: 'Try Again',
+		accessDenied: 'Access Denied',
+		adminAccessRequired:
+			'You need administrator privileges to create users',
+		goBack: 'Go Back',
+		failedToLoadRoles: 'Failed to load available roles',
+		failedToLoadRoleFields: 'Failed to load role-specific fields',
+		failedToCreateUser: 'Failed to create user',
+		fillDetails: 'Fill Details',
+		complete: 'Complete',
+		createUser: 'Create User',
+		back: 'Back',
 	},
 	ar: {
 		// Login Form
@@ -154,6 +197,48 @@ export const translations = {
 		userNameRequired: 'اسم المستخدم مطلوب',
 		passwordRequired: 'كلمة المرور مطلوبة',
 		passwordMinLength: 'كلمة المرور يجب أن تكون على الأقل 6 أحرف',
+
+		// User Creation Flow
+		selectUserRole: 'اختر دور المستخدم',
+		selectRoleDescription:
+			'اختر الدور للمستخدم الجديد. سيحدد هذا صلاحياته والمعلومات المطلوبة.',
+		selectRole: 'اختر الدور',
+		loadingRoles: 'جاري تحميل الأدوار المتاحة...',
+		noRolesAvailable: 'لا توجد أدوار متاحة للاختيار',
+		createNewUser: 'إنشاء مستخدم جديد',
+		createNewUserDescription:
+			'إضافة مستخدم جديد إلى النظام مع معلومات خاصة بالدور',
+		selectRoleStep: 'اختر الدور',
+		fillDetailsStep: 'املأ التفاصيل',
+		completeStep: 'اكتمال',
+		fillUserDetails: 'املأ تفاصيل المستخدم أدناه',
+		basicInformation: 'المعلومات الأساسية',
+		basicInformationDescription: 'معلومات الحساب الأساسية',
+		roleSpecificInformation: 'معلومات خاصة بالدور',
+		roleSpecificInformationDescription:
+			'معلومات إضافية مطلوبة لهذا الدور',
+		validationErrors: 'أخطاء التحقق',
+		creating: 'جاري الإنشاء...',
+		creatingUser: 'إنشاء المستخدم',
+		pleaseWait: 'يرجى الانتظار بينما ننشئ حساب المستخدم...',
+		userCreatedSuccessfully: 'تم إنشاء المستخدم بنجاح',
+		createAnother: 'إنشاء مستخدم آخر',
+		viewUsers: 'عرض جميع المستخدمين',
+		creationFailed: 'فشل الإنشاء',
+		userCreationError:
+			'حدث خطأ في إنشاء المستخدم. يرجى المحاولة مرة أخرى.',
+		tryAgain: 'حاول مرة أخرى',
+		accessDenied: 'تم رفض الوصول',
+		adminAccessRequired:
+			'تحتاج إلى صلاحيات المدير لإنشاء المستخدمين',
+		goBack: 'العودة',
+		failedToLoadRoles: 'فشل في تحميل الأدوار المتاحة',
+		failedToLoadRoleFields: 'فشل في تحميل الحقول الخاصة بالدور',
+		failedToCreateUser: 'فشل في إنشاء المستخدم',
+		fillDetails: 'املأ التفاصيل',
+		complete: 'اكتمال',
+		createUser: 'إنشاء مستخدم',
+		back: 'عودة',
 	},
 };
 
