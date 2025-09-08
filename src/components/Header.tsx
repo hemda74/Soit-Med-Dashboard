@@ -1,4 +1,4 @@
-import { Moon, Sun, Languages, User, LogOut, UserPlus } from 'lucide-react';
+import { Moon, Sun, Languages, User, LogOut, UserPlus, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -47,7 +47,7 @@ export function Header() {
                         </Link>
                         {isAuthenticated && user && (
                             <div className="text-sm text-muted-foreground">
-                                Hello, <span className="font-medium text-foreground">{user.firstName}</span>!
+                                {t('Hello')}, <span className="font-medium text-foreground">{user.firstName}</span>!
                             </div>
                         )}
                     </div>
@@ -131,6 +131,15 @@ export function Header() {
                                     {(hasRole('SuperAdmin') || hasRole('Admin')) && (
                                         <>
                                             <DropdownMenuSeparator />
+                                            <DropdownMenuItem asChild>
+                                                <Link
+                                                    to="/users"
+                                                    className="flex items-center gap-2 cursor-pointer w-full"
+                                                >
+                                                    <Users className="h-4 w-4" />
+                                                    {t('usersList')}
+                                                </Link>
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem asChild>
                                                 <Link
                                                     to="/admin/create-user"

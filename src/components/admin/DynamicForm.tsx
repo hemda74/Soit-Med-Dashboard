@@ -26,7 +26,7 @@ interface DynamicFormProps {
     roleSpecificFields: UserFormField[];
     referenceData: {
         hospitals: Array<{ id: string; name: string }>;
-        governorates: Array<{ id: number; name: string }>;
+        governorates: Array<{ governorateId: number; name: string; createdAt: string; isActive: boolean; engineerCount: number }>;
         departments: Array<{ id: number; name: string }>;
     };
     onSubmit: (data: Record<string, any>) => void;
@@ -137,7 +137,7 @@ export function DynamicForm({
                 case 'hospitalId':
                     return referenceData.hospitals.map(h => ({ value: h.id, label: h.name }));
                 case 'governorateIds':
-                    return referenceData.governorates.map(g => ({ value: g.id, label: g.name }));
+                    return referenceData.governorates.map(g => ({ value: g.governorateId, label: g.name }));
                 case 'departmentId':
                     return referenceData.departments.map(d => ({ value: d.id, label: d.name }));
                 default:

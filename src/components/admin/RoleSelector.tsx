@@ -1,13 +1,13 @@
 import React from 'react';
 import { Users, Shield, Stethoscope, Wrench, TrendingUp, Hammer, DollarSign, Scale } from 'lucide-react';
-import type { UserRole } from '@/types/userCreation.types';
+import type { UserRole, RoleObject } from '@/types/userCreation.types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface RoleSelectorProps {
-    availableRoles: UserRole[];
-    onRoleSelect: (role: UserRole) => void;
+    availableRoles: RoleObject[];
+    onRoleSelect: (roleObject: RoleObject) => void;
     isLoading?: boolean;
 }
 
@@ -78,6 +78,24 @@ const ROLE_CONFIG: Record<UserRole, {
         description: 'Legal support and compliance',
         category: 'legal',
     },
+    Hello: {
+        icon: Users,
+        color: 'text-pink-600',
+        description: 'Custom role - Hello',
+        category: 'admin',
+    },
+    admin: {
+        icon: Users,
+        color: 'text-blue-500',
+        description: 'Administrative access',
+        category: 'admin',
+    },
+    user: {
+        icon: Users,
+        color: 'text-gray-600',
+        description: 'Basic user access',
+        category: 'admin',
+    },
 };
 
 const CATEGORY_LABELS = {
@@ -91,15 +109,32 @@ const CATEGORY_LABELS = {
 export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSelectorProps) {
     const { t } = useTranslation();
 
+    // Debug logging
+    console.log('🎭 RoleSelector received availableRoles:', availableRoles);
+    console.log('📊 availableRoles type:', typeof availableRoles);
+    console.log('📏 availableRoles length:', Array.isArray(availableRoles) ? availableRoles.length : 'Not an array');
+    console.log('🔍 availableRoles content:', JSON.stringify(availableRoles, null, 2));
+
     // Group roles by category
-    const rolesByCategory = availableRoles.reduce((acc, role) => {
-        const category = ROLE_CONFIG[role].category;
+    const rolesByCategory = availableRoles.reduce((acc, roleObject) => {
+        const roleConfig = ROLE_CONFIG[roleObject.name as UserRole];
+        if (!roleConfig) {
+            // If role is not in config, add it to admin category as fallback
+            const category = 'admin';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(roleObject);
+            return acc;
+        }
+
+        const category = roleConfig.category;
         if (!acc[category]) {
             acc[category] = [];
         }
-        acc[category].push(role);
+        acc[category].push(roleObject);
         return acc;
-    }, {} as Record<string, UserRole[]>);
+    }, {} as Record<string, RoleObject[]>);
 
     if (isLoading) {
         return (
@@ -128,20 +163,25 @@ export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSe
                     </h3>
 
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {roles.map((role) => {
-                            const config = ROLE_CONFIG[role];
+                        {roles.map((roleObject) => {
+                            const config = ROLE_CONFIG[roleObject.name as UserRole] || {
+                                icon: Users,
+                                color: 'text-gray-600',
+                                description: `Role: ${roleObject.name}`,
+                                category: 'admin' as const
+                            };
                             const Icon = config.icon;
 
                             return (
                                 <Card
-                                    key={role}
+                                    key={roleObject.id}
                                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 border-2 hover:border-primary/50"
-                                    onClick={() => onRoleSelect(role)}
+                                    onClick={() => onRoleSelect(roleObject)}
                                 >
                                     <CardHeader className="pb-3">
                                         <CardTitle className="flex items-center gap-3 text-base">
                                             <Icon className={`h-5 w-5 ${config.color}`} />
-                                            <span>{role}</span>
+                                            <span>{roleObject.name}</span>
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="pt-0">
@@ -154,7 +194,7 @@ export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSe
                                             className="w-full mt-3"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                onRoleSelect(role);
+                                                onRoleSelect(roleObject);
                                             }}
                                         >
                                             {t('selectRole')}

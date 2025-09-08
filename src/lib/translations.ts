@@ -1,6 +1,7 @@
 export const translations = {
 	en: {
 		// Login Form
+		Hello: 'Hello',
 		welcomeBack: 'Welcome back',
 		enterCredentials:
 			'Enter your credentials to access your account',
@@ -22,12 +23,13 @@ export const translations = {
 		profileDescription: 'Your account information',
 		name: 'Name',
 		roles: 'Roles',
+		role: 'Role',
 		id: 'ID',
-		medicalDashboard: 'Medical Dashboard',
-		soitronMedical: 'Soitron Medical System',
+		medicalDashboard: 'Add New User',
+		soitronMedical: 'SoitMed',
 		dashboardDescription:
 			'This is your medical dashboard. You can add more components and features here.',
-		quickStats: 'Quick Stats',
+		quickStats: 'Veiw All Users',
 		systemOverview: 'System overview',
 		status: 'Status',
 		online: 'Online',
@@ -90,6 +92,7 @@ export const translations = {
 		createNewUser: 'Create New User',
 		createNewUserDescription:
 			'Add a new user to the system with role-specific information',
+		usersList: 'Users List',
 		selectRoleStep: 'Select Role',
 		fillDetailsStep: 'Fill Details',
 		completeStep: 'Complete',
@@ -124,6 +127,7 @@ export const translations = {
 		back: 'Back',
 	},
 	ar: {
+		Hello: 'مرحبا',
 		// Login Form
 		welcomeBack: 'مرحباً بعودتك',
 		enterCredentials: 'أدخل بياناتك للوصول إلى حسابك',
@@ -145,12 +149,13 @@ export const translations = {
 		profileDescription: 'معلومات حسابك',
 		name: 'الاسم',
 		roles: 'الأدوار',
+		role: 'الوظيفة',
 		id: 'المعرف',
-		medicalDashboard: 'لوحة التحكم الطبية',
-		soitronMedical: 'نظام سويترون الطبي',
+		medicalDashboard: 'اضافة مستخدم جديد',
+		soitronMedical: 'سويت ميد',
 		dashboardDescription:
 			'هذه لوحة التحكم الطبية الخاصة بك. يمكنك إضافة المزيد من المكونات والميزات هنا.',
-		quickStats: 'إحصائيات سريعة',
+		quickStats: 'عرض جميع المستخدمين',
 		systemOverview: 'نظرة عامة على النظام',
 		status: 'الحالة',
 		online: 'متصل',
@@ -208,6 +213,7 @@ export const translations = {
 		createNewUser: 'إنشاء مستخدم جديد',
 		createNewUserDescription:
 			'إضافة مستخدم جديد إلى النظام مع معلومات خاصة بالدور',
+		usersList: 'قائمة المستخدمين',
 		selectRoleStep: 'اختر الدور',
 		fillDetailsStep: 'املأ التفاصيل',
 		completeStep: 'اكتمال',

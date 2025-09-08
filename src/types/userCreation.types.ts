@@ -10,7 +10,18 @@ export type UserRole =
 	| 'FinanceManager'
 	| 'FinanceEmployee'
 	| 'LegalManager'
-	| 'LegalEmployee';
+	| 'LegalEmployee'
+	| 'Hello'
+	| 'admin'
+	| 'user';
+
+// Role object from API
+export interface RoleObject {
+	id: string;
+	name: string;
+	normalizedName: string;
+	concurrencyStamp: string | null;
+}
 
 export type FieldType =
 	| 'string'
@@ -50,9 +61,8 @@ export interface RoleFieldsResponse {
 	message: string;
 }
 
-export interface RolesResponse {
-	roles: UserRole[];
-}
+// Updated response type for new API endpoint
+export type RolesResponse = RoleObject[];
 
 // Reference data types
 export interface Hospital {
@@ -63,9 +73,11 @@ export interface Hospital {
 }
 
 export interface Governorate {
-	id: number;
+	governorateId: number;
 	name: string;
-	code?: string;
+	createdAt: string;
+	isActive: boolean;
+	engineerCount: number;
 }
 
 export interface Department {
@@ -145,6 +157,7 @@ export interface UserCreationResponse {
 	specialty?: string;
 	hospitalName?: string;
 	governorateNames?: string[];
+	assignedGovernorates?: string[];
 	territory?: string;
 }
 

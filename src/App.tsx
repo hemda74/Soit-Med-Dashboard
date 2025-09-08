@@ -6,6 +6,7 @@ import LoginForm from '@/components/LoginForm'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import CreateUser from '@/components/admin/CreateUser'
+import UsersList from '@/components/UsersList'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -20,6 +21,7 @@ function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="admin/create-user" element={<CreateUser />} />
+                <Route path="users" element={<UsersList />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
