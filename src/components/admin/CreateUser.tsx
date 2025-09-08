@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type {
     UserRole,
+    RoleObject,
     UserCreationFormState,
-    RoleFieldsResponse,
-    UserCreationData,
     UserCreationResponse,
     ValidationError,
     ApiError
@@ -16,8 +15,9 @@ import { useApiStore } from '@/stores/apiStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RoleSelector } from './RoleSelector';
 import { DynamicForm } from './DynamicForm';
+import { EngineerForm } from './EngineerForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     getAvailableRoles,
     getRoleFields,
@@ -25,6 +25,7 @@ import {
     createUser,
     validateForm,
     transformFormData,
+    createRoleSlug,
 } from '@/services/userCreationApi';
 
 const INITIAL_STATE: UserCreationFormState = {
@@ -49,12 +50,53 @@ export default function CreateUser() {
     const { t } = useTranslation();
 
     const [state, setState] = useState<UserCreationFormState>(INITIAL_STATE);
-    const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
+    const [availableRoles, setAvailableRoles] = useState<RoleObject[]>([]);
     const [createdUser, setCreatedUser] = useState<UserCreationResponse | null>(null);
 
     // Check if user has permission to create users
     const { hasRole } = useAuthStore();
     const canCreateUsers = hasRole('SuperAdmin') || hasRole('Admin');
+
+    const loadAvailableRoles = useCallback(async () => {
+        console.log('loadAvailableRoles called');
+        console.log('User token:', user?.token ? 'Token exists' : 'No token');
+
+        if (!user?.token) {
+            console.log('No user token available');
+            return;
+        }
+
+        setState(prev => ({ ...prev, isLoading: true }));
+        setLoading('loadRoles', true);
+        clearError('loadRoles');
+
+        try {
+            console.log('🚀 Calling getAvailableRoles with token');
+            const roleObjects = await getAvailableRoles(user.token);
+
+            console.log('📦 API Response - Available Role Objects:', roleObjects);
+            console.log('📊 Response type in component:', typeof roleObjects);
+            console.log('📏 Number of roles received:', Array.isArray(roleObjects) ? roleObjects.length : 'Not an array');
+
+            if (Array.isArray(roleObjects)) {
+                console.log('📝 Role names only:', roleObjects.map(role => role.name));
+                console.log('🎯 Setting availableRoles state with:', roleObjects);
+                setAvailableRoles(roleObjects);
+                console.log('✅ State updated successfully');
+            } else {
+                console.error('❌ roleObjects is not an array:', roleObjects);
+                setAvailableRoles([]);
+            }
+        } catch (err) {
+            console.error('Error loading roles:', err);
+            const apiError = err as ApiError;
+            setError('loadRoles', apiError.message);
+            showError(t('failedToLoadRoles'), apiError.message);
+        } finally {
+            setState(prev => ({ ...prev, isLoading: false }));
+            setLoading('loadRoles', false);
+        }
+    }, [user?.token, setLoading, clearError, setError]);
 
     useEffect(() => {
         if (!canCreateUsers) {
@@ -64,45 +106,42 @@ export default function CreateUser() {
         }
 
         loadAvailableRoles();
-    }, [canCreateUsers, navigate, showError, t]);
+        // Only run once when component mounts and when canCreateUsers changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [canCreateUsers]);
 
-    const loadAvailableRoles = async () => {
+    const handleRoleSelect = async (roleObject: RoleObject) => {
         if (!user?.token) return;
 
-        setState(prev => ({ ...prev, isLoading: true }));
-        setLoading('loadRoles', true);
-        clearError('loadRoles');
-
-        try {
-            const roles = await getAvailableRoles(user.token);
-            setAvailableRoles(roles);
-        } catch (err) {
-            const apiError = err as ApiError;
-            setError('loadRoles', apiError.message);
-            showError(t('failedToLoadRoles'), apiError.message);
-        } finally {
-            setState(prev => ({ ...prev, isLoading: false }));
-            setLoading('loadRoles', false);
-        }
-    };
-
-    const handleRoleSelect = async (role: UserRole) => {
-        if (!user?.token) return;
+        const roleSlug = createRoleSlug(roleObject.name);
+        console.log('🎯 Role selected:', roleObject.name);
+        console.log('🔗 Generated slug:', roleSlug);
+        console.log('📝 Full role object:', roleObject);
 
         setState(prev => ({
             ...prev,
-            selectedRole: role,
+            selectedRole: roleObject.name as UserRole,
             isLoading: true,
             step: 'form-filling',
             errors: []
         }));
 
+        // For Engineer role, use custom form - no need to load role fields
+        if (roleObject.name === 'Engineer') {
+            console.log('🔧 Using custom Engineer form');
+            setState(prev => ({
+                ...prev,
+                isLoading: false,
+            }));
+            return;
+        }
+
         setLoading('loadRoleFields', true);
         clearError('loadRoleFields');
 
         try {
-            // Get role-specific fields
-            const roleFields = await getRoleFields(role, user.token);
+            // Get role-specific fields for other roles
+            const roleFields = await getRoleFields(roleObject.name as UserRole, user.token);
 
             // Get reference data
             const referenceData = await getReferenceDataForRole(roleFields, user.token);
@@ -246,11 +285,11 @@ export default function CreateUser() {
             <div className="flex items-center justify-center mb-8">
                 <div className="flex items-center space-x-4">
                     <div className={`flex items-center ${state.step === 'role-selection' ? 'text-primary' :
-                            ['form-filling', 'submitting', 'success'].includes(state.step) ? 'text-green-600' : 'text-muted-foreground'
+                        ['form-filling', 'submitting', 'success'].includes(state.step) ? 'text-green-600' : 'text-muted-foreground'
                         }`}>
                         <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${state.step === 'role-selection' ? 'border-primary bg-primary text-primary-foreground' :
-                                ['form-filling', 'submitting', 'success'].includes(state.step) ? 'border-green-600 bg-green-600 text-white' :
-                                    'border-muted-foreground'
+                            ['form-filling', 'submitting', 'success'].includes(state.step) ? 'border-green-600 bg-green-600 text-white' :
+                                'border-muted-foreground'
                             }`}>
                             1
                         </div>
@@ -261,11 +300,11 @@ export default function CreateUser() {
                         }`} />
 
                     <div className={`flex items-center ${state.step === 'form-filling' ? 'text-primary' :
-                            ['submitting', 'success'].includes(state.step) ? 'text-green-600' : 'text-muted-foreground'
+                        ['submitting', 'success'].includes(state.step) ? 'text-green-600' : 'text-muted-foreground'
                         }`}>
                         <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium ${state.step === 'form-filling' ? 'border-primary bg-primary text-primary-foreground' :
-                                ['submitting', 'success'].includes(state.step) ? 'border-green-600 bg-green-600 text-white' :
-                                    'border-muted-foreground'
+                            ['submitting', 'success'].includes(state.step) ? 'border-green-600 bg-green-600 text-white' :
+                                'border-muted-foreground'
                             }`}>
                             2
                         </div>
@@ -296,7 +335,17 @@ export default function CreateUser() {
                     />
                 )}
 
-                {state.step === 'form-filling' && state.roleFields && state.selectedRole && (
+                {state.step === 'form-filling' && state.selectedRole === 'Engineer' && (
+                    <EngineerForm
+                        onBack={handleBack}
+                        onSuccess={(response) => {
+                            setCreatedUser(response);
+                            setState(prev => ({ ...prev, step: 'success', isLoading: false }));
+                        }}
+                    />
+                )}
+
+                {state.step === 'form-filling' && state.roleFields && state.selectedRole && state.selectedRole !== 'Engineer' && (
                     <DynamicForm
                         role={state.selectedRole}
                         baseFields={state.roleFields.baseFields}
@@ -366,7 +415,7 @@ export default function CreateUser() {
                                     {t('tryAgain')}
                                 </Button>
                                 <Button onClick={() => navigate('/admin/users')} className="flex-1">
-                                    {t('cancel')}
+                                    {t('goBack')}
                                 </Button>
                             </div>
                         </CardContent>

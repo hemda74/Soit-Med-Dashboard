@@ -6,6 +6,8 @@ export const API_CONFIG = {
 	ENDPOINTS: {
 		LOGIN: '/Account/login',
 		USER_ME: '/User/me',
+		AVAILABLE_ROLES: '/Role',
+		USERS: '/User',
 	},
 } as const;
 

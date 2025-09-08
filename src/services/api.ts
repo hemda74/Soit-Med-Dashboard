@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/utils/constants';
+import type { UserListResponse } from '@/types/user.types';
 
 class ApiClient {
 	private baseURL: string;
@@ -75,3 +76,14 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
+// Function to fetch all users
+export const fetchUsers = async (
+	token: string
+): Promise<UserListResponse[]> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	return apiClient.get<UserListResponse[]>('/User', token);
+};

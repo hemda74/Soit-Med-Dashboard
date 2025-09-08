@@ -2,6 +2,7 @@ import { User } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
     const { user } = useAuthStore()
@@ -15,46 +16,51 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
-                <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            {t('profile')}
-                        </CardTitle>
-                        <CardDescription>
-                            {t('profileDescription')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">Full Name:</span>
-                                <span className="text-muted-foreground">{user?.fullName}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">Department:</span>
-                                <span className="text-muted-foreground">{user?.departmentName}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">{t('roles')}:</span>
-                                <span className="text-muted-foreground">{user?.roles.join(', ')}</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                <Link to="/profile">
 
+                    <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <User className="h-5 w-5" />
+                                {t('profile')}
+                            </CardTitle>
+                            <CardDescription>
+                                {t('profileDescription')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">{t('fullName')}</span>
+                                    <span className="text-muted-foreground">{user?.fullName}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">{t('department')}</span>
+                                    <span className="text-muted-foreground">{user?.departmentName}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-medium">{t('role')}</span>
+                                    <span className="text-muted-foreground">{user?.roles.join(', ')}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </Link>
                 <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <CardHeader>
-                        <CardTitle>{t('medicalDashboard')}</CardTitle>
-                        <CardDescription>
-                            {t('soitronMedical')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">
-                            {t('dashboardDescription')}
-                        </p>
-                    </CardContent>
+                    <Link to="/admin/create-user">
+
+                        <CardHeader>
+                            <CardTitle>{t('medicalDashboard')}</CardTitle>
+                            <CardDescription>
+                                {t('soitronMedical')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">
+                                {t('dashboardDescription')}
+                            </p>
+                        </CardContent>
+                    </Link>
                 </Card>
 
                 <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
