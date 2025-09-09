@@ -1,53 +1,74 @@
 import type { LoginDTO, AuthResponse, AuthUser } from '../types/auth.types';
 import { API_CONFIG, getApiUrl } from '../config/api';
+import { useAppStore } from '@/stores/appStore';
 
-// Login API function using fetch
+// Login API function using fetch with loading state
 export const loginUser = async (
-	credentials: LoginDTO
+	credentials: LoginDTO,
+	setLoading?: (loading: boolean) => void
 ): Promise<AuthResponse> => {
-	const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.LOGIN), {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify({
-			userName: credentials.UserName,
-			password: credentials.Password,
-		}),
-	});
-
-	if (!response.ok) {
-		const errorText = await response.text();
-		throw new Error(
-			`HTTP ${response.status}: ${
-				errorText || 'Login failed'
-			}`
+	try {
+		setLoading?.(true);
+		const response = await fetch(
+			getApiUrl(API_CONFIG.ENDPOINTS.LOGIN),
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					userName: credentials.UserName,
+					password: credentials.Password,
+				}),
+			}
 		);
-	}
 
-	return response.json();
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(
+				`HTTP ${response.status}: ${
+					errorText || 'Login failed'
+				}`
+			);
+		}
+
+		return response.json();
+	} finally {
+		setLoading?.(false);
+	}
 };
 
-// Fetch current user data
-export const getCurrentUser = async (token: string): Promise<AuthUser> => {
-	const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.USER_ME), {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`,
-		},
-	});
-
-	if (!response.ok) {
-		const errorText = await response.text();
-		throw new Error(
-			`HTTP ${response.status}: ${
-				errorText || 'Failed to fetch user data'
-			}`
+// Fetch current user data with loading state
+export const getCurrentUser = async (
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<AuthUser> => {
+	try {
+		setLoading?.(true);
+		const response = await fetch(
+			getApiUrl(API_CONFIG.ENDPOINTS.USER_ME),
+			{
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`,
+				},
+			}
 		);
-	}
 
-	return response.json();
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(
+				`HTTP ${response.status}: ${
+					errorText || 'Failed to fetch user data'
+				}`
+			);
+		}
+
+		return response.json();
+	} finally {
+		setLoading?.(false);
+	}
 };
 
 // Function to decode JWT token and extract user info

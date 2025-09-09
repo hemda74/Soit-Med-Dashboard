@@ -7,6 +7,7 @@ import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import CreateUser from '@/components/admin/CreateUser'
 import UsersList from '@/components/UsersList'
+import LoadingScreen from '@/components/LoadingScreen'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -15,6 +16,7 @@ function App() {
     <ThemeProvider>
       <Router>
         <div className="min-h-screen bg-background text-foreground">
+          <LoadingScreen />
           {isAuthenticated ? (
             <Routes>
               <Route path="/" element={<Layout />}>

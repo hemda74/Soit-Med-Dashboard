@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/utils/constants';
 import type { UserListResponse } from '@/types/user.types';
+import { useAppStore } from '@/stores/appStore';
 
 class ApiClient {
 	private baseURL: string;
@@ -77,13 +78,19 @@ class ApiClient {
 
 export const apiClient = new ApiClient(API_BASE_URL);
 
-// Function to fetch all users
+// Function to fetch all users with loading state
 export const fetchUsers = async (
-	token: string
+	token: string,
+	setLoading?: (loading: boolean) => void
 ): Promise<UserListResponse[]> => {
 	if (!token) {
 		throw new Error('No authentication token provided');
 	}
 
-	return apiClient.get<UserListResponse[]>('/User', token);
+	try {
+		setLoading?.(true);
+		return await apiClient.get<UserListResponse[]>('/User', token);
+	} finally {
+		setLoading?.(false);
+	}
 };

@@ -3,34 +3,31 @@ import type { UserListResponse } from '@/types/user.types';
 import { fetchUsers } from '@/services/api';
 import { Card } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppStore } from '@/stores/appStore';
 
 const UsersList: React.FC = () => {
     const [users, setUsers] = useState<UserListResponse[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuthStore();
+    const { setLoading } = useAppStore();
 
     useEffect(() => {
         const loadUsers = async () => {
             if (!user?.token) {
                 setError('No authentication token found');
-                setLoading(false);
                 return;
             }
 
             try {
-                setLoading(true);
-                const usersData = await fetchUsers(user.token);
+                const usersData = await fetchUsers(user.token, setLoading);
                 setUsers(usersData);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load users');
-            } finally {
-                setLoading(false);
             }
         };
 
         loadUsers();
-    }, [user?.token]);
+    }, [user?.token, setLoading]);
 
     // Map department IDs to department names
     const getDepartmentName = (departmentId: number): string => {
@@ -45,13 +42,7 @@ const UsersList: React.FC = () => {
         return departmentMap[departmentId] || `Department ${departmentId}`;
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center p-8">
-                <div className="text-lg">Loading users...</div>
-            </div>
-        );
-    }
+    // Loading state is now handled by the global LoadingScreen component
 
     if (error) {
         return (

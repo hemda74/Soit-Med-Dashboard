@@ -4,6 +4,7 @@ import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { createLoginSchema, type LoginFormData } from '@/schemas/loginSchema'
 import { useAuthStore } from '@/stores/authStore'
+import { useAppStore } from '@/stores/appStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,7 +21,8 @@ import { Header } from '@/components/Header'
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
-    const { login, isLoading } = useAuthStore()
+    const { login } = useAuthStore()
+    const { loading: isLoading } = useAppStore()
     const { t } = useTranslation()
 
     const form = useForm<LoginFormData>({
