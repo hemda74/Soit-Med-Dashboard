@@ -1,6 +1,12 @@
 import { API_BASE_URL } from '@/utils/constants';
 import type { UserListResponse } from '@/types/user.types';
-import { useAppStore } from '@/stores/appStore';
+import type {
+	Department,
+	DepartmentUsersResponse,
+	UserSearchResponse,
+	Role,
+	RoleUsersResponse,
+} from '@/types/department.types';
 
 class ApiClient {
 	private baseURL: string;
@@ -90,6 +96,111 @@ export const fetchUsers = async (
 	try {
 		setLoading?.(true);
 		return await apiClient.get<UserListResponse[]>('/User', token);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to fetch all departments with loading state
+export const fetchDepartments = async (
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<Department[]> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	try {
+		setLoading?.(true);
+		return await apiClient.get<Department[]>('/Department', token);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to fetch users by department with loading state
+export const fetchUsersByDepartment = async (
+	departmentId: number,
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<DepartmentUsersResponse> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	try {
+		setLoading?.(true);
+		return await apiClient.get<DepartmentUsersResponse>(
+			`/User/department/${departmentId}`,
+			token
+		);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to search user by username with loading state
+export const searchUserByUsername = async (
+	username: string,
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<UserSearchResponse> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	if (!username.trim()) {
+		throw new Error('Username is required');
+	}
+
+	try {
+		setLoading?.(true);
+		return await apiClient.get<UserSearchResponse>(
+			`/User/username/${encodeURIComponent(username.trim())}`,
+			token
+		);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to fetch all roles with loading state
+export const fetchRoles = async (
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<Role[]> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	try {
+		setLoading?.(true);
+		return await apiClient.get<Role[]>('/Role', token);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to fetch users by role with loading state
+export const fetchUsersByRole = async (
+	role: string,
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<RoleUsersResponse> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	if (!role.trim()) {
+		throw new Error('Role is required');
+	}
+
+	try {
+		setLoading?.(true);
+		return await apiClient.get<RoleUsersResponse>(
+			`/User/role/${encodeURIComponent(role.trim())}`,
+			token
+		);
 	} finally {
 		setLoading?.(false);
 	}
