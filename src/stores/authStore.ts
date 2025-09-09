@@ -3,6 +3,7 @@ import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { loginUser, getCurrentUser, decodeToken } from '../services/authApi';
 import type { AuthUser } from '../types/auth.types';
 import toast from 'react-hot-toast';
+import { useAppStore } from './appStore';
 
 export interface User extends AuthUser {
 	token: string;
@@ -11,7 +12,6 @@ export interface User extends AuthUser {
 interface AuthState {
 	user: User | null;
 	isAuthenticated: boolean;
-	isLoading: boolean;
 	loginAttempts: number;
 	lastLoginAttempt: number | null;
 	sessionExpiry: number | null;
@@ -21,7 +21,6 @@ interface AuthState {
 	login: (userName: string, password: string) => Promise<void>;
 	fetchUserData: () => Promise<void>;
 	logout: () => void;
-	setLoading: (loading: boolean) => void;
 
 	// Session management
 	checkTokenExpiry: () => boolean;
@@ -49,7 +48,6 @@ export const useAuthStore = create<AuthState>()(
 			(set, get) => ({
 				user: null,
 				isAuthenticated: false,
-				isLoading: false,
 				loginAttempts: 0,
 				lastLoginAttempt: null,
 				sessionExpiry: null,
@@ -59,7 +57,9 @@ export const useAuthStore = create<AuthState>()(
 					userName: string,
 					password: string
 				) => {
-					set({ isLoading: true });
+					const { setLoading } =
+						useAppStore.getState();
+					setLoading(true);
 
 					try {
 						// Check if account is locked
@@ -69,17 +69,21 @@ export const useAuthStore = create<AuthState>()(
 							);
 						}
 
-						// Call the real API
+						// Call the real API with loading state
 						const response =
-							await loginUser({
-								UserName: userName,
-								Password: password,
-							});
+							await loginUser(
+								{
+									UserName: userName,
+									Password: password,
+								},
+								setLoading
+							);
 
 						// Fetch complete user data using the token
 						const userData =
 							await getCurrentUser(
-								response.token
+								response.token,
+								setLoading
 							);
 
 						// Calculate session expiry
@@ -104,7 +108,6 @@ export const useAuthStore = create<AuthState>()(
 						set({
 							user,
 							isAuthenticated: true,
-							isLoading: false,
 							sessionExpiry,
 							loginAttempts: 0,
 							lastLoginAttempt: null,
@@ -115,7 +118,7 @@ export const useAuthStore = create<AuthState>()(
 						);
 					} catch (error: any) {
 						get().incrementLoginAttempts();
-						set({ isLoading: false });
+						setLoading(false);
 						const errorMessage =
 							error.message ||
 							'Login failed. Please check your credentials.';
@@ -128,11 +131,14 @@ export const useAuthStore = create<AuthState>()(
 					const { user } = get();
 					if (!user?.token) return;
 
+					const { setLoading } =
+						useAppStore.getState();
 					try {
-						set({ isLoading: true });
+						setLoading(true);
 						const userData =
 							await getCurrentUser(
-								user.token
+								user.token,
+								setLoading
 							);
 
 						set({
@@ -140,14 +146,13 @@ export const useAuthStore = create<AuthState>()(
 								...userData,
 								token: user.token,
 							},
-							isLoading: false,
 						});
 					} catch (error: any) {
 						console.error(
 							'Failed to fetch user data:',
 							error
 						);
-						set({ isLoading: false });
+						setLoading(false);
 						// If token is invalid, logout
 						if (
 							error.message.includes(
@@ -166,12 +171,7 @@ export const useAuthStore = create<AuthState>()(
 					set({
 						user: null,
 						isAuthenticated: false,
-						isLoading: false,
 					});
-				},
-
-				setLoading: (loading: boolean) => {
-					set({ isLoading: loading });
 				},
 
 				// Session management
