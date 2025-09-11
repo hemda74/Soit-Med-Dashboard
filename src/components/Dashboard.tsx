@@ -1,12 +1,13 @@
-import { User } from 'lucide-react'
+import { User, Users, UserPlus, Settings, TestTube } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
-    const { user } = useAuthStore()
+    const { user, hasRole } = useAuthStore()
     const { t } = useTranslation()
+    const isAdmin = hasRole('SuperAdmin') || hasRole('Admin')
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -16,8 +17,8 @@ export default function Dashboard() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
+                {/* Profile Card */}
                 <Link to="/profile">
-
                     <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -46,43 +47,94 @@ export default function Dashboard() {
                         </CardContent>
                     </Card>
                 </Link>
-                <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <Link to="/admin/create-user">
 
-                        <CardHeader>
-                            <CardTitle>{t('medicalDashboard')}</CardTitle>
-                            <CardDescription>
-                                {t('soitronMedical')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">
-                                {t('dashboardDescription')}
-                            </p>
-                        </CardContent>
+                {/* Users Management Card */}
+                {isAdmin && (
+                    <Link to="/admin/users">
+                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Users className="h-5 w-5" />
+                                    Users Management
+                                </CardTitle>
+                                <CardDescription>
+                                    View and manage all users
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Browse, search, and manage user accounts across all departments.
+                                </p>
+                            </CardContent>
+                        </Card>
                     </Link>
-                </Card>
+                )}
 
-                <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <CardHeader>
-                        <CardTitle>{t('quickStats')}</CardTitle>
-                        <CardDescription>
-                            {t('systemOverview')}
-                        </CardDescription>
-                    </CardHeader>
-                    {/* <CardContent>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">{t('status')}:</span>
-                                <span className="text-green-600 font-medium">{t('online')}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">{t('lastLogin')}:</span>
-                                <span className="text-muted-foreground">{t('justNow')}</span>
-                            </div>
-                        </div>
-                    </CardContent> */}
-                </Card>
+                {/* User Creation Card */}
+                {isAdmin && (
+                    <Link to="/admin/create-role-user">
+                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <UserPlus className="h-5 w-5" />
+                                    Create User
+                                </CardTitle>
+                                <CardDescription>
+                                    Create new users with specific roles
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Create doctors, engineers, technicians, and other role-specific users.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                )}
+
+                {/* API Test Card */}
+                {isAdmin && (
+                    <Link to="/admin/test-user-creation">
+                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <TestTube className="h-5 w-5" />
+                                    API Testing
+                                </CardTitle>
+                                <CardDescription>
+                                    Test user creation APIs
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Test the role-specific user creation endpoints with sample data.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                )}
+
+                {/* Legacy Create User Card */}
+                {isAdmin && (
+                    <Link to="/admin/create-user">
+                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Settings className="h-5 w-5" />
+                                    Legacy User Creation
+                                </CardTitle>
+                                <CardDescription>
+                                    Original user creation system
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">
+                                    Use the original dynamic form-based user creation system.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                )}
             </div>
         </div>
     )
