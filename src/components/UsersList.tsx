@@ -1,17 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw } from 'lucide-react';
+import { Users, RefreshCw, Edit, Save, X } from 'lucide-react';
 import type { UserListResponse } from '@/types/user.types';
-import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse } from '@/types/department.types';
+import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse, DepartmentUser } from '@/types/department.types';
 import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole } from '@/services/api';
-import { Card } from '@/components/ui/card';
+import { updateUser } from '@/services/roleSpecificUserApi';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import DepartmentSelector from './DepartmentSelector';
 import RoleSelector from './RoleSelector';
 import UserSearchInput from './UserSearchInput';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 type ViewMode = 'all' | 'department' | 'role' | 'search';
+
+// Department mapping
+const DEPARTMENT_MAP: Record<number, string> = {
+    1: 'Administration',
+    2: 'Medical',
+    3: 'Sales',
+    4: 'Engineering',
+    5: 'Finance',
+    6: 'Legal',
+    7: 'NewOne'
+};
+
+// Union type for all possible user types
+type UserData = UserListResponse | DepartmentUser | UserSearchResponse;
+
+// Helper function to get department name by ID
+const getDepartmentName = (departmentId: number): string => {
+    return DEPARTMENT_MAP[departmentId] || `Department ${departmentId}`;
+};
+
+// User edit form validation schema
+const userEditSchema = z.object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    userName: z.string().min(1, 'Username is required'),
+    email: z.string().email('Invalid email address'),
+    phoneNumber: z.string().optional(),
+    isActive: z.boolean(),
+});
+
+type UserEditFormData = z.infer<typeof userEditSchema>;
 
 const UsersList: React.FC = () => {
     const [users, setUsers] = useState<UserListResponse[]>([]);
@@ -22,8 +60,24 @@ const UsersList: React.FC = () => {
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('all');
     const [error, setError] = useState<string | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
+    const { success, error: showError } = useNotificationStore();
+
+    // Form for editing user
+    const editForm = useForm<UserEditFormData>({
+        resolver: zodResolver(userEditSchema),
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            userName: '',
+            email: '',
+            phoneNumber: '',
+            isActive: true,
+        }
+    });
 
     const loadAllUsers = async () => {
         if (!user?.token) {
@@ -116,23 +170,77 @@ const UsersList: React.FC = () => {
         loadRoleUsers(role);
     };
 
+    // Handle opening edit modal
+    const handleEditUser = (userToEdit: UserData) => {
+        setSelectedUser(userToEdit);
+        editForm.reset({
+            firstName: userToEdit.firstName,
+            lastName: userToEdit.lastName,
+            userName: userToEdit.userName,
+            email: userToEdit.email,
+            phoneNumber: 'phoneNumber' in userToEdit ? (userToEdit.phoneNumber || '') : '',
+            isActive: userToEdit.isActive,
+        });
+        setIsEditModalOpen(true);
+    };
+
+    // Handle closing edit modal
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedUser(null);
+        editForm.reset();
+    };
+
+    // Handle form submission
+    const onSubmitEdit = async (data: UserEditFormData) => {
+        if (!user?.token || !selectedUser) {
+            showError('No authentication token or selected user found');
+            return;
+        }
+
+        try {
+            const response = await updateUser(
+                selectedUser.id,
+                {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    userName: data.userName,
+                    email: data.email,
+                    phoneNumber: data.phoneNumber || '',
+                    isActive: data.isActive,
+                },
+                user.token
+            );
+
+            if (response.success) {
+                success('User Updated Successfully', response.message);
+                handleCloseEditModal();
+                // Refresh the current view
+                if (viewMode === 'all') {
+                    loadAllUsers();
+                } else if (viewMode === 'department' && selectedDepartment) {
+                    loadDepartmentUsers(selectedDepartment);
+                } else if (viewMode === 'role' && selectedRole) {
+                    loadRoleUsers(selectedRole);
+                } else if (viewMode === 'search' && searchResult) {
+                    searchUser(searchResult.userName);
+                }
+            } else {
+                showError('User Update Failed', response.message);
+            }
+        } catch (error: any) {
+            console.error('Error updating user:', error);
+            const errorMessage = error.message || 'Failed to update user';
+            showError('User Update Failed', errorMessage);
+        }
+    };
+
     // Load all users on component mount
     useEffect(() => {
         loadAllUsers();
     }, [user?.token]);
 
-    // Map department IDs to department names
-    const getDepartmentName = (departmentId: number): string => {
-        const departmentMap: { [key: number]: string } = {
-            1: 'Administration',
-            2: 'IT',
-            3: 'HR',
-            4: 'Finance',
-            5: 'Operations',
-            6: 'Support'
-        };
-        return departmentMap[departmentId] || `Department ${departmentId}`;
-    };
+
 
     // Get current users to display
     const currentUsers = viewMode === 'all'
@@ -248,6 +356,9 @@ const UsersList: React.FC = () => {
                                 <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
                                     Status
                                 </th>
+                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -260,7 +371,10 @@ const UsersList: React.FC = () => {
                                         {user.fullName}
                                     </td>
                                     <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                                        {getDepartmentName(user.departmentId)}
+                                        {'departmentName' in user
+                                            ? user.departmentName
+                                            : getDepartmentName(user.departmentId)
+                                        }
                                     </td>
                                     <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
                                         {user.email}
@@ -274,6 +388,17 @@ const UsersList: React.FC = () => {
                                         >
                                             {user.isActive ? 'Active' : 'Inactive'}
                                         </span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleEditUser(user)}
+                                            className="flex items-center gap-1"
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                            Edit
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -294,6 +419,161 @@ const UsersList: React.FC = () => {
                     </div>
                 )}
             </Card>
+
+            {/* Edit User Modal */}
+            {isEditModalOpen && selectedUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Edit className="h-5 w-5" />
+                                        Edit User
+                                    </CardTitle>
+                                    <CardDescription>
+                                        Update user information for {selectedUser.fullName}
+                                    </CardDescription>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleCloseEditModal}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {/* First Name */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName">First Name</Label>
+                                        <Input
+                                            id="firstName"
+                                            {...editForm.register("firstName")}
+                                            placeholder="Enter first name"
+                                        />
+                                        {editForm.formState.errors.firstName && (
+                                            <p className="text-sm text-red-600">
+                                                {editForm.formState.errors.firstName.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Last Name */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName">Last Name</Label>
+                                        <Input
+                                            id="lastName"
+                                            {...editForm.register("lastName")}
+                                            placeholder="Enter last name"
+                                        />
+                                        {editForm.formState.errors.lastName && (
+                                            <p className="text-sm text-red-600">
+                                                {editForm.formState.errors.lastName.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Username */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="userName">Username</Label>
+                                        <Input
+                                            id="userName"
+                                            {...editForm.register("userName")}
+                                            placeholder="Enter username"
+                                        />
+                                        {editForm.formState.errors.userName && (
+                                            <p className="text-sm text-red-600">
+                                                {editForm.formState.errors.userName.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            {...editForm.register("email")}
+                                            placeholder="Enter email address"
+                                        />
+                                        {editForm.formState.errors.email && (
+                                            <p className="text-sm text-red-600">
+                                                {editForm.formState.errors.email.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Phone Number */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                                        <Input
+                                            id="phoneNumber"
+                                            {...editForm.register("phoneNumber")}
+                                            placeholder="Enter phone number"
+                                        />
+                                        {editForm.formState.errors.phoneNumber && (
+                                            <p className="text-sm text-red-600">
+                                                {editForm.formState.errors.phoneNumber.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Department (Read-only) */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="department">Department</Label>
+                                        <Input
+                                            id="department"
+                                            value={'departmentName' in selectedUser ? selectedUser.departmentName : selectedUser.departmentId}
+                                            disabled
+                                            className="bg-gray-50 dark:bg-gray-800"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Department cannot be changed here
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Active Status */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="isActive"
+                                            {...editForm.register("isActive")}
+                                            className="rounded border-gray-300"
+                                        />
+                                        <Label htmlFor="isActive">User is active</Label>
+                                    </div>
+                                </div>
+
+                                {/* Form Actions */}
+                                <div className="flex gap-2 pt-4">
+                                    <Button
+                                        type="submit"
+                                        disabled={editForm.formState.isSubmitting}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Save className="h-4 w-4" />
+                                        {editForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleCloseEditModal}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 };
