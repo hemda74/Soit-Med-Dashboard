@@ -356,3 +356,44 @@ export const validateForm = (
 
 	return errors;
 };
+
+// Super admin password update API function
+export const updateUserPasswordBySuperAdmin = async (
+	userId: string,
+	newPassword: string,
+	confirmPassword: string,
+	token: string
+): Promise<{
+	success: boolean;
+	message: string;
+	userId: string;
+	userName: string;
+}> => {
+	console.log('Calling superadmin password update API with:', {
+		userId,
+		newPassword: '***',
+		confirmPassword: '***',
+		token: token ? 'present' : 'missing',
+	});
+
+	const response = await apiRequest<{
+		success: boolean;
+		message: string;
+		userId: string;
+		userName: string;
+	}>(
+		`/Account/superadmin-update-password`,
+		{
+			method: 'POST',
+			body: JSON.stringify({
+				userId,
+				newPassword,
+				confirmPassword,
+			}),
+		},
+		token
+	);
+
+	console.log('API response:', response);
+	return response;
+};

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw, Edit, Save, X } from 'lucide-react';
+import { Users, RefreshCw, Edit, Save, X, Key } from 'lucide-react';
 import type { UserListResponse } from '@/types/user.types';
 import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse, DepartmentUser } from '@/types/department.types';
 import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole } from '@/services/api';
@@ -14,6 +14,7 @@ import { useAppStore } from '@/stores/appStore';
 import DepartmentSelector from './DepartmentSelector';
 import RoleSelector from './RoleSelector';
 import UserSearchInput from './UserSearchInput';
+import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,10 +62,14 @@ const UsersList: React.FC = () => {
     const [viewMode, setViewMode] = useState<ViewMode>('all');
     const [error, setError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
     const { success, error: showError } = useNotificationStore();
+
+    // Check if current user is super admin
+    const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
 
     // Form for editing user
     const editForm = useForm<UserEditFormData>({
@@ -189,6 +194,18 @@ const UsersList: React.FC = () => {
         setIsEditModalOpen(false);
         setSelectedUser(null);
         editForm.reset();
+    };
+
+    // Handle opening password update modal
+    const handleUpdatePassword = (userToUpdate: UserData) => {
+        setSelectedUser(userToUpdate);
+        setIsPasswordModalOpen(true);
+    };
+
+    // Handle closing password update modal
+    const handleClosePasswordModal = () => {
+        setIsPasswordModalOpen(false);
+        setSelectedUser(null);
     };
 
     // Handle form submission
@@ -390,15 +407,28 @@ const UsersList: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="py-3 px-4">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => handleEditUser(user)}
-                                            className="flex items-center gap-1"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                            Edit
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleEditUser(user)}
+                                                className="flex items-center gap-1"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                                Edit
+                                            </Button>
+                                            {isSuperAdmin && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleUpdatePassword(user)}
+                                                    className="flex items-center gap-1"
+                                                >
+                                                    <Key className="h-4 w-4" />
+                                                    Password
+                                                </Button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -574,6 +604,13 @@ const UsersList: React.FC = () => {
                     </Card>
                 </div>
             )}
+
+            {/* Password Update Modal */}
+            <PasswordUpdateModal
+                isOpen={isPasswordModalOpen}
+                onClose={handleClosePasswordModal}
+                user={selectedUser as UserListResponse | null}
+            />
         </div>
     );
 };
