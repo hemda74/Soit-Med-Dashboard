@@ -444,12 +444,12 @@ const RoleSpecificUserCreation: React.FC = () => {
             try {
                 // Try to parse the error response
                 const errorResponse = err.response || err;
-                
+
                 if (errorResponse && typeof errorResponse === 'object') {
                     // Check if it's the API error format we expect
                     if (errorResponse.message && errorResponse.errors) {
                         errorTitle = errorResponse.message;
-                        
+
                         // Extract individual error messages from the errors object
                         if (typeof errorResponse.errors === 'object') {
                             Object.entries(errorResponse.errors).forEach(([field, message]) => {
@@ -480,7 +480,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             }
 
             setErrors(errorMessages);
-            
+
             // Show the first specific error message in toast
             const toastMessage = errorMessages[0];
             showError(errorTitle, toastMessage);
