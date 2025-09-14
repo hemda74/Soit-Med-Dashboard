@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     createDoctor,
     createEngineer,
@@ -225,12 +224,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                 getGovernorates(user.token),
             ]);
 
-            console.log('Loaded hospitals:', hospitalsData);
-            console.log('Hospital data structure:', hospitalsData.map(h => ({ id: h.id, name: h.name })));
-            console.log('First hospital example:', hospitalsData[0]);
-            console.log('Hospital IDs:', hospitalsData.map(h => h.id));
-            console.log('Hospital Names:', hospitalsData.map(h => h.name));
-            console.log('Loaded governorates:', governoratesData);
 
             setHospitals(hospitalsData);
             setGovernorates(governoratesData);
@@ -324,10 +317,8 @@ const RoleSpecificUserCreation: React.FC = () => {
     };
 
     const handleHospitalSelect = (hospitalId: string) => {
-        console.log('Hospital selected:', hospitalId);
         setFormData(prev => {
             const updated = { ...prev, hospitalId };
-            console.log('Updated form data:', updated);
             return updated;
         });
 
@@ -345,14 +336,10 @@ const RoleSpecificUserCreation: React.FC = () => {
         const requiredFields = config.fields;
 
 
-        // Debug form data
-        console.log('Form data before validation:', formData);
-        console.log('Required fields:', requiredFields);
-        console.log('Hospital ID value:', formData.hospitalId);
+
 
         // Validate form
         const validationErrors = validateForm(formData, requiredFields);
-        console.log('Validation errors:', validationErrors);
         if (validationErrors.length > 0) {
             setErrors(validationErrors);
             return;
@@ -450,9 +437,53 @@ const RoleSpecificUserCreation: React.FC = () => {
                 stack: err.stack
             });
 
-            const errorMessage = err.message || 'Failed to create user';
-            setErrors([errorMessage]);
-            showError('Error', errorMessage);
+            // Parse API error response to extract specific error messages
+            let errorMessages: string[] = [];
+            let errorTitle = 'Error';
+
+            try {
+                // Try to parse the error response
+                const errorResponse = err.response || err;
+                
+                if (errorResponse && typeof errorResponse === 'object') {
+                    // Check if it's the API error format we expect
+                    if (errorResponse.message && errorResponse.errors) {
+                        errorTitle = errorResponse.message;
+                        
+                        // Extract individual error messages from the errors object
+                        if (typeof errorResponse.errors === 'object') {
+                            Object.entries(errorResponse.errors).forEach(([field, message]) => {
+                                if (typeof message === 'string') {
+                                    errorMessages.push(`${field}: ${message}`);
+                                } else if (Array.isArray(message)) {
+                                    message.forEach(msg => {
+                                        if (typeof msg === 'string') {
+                                            errorMessages.push(`${field}: ${msg}`);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    } else if (errorResponse.message) {
+                        errorMessages.push(errorResponse.message);
+                    } else if (errorResponse.error) {
+                        errorMessages.push(errorResponse.error);
+                    }
+                }
+            } catch (parseError) {
+                console.error('Error parsing API response:', parseError);
+            }
+
+            // Fallback to generic error if no specific errors found
+            if (errorMessages.length === 0) {
+                errorMessages.push(err.message || 'Failed to create user');
+            }
+
+            setErrors(errorMessages);
+            
+            // Show the first specific error message in toast
+            const toastMessage = errorMessages[0];
+            showError(errorTitle, toastMessage);
         } finally {
             setIsLoading(false);
         }
@@ -763,7 +794,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 <option value="">{t('selectHospital')}</option>
                                                 {hospitals && hospitals.length > 0 ? (
                                                     hospitals.map((hospital) => {
-                                                        console.log('Hospital data:', hospital);
                                                         // Handle different possible field names
                                                         const hospitalId = hospital.id || hospital.hospitalId || hospital.HospitalId;
                                                         const hospitalName = hospital.name || hospital.hospitalName || hospital.HospitalName;
@@ -790,18 +820,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 </div>
                                             )}
 
-                                            {/* Debug button */}
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    console.log('Current form data:', formData);
-                                                    console.log('Available hospitals:', hospitals);
-                                                }}
-                                            >
-                                                Debug Form Data
-                                            </Button>
+
                                         </div>
                                     )}
 
