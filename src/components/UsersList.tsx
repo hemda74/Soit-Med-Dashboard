@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Users, RefreshCw, Edit, Save, X, Key } from 'lucide-react';
 import type { UserListResponse } from '@/types/user.types';
 import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse, DepartmentUser } from '@/types/department.types';
-import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole } from '@/services/api';
+import type { UserFilters, PaginatedUserResponse, User } from '@/types/api.types';
+import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole, fetchUsersWithFilters } from '@/services/api';
 import { updateUser } from '@/services/roleSpecificUserApi';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,13 +15,16 @@ import { useAppStore } from '@/stores/appStore';
 import DepartmentSelector from './DepartmentSelector';
 import RoleSelector from './RoleSelector';
 import UserSearchInput from './UserSearchInput';
+import UserFiltersComponent from './UserFilters';
+import Pagination from './Pagination';
 import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
 import { UserStatusToggle } from './UserStatusToggle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from '@/hooks/useTranslation';
 
-type ViewMode = 'all' | 'department' | 'role' | 'search';
+type ViewMode = 'all' | 'department' | 'role' | 'search' | 'filtered';
 
 // Department mapping
 const DEPARTMENT_MAP: Record<number, string> = {
@@ -34,7 +38,7 @@ const DEPARTMENT_MAP: Record<number, string> = {
 };
 
 // Union type for all possible user types
-type UserData = UserListResponse | DepartmentUser | UserSearchResponse;
+type UserData = UserListResponse | DepartmentUser | UserSearchResponse | User;
 
 // Helper function to get department name by ID
 const getDepartmentName = (departmentId: number): string => {
@@ -66,6 +70,7 @@ const UsersList: React.FC = () => {
     const [departmentUsers, setDepartmentUsers] = useState<DepartmentUsersResponse | null>(null);
     const [roleUsers, setRoleUsers] = useState<RoleUsersResponse | null>(null);
     const [searchResult, setSearchResult] = useState<UserSearchResponse | null>(null);
+    const [filteredUsers, setFilteredUsers] = useState<PaginatedUserResponse | null>(null);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('all');
@@ -73,9 +78,16 @@ const UsersList: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+    const [filters, setFilters] = useState<UserFilters>({
+        pageNumber: 1,
+        pageSize: 50,
+        sortBy: 'CreatedAt',
+        sortOrder: 'desc'
+    });
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
     const { success, error: showError } = useNotificationStore();
+    const { t } = useTranslation();
 
     // Check if current user is super admin
     const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
@@ -107,9 +119,55 @@ const UsersList: React.FC = () => {
             setDepartmentUsers(null);
             setRoleUsers(null);
             setSearchResult(null);
+            setFilteredUsers(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load users');
         }
+    };
+
+    const loadFilteredUsers = async (newFilters?: UserFilters) => {
+        if (!user?.token) {
+            setError('No authentication token found');
+            return;
+        }
+
+        try {
+            setError(null);
+            const filtersToUse = newFilters || filters;
+            const response = await fetchUsersWithFilters(filtersToUse, user.token, setLoading);
+            setFilteredUsers(response);
+            setViewMode('filtered');
+            setDepartmentUsers(null);
+            setRoleUsers(null);
+            setSearchResult(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load filtered users');
+        }
+    };
+
+    const handleFiltersChange = (newFilters: UserFilters) => {
+        setFilters(newFilters);
+    };
+
+    const handleApplyFilters = () => {
+        loadFilteredUsers(filters);
+    };
+
+    const handleClearFilters = () => {
+        const clearedFilters: UserFilters = {
+            pageNumber: 1,
+            pageSize: 50,
+            sortBy: 'CreatedAt',
+            sortOrder: 'desc'
+        };
+        setFilters(clearedFilters);
+        loadFilteredUsers(clearedFilters);
+    };
+
+    const handlePageChange = (page: number) => {
+        const newFilters = { ...filters, pageNumber: page };
+        setFilters(newFilters);
+        loadFilteredUsers(newFilters);
     };
 
     const loadDepartmentUsers = async (department: Department) => {
@@ -254,6 +312,16 @@ const UsersList: React.FC = () => {
                     isActive: newStatus
                 };
             });
+        } else if (viewMode === 'filtered' && filteredUsers) {
+            setFilteredUsers(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    users: prev.users.map(user =>
+                        user.id === userId ? { ...user, isActive: newStatus } : user
+                    )
+                };
+            });
         }
 
         // Update the selectedUser if it's the same user being edited
@@ -320,9 +388,11 @@ const UsersList: React.FC = () => {
             ? departmentUsers?.users || []
             : viewMode === 'role'
                 ? roleUsers?.users || []
-                : searchResult
-                    ? [searchResult]
-                    : [];
+                : viewMode === 'filtered'
+                    ? filteredUsers?.users || []
+                    : searchResult
+                        ? [searchResult]
+                        : [];
 
     const currentDescription = viewMode === 'all'
         ? 'View all users across all departments'
@@ -330,9 +400,11 @@ const UsersList: React.FC = () => {
             ? `View users in ${selectedDepartment?.name} department (${departmentUsers?.userCount || 0} users)`
             : viewMode === 'role'
                 ? `View users with ${selectedRole?.name} role (${roleUsers?.userCount || 0} users)`
-                : searchResult
-                    ? `Found user: ${searchResult.fullName}`
-                    : 'Search for a user by username';
+                : viewMode === 'filtered'
+                    ? `Filtered results (${filteredUsers?.totalCount || 0} users)`
+                    : searchResult
+                        ? `Found user: ${searchResult.fullName}`
+                        : 'Search for a user by username';
 
     if (error) {
         return (
@@ -366,6 +438,17 @@ const UsersList: React.FC = () => {
                             setSearchResult(prev => prev ? { ...prev, isActive: newStatus } : null);
                         }
                     }}
+                />
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="mb-6">
+                <UserFiltersComponent
+                    filters={filters}
+                    onFiltersChange={handleFiltersChange}
+                    onApplyFilters={handleApplyFilters}
+                    onClearFilters={handleClearFilters}
+                    isLoading={false}
                 />
             </div>
 
@@ -503,9 +586,25 @@ const UsersList: React.FC = () => {
                                 ? 'No users found in this department'
                                 : viewMode === 'role'
                                     ? 'No users found with this role'
-                                    : 'No user found with this username'
+                                    : viewMode === 'filtered'
+                                        ? 'No users found matching the filters'
+                                        : 'No user found with this username'
                         }
                     </div>
+                )}
+
+                {/* Pagination for filtered results */}
+                {viewMode === 'filtered' && filteredUsers && filteredUsers.totalPages > 1 && (
+                    <Pagination
+                        currentPage={filteredUsers.pageNumber}
+                        totalPages={filteredUsers.totalPages}
+                        hasPreviousPage={filteredUsers.hasPreviousPage}
+                        hasNextPage={filteredUsers.hasNextPage}
+                        onPageChange={handlePageChange}
+                        totalCount={filteredUsers.totalCount}
+                        pageSize={filteredUsers.pageSize}
+                        isLoading={false}
+                    />
                 )}
             </Card>
 

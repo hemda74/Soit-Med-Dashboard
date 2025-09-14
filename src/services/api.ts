@@ -11,6 +11,10 @@ import type {
 	Role,
 	RoleUsersResponse,
 } from '@/types/department.types';
+import type {
+	UserFilters,
+	PaginatedUserResponse,
+} from '@/types/api.types';
 
 class ApiClient {
 	private baseURL: string;
@@ -105,7 +109,10 @@ export const fetchUsers = async (
 
 	try {
 		setLoading?.(true);
-		return await apiClient.get<UserListResponse[]>('/User', token);
+		return await apiClient.get<UserListResponse[]>(
+			'/User/all',
+			token
+		);
 	} finally {
 		setLoading?.(false);
 	}
@@ -266,6 +273,75 @@ export const updateUserStatus = async (
 		return response;
 	} catch (error) {
 		console.error('❌ User status update failed:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// New function for fetching users with advanced filtering
+export const fetchUsersWithFilters = async (
+	filters: UserFilters = {},
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<PaginatedUserResponse> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	try {
+		setLoading?.(true);
+
+		// Build query parameters
+		const queryParams = new URLSearchParams();
+		
+		if (filters.searchTerm) {
+			queryParams.append('SearchTerm', filters.searchTerm);
+		}
+		if (filters.role) {
+			queryParams.append('Role', filters.role);
+		}
+		if (filters.departmentId !== undefined) {
+			queryParams.append('DepartmentId', filters.departmentId.toString());
+		}
+		if (filters.isActive !== undefined) {
+			queryParams.append('IsActive', filters.isActive.toString());
+		}
+		if (filters.createdFrom) {
+			queryParams.append('CreatedFrom', filters.createdFrom);
+		}
+		if (filters.createdTo) {
+			queryParams.append('CreatedTo', filters.createdTo);
+		}
+		if (filters.sortBy) {
+			queryParams.append('SortBy', filters.sortBy);
+		}
+		if (filters.sortOrder) {
+			queryParams.append('SortOrder', filters.sortOrder);
+		}
+		if (filters.pageNumber) {
+			queryParams.append('PageNumber', filters.pageNumber.toString());
+		}
+		if (filters.pageSize) {
+			queryParams.append('PageSize', filters.pageSize.toString());
+		}
+
+		const endpoint = `/User/all${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+		console.log('🔄 Fetching users with filters:', {
+			endpoint,
+			filters,
+		});
+
+		const response = await apiClient.get<PaginatedUserResponse>(
+			endpoint,
+			token
+		);
+
+		console.log('✅ Users fetched successfully:', response);
+		return response;
+	} catch (error) {
+		console.error('❌ Failed to fetch users with filters:', error);
 		throw error;
 	} finally {
 		setLoading?.(false);
