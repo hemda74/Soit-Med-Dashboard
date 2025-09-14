@@ -226,6 +226,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             ]);
 
             console.log('Loaded hospitals:', hospitalsData);
+            console.log('Hospital data structure:', hospitalsData.map(h => ({ id: h.id, name: h.name })));
             console.log('Loaded governorates:', governoratesData);
             
             setHospitals(hospitalsData);
@@ -752,17 +753,21 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 value={formData.hospitalId || ""}
                                                 onChange={(e) => {
                                                     console.log('Select onChange called with:', e.target.value);
+                                                    console.log('Selected hospital:', hospitals.find(h => h.id === e.target.value));
                                                     handleHospitalSelect(e.target.value);
                                                 }}
                                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                             >
                                                 <option value="">{t('selectHospital')}</option>
                                                 {hospitals && hospitals.length > 0 ? (
-                                                    hospitals.map((hospital) => (
-                                                        <option key={hospital.id} value={hospital.id}>
-                                                            {hospital.name}
-                                                        </option>
-                                                    ))
+                                                    hospitals.map((hospital) => {
+                                                        console.log('Hospital data:', hospital);
+                                                        return (
+                                                            <option key={hospital.id} value={hospital.id}>
+                                                                {hospital.name} (ID: {hospital.id})
+                                                            </option>
+                                                        );
+                                                    })
                                                 ) : (
                                                     <option value="" disabled>
                                                         {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
