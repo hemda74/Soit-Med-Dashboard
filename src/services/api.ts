@@ -1,5 +1,9 @@
 import { API_BASE_URL } from '@/utils/constants';
-import type { UserListResponse } from '@/types/user.types';
+import type {
+	UserListResponse,
+	UserStatusRequest,
+	UserStatusResponse,
+} from '@/types/user.types';
 import type {
 	Department,
 	DepartmentUsersResponse,
@@ -72,12 +76,18 @@ class ApiClient {
 	}
 
 	async put<T>(endpoint: string, data?: any, token?: string): Promise<T> {
+		const headers: HeadersInit = {
+			'Content-Type': 'application/json',
+		};
+
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+
 		return this.request<T>(endpoint, {
 			method: 'PUT',
 			body: data ? JSON.stringify(data) : undefined,
-			headers: token
-				? { Authorization: `Bearer ${token}` }
-				: {},
+			headers,
 		});
 	}
 }
@@ -201,6 +211,62 @@ export const fetchUsersByRole = async (
 			`/User/role/${encodeURIComponent(role.trim())}`,
 			token
 		);
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Function to activate/deactivate user with loading state
+export const updateUserStatus = async (
+	request: UserStatusRequest,
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<UserStatusResponse> => {
+	if (!token) {
+		throw new Error('No authentication token provided');
+	}
+
+	if (!request.userId.trim()) {
+		throw new Error('User ID is required');
+	}
+
+	if (
+		!request.action ||
+		!['activate', 'deactivate'].includes(request.action)
+	) {
+		throw new Error(
+			'Valid action (activate/deactivate) is required'
+		);
+	}
+
+	if (!request.reason.trim()) {
+		throw new Error('Reason is required');
+	}
+
+	try {
+		setLoading?.(true);
+
+		// Debug logging
+		console.log('🔄 Making user status update request:', {
+			endpoint: '/User/activate-deactivate',
+			method: 'PUT',
+			request,
+			token: token
+				? `${token.substring(0, 20)}...`
+				: 'No token',
+		});
+
+		const response = await apiClient.put<UserStatusResponse>(
+			'/User/activate-deactivate',
+			request,
+			token
+		);
+
+		console.log('✅ User status update successful:', response);
+		return response;
+	} catch (error) {
+		console.error('❌ User status update failed:', error);
+		throw error;
 	} finally {
 		setLoading?.(false);
 	}

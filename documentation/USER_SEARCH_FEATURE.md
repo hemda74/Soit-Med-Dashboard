@@ -6,21 +6,21 @@ The Users module now includes a powerful username search functionality that allo
 
 ## Features
 
-### 🔍 **Username Search**
+### **Username Search**
 
 - **Real-time Search**: Search for users by exact username
 - **API Integration**: Uses `GET /api/User/username/{username}` endpoint
 - **Loading States**: Integrated with global Logo Loader.gif system
 - **Error Handling**: Clear error messages for failed searches
 
-### 🎯 **Search Results Display**
+### **Search Results Display**
 
 - **Detailed User Card**: Shows comprehensive user information
 - **Visual Indicators**: Color-coded status and role information
 - **Quick Actions**: Easy access to user details
 - **Clear Results**: Option to clear search and return to all users
 
-### 🔄 **Seamless Integration**
+### **Seamless Integration**
 
 - **Three View Modes**: All Users, Department Users, and Search Results
 - **Smart Navigation**: Easy switching between different views

@@ -11,8 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import logoImage from '@/assets/Logo.png';
-
+import Logo from './Logo';
 export function Header() {
     const { theme, language, toggleLanguage, setTheme } = useThemeStore();
     const { user, isAuthenticated, logout, hasRole } = useAuthStore();
@@ -29,22 +28,7 @@ export function Header() {
                 <div className="flex items-center justify-between w-full">
                     {/* Logo/Brand and Welcome message */}
                     <div className="flex items-center gap-4">
-                        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-                            <img
-                                src={logoImage}
-                                alt="Soit Medical"
-                                className=""
-                                width={200}
-                                height={150}
-                                onError={(e) => {
-                                    // Fallback to text if image fails to load
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    target.nextElementSibling?.classList.remove('hidden');
-                                }}
-                            />
-
-                        </Link>
+                        <Logo />
                         {isAuthenticated && user && (
                             <div className="text-sm text-muted-foreground">
                                 {t('Hello')}, <span className="font-medium text-foreground">{user.firstName}</span>!

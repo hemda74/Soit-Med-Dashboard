@@ -50,12 +50,6 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
         message: '',
     });
 
-    console.log('PasswordUpdateModal state:', {
-        isOpen,
-        user: user?.id,
-        successModal
-    });
-
     const { user: currentUser } = useAuthStore();
     const { error: showError } = useNotificationStore();
 

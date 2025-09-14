@@ -2,30 +2,156 @@ import { User, Users, UserPlus, Settings, TestTube } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Link } from 'react-router-dom';
-
+import { Link } from 'react-router-dom'
+import { fetchUserStatistics } from '@/services/dashboardApi'
+import type { UserStatistics } from '@/types/api.types'
+import { useState, useEffect } from 'react'
+import Logo from './Logo'
 export default function Dashboard() {
     const { user, hasRole } = useAuthStore()
     const { t } = useTranslation()
     const isAdmin = hasRole('SuperAdmin') || hasRole('Admin')
 
+    const [statistics, setStatistics] = useState<UserStatistics | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fetchStatistics = async () => {
+            if (!user?.token) {
+                setError('No authentication token available')
+                setLoading(false)
+                return
+            }
+
+            try {
+                setError(null)
+                const data = await fetchUserStatistics(user.token, setLoading)
+                setStatistics(data)
+            } catch (err) {
+                console.error('Failed to fetch statistics:', err)
+                setError('Failed to load statistics')
+                setLoading(false)
+            }
+        }
+
+        fetchStatistics()
+    }, [user?.token])
+
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8 animate-slideIn">
-                <h1 className="text-3xl font-bold text-foreground">{t('dashboard')}</h1>
-                <p className="text-muted-foreground mt-2">{t('welcomeBackUser')}, {user?.firstName}!</p>
+        <div className="space-y-8">
+            {/* Welcome Section */}
+            <div className=" bg-primary rounded-2xl p-8 text-white animate-slideIn shadow-2xl glow">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-4xl font-bold mb-2 text-white">{t('dashboard')}</h1>
+                        <p className="text-white/90 text-lg font-medium">{t('welcomeBackUser')}, {user?.firstName}!</p>
+                    </div>
+                    <div className="hidden md:block">
+                        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center float ">
+                            <Logo />                        </div>
+                    </div>
+                </div>
             </div>
 
+            {/* Quick Stats */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fadeIn">
+                {loading ? (
+                    // Loading state
+                    Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="bg-white rounded-xl p-6 border-2 border-border shadow-lg h-32 flex flex-col justify-center">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <div className="h-4 bg-muted animate-pulse rounded w-20"></div>
+                                    <div className="h-8 bg-muted animate-pulse rounded w-16"></div>
+                                </div>
+                                <div className="w-14 h-14 bg-muted animate-pulse rounded-xl"></div>
+                            </div>
+                        </div>
+                    ))
+                ) : error ? (
+                    // Error state
+                    <div className="col-span-full bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
+                        <p className="text-destructive font-medium">{error}</p>
+                    </div>
+                ) : (
+                    // Data state
+                    <>
+                        <div className="bg-white rounded-xl p-6 border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-32 flex flex-col justify-center">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-muted-foreground font-semibold text-sm">{t('totalUsers')}</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {statistics?.totalUsers.toLocaleString() || '0'}
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                    <Users className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-6 border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-32 flex flex-col justify-center">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-muted-foreground font-semibold text-sm">{t('activeUsers')}</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {statistics?.activeUsers.toLocaleString() || '0'}
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                    <TestTube className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-6 border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-32 flex flex-col justify-center">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-muted-foreground font-semibold text-sm">{t('inactiveUsers')}</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {statistics?.inactiveUsers.toLocaleString() || '0'}
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                    <UserPlus className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-6 border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 h-32 flex flex-col justify-center">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-muted-foreground font-semibold text-sm">{t('successRate')}</p>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {statistics ?
+                                            `${((statistics.activeUsers / statistics.totalUsers) * 100).toFixed(1)}%` :
+                                            '0%'
+                                        }
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                    <Settings className="w-7 h-7 text-white" />
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Action Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
                 {/* Profile Card */}
                 <Link to="/profile">
-                    <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-2 border-border group shadow-lg h-64">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="h-5 w-5" />
+                            <CardTitle className="flex items-center gap-3 text-foreground group-hover:text-foreground/90 font-bold">
+                                <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                    <User className="h-6 w-6 text-white" />
+                                </div>
                                 {t('profile')}
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-muted-foreground font-medium">
                                 {t('profileDescription')}
                             </CardDescription>
                         </CardHeader>
@@ -51,19 +177,21 @@ export default function Dashboard() {
                 {/* Users Management Card */}
                 {isAdmin && (
                     <Link to="/admin/users">
-                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-2 border-border group shadow-lg h-64">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    Users Management
+                                <CardTitle className="flex items-center gap-3 text-foreground group-hover:text-foreground/90 font-bold">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                        <Users className="h-6 w-6 text-white" />
+                                    </div>
+                                    {t('usersManagement')}
                                 </CardTitle>
-                                <CardDescription>
-                                    View and manage all users
+                                <CardDescription className="text-muted-foreground font-medium">
+                                    {t('usersManagementDescription')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-muted-foreground">
-                                    Browse, search, and manage user accounts across all departments.
+                                <p className="text-muted-foreground font-medium">
+                                    {t('usersManagementDetails')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -73,63 +201,21 @@ export default function Dashboard() {
                 {/* User Creation Card */}
                 {isAdmin && (
                     <Link to="/admin/create-role-user">
-                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                        <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white border-2 border-border group shadow-lg h-64">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <UserPlus className="h-5 w-5" />
-                                    Create User
+                                <CardTitle className="flex items-center gap-3 text-foreground group-hover:text-foreground/90 font-bold">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                        <UserPlus className="h-6 w-6 text-white" />
+                                    </div>
+                                    {t('createUser')}
                                 </CardTitle>
-                                <CardDescription>
-                                    Create new users with specific roles
+                                <CardDescription className="text-muted-foreground font-medium">
+                                    {t('createUserDescription')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-muted-foreground">
-                                    Create doctors, engineers, technicians, and other role-specific users.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                )}
-
-                {/* API Test Card */}
-                {isAdmin && (
-                    <Link to="/admin/test-user-creation">
-                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <TestTube className="h-5 w-5" />
-                                    API Testing
-                                </CardTitle>
-                                <CardDescription>
-                                    Test user creation APIs
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">
-                                    Test the role-specific user creation endpoints with sample data.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                )}
-
-                {/* Legacy Create User Card */}
-                {isAdmin && (
-                    <Link to="/admin/create-user">
-                        <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Settings className="h-5 w-5" />
-                                    Legacy User Creation
-                                </CardTitle>
-                                <CardDescription>
-                                    Original user creation system
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">
-                                    Use the original dynamic form-based user creation system.
+                                <p className="text-muted-foreground font-medium">
+                                    {t('createUserDetails')}
                                 </p>
                             </CardContent>
                         </Card>
