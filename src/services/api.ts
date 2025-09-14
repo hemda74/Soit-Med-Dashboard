@@ -11,10 +11,7 @@ import type {
 	Role,
 	RoleUsersResponse,
 } from '@/types/department.types';
-import type {
-	UserFilters,
-	PaginatedUserResponse,
-} from '@/types/api.types';
+import type { UserFilters, PaginatedUserResponse } from '@/types/api.types';
 
 class ApiClient {
 	private baseURL: string;
@@ -109,10 +106,25 @@ export const fetchUsers = async (
 
 	try {
 		setLoading?.(true);
-		return await apiClient.get<UserListResponse[]>(
+		const response = await apiClient.get<PaginatedUserResponse>(
 			'/User/all',
 			token
 		);
+
+		// Handle both old and new API response formats
+		if (Array.isArray(response)) {
+			// Old format: direct array
+			return response as UserListResponse[];
+		} else if (response && Array.isArray(response.users)) {
+			// New format: paginated response with users array
+			return response.users as UserListResponse[];
+		} else {
+			console.warn(
+				'Unexpected API response format:',
+				response
+			);
+			return [];
+		}
 	} finally {
 		setLoading?.(false);
 	}
@@ -294,7 +306,7 @@ export const fetchUsersWithFilters = async (
 
 		// Build query parameters
 		const queryParams = new URLSearchParams();
-		
+
 		if (filters.searchTerm) {
 			queryParams.append('SearchTerm', filters.searchTerm);
 		}
@@ -302,10 +314,16 @@ export const fetchUsersWithFilters = async (
 			queryParams.append('Role', filters.role);
 		}
 		if (filters.departmentId !== undefined) {
-			queryParams.append('DepartmentId', filters.departmentId.toString());
+			queryParams.append(
+				'DepartmentId',
+				filters.departmentId.toString()
+			);
 		}
 		if (filters.isActive !== undefined) {
-			queryParams.append('IsActive', filters.isActive.toString());
+			queryParams.append(
+				'IsActive',
+				filters.isActive.toString()
+			);
 		}
 		if (filters.createdFrom) {
 			queryParams.append('CreatedFrom', filters.createdFrom);
@@ -320,13 +338,23 @@ export const fetchUsersWithFilters = async (
 			queryParams.append('SortOrder', filters.sortOrder);
 		}
 		if (filters.pageNumber) {
-			queryParams.append('PageNumber', filters.pageNumber.toString());
+			queryParams.append(
+				'PageNumber',
+				filters.pageNumber.toString()
+			);
 		}
 		if (filters.pageSize) {
-			queryParams.append('PageSize', filters.pageSize.toString());
+			queryParams.append(
+				'PageSize',
+				filters.pageSize.toString()
+			);
 		}
 
-		const endpoint = `/User/all${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+		const endpoint = `/User/all${
+			queryParams.toString()
+				? `?${queryParams.toString()}`
+				: ''
+		}`;
 
 		console.log('🔄 Fetching users with filters:', {
 			endpoint,
