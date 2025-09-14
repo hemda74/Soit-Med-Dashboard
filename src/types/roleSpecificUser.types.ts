@@ -202,4 +202,8 @@ export interface HospitalInfo {
 	name: string;
 	location?: string;
 	type?: string;
+	hospitalId?: string;
+	hospitalName?: string;
+	HospitalId?: string;
+	HospitalName?: string;
 }
