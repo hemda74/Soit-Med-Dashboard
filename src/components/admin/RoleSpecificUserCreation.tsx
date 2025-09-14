@@ -261,8 +261,7 @@ const RoleSpecificUserCreation: React.FC = () => {
         setShowConfirmPassword(false);
         setCreatedUser(null);
         setShowGovernorateDropdown(false);
-        setShowHospitalDropdown(false);
-        setShowHospitalDropdown(false);
+
 
     };
 
