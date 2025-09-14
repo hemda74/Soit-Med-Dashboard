@@ -747,10 +747,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                                         <div className="space-y-2">
                                             <Label>{t('hospital')} *</Label>
                                             <Select
-                                                value={formData.hospitalId || ""}
+                                                value={formData.hospitalId ? formData.hospitalId : undefined}
                                                 onValueChange={(value) => {
                                                     console.log('Select onValueChange called with:', value);
-                                                    handleHospitalSelect(value);
+                                                    if (value && value !== "no-hospitals") {
+                                                        handleHospitalSelect(value);
+                                                    }
                                                 }}
                                             >
                                                 <SelectTrigger>
@@ -772,11 +774,27 @@ const RoleSpecificUserCreation: React.FC = () => {
                                             </Select>
                                             
                                             {/* Debug display */}
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                Current hospitalId: {formData.hospitalId || 'None'}
+                                            </div>
                                             {formData.hospitalId && (
                                                 <div className="text-sm text-green-600 mt-1">
                                                     Selected: {hospitals.find(h => h.id === formData.hospitalId)?.name || formData.hospitalId}
                                                 </div>
                                             )}
+                                            
+                                            {/* Debug button */}
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    console.log('Current form data:', formData);
+                                                    console.log('Available hospitals:', hospitals);
+                                                }}
+                                            >
+                                                Debug Form Data
+                                            </Button>
                                         </div>
                                     )}
 
