@@ -108,6 +108,7 @@ export const createDoctor = async (
 		password: string;
 		firstName: string;
 		lastName: string;
+		departmentId: number;
 		specialty: string;
 		hospitalId: string;
 	},
