@@ -107,7 +107,7 @@ export const UserStatusToggle: React.FC<UserStatusToggleProps> = ({
                 size="sm"
                 onClick={handleToggleClick}
                 disabled={disabled || isLoading}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-white hover:text-white"
             >
                 {React.createElement(actionIcon, { className: 'h-4 w-4' })}
                 {actionText}
@@ -136,8 +136,8 @@ export const UserStatusToggle: React.FC<UserStatusToggleProps> = ({
                                 <div><strong>Email:</strong> {email}</div>
                                 <div><strong>Current Status:</strong>
                                     <span className={`ml-1 px-2 py-1 text-xs font-semibold rounded-full ${isActive
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                                         }`}>
                                         {isActive ? 'Active' : 'Inactive'}
                                     </span>

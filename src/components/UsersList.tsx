@@ -22,12 +22,8 @@ import { UserStatusToggle } from './UserStatusToggle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useTranslation } from '@/hooks/useTranslation';
 
 type ViewMode = 'all' | 'department' | 'role' | 'search' | 'filtered';
-
-// User data type for editing
-type UserData = User | UserListResponse | DepartmentUser;
 
 // Department mapping
 const DEPARTMENT_MAP: Record<number, string> = {
@@ -41,7 +37,7 @@ const DEPARTMENT_MAP: Record<number, string> = {
 };
 
 // Union type for all possible user types
-type UserData = UserListResponse | DepartmentUser | UserSearchResponse;
+type UserData = User | UserListResponse | DepartmentUser | UserSearchResponse;
 
 // Helper function to get department name by ID
 const getDepartmentName = (departmentId: number): string => {
@@ -82,7 +78,7 @@ const UsersList: React.FC = () => {
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [filters, setFilters] = useState<UserFilters>({});
-    const { t } = useTranslation();
+
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
     const { success, error: showError } = useNotificationStore();
@@ -605,11 +601,12 @@ const UsersList: React.FC = () => {
                                     </CardDescription>
                                 </div>
                                 <Button
+                                    className="hover:text-white hover:bg-red-500"
                                     variant="ghost"
                                     size="sm"
                                     onClick={handleCloseEditModal}
                                 >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-4 w-4 " />
                                 </Button>
                             </div>
                         </CardHeader>
@@ -709,6 +706,31 @@ const UsersList: React.FC = () => {
                                             Department cannot be changed here
                                         </p>
                                     </div>
+
+                                    {/* Created At (Read-only) */}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="createdAt">Created At</Label>
+                                        <Input
+                                            id="createdAt"
+                                            value={
+                                                'createdAt' in selectedUser
+                                                    ? new Date(selectedUser.createdAt).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        second: '2-digit'
+                                                    })
+                                                    : 'N/A'
+                                            }
+                                            disabled
+                                            className="bg-gray-50 dark:bg-gray-800"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Account creation date
+                                        </p>
+                                    </div>
                                 </div>
                                 {/* User Status Actions - Only for SuperAdmin */}
                                 {isSuperAdmin && (
@@ -728,7 +750,7 @@ const UsersList: React.FC = () => {
                                                     <span
                                                         className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedUser.isActive
                                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                                            : 'bg-red-100 text-red-500 dark:bg-red-900/20 dark:text-red-400'
                                                             }`}
                                                     >
                                                         {selectedUser.isActive ? 'Active' : 'Inactive'}
