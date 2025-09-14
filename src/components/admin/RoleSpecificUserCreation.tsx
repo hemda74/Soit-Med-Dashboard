@@ -227,8 +227,11 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             console.log('Loaded hospitals:', hospitalsData);
             console.log('Hospital data structure:', hospitalsData.map(h => ({ id: h.id, name: h.name })));
+            console.log('First hospital example:', hospitalsData[0]);
+            console.log('Hospital IDs:', hospitalsData.map(h => h.id));
+            console.log('Hospital Names:', hospitalsData.map(h => h.name));
             console.log('Loaded governorates:', governoratesData);
-            
+
             setHospitals(hospitalsData);
             setGovernorates(governoratesData);
         } catch (err) {
@@ -747,7 +750,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                     {ROLE_CONFIG[selectedRole].requiresHospital && (
                                         <div className="space-y-2">
                                             <Label>{t('hospital')} *</Label>
-                                            
+
                                             {/* Simple select dropdown */}
                                             <select
                                                 value={formData.hospitalId || ""}
@@ -762,9 +765,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 {hospitals && hospitals.length > 0 ? (
                                                     hospitals.map((hospital) => {
                                                         console.log('Hospital data:', hospital);
+                                                        // Handle different possible field names
+                                                        const hospitalId = hospital.id || hospital.hospitalId || hospital.HospitalId;
+                                                        const hospitalName = hospital.name || hospital.hospitalName || hospital.HospitalName;
                                                         return (
-                                                            <option key={hospital.id} value={hospital.id}>
-                                                                {hospital.name} (ID: {hospital.id})
+                                                            <option key={hospitalId} value={hospitalId}>
+                                                                {hospitalName} (ID: {hospitalId})
                                                             </option>
                                                         );
                                                     })
@@ -774,17 +780,17 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                     </option>
                                                 )}
                                             </select>
-                                            
+
                                             {/* Debug display */}
                                             <div className="text-sm text-gray-600 mt-1">
                                                 Current hospitalId: {formData.hospitalId || 'None'}
                                             </div>
                                             {formData.hospitalId && (
                                                 <div className="text-sm text-green-600 mt-1">
-                                                    Selected: {hospitals.find(h => h.id === formData.hospitalId)?.name || formData.hospitalId}
+                                                    Selected: {hospitals.find(h => (h.id || h.hospitalId || h.HospitalId) === formData.hospitalId)?.name || formData.hospitalId}
                                                 </div>
                                             )}
-                                            
+
                                             {/* Debug button */}
                                             <Button
                                                 type="button"
