@@ -225,6 +225,9 @@ const RoleSpecificUserCreation: React.FC = () => {
                 getGovernorates(user.token),
             ]);
 
+            console.log('Loaded hospitals:', hospitalsData);
+            console.log('Loaded governorates:', governoratesData);
+            
             setHospitals(hospitalsData);
             setGovernorates(governoratesData);
         } catch (err) {
@@ -318,7 +321,12 @@ const RoleSpecificUserCreation: React.FC = () => {
     };
 
     const handleHospitalSelect = (hospitalId: string) => {
-        setFormData(prev => ({ ...prev, hospitalId }));
+        console.log('Hospital selected:', hospitalId);
+        setFormData(prev => {
+            const updated = { ...prev, hospitalId };
+            console.log('Updated form data:', updated);
+            return updated;
+        });
 
         // Clear errors when user makes selection
         if (errors.length > 0) {
@@ -334,8 +342,14 @@ const RoleSpecificUserCreation: React.FC = () => {
         const requiredFields = config.fields;
 
 
+        // Debug form data
+        console.log('Form data before validation:', formData);
+        console.log('Required fields:', requiredFields);
+        console.log('Hospital ID value:', formData.hospitalId);
+
         // Validate form
         const validationErrors = validateForm(formData, requiredFields);
+        console.log('Validation errors:', validationErrors);
         if (validationErrors.length > 0) {
             setErrors(validationErrors);
             return;
@@ -733,8 +747,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                                         <div className="space-y-2">
                                             <Label>{t('hospital')} *</Label>
                                             <Select
-                                                value={formData.hospitalId || undefined}
-                                                onValueChange={(value) => handleHospitalSelect(value)}
+                                                value={formData.hospitalId || ""}
+                                                onValueChange={(value) => {
+                                                    console.log('Select onValueChange called with:', value);
+                                                    handleHospitalSelect(value);
+                                                }}
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder={t('selectHospital')} />
@@ -753,6 +770,13 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                     )}
                                                 </SelectContent>
                                             </Select>
+                                            
+                                            {/* Debug display */}
+                                            {formData.hospitalId && (
+                                                <div className="text-sm text-green-600 mt-1">
+                                                    Selected: {hospitals.find(h => h.id === formData.hospitalId)?.name || formData.hospitalId}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
