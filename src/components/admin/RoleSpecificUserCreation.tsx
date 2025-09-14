@@ -855,7 +855,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                     </option>
                                                 ))}
                                             </select>
-                                            
+
                                             {/* Debug display */}
                                             <div className="text-sm text-gray-600 mt-1">
                                                 Current department: {formData.department || 'None'}
