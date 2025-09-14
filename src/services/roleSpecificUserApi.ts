@@ -333,7 +333,12 @@ export const validateForm = (
 			(typeof formData[field] === 'string' &&
 				formData[field].trim() === '')
 		) {
-			errors.push(`${field} is required`);
+			// Special handling for hospitalId to provide better error message
+			if (field === 'hospitalId') {
+				errors.push('Please select a hospital');
+			} else {
+				errors.push(`${field} is required`);
+			}
 		}
 	});
 
