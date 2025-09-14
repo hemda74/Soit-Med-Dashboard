@@ -94,7 +94,7 @@ export function Header() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="flex items-center gap-2"
+                                        className="flex items-center hover:text-white hover:bg-blue-800 gap-2"
                                     >
                                         <User className="h-4 w-4" />
                                         <span className="text-xs">{user.fullName}</span>
