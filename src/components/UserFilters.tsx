@@ -126,19 +126,30 @@ export default function UserFilters({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Role Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="role" className="flex items-center gap-2">
-                                <Users className="h-4 w-4" />
-                                {t('role')}
-                            </Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="role" className="flex items-center gap-2">
+                                    <Users className="h-4 w-4" />
+                                    {t('role')}
+                                </Label>
+                                {filters.role && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleFilterChange('role', undefined)}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                )}
+                            </div>
                             <Select
-                                value={filters.role || ''}
+                                value={filters.role || undefined}
                                 onValueChange={(value) => handleFilterChange('role', value || undefined)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder={t('selectRole')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">{t('allRoles')}</SelectItem>
                                     {ROLE_OPTIONS.map((role) => (
                                         <SelectItem key={role} value={role}>
                                             {role}
@@ -150,19 +161,30 @@ export default function UserFilters({
 
                         {/* Department Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="department" className="flex items-center gap-2">
-                                <Building className="h-4 w-4" />
-                                {t('department')}
-                            </Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="department" className="flex items-center gap-2">
+                                    <Building className="h-4 w-4" />
+                                    {t('department')}
+                                </Label>
+                                {filters.departmentId && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleFilterChange('departmentId', undefined)}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                )}
+                            </div>
                             <Select
-                                value={filters.departmentId?.toString() || ''}
+                                value={filters.departmentId?.toString() || undefined}
                                 onValueChange={(value) => handleFilterChange('departmentId', value ? parseInt(value) : undefined)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder={t('selectDepartment')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">{t('allDepartments')}</SelectItem>
                                     {DEPARTMENT_OPTIONS.map((dept) => (
                                         <SelectItem key={dept.value} value={dept.value.toString()}>
                                             {dept.label}
@@ -174,25 +196,36 @@ export default function UserFilters({
 
                         {/* Status Filter */}
                         <div className="space-y-2">
-                            <Label htmlFor="status" className="flex items-center gap-2">
-                                {filters.isActive === true ? (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
-                                ) : filters.isActive === false ? (
-                                    <XCircle className="h-4 w-4 text-red-600" />
-                                ) : (
-                                    <Users className="h-4 w-4" />
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="status" className="flex items-center gap-2">
+                                    {filters.isActive === true ? (
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : filters.isActive === false ? (
+                                        <XCircle className="h-4 w-4 text-red-600" />
+                                    ) : (
+                                        <Users className="h-4 w-4" />
+                                    )}
+                                    {t('status')}
+                                </Label>
+                                {filters.isActive !== undefined && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleFilterChange('isActive', undefined)}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
                                 )}
-                                {t('status')}
-                            </Label>
+                            </div>
                             <Select
-                                value={filters.isActive?.toString() || ''}
-                                onValueChange={(value) => handleFilterChange('isActive', value === '' ? undefined : value === 'true')}
+                                value={filters.isActive?.toString() || undefined}
+                                onValueChange={(value) => handleFilterChange('isActive', value === 'true' ? true : value === 'false' ? false : undefined)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder={t('selectStatus')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">{t('allStatuses')}</SelectItem>
                                     <SelectItem value="true">{t('active')}</SelectItem>
                                     <SelectItem value="false">{t('inactive')}</SelectItem>
                                 </SelectContent>
@@ -203,10 +236,22 @@ export default function UserFilters({
                     {/* Date Range Filters */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="createdFrom" className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                {t('createdFrom')}
-                            </Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="createdFrom" className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    {t('createdFrom')}
+                                </Label>
+                                {filters.createdFrom && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleFilterChange('createdFrom', undefined)}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                )}
+                            </div>
                             <Input
                                 id="createdFrom"
                                 type="date"
@@ -215,10 +260,22 @@ export default function UserFilters({
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="createdTo" className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                {t('createdTo')}
-                            </Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="createdTo" className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    {t('createdTo')}
+                                </Label>
+                                {filters.createdTo && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleFilterChange('createdTo', undefined)}
+                                        className="h-6 px-2 text-xs"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                )}
+                            </div>
                             <Input
                                 id="createdTo"
                                 type="date"
