@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     createDoctor,
     createEngineer,
@@ -141,11 +142,9 @@ const RoleSpecificUserCreation: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showGovernorateDropdown, setShowGovernorateDropdown] = useState(false);
-    const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [createdPassword, setCreatedPassword] = useState('');
     const governorateDropdownRef = useRef<HTMLDivElement>(null);
-    const hospitalDropdownRef = useRef<HTMLDivElement>(null);
 
     // Check permissions
     const { hasRole } = useAuthStore();
@@ -206,19 +205,16 @@ const RoleSpecificUserCreation: React.FC = () => {
             if (governorateDropdownRef.current && !governorateDropdownRef.current.contains(event.target as Node)) {
                 setShowGovernorateDropdown(false);
             }
-            if (hospitalDropdownRef.current && !hospitalDropdownRef.current.contains(event.target as Node)) {
-                setShowHospitalDropdown(false);
-            }
         };
 
-        if (showGovernorateDropdown || showHospitalDropdown) {
+        if (showGovernorateDropdown) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showGovernorateDropdown, showHospitalDropdown]);
+    }, [showGovernorateDropdown]);
 
     const loadReferenceData = async () => {
         if (!user?.token) return;
@@ -323,7 +319,6 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     const handleHospitalSelect = (hospitalId: string) => {
         setFormData(prev => ({ ...prev, hospitalId }));
-        setShowHospitalDropdown(false);
 
         // Clear errors when user makes selection
         if (errors.length > 0) {
@@ -373,12 +368,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
+                // Auto-assign department ID for all roles (as number)
+                departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
-                ...(config.requiresDepartment && formData.departmentId && { departmentId: formData.departmentId }),
                 ...(selectedRole === 'doctor' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'engineer' && formData.specialty && { specialty: formData.specialty }),
-                // Auto-assign department ID for all roles
-                ...(selectedRole && { departmentId: getDepartmentIdForRole(selectedRole) }),
                 ...(selectedRole === 'engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
             };
 
@@ -738,60 +732,27 @@ const RoleSpecificUserCreation: React.FC = () => {
                                     {ROLE_CONFIG[selectedRole].requiresHospital && (
                                         <div className="space-y-2">
                                             <Label>{t('hospital')} *</Label>
-
-                                            {/* Custom hospital dropdown */}
-                                            <div className="relative" ref={hospitalDropdownRef}>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() => setShowHospitalDropdown(!showHospitalDropdown)}
-                                                    className="w-full justify-between text-left"
-                                                >
-                                                    <span className={!formData.hospitalId ? "text-muted-foreground" : ""}>
-                                                        {!formData.hospitalId
-                                                            ? t('selectHospital')
-                                                            : hospitals.find(h => h.id === formData.hospitalId)?.name || t('selectHospital')
-                                                        }
-                                                    </span>
-                                                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showHospitalDropdown ? 'rotate-180' : ''}`} />
-                                                </Button>
-
-                                                {showHospitalDropdown && (
-                                                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                                        {hospitals && hospitals.length > 0 ? (
-                                                            hospitals.map((hospital) => (
-                                                                <div
-                                                                    key={hospital.id}
-                                                                    className={`flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors ${formData.hospitalId === hospital.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
-                                                                    onClick={() => handleHospitalSelect(hospital.id)}
-                                                                >
-                                                                    <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all ${formData.hospitalId === hospital.id
-                                                                        ? 'bg-blue-500 border-blue-500 text-white'
-                                                                        : 'border-gray-300 hover:border-blue-400'
-                                                                        }`}>
-                                                                        {formData.hospitalId === hospital.id && (
-                                                                            <CheckCircle className="w-3 h-3 text-white" />
-                                                                        )}
-                                                                    </div>
-                                                                    <label
-                                                                        className={`text-sm font-medium cursor-pointer flex-1 ${formData.hospitalId === hospital.id ? 'text-blue-700' : 'text-gray-700'
-                                                                            }`}
-                                                                    >
-                                                                        {hospital.name}
-                                                                    </label>
-                                                                    {formData.hospitalId === hospital.id && (
-                                                                        <span className="text-xs text-blue-600 font-medium">✓ Selected</span>
-                                                                    )}
-                                                                </div>
-                                                            ))
-                                                        ) : (
-                                                            <div className="p-3 text-sm text-gray-500 text-center">
-                                                                {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <Select
+                                                value={formData.hospitalId || undefined}
+                                                onValueChange={(value) => handleHospitalSelect(value)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder={t('selectHospital')} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {hospitals && hospitals.length > 0 ? (
+                                                        hospitals.map((hospital) => (
+                                                            <SelectItem key={hospital.id} value={hospital.id}>
+                                                                {hospital.name}
+                                                            </SelectItem>
+                                                        ))
+                                                    ) : (
+                                                        <SelectItem value="no-hospitals" disabled>
+                                                            {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
+                                                        </SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     )}
 

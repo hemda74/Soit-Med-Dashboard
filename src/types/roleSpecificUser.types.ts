@@ -10,6 +10,7 @@ export interface BaseUserRequest {
 
 // Role-specific request types
 export interface DoctorUserRequest extends BaseUserRequest {
+	departmentId: number;
 	specialty: string;
 	hospitalId: string;
 }
