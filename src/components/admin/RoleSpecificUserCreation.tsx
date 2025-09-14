@@ -746,32 +746,29 @@ const RoleSpecificUserCreation: React.FC = () => {
                                     {ROLE_CONFIG[selectedRole].requiresHospital && (
                                         <div className="space-y-2">
                                             <Label>{t('hospital')} *</Label>
-                                            <Select
-                                                value={formData.hospitalId ? formData.hospitalId : undefined}
-                                                onValueChange={(value) => {
-                                                    console.log('Select onValueChange called with:', value);
-                                                    if (value && value !== "no-hospitals") {
-                                                        handleHospitalSelect(value);
-                                                    }
+                                            
+                                            {/* Simple select dropdown */}
+                                            <select
+                                                value={formData.hospitalId || ""}
+                                                onChange={(e) => {
+                                                    console.log('Select onChange called with:', e.target.value);
+                                                    handleHospitalSelect(e.target.value);
                                                 }}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                             >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder={t('selectHospital')} />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {hospitals && hospitals.length > 0 ? (
-                                                        hospitals.map((hospital) => (
-                                                            <SelectItem key={hospital.id} value={hospital.id}>
-                                                                {hospital.name}
-                                                            </SelectItem>
-                                                        ))
-                                                    ) : (
-                                                        <SelectItem value="no-hospitals" disabled>
-                                                            {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
-                                                        </SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
+                                                <option value="">{t('selectHospital')}</option>
+                                                {hospitals && hospitals.length > 0 ? (
+                                                    hospitals.map((hospital) => (
+                                                        <option key={hospital.id} value={hospital.id}>
+                                                            {hospital.name}
+                                                        </option>
+                                                    ))
+                                                ) : (
+                                                    <option value="" disabled>
+                                                        {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
+                                                    </option>
+                                                )}
+                                            </select>
                                             
                                             {/* Debug display */}
                                             <div className="text-sm text-gray-600 mt-1">
