@@ -6,18 +6,18 @@ The Users page has been transformed into a modular system that allows users to v
 
 ## Features
 
-### 🎯 **Two View Modes**
+### **Two View Modes**
 
 - **All Users**: View all users across all departments
 - **Department Users**: View users filtered by specific department
 
-### 🔧 **Interactive Controls**
+### **Interactive Controls**
 
 - **All Users Button**: Switches to view all users
 - **Department Selector**: Dropdown to select specific departments
 - **Refresh Button**: Reloads current view data
 
-### 📊 **Smart Data Display**
+### **Smart Data Display**
 
 - Dynamic table that adapts to the selected view
 - Department names are properly displayed based on the API response
@@ -282,4 +282,3 @@ const switchToAllUsers = () => {
 ```
 
 This modular approach provides a much more organized and user-friendly way to manage users, with clear separation between different data views and intuitive controls for switching between them.
-

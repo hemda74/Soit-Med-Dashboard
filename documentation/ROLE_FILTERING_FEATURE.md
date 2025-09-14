@@ -6,21 +6,21 @@ The Users module now includes comprehensive role-based filtering functionality t
 
 ## Features
 
-### 🛡️ **Role-Based Filtering**
+### **Role-Based Filtering**
 
 - **Role Selection**: Dropdown to select specific roles
 - **API Integration**: Uses `GET /api/Role` and `GET /api/User/role/{role}` endpoints
 - **Loading States**: Integrated with global Logo Loader.gif system
 - **Error Handling**: Clear error messages for failed operations
 
-### 🎯 **Four View Modes**
+### **Four View Modes**
 
 - **All Users**: View all users across all departments and roles
 - **Department Users**: Filter by specific department
 - **Role Users**: Filter by specific role
 - **Search Results**: Search by username
 
-### 🔄 **Seamless Integration**
+### **Seamless Integration**
 
 - **Smart Navigation**: Easy switching between all view modes
 - **Consistent UI**: Maintains the same design language

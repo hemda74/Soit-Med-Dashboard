@@ -15,6 +15,7 @@ import DepartmentSelector from './DepartmentSelector';
 import RoleSelector from './RoleSelector';
 import UserSearchInput from './UserSearchInput';
 import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
+import { UserStatusToggle } from './UserStatusToggle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -38,6 +39,14 @@ type UserData = UserListResponse | DepartmentUser | UserSearchResponse;
 // Helper function to get department name by ID
 const getDepartmentName = (departmentId: number): string => {
     return DEPARTMENT_MAP[departmentId] || `Department ${departmentId}`;
+};
+
+// Helper function to extract username from email (remove @soitmed.com)
+const extractUsername = (email: string): string => {
+    if (email.includes('@soitmed.com')) {
+        return email.split('@soitmed.com')[0];
+    }
+    return email;
 };
 
 // User edit form validation schema
@@ -181,10 +190,10 @@ const UsersList: React.FC = () => {
         editForm.reset({
             firstName: userToEdit.firstName,
             lastName: userToEdit.lastName,
-            userName: userToEdit.userName,
+            userName: extractUsername(userToEdit.email),
             email: userToEdit.email,
             phoneNumber: 'phoneNumber' in userToEdit ? (userToEdit.phoneNumber || '') : '',
-            isActive: userToEdit.isActive,
+
         });
         setIsEditModalOpen(true);
     };
@@ -206,6 +215,51 @@ const UsersList: React.FC = () => {
     const handleClosePasswordModal = () => {
         setIsPasswordModalOpen(false);
         setSelectedUser(null);
+    };
+
+    // Handle user status change
+    const handleUserStatusChange = (userId: string, newStatus: boolean) => {
+        // Update the user status in the current view
+        if (viewMode === 'all') {
+            setUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.id === userId ? { ...user, isActive: newStatus } : user
+                )
+            );
+        } else if (viewMode === 'department' && departmentUsers) {
+            setDepartmentUsers(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    users: prev.users.map(user =>
+                        user.id === userId ? { ...user, isActive: newStatus } : user
+                    )
+                };
+            });
+        } else if (viewMode === 'role' && roleUsers) {
+            setRoleUsers(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    users: prev.users.map(user =>
+                        user.id === userId ? { ...user, isActive: newStatus } : user
+                    )
+                };
+            });
+        } else if (viewMode === 'search' && searchResult) {
+            setSearchResult(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    isActive: newStatus
+                };
+            });
+        }
+
+        // Update the selectedUser if it's the same user being edited
+        if (selectedUser && selectedUser.id === userId) {
+            setSelectedUser(prev => prev ? { ...prev, isActive: newStatus } : null);
+        }
     };
 
     // Handle form submission
@@ -307,6 +361,11 @@ const UsersList: React.FC = () => {
                     isSearching={false}
                     searchResult={searchResult}
                     error={error}
+                    onStatusChange={(newStatus) => {
+                        if (searchResult) {
+                            setSearchResult(prev => prev ? { ...prev, isActive: newStatus } : null);
+                        }
+                    }}
                 />
             </div>
 
@@ -558,7 +617,11 @@ const UsersList: React.FC = () => {
                                         <Label htmlFor="department">Department</Label>
                                         <Input
                                             id="department"
-                                            value={'departmentName' in selectedUser ? selectedUser.departmentName : selectedUser.departmentId}
+                                            value={
+                                                'departmentName' in selectedUser
+                                                    ? selectedUser.departmentName
+                                                    : getDepartmentName(selectedUser.departmentId)
+                                            }
                                             disabled
                                             className="bg-gray-50 dark:bg-gray-800"
                                         />
@@ -567,19 +630,45 @@ const UsersList: React.FC = () => {
                                         </p>
                                     </div>
                                 </div>
-
-                                {/* Active Status */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="isActive"
-                                            {...editForm.register("isActive")}
-                                            className="rounded border-gray-300"
-                                        />
-                                        <Label htmlFor="isActive">User is active</Label>
+                                {/* User Status Actions - Only for SuperAdmin */}
+                                {isSuperAdmin && (
+                                    <div className="border-t pt-4 mt-4">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                                    User Status Management
+                                                </h4>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                                                    Change the user's active status. This will affect their ability to access the system.
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium">Current Status:</span>
+                                                    <span
+                                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedUser.isActive
+                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                            : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                                            }`}
+                                                    >
+                                                        {selectedUser.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </div>
+                                                <UserStatusToggle
+                                                    userId={selectedUser.id}
+                                                    userName={selectedUser.fullName}
+                                                    email={selectedUser.email}
+                                                    isActive={selectedUser.isActive}
+                                                    onStatusChange={(newStatus) => {
+                                                        handleUserStatusChange(selectedUser.id, newStatus);
+                                                        // Update the form's isActive field to reflect the change
+                                                        editForm.setValue('isActive', newStatus);
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Form Actions */}
                                 <div className="flex gap-2 pt-4">

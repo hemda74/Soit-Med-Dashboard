@@ -3,13 +3,24 @@ import { Search, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { UserStatusToggle } from './UserStatusToggle';
+import { useAuthStore } from '@/stores/authStore';
 
 interface UserSearchInputProps {
     onSearch: (username: string) => void;
     onClear: () => void;
     isSearching: boolean;
-    searchResult: any | null;
+    searchResult: {
+        id: string;
+        fullName: string;
+        userName: string;
+        email: string;
+        departmentName: string;
+        roles: string[];
+        isActive: boolean;
+    } | null;
     error: string | null;
+    onStatusChange?: (newStatus: boolean) => void;
 }
 
 export function UserSearchInput({
@@ -18,8 +29,13 @@ export function UserSearchInput({
     isSearching,
     searchResult,
     error,
+    onStatusChange,
 }: UserSearchInputProps) {
     const [searchValue, setSearchValue] = useState('');
+    const { user } = useAuthStore();
+
+    // Check if current user is super admin
+    const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -120,6 +136,17 @@ export function UserSearchInput({
                                         </span>
                                     </p>
                                 </div>
+                                {isSuperAdmin && onStatusChange && (
+                                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                                        <UserStatusToggle
+                                            userId={searchResult.id}
+                                            userName={searchResult.fullName}
+                                            email={searchResult.email}
+                                            isActive={searchResult.isActive}
+                                            onStatusChange={onStatusChange}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </CardContent>

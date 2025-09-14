@@ -37,3 +37,21 @@ export interface UserListResponse {
 	lockoutEnabled: boolean;
 	accessFailedCount: number;
 }
+
+// User activation/deactivation types
+export interface UserStatusRequest {
+	userId: string;
+	action: 'activate' | 'deactivate';
+	reason: string;
+}
+
+export interface UserStatusResponse {
+	userId: string;
+	userName: string;
+	email: string;
+	isActive: boolean;
+	action: 'activate' | 'deactivate';
+	reason: string;
+	actionDate: string;
+	message: string;
+}

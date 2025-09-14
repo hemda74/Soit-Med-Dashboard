@@ -4,11 +4,11 @@ import { CheckCircle, AlertCircle, ArrowLeft, UserPlus, Eye, EyeOff, X, ChevronD
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     createDoctor,
     createEngineer,
@@ -26,6 +26,7 @@ import type {
     HospitalInfo,
     RoleSpecificUserResponse,
 } from '@/types/roleSpecificUser.types';
+import UserCreationSuccessModal from '../ui/user-creation-success-modal';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -36,66 +37,7 @@ interface GovernorateInfo {
     engineerCount: number;
 }
 
-// Role configuration
-const ROLE_CONFIG = {
-    doctor: {
-        name: 'Doctor',
-        description: 'Medical staff including doctors and technicians',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'hospitalId'],
-        requiresHospital: true,
-        requiresDepartment: false,
-        autoDepartmentId: 2,
-    },
-    engineer: {
-        name: 'Engineer',
-        description: 'Technical and engineering staff',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'governorateIds'],
-        requiresHospital: false,
-        requiresDepartment: false,
-        requiresGovernorates: true,
-        autoDepartmentId: 4,
-    },
-    technician: {
-        name: 'Technician',
-        description: 'Medical technicians',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId'],
-        requiresHospital: true,
-        requiresDepartment: false,
-        autoDepartmentId: 2,
-    },
-    admin: {
-        name: 'Admin',
-        description: 'Administrative and management roles',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
-        requiresHospital: false,
-        requiresDepartment: false,
-        autoDepartmentId: 1,
-    },
-    'finance-manager': {
-        name: 'Finance Manager',
-        description: 'Financial management and accounting',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
-        requiresHospital: false,
-        requiresDepartment: false,
-        autoDepartmentId: 5,
-    },
-    'legal-manager': {
-        name: 'Legal Manager',
-        description: 'Legal affairs and compliance',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
-        requiresHospital: false,
-        requiresDepartment: false,
-        autoDepartmentId: 6,
-    },
-    salesman: {
-        name: 'Salesman',
-        description: 'Sales team and customer relations',
-        fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
-        requiresHospital: false,
-        requiresDepartment: false,
-        autoDepartmentId: 3,
-    },
-};
+// Role configuration - will be created inside component to use translations
 
 interface FormData {
     email: string;
@@ -114,6 +56,69 @@ const RoleSpecificUserCreation: React.FC = () => {
     const { user } = useAuthStore();
     const { success, error: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
+    const { t, language } = useTranslation();
+
+    // Role configuration with translations
+    const ROLE_CONFIG = {
+        doctor: {
+            name: t('doctor'),
+            description: t('doctorDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'hospitalId'],
+            requiresHospital: true,
+            requiresDepartment: false,
+            autoDepartmentId: 2,
+        },
+        engineer: {
+            name: t('engineer'),
+            description: t('engineerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'governorateIds'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            requiresGovernorates: true,
+            autoDepartmentId: 4,
+        },
+        technician: {
+            name: t('technician'),
+            description: t('technicianDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId'],
+            requiresHospital: true,
+            requiresDepartment: false,
+            autoDepartmentId: 2,
+        },
+        admin: {
+            name: t('admin'),
+            description: t('adminDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 1,
+        },
+        'finance-manager': {
+            name: t('financeManager'),
+            description: t('financeManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 5,
+        },
+        'legal-manager': {
+            name: t('legalManager'),
+            description: t('legalManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 6,
+        },
+        salesman: {
+            name: t('salesman'),
+            description: t('salesmanDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 3,
+            role: 'Salesman'
+        },
+    };
 
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
     const [formData, setFormData] = useState<FormData>({
@@ -136,7 +141,11 @@ const RoleSpecificUserCreation: React.FC = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showGovernorateDropdown, setShowGovernorateDropdown] = useState(false);
+    const [showHospitalDropdown, setShowHospitalDropdown] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [createdPassword, setCreatedPassword] = useState('');
     const governorateDropdownRef = useRef<HTMLDivElement>(null);
+    const hospitalDropdownRef = useRef<HTMLDivElement>(null);
 
     // Check permissions
     const { hasRole } = useAuthStore();
@@ -147,23 +156,23 @@ const RoleSpecificUserCreation: React.FC = () => {
         const errors: string[] = [];
 
         if (password.length < 8) {
-            errors.push('Password must be at least 8 characters long');
+            errors.push(t('passwordMustBeAtLeast8'));
         }
 
         if (!/[A-Z]/.test(password)) {
-            errors.push('Password must contain at least one uppercase letter');
+            errors.push(t('passwordMustContainUppercase'));
         }
 
         if (!/[a-z]/.test(password)) {
-            errors.push('Password must contain at least one lowercase letter');
+            errors.push(t('passwordMustContainLowercase'));
         }
 
         if (!/\d/.test(password)) {
-            errors.push('Password must contain at least one number');
+            errors.push(t('passwordMustContainNumber'));
         }
 
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            errors.push('Password must contain at least one special character');
+            errors.push(t('passwordMustContainSpecial'));
         }
 
         return {
@@ -191,22 +200,25 @@ const RoleSpecificUserCreation: React.FC = () => {
         loadReferenceData();
     }, [canCreateUsers, user?.token]);
 
-    // Handle click outside to close governorate dropdown
+    // Handle click outside to close dropdowns
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (governorateDropdownRef.current && !governorateDropdownRef.current.contains(event.target as Node)) {
                 setShowGovernorateDropdown(false);
             }
+            if (hospitalDropdownRef.current && !hospitalDropdownRef.current.contains(event.target as Node)) {
+                setShowHospitalDropdown(false);
+            }
         };
 
-        if (showGovernorateDropdown) {
+        if (showGovernorateDropdown || showHospitalDropdown) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [showGovernorateDropdown]);
+    }, [showGovernorateDropdown, showHospitalDropdown]);
 
     const loadReferenceData = async () => {
         if (!user?.token) return;
@@ -246,13 +258,13 @@ const RoleSpecificUserCreation: React.FC = () => {
         setShowConfirmPassword(false);
         setCreatedUser(null);
         setShowGovernorateDropdown(false);
+        setShowHospitalDropdown(false);
+        setShowHospitalDropdown(false);
 
-        console.log('Selected role:', role);
     };
 
     const handleInputChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        console.log(`Form field updated - ${field}:`, value);
 
         // Clear errors when user starts typing
         if (errors.length > 0) {
@@ -290,12 +302,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                 newIds = [...currentIds, governorateId];
             }
 
-            console.log('Governorate selection updated:', {
-                governorateId,
-                isSelected,
-                previousIds: currentIds,
-                newIds
-            });
 
             return { ...prev, governorateIds: newIds };
         });
@@ -311,14 +317,18 @@ const RoleSpecificUserCreation: React.FC = () => {
             const currentIds = prev.governorateIds || [];
             const newIds = currentIds.filter(id => id !== governorateId);
 
-            console.log('Removing governorate:', {
-                governorateId,
-                previousIds: currentIds,
-                newIds
-            });
-
             return { ...prev, governorateIds: newIds };
         });
+    };
+
+    const handleHospitalSelect = (hospitalId: string) => {
+        setFormData(prev => ({ ...prev, hospitalId }));
+        setShowHospitalDropdown(false);
+
+        // Clear errors when user makes selection
+        if (errors.length > 0) {
+            setErrors([]);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -328,14 +338,10 @@ const RoleSpecificUserCreation: React.FC = () => {
         const config = ROLE_CONFIG[selectedRole];
         const requiredFields = config.fields;
 
-        console.log('=== FORM SUBMISSION ===');
-        console.log('Selected Role:', selectedRole);
-        console.log('Form Data Before Validation:', formData);
 
         // Validate form
         const validationErrors = validateForm(formData, requiredFields);
         if (validationErrors.length > 0) {
-            console.log('Validation Errors:', validationErrors);
             setErrors(validationErrors);
             return;
         }
@@ -343,15 +349,13 @@ const RoleSpecificUserCreation: React.FC = () => {
         // Custom password strength validation
         const passwordValidation = validatePasswordStrength(formData.password);
         if (!passwordValidation.isValid) {
-            console.log('Password Validation Errors:', passwordValidation.errors);
             setErrors(passwordValidation.errors);
             return;
         }
 
         // Additional password confirmation validation
         if (formData.password !== formData.confirmPassword) {
-            console.log('Password confirmation failed');
-            setErrors(['Passwords do not match']);
+            setErrors([t('passwordsDoNotMatchError')]);
             return;
         }
 
@@ -378,49 +382,53 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
             };
 
-            console.log('=== API CALL DATA ===');
-            console.log('User Data to be sent:', userData);
-            console.log('API Token:', user.token ? 'Present' : 'Missing');
 
             let response: RoleSpecificUserResponse;
 
             switch (selectedRole) {
                 case 'doctor':
-                    console.log('Calling createDoctor API...');
                     response = await createDoctor(userData as any, user.token);
                     break;
                 case 'engineer':
-                    console.log('Calling createEngineer API...');
                     response = await createEngineer(userData as any, user.token);
                     break;
                 case 'technician':
-                    console.log('Calling createTechnician API...');
                     response = await createTechnician(userData as any, user.token);
                     break;
                 case 'admin':
-                    console.log('Calling createAdmin API...');
                     response = await createAdmin(userData as any, user.token);
                     break;
                 case 'finance-manager':
-                    console.log('Calling createFinanceManager API...');
                     response = await createFinanceManager(userData as any, user.token);
                     break;
                 case 'legal-manager':
-                    console.log('Calling createLegalManager API...');
                     response = await createLegalManager(userData as any, user.token);
                     break;
                 case 'salesman':
-                    console.log('Calling createSalesman API...');
                     response = await createSalesman(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
             }
 
-            console.log('=== API RESPONSE ===');
-            console.log('API Response:', response);
+            // Transform the response to match expected structure
+            const transformedResponse = {
+                success: true,
+                message: 'User created successfully',
+                data: {
+                    userId: (response as any).userId,
+                    email: (response as any).email,
+                    firstName: (response as any).firstName,
+                    lastName: (response as any).lastName,
+                    role: (response as any).role || selectedRole,
+                    departmentId: (response as any).departmentId || getDepartmentIdForRole(selectedRole).toString(),
+                }
+            } as RoleSpecificUserResponse;
 
-            setCreatedUser(response);
+            setCreatedUser(transformedResponse);
+            setCreatedPassword(formData.password);
+            setShowSuccessModal(true);
+
             success('User Created Successfully', response.message);
         } catch (err: any) {
             console.error('=== API ERROR ===');
@@ -464,7 +472,11 @@ const RoleSpecificUserCreation: React.FC = () => {
         }
     };
 
-    const handleStartOver = () => {
+    const handleSuccessModalClose = () => {
+        setShowSuccessModal(false);
+        setCreatedUser(null);
+        setCreatedPassword('');
+        // Reset form and go back to role selection
         setSelectedRole(null);
         setFormData({
             email: '',
@@ -481,9 +493,9 @@ const RoleSpecificUserCreation: React.FC = () => {
         setPasswordErrors([]);
         setShowPassword(false);
         setShowConfirmPassword(false);
-        setCreatedUser(null);
         setShowGovernorateDropdown(false);
     };
+
 
     if (!canCreateUsers) {
         return (
@@ -492,13 +504,13 @@ const RoleSpecificUserCreation: React.FC = () => {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-destructive">
                             <AlertCircle className="h-5 w-5" />
-                            Access Denied
+                            {t('accessDeniedTitle')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground">Admin access required</p>
+                        <p className="text-muted-foreground">{t('adminAccessRequiredMessage')}</p>
                         <Button onClick={() => navigate('/')} className="w-full mt-4">
-                            Go Back
+                            {t('goBack')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -506,101 +518,76 @@ const RoleSpecificUserCreation: React.FC = () => {
         );
     };
 
-    if (createdUser) {
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="max-w-2xl mx-auto">
-                    <div className="flex items-center gap-4 mb-6">
-                        <Button variant="ghost" size="sm" onClick={handleBack}>
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back
-                        </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">User Created Successfully</h1>
-                        </div>
-                    </div>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <CheckCircle className="h-5 w-5" />
-                                User Created Successfully
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <p><strong>User ID:</strong> {createdUser.data.userId}</p>
-                                <p><strong>Name:</strong> {createdUser.data.firstName} {createdUser.data.lastName}</p>
-                                <p><strong>Email:</strong> {createdUser.data.email}</p>
-                                <p><strong>Role:</strong> {createdUser.data.role}</p>
-                                {'specialty' in createdUser.data && (
-                                    <p><strong>Specialty:</strong> {createdUser.data.specialty}</p>
-                                )}
-                                {'hospitalId' in createdUser.data && (
-                                    <p><strong>Hospital ID:</strong> {createdUser.data.hospitalId}</p>
-                                )}
-                                {'departmentId' in createdUser.data && (
-                                    <p><strong>Department ID:</strong> {createdUser.data.departmentId}</p>
-                                )}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button onClick={handleStartOver} variant="outline" className="flex-1">
-                                    Create Another User
-                                </Button>
-                                <Button onClick={() => navigate('/admin/users')} className="flex-1">
-                                    View All Users
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="max-w-4xl mx-auto">
-                <div className="flex items-center gap-4 mb-6">
-                    <Button variant="ghost" size="sm" onClick={handleBack}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">Create New User</h1>
-                        <p className="text-muted-foreground">
-                            {selectedRole ? `Create a new ${ROLE_CONFIG[selectedRole].name}` : 'Select a role to create a new user'}
-                        </p>
+                {/* Colorful Header */}
+                <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 text-white mb-8 shadow-lg">
+                    <div className="flex items-center gap-4">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleBack}
+                            className="text-white hover:bg-white/20"
+                        >
+                            <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            {t('back')}
+                        </Button>
+                        <div className="flex-1">
+                            <h1 className="text-4xl font-bold mb-2">{t('createNewUserTitle')}</h1>
+                            <p className="text-primary-foreground/80 text-lg">
+                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                            </p>
+                        </div>
+                        <div className="hidden md:block">
+                            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                                <UserPlus className="w-8 h-8 text-white" />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {!selectedRole ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(ROLE_CONFIG).map(([roleKey, config]) => (
-                            <Card
-                                key={roleKey}
-                                className="cursor-pointer hover:shadow-md transition-shadow"
-                                onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
-                            >
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <UserPlus className="h-5 w-5" />
-                                        {config.name}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-muted-foreground text-sm">{config.description}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Object.entries(ROLE_CONFIG).map(([roleKey, config], index) => {
+                            const colors = [
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
+                            ];
+                            const colorScheme = colors[index % colors.length];
+
+                            return (
+                                <Card
+                                    key={roleKey}
+                                    className={`cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-110 ${colorScheme.bg} ${colorScheme.border} group shadow-lg`}
+                                    onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
+                                >
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-4 text-foreground group-hover:scale-105 transition-transform font-bold text-lg">
+                                            <div className={`w-12 h-12 ${colorScheme.icon} rounded-xl flex items-center justify-center shadow-lg`}>
+                                                <UserPlus className="h-6 w-6 text-white" />
+                                            </div>
+                                            {config.name}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground font-medium opacity-90">{config.description}</p>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </div>
                 ) : (
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <UserPlus className="h-5 w-5" />
-                                Create {ROLE_CONFIG[selectedRole].name}
+                                {t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name)}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -610,7 +597,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                         <div className="flex">
                                             <AlertCircle className="h-5 w-5 text-red-400" />
                                             <div className="ml-3">
-                                                <h3 className="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                                                <h3 className="text-sm font-medium text-red-800">{t('pleaseFixFollowingErrors')}</h3>
                                                 <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
                                                     {errors.map((error, index) => (
                                                         <li key={index}>{error}</li>
@@ -623,48 +610,48 @@ const RoleSpecificUserCreation: React.FC = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="firstName">First Name *</Label>
+                                        <Label htmlFor="firstName">{t('firstName')} *</Label>
                                         <Input
                                             id="firstName"
                                             value={formData.firstName}
                                             onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                            placeholder="Enter first name"
+                                            placeholder={t('enterFirstName')}
                                             required
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="lastName">Last Name *</Label>
+                                        <Label htmlFor="lastName">{t('lastName')} *</Label>
                                         <Input
                                             id="lastName"
                                             value={formData.lastName}
                                             onChange={(e) => handleInputChange('lastName', e.target.value)}
-                                            placeholder="Enter last name"
+                                            placeholder={t('enterLastName')}
                                             required
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="email">Email *</Label>
+                                        <Label htmlFor="email">{t('email')} *</Label>
                                         <Input
                                             id="email"
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => handleInputChange('email', e.target.value)}
-                                            placeholder="Enter email address"
+                                            placeholder={t('enterEmailAddress')}
                                             required
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="password">Password *</Label>
+                                        <Label htmlFor="password">{t('password')} *</Label>
                                         <div className="relative">
                                             <Input
                                                 id="password"
                                                 type={showPassword ? "text" : "password"}
                                                 value={formData.password}
                                                 onChange={(e) => handleInputChange('password', e.target.value)}
-                                                placeholder="Enter password"
+                                                placeholder={t('enterPasswordField')}
                                                 required
                                                 className={`pr-10 ${passwordErrors.length > 0 ? 'border-red-500' : ''}`}
                                             />
@@ -683,7 +670,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                             </Button>
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            Must be at least 8 characters with uppercase, lowercase, number, and special character
+                                            {t('passwordRequirements')}
                                         </p>
                                         {passwordErrors.length > 0 && (
                                             <div className="text-xs text-red-600">
@@ -697,14 +684,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                                        <Label htmlFor="confirmPassword">{t('confirmPassword')} *</Label>
                                         <div className="relative">
                                             <Input
                                                 id="confirmPassword"
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 value={formData.confirmPassword}
                                                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                                placeholder="Confirm password"
+                                                placeholder={t('confirmPasswordPlaceholder')}
                                                 required
                                                 className={`pr-10 ${formData.confirmPassword && formData.password !== formData.confirmPassword
                                                     ? 'border-red-500'
@@ -728,21 +715,21 @@ const RoleSpecificUserCreation: React.FC = () => {
                                             </Button>
                                         </div>
                                         {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                                            <p className="text-xs text-red-600">Passwords do not match</p>
+                                            <p className="text-xs text-red-600">{t('passwordsDoNotMatch')}</p>
                                         )}
                                         {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                                            <p className="text-xs text-green-600">Passwords match</p>
+                                            <p className="text-xs text-green-600">{t('passwordsMatch')}</p>
                                         )}
                                     </div>
 
                                     {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
                                         <div className="space-y-2">
-                                            <Label htmlFor="specialty">Specialty *</Label>
+                                            <Label htmlFor="specialty">{t('specialty')} *</Label>
                                             <Input
                                                 id="specialty"
                                                 value={formData.specialty}
                                                 onChange={(e) => handleInputChange('specialty', e.target.value)}
-                                                placeholder={selectedRole === 'doctor' ? "Enter medical specialty" : "Enter engineering specialty"}
+                                                placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
                                                 required
                                             />
                                         </div>
@@ -750,45 +737,67 @@ const RoleSpecificUserCreation: React.FC = () => {
 
                                     {ROLE_CONFIG[selectedRole].requiresHospital && (
                                         <div className="space-y-2">
-                                            <Label htmlFor="hospitalId">Hospital *</Label>
-                                            <Select
-                                                value={formData.hospitalId}
-                                                onValueChange={(value) => handleInputChange('hospitalId', value)}
-                                                required
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a hospital" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {hospitals.map((hospital) => (
-                                                        <SelectItem key={hospital.id} value={hospital.id}>
-                                                            {hospital.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Label>{t('hospital')} *</Label>
+
+                                            {/* Custom hospital dropdown */}
+                                            <div className="relative" ref={hospitalDropdownRef}>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => setShowHospitalDropdown(!showHospitalDropdown)}
+                                                    className="w-full justify-between text-left"
+                                                >
+                                                    <span className={!formData.hospitalId ? "text-muted-foreground" : ""}>
+                                                        {!formData.hospitalId
+                                                            ? t('selectHospital')
+                                                            : hospitals.find(h => h.id === formData.hospitalId)?.name || t('selectHospital')
+                                                        }
+                                                    </span>
+                                                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showHospitalDropdown ? 'rotate-180' : ''}`} />
+                                                </Button>
+
+                                                {showHospitalDropdown && (
+                                                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                                        {hospitals && hospitals.length > 0 ? (
+                                                            hospitals.map((hospital) => (
+                                                                <div
+                                                                    key={hospital.id}
+                                                                    className={`flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors ${formData.hospitalId === hospital.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
+                                                                    onClick={() => handleHospitalSelect(hospital.id)}
+                                                                >
+                                                                    <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all ${formData.hospitalId === hospital.id
+                                                                        ? 'bg-blue-500 border-blue-500 text-white'
+                                                                        : 'border-gray-300 hover:border-blue-400'
+                                                                        }`}>
+                                                                        {formData.hospitalId === hospital.id && (
+                                                                            <CheckCircle className="w-3 h-3 text-white" />
+                                                                        )}
+                                                                    </div>
+                                                                    <label
+                                                                        className={`text-sm font-medium cursor-pointer flex-1 ${formData.hospitalId === hospital.id ? 'text-blue-700' : 'text-gray-700'
+                                                                            }`}
+                                                                    >
+                                                                        {hospital.name}
+                                                                    </label>
+                                                                    {formData.hospitalId === hospital.id && (
+                                                                        <span className="text-xs text-blue-600 font-medium">✓ Selected</span>
+                                                                    )}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-3 text-sm text-gray-500 text-center">
+                                                                {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
 
-                                    {/* Department is auto-assigned for all roles */}
-                                    <div className="space-y-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <Label className="text-sm font-medium text-blue-800">Department Assignment</Label>
-                                        <p className="text-xs text-blue-600">
-                                            Department will be automatically assigned based on role:
-                                            <span className="font-medium ml-1">
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 1 && 'Admin (ID: 1)'}
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 2 && 'Medical (ID: 2)'}
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 3 && 'Sales (ID: 3)'}
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 4 && 'Engineering (ID: 4)'}
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 5 && 'Finance (ID: 5)'}
-                                                {ROLE_CONFIG[selectedRole]?.autoDepartmentId === 6 && 'Legal (ID: 6)'}
-                                            </span>
-                                        </p>
-                                    </div>
-
                                     {selectedRole === 'engineer' && (
                                         <div className="space-y-2 md:col-span-2">
-                                            <Label>Governorates * (Select multiple)</Label>
+                                            <Label>{t('governorates')} * (Select multiple)</Label>
 
                                             {/* Multi-select dropdown with better visual feedback */}
                                             <div className="relative" ref={governorateDropdownRef}>
@@ -800,8 +809,8 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 >
                                                     <span className={formData.governorateIds?.length === 0 ? "text-muted-foreground" : ""}>
                                                         {formData.governorateIds?.length === 0
-                                                            ? "Select governorates"
-                                                            : `${formData.governorateIds?.length} governorate(s) selected`
+                                                            ? t('selectGovernorates')
+                                                            : t('governoratesSelected').replace('{count}', formData.governorateIds?.length.toString() || '0')
                                                         }
                                                     </span>
                                                     <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showGovernorateDropdown ? 'rotate-180' : ''}`} />
@@ -853,7 +862,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                                     <div className="flex items-center justify-between">
                                                         <p className="text-sm font-medium text-blue-800">
-                                                            Selected Governorates ({formData.governorateIds.length})
+                                                            {t('selectedGovernorates').replace('{count}', formData.governorateIds.length.toString())}
                                                         </p>
                                                         <Button
                                                             type="button"
@@ -862,7 +871,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                             onClick={() => setFormData(prev => ({ ...prev, governorateIds: [] }))}
                                                             className="text-blue-600 hover:text-blue-800 text-xs"
                                                         >
-                                                            Clear All
+                                                            {t('clearAll')}
                                                         </Button>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
@@ -889,22 +898,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                     </div>
                                                 </div>
                                             )}
-
-                                            {/* Debug info */}
-                                            <div className="p-2 bg-gray-100 rounded text-xs">
-                                                <p>Debug: Selected IDs: {JSON.stringify(formData.governorateIds || [])}</p>
-                                                <p>Total governorates: {governorates.length}</p>
-                                            </div>
-
-                                            {/* Show requirement message if no governorates selected */}
-                                            {(!formData.governorateIds || formData.governorateIds.length === 0) && (
-                                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                                    <p className="text-sm text-amber-700 flex items-center gap-2">
-                                                        <AlertCircle className="h-4 w-4" />
-                                                        Please select at least one governorate for the engineer.
-                                                    </p>
-                                                </div>
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -916,14 +909,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                                         onClick={handleBack}
                                         disabled={isLoading}
                                     >
-                                        Back
+                                        {t('back')}
                                     </Button>
                                     <Button
                                         type="submit"
                                         disabled={isLoading}
                                         className="flex-1"
                                     >
-                                        {isLoading ? 'Creating User...' : `Create ${ROLE_CONFIG[selectedRole].name}`}
+                                        {isLoading ? t('creatingUserLoading') : t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name)}
                                     </Button>
                                 </div>
                             </form>
@@ -931,6 +924,22 @@ const RoleSpecificUserCreation: React.FC = () => {
                     </Card>
                 )}
             </div>
+
+            {/* Success Modal */}
+            {createdUser && createdUser.data && showSuccessModal && (
+                <UserCreationSuccessModal
+                    isOpen={showSuccessModal}
+                    onClose={handleSuccessModalClose}
+                    userData={{
+                        email: createdUser.data.email,
+                        firstName: createdUser.data.firstName,
+                        lastName: createdUser.data.lastName,
+                        role: createdUser.data.role,
+                        userId: createdUser.data.userId,
+                    }}
+                    password={createdPassword}
+                />
+            )}
         </div>
     );
 };
