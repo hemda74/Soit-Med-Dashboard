@@ -54,7 +54,7 @@ interface FormData {
 const RoleSpecificUserCreation: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { success, error: showError } = useNotificationStore();
+    const { error: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
 
@@ -427,7 +427,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             setCreatedPassword(formData.password);
             setShowSuccessModal(true);
 
-            success('User Created Successfully', response.message);
+            // success('User Created Successfully', response.message);
         } catch (err: any) {
             console.error('=== API ERROR ===');
             console.error('Error creating user:', err);
@@ -439,7 +439,7 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             // Parse API error response to extract specific error messages
             let errorMessages: string[] = [];
-            let errorTitle = 'Error';
+
 
             try {
                 // Try to parse the error response
@@ -448,8 +448,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                 if (errorResponse && typeof errorResponse === 'object') {
                     // Check if it's the API error format we expect
                     if (errorResponse.message && errorResponse.errors) {
-                        errorTitle = errorResponse.message;
-
                         // Extract individual error messages from the errors object
                         if (typeof errorResponse.errors === 'object') {
                             Object.entries(errorResponse.errors).forEach(([field, message]) => {
@@ -471,19 +469,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                     }
                 }
             } catch (parseError) {
-                console.error('Error parsing API response:', parseError);
-            }
 
-            // Fallback to generic error if no specific errors found
+            }
             if (errorMessages.length === 0) {
                 errorMessages.push(err.message || 'Failed to create user');
             }
 
             setErrors(errorMessages);
 
-            // Show the first specific error message in toast
-            const toastMessage = errorMessages[0];
-            showError(errorTitle, toastMessage);
         } finally {
             setIsLoading(false);
         }
@@ -551,7 +544,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground">{t('adminAccessRequiredMessage')}</p>
-                        <Button onClick={() => navigate('/')} className="w-full mt-4">
+                        <Button onClick={() => navigate('/')} className="w-full mt-4 hover:bg-blue-800 hover:text-white transition-colors duration-200">
                             {t('goBack')}
                         </Button>
                     </CardContent>
@@ -570,7 +563,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={handleBack}
-                            className="text-white hover:bg-white/20"
+                            className="text-white hover:bg-blue-800 hover:text-white transition-colors duration-200"
                         >
                             <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                             {t('back')}
@@ -701,7 +694,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
                                                 onClick={togglePasswordVisibility}
                                             >
                                                 {showPassword ? (
@@ -746,7 +739,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
                                                 onClick={toggleConfirmPasswordVisibility}
                                             >
                                                 {showConfirmPassword ? (
@@ -834,7 +827,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                     type="button"
                                                     variant="outline"
                                                     onClick={() => setShowGovernorateDropdown(!showGovernorateDropdown)}
-                                                    className="w-full justify-between text-left"
+                                                    className="w-full justify-between text-left hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
                                                 >
                                                     <span className={formData.governorateIds?.length === 0 ? "text-muted-foreground" : ""}>
                                                         {formData.governorateIds?.length === 0
@@ -898,7 +891,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => setFormData(prev => ({ ...prev, governorateIds: [] }))}
-                                                            className="text-blue-600 hover:text-blue-800 text-xs"
+                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-800 hover:text-white text-xs transition-colors duration-200"
                                                         >
                                                             {t('clearAll')}
                                                         </Button>
@@ -937,13 +930,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                                         variant="outline"
                                         onClick={handleBack}
                                         disabled={isLoading}
+                                        className="hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
                                     >
                                         {t('back')}
                                     </Button>
                                     <Button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="flex-1"
+                                        className="flex-1 hover:bg-blue-800 hover:text-white transition-colors duration-200"
                                     >
                                         {isLoading ? t('creatingUserLoading') : t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name)}
                                     </Button>
