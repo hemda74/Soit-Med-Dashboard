@@ -942,7 +942,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => setFormData(prev => ({ ...prev, governorateIds: [] }))}
-                                                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-800 hover:text-white text-xs transition-colors duration-200"
+                                                            className="text-blue-600  hover:bg-blue-800 hover:text-white text-xs transition-colors duration-200"
                                                         >
                                                             {t('clearAll')}
                                                         </Button>
