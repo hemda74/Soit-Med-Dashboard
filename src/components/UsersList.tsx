@@ -114,14 +114,29 @@ const UsersList: React.FC = () => {
         try {
             setError(null);
             const usersData = await fetchUsers(user.token, setLoading);
-            setUsers(usersData);
+            console.log('Users data received:', usersData);
+            console.log('Is array:', Array.isArray(usersData));
+            console.log('Type:', typeof usersData);
+            console.log('Length:', usersData?.length);
+
+            // Ensure we always set an array
+            if (Array.isArray(usersData)) {
+                setUsers(usersData);
+                console.log('Successfully set users array with', usersData.length, 'items');
+            } else {
+                console.warn('Users data is not an array, setting empty array. Data:', usersData);
+                setUsers([]);
+            }
+
             setViewMode('all');
             setDepartmentUsers(null);
             setRoleUsers(null);
             setSearchResult(null);
             setFilteredUsers(null);
         } catch (err) {
+            console.error('Error loading users:', err);
             setError(err instanceof Error ? err.message : 'Failed to load users');
+            setUsers([]); // Ensure users is always an array even on error
         }
     };
 
@@ -382,17 +397,43 @@ const UsersList: React.FC = () => {
 
 
     // Get current users to display
-    const currentUsers = viewMode === 'all'
-        ? users
-        : viewMode === 'department'
-            ? departmentUsers?.users || []
-            : viewMode === 'role'
-                ? roleUsers?.users || []
-                : viewMode === 'filtered'
-                    ? filteredUsers?.users || []
-                    : searchResult
-                        ? [searchResult]
-                        : [];
+    const getCurrentUsers = () => {
+        console.log('Getting current users for viewMode:', viewMode);
+        console.log('Users:', users, 'Is array:', Array.isArray(users));
+        console.log('Department users:', departmentUsers?.users, 'Is array:', Array.isArray(departmentUsers?.users));
+        console.log('Role users:', roleUsers?.users, 'Is array:', Array.isArray(roleUsers?.users));
+        console.log('Filtered users:', filteredUsers?.users, 'Is array:', Array.isArray(filteredUsers?.users));
+        console.log('Search result:', searchResult);
+
+        switch (viewMode) {
+            case 'all':
+                const allUsers = Array.isArray(users) ? users : [];
+                console.log('Returning all users:', allUsers);
+                return allUsers;
+            case 'department':
+                const deptUsers = Array.isArray(departmentUsers?.users) ? departmentUsers.users : [];
+                console.log('Returning department users:', deptUsers);
+                return deptUsers;
+            case 'role':
+                const roleUsersArray = Array.isArray(roleUsers?.users) ? roleUsers.users : [];
+                console.log('Returning role users:', roleUsersArray);
+                return roleUsersArray;
+            case 'filtered':
+                const filteredUsersArray = Array.isArray(filteredUsers?.users) ? filteredUsers.users : [];
+                console.log('Returning filtered users:', filteredUsersArray);
+                return filteredUsersArray;
+            case 'search':
+                const searchUsers = searchResult ? [searchResult] : [];
+                console.log('Returning search users:', searchUsers);
+                return searchUsers;
+            default:
+                console.log('Returning empty array for unknown viewMode');
+                return [];
+        }
+    };
+
+    const currentUsers = getCurrentUsers();
+    console.log('Final currentUsers:', currentUsers, 'Is array:', Array.isArray(currentUsers));
 
     const currentDescription = viewMode === 'all'
         ? 'View all users across all departments'
