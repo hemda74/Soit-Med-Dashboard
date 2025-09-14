@@ -37,6 +37,20 @@ interface GovernorateInfo {
     engineerCount: number;
 }
 
+// Medical department options for technicians
+const MEDICAL_DEPARTMENTS = [
+    'Radiology',
+    'Laboratory',
+    'Biomedical Engineering',
+    'Cardiology',
+    'Respiratory Therapy',
+    'Emergency Department',
+    'Operating Room',
+    'ICU/Critical Care',
+    'Blood Bank',
+    'Equipment Maintenance'
+];
+
 // Role configuration - will be created inside component to use translations
 
 interface FormData {
@@ -48,6 +62,7 @@ interface FormData {
     specialty?: string;
     hospitalId?: string;
     departmentId?: string;
+    department?: string;
     governorateIds?: number[];
 }
 
@@ -80,9 +95,10 @@ const RoleSpecificUserCreation: React.FC = () => {
         technician: {
             name: t('technician'),
             description: t('technicianDescription'),
-            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId'],
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId', 'department'],
             requiresHospital: true,
             requiresDepartment: false,
+            requiresMedicalDepartment: true,
             autoDepartmentId: 2,
         },
         admin: {
@@ -130,6 +146,7 @@ const RoleSpecificUserCreation: React.FC = () => {
         specialty: '',
         hospitalId: '',
         departmentId: '',
+        department: '',
         governorateIds: [],
     });
     const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
@@ -246,6 +263,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             specialty: '',
             hospitalId: '',
             departmentId: '',
+            department: '',
             governorateIds: [],
         });
         setErrors([]);
@@ -378,6 +396,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'doctor' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'engineer' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
+                ...(selectedRole === 'technician' && formData.department && { department: formData.department }),
             };
 
 
@@ -522,6 +541,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             specialty: '',
             hospitalId: '',
             departmentId: '',
+            department: '',
             governorateIds: [],
         });
         setErrors([]);
@@ -814,6 +834,37 @@ const RoleSpecificUserCreation: React.FC = () => {
                                             )}
 
 
+                                        </div>
+                                    )}
+
+                                    {selectedRole === 'technician' && ROLE_CONFIG[selectedRole].requiresMedicalDepartment && (
+                                        <div className="space-y-2">
+                                            <Label>{t('medicalDepartment')} *</Label>
+                                            <select
+                                                value={formData.department || ""}
+                                                onChange={(e) => {
+                                                    console.log('Medical department selected:', e.target.value);
+                                                    setFormData(prev => ({ ...prev, department: e.target.value }));
+                                                }}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
+                                            >
+                                                <option value="">{t('selectMedicalDepartment')}</option>
+                                                {MEDICAL_DEPARTMENTS.map((dept) => (
+                                                    <option key={dept} value={dept}>
+                                                        {dept}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            
+                                            {/* Debug display */}
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                Current department: {formData.department || 'None'}
+                                            </div>
+                                            {formData.department && (
+                                                <div className="text-sm text-green-600 mt-1">
+                                                    Selected: {formData.department}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

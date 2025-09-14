@@ -20,7 +20,9 @@ export interface EngineerUserRequest extends BaseUserRequest {
 }
 
 export interface TechnicianUserRequest extends BaseUserRequest {
+	departmentId: number;
 	hospitalId: string;
+	department: string;
 }
 
 export interface AdminUserRequest extends BaseUserRequest {

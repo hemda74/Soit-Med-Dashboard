@@ -136,7 +136,9 @@ export const createTechnician = async (
 		password: string;
 		firstName: string;
 		lastName: string;
+		departmentId: number;
 		hospitalId: string;
+		department: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
