@@ -66,3 +66,44 @@ export interface ActivateDeactivateResponse {
 	actionDate: string;
 	message: string;
 }
+
+// New filtering and pagination types
+export interface UserFilters {
+	searchTerm?: string;
+	role?: string;
+	departmentId?: number;
+	isActive?: boolean;
+	createdFrom?: string;
+	createdTo?: string;
+	sortBy?: string;
+	sortOrder?: 'asc' | 'desc';
+	pageNumber?: number;
+	pageSize?: number;
+}
+
+export interface PaginatedUserResponse {
+	users: User[];
+	totalCount: number;
+	pageNumber: number;
+	pageSize: number;
+	totalPages: number;
+	hasPreviousPage: boolean;
+	hasNextPage: boolean;
+	appliedFilters: UserFilters;
+}
+
+export interface User {
+	id: string;
+	userName: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	fullName: string;
+	isActive: boolean;
+	createdAt: string;
+	lastLoginAt: string | null;
+	roles: string[];
+	departmentId: number;
+	departmentName: string;
+	departmentDescription: string;
+}
