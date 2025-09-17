@@ -4,6 +4,7 @@ import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { createLoginSchema, type LoginFormData } from '@/schemas/loginSchema'
 import { useAuthStore } from '@/stores/authStore'
+import { useAppStore } from '@/stores/appStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,20 +21,21 @@ import { Header } from '@/components/Header'
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
-    const { login, isLoading } = useAuthStore()
+    const { login } = useAuthStore()
+    const { loading: isLoading } = useAppStore()
     const { t } = useTranslation()
 
     const form = useForm<LoginFormData>({
         resolver: zodResolver(createLoginSchema(t)),
         defaultValues: {
-            email: '',
+            userName: '',
             password: '',
         },
     })
 
     const onSubmit = async (data: LoginFormData) => {
         try {
-            await login(data.email, data.password)
+            await login(data.userName, data.password)
         } catch (error) {
             form.setError('root', {
                 message: error instanceof Error ? error.message : t('invalidCredentials')
@@ -62,14 +64,14 @@ export default function LoginForm() {
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
                                     control={form.control}
-                                    name="email"
+                                    name="userName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>{t('email')}</FormLabel>
+                                            <FormLabel>{t('userName')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    type="email"
-                                                    placeholder={t('enterEmail')}
+                                                    type="text"
+                                                    placeholder={t('enterUserName')}
                                                     {...field}
                                                     disabled={isLoading}
                                                     className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
@@ -145,8 +147,8 @@ export default function LoginForm() {
                         <div className="mt-6 text-center text-sm text-muted-foreground">
                             <p className="mb-2">{t('demoCredentials')}</p>
                             <div className="font-mono text-xs bg-muted p-3 rounded-md">
-                                <p>{t('email')}: admin@example.com</p>
-                                <p>{t('password')}: password</p>
+                                <p>{t('userName')}: Hemdan</p>
+                                <p>{t('password')}: 356120Ahmed@shraf</p>
                             </div>
                         </div>
                     </CardContent>
