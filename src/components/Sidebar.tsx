@@ -6,7 +6,7 @@ import {
     User,
     ChevronLeft,
     ChevronRight,
-    Shield,
+
     BarChart3
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
@@ -55,17 +55,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 activeBgColor: 'bg-muted',
             },
             {
-                name: t('createUser'),
-                href: '/admin/create-user',
-                icon: UserPlus,
-                bgColor: isDark ? 'bg-card' : 'bg-white',
-                hoverColor: 'hover:bg-muted/50',
-                activeBgColor: 'bg-muted',
-            },
-            {
-                name: 'Create Role User',
+                name: 'Create New User',
                 href: '/admin/create-role-user',
-                icon: Shield,
+                icon: UserPlus,
                 bgColor: isDark ? 'bg-card' : 'bg-white',
                 hoverColor: 'hover:bg-muted/50',
                 activeBgColor: 'bg-muted',

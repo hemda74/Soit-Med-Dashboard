@@ -1,4 +1,4 @@
-import { Moon, Sun, Languages, User, LogOut, UserPlus, Users } from 'lucide-react';
+import { Moon, Sun, Languages, User, LogOut, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -124,15 +124,7 @@ export function Header() {
                                                     {t('usersList')}
                                                 </Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link
-                                                    to="/admin/create-user"
-                                                    className="flex items-center gap-2 cursor-pointer w-full"
-                                                >
-                                                    <UserPlus className="h-4 w-4" />
-                                                    {t('createNewUser')}
-                                                </Link>
-                                            </DropdownMenuItem>
+
                                         </>
                                     )}
 
