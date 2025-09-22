@@ -3,6 +3,19 @@ export interface User {
 	userName: string;
 	email: string;
 	passwordHash?: string;
+	profileImage?: {
+		id: number;
+		userId: string;
+		fileName: string;
+		filePath: string;
+		contentType: string;
+		fileSize: number;
+		altText: string;
+		uploadedAt: string;
+		isActive: boolean;
+		isProfileImage: boolean;
+	} | null;
+	userImages?: any[];
 }
 
 export interface CreateUserRequest {
@@ -36,6 +49,19 @@ export interface UserListResponse {
 	lockoutEnd: string | null;
 	lockoutEnabled: boolean;
 	accessFailedCount: number;
+	profileImage: {
+		id: number;
+		userId: string;
+		fileName: string;
+		filePath: string;
+		contentType: string;
+		fileSize: number;
+		altText: string;
+		uploadedAt: string;
+		isActive: boolean;
+		isProfileImage: boolean;
+	} | null;
+	userImages: any[];
 }
 
 // User activation/deactivation types

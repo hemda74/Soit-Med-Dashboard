@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw, Edit, Save, X, Key } from 'lucide-react';
+import { Users, RefreshCw, Edit, Save, X, Key, Camera, Trash2, AlertTriangle } from 'lucide-react';
 import type { UserListResponse } from '@/types/user.types';
 import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse, DepartmentUser } from '@/types/department.types';
 import type { UserFilters, PaginatedUserResponse, User } from '@/types/api.types';
 import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole, fetchUsersWithFilters } from '@/services/api';
-import { updateUser } from '@/services/roleSpecificUserApi';
+import { updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services/roleSpecificUserApi';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,7 @@ import UserFiltersComponent from './UserFilters';
 import Pagination from './Pagination';
 import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
 import { UserStatusToggle } from './UserStatusToggle';
+import ProfileImage from './ProfileImage';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -78,6 +80,9 @@ const UsersList: React.FC = () => {
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [filters, setFilters] = useState<UserFilters>({});
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [isDeletingImage, setIsDeletingImage] = useState(false);
+    const [showDeleteImageModal, setShowDeleteImageModal] = useState(false);
 
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
@@ -264,6 +269,85 @@ const UsersList: React.FC = () => {
     const handleClosePasswordModal = () => {
         setIsPasswordModalOpen(false);
         setSelectedUser(null);
+    };
+
+    // Image upload handler for edit modal
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !user?.token || !selectedUser) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showError('Invalid file type', 'Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showError('File too large', 'Please select an image smaller than 5MB');
+            return;
+        }
+
+        setIsUploadingImage(true);
+        try {
+            // Use POST if no existing image, PUT if image exists
+            const hasExistingImage = selectedUser.profileImage && selectedUser.profileImage.filePath;
+            console.log('Selected user profile image state:', selectedUser.profileImage);
+            console.log('Has existing image:', hasExistingImage);
+            console.log('Using method:', hasExistingImage ? 'PUT' : 'POST');
+
+            const response = hasExistingImage
+                ? await updateProfileImage(file, selectedUser.fullName, user.token)
+                : await uploadProfileImage(file, selectedUser.fullName, user.token);
+
+            if (response.profileImage) {
+                // Update the selected user's profile image
+                setSelectedUser(prev => prev ? {
+                    ...prev,
+                    profileImage: response.profileImage
+                } : null);
+                success('Profile Image Updated', response.message);
+            } else {
+                showError('Upload Failed', 'Failed to update profile image');
+            }
+        } catch (error: any) {
+            console.error('Error uploading image:', error);
+            const errorMessage = error.message || 'Failed to upload image';
+            showError('Upload Failed', errorMessage);
+        } finally {
+            setIsUploadingImage(false);
+            // Reset file input
+            event.target.value = '';
+        }
+    };
+
+    // Image delete handler for edit modal
+    const handleImageDelete = async () => {
+        if (!user?.token || !selectedUser) return;
+
+        console.log('Deleting profile image for user:', selectedUser.id);
+        setIsDeletingImage(true);
+        try {
+            const response = await deleteProfileImage(user.token);
+
+            if (response.message) {
+                // Update the selected user's profile image to null
+                setSelectedUser(prev => prev ? {
+                    ...prev,
+                    profileImage: null
+                } : null);
+                success('Profile Image Deleted', response.message);
+                setShowDeleteImageModal(false);
+            } else {
+                showError('Delete Failed', 'Failed to delete profile image');
+            }
+        } catch (error: any) {
+            console.error('Error deleting image:', error);
+            const errorMessage = error.message || 'Failed to delete image';
+            showError('Delete Failed', errorMessage);
+        } finally {
+            setIsDeletingImage(false);
+        }
     };
 
     // Handle user status change
@@ -483,6 +567,9 @@ const UsersList: React.FC = () => {
                         <thead>
                             <tr className="border-b border-gray-200 dark:border-gray-700">
                                 <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                    Image
+                                </th>
+                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
                                     Name
                                 </th>
                                 <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
@@ -505,6 +592,13 @@ const UsersList: React.FC = () => {
                                     key={user.id}
                                     className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                                 >
+                                    <td className="py-3 px-4">
+                                        <ProfileImage
+                                            src={'profileImage' in user ? user.profileImage : undefined}
+                                            alt={`${user.fullName} profile picture`}
+                                            size="sm"
+                                        />
+                                    </td>
                                     <td className="py-3 px-4 text-gray-900 dark:text-white">
                                         {user.fullName}
                                     </td>
@@ -687,6 +781,123 @@ const UsersList: React.FC = () => {
                                                 {editForm.formState.errors.phoneNumber.message}
                                             </p>
                                         )}
+                                    </div>
+
+                                    {/* Profile Image */}
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label>Profile Image</Label>
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center border-4 border-primary/20 overflow-hidden">
+                                                    {selectedUser?.profileImage && selectedUser.profileImage.filePath ? (
+                                                        <img
+                                                            src={selectedUser.profileImage.filePath}
+                                                            alt={selectedUser.profileImage.altText || selectedUser.fullName}
+                                                            className="w-full h-full rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/30 to-primary/50 flex items-center justify-center">
+                                                            <Users className="w-8 h-8 text-primary/70" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Camera Button for Upload/Update */}
+                                                <label
+                                                    htmlFor="edit-profile-image-upload"
+                                                    className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 p-0 cursor-pointer"
+                                                    title={isUploadingImage ? "Uploading..." : (selectedUser?.profileImage && selectedUser.profileImage.filePath) ? "Change profile picture" : "Upload profile picture"}
+                                                >
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handleImageUpload}
+                                                        disabled={isUploadingImage}
+                                                        className="hidden"
+                                                        id="edit-profile-image-upload"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-full h-full rounded-full"
+                                                        variant="secondary"
+                                                        disabled={isUploadingImage}
+                                                        asChild
+                                                    >
+                                                        <div>
+                                                            {isUploadingImage ? (
+                                                                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                                            ) : (
+                                                                <Camera className="w-3 h-3" />
+                                                            )}
+                                                        </div>
+                                                    </Button>
+                                                </label>
+
+                                                {/* Delete Button (only show if image exists) */}
+                                                {selectedUser?.profileImage && selectedUser.profileImage.filePath && (
+                                                    <Dialog open={showDeleteImageModal} onOpenChange={setShowDeleteImageModal}>
+                                                        <DialogTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                className="absolute -top-1 -right-1 rounded-full w-6 h-6 p-0"
+                                                                variant="destructive"
+                                                                title="Delete profile picture"
+                                                            >
+                                                                <Trash2 className="w-2 h-2" />
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent>
+                                                            <DialogHeader>
+                                                                <DialogTitle className="flex items-center gap-2">
+                                                                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                                                                    Delete Profile Image
+                                                                </DialogTitle>
+                                                                <DialogDescription>
+                                                                    Are you sure you want to delete this user's profile image? This action cannot be undone.
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <DialogFooter>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    onClick={() => setShowDeleteImageModal(false)}
+                                                                    disabled={isDeletingImage}
+                                                                >
+                                                                    Cancel
+                                                                </Button>
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    onClick={handleImageDelete}
+                                                                    disabled={isDeletingImage}
+                                                                >
+                                                                    {isDeletingImage ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                            Deleting...
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Trash2 className="w-4 h-4" />
+                                                                            Delete Image
+                                                                        </div>
+                                                                    )}
+                                                                </Button>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-sm text-muted-foreground">
+                                                    {selectedUser?.profileImage && selectedUser.profileImage.filePath
+                                                        ? `Current image: ${selectedUser.profileImage.fileName}`
+                                                        : 'No profile image set'
+                                                    }
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Click the camera icon to upload or change the profile image
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Department (Read-only) */}

@@ -6,39 +6,59 @@ export interface BaseUserRequest {
 	password: string;
 	firstName: string;
 	lastName: string;
+	profileImage?: File;
+	altText?: string;
 }
 
 // Role-specific request types
 export interface DoctorUserRequest extends BaseUserRequest {
-	departmentId: number;
+	departmentId?: number;
 	specialty: string;
 	hospitalId: string;
 }
 
 export interface EngineerUserRequest extends BaseUserRequest {
-	departmentId: string;
+	departmentId?: number;
+	specialty: string;
+	governorateIds: number[];
 }
 
 export interface TechnicianUserRequest extends BaseUserRequest {
-	departmentId: number;
+	departmentId?: number;
 	hospitalId: string;
 	department: string;
 }
 
 export interface AdminUserRequest extends BaseUserRequest {
-	departmentId: string;
+	departmentId?: number;
 }
 
 export interface FinanceManagerUserRequest extends BaseUserRequest {
-	departmentId: string;
+	departmentId?: number;
+}
+
+export interface FinanceEmployeeUserRequest extends BaseUserRequest {
+	departmentId?: number;
 }
 
 export interface LegalManagerUserRequest extends BaseUserRequest {
-	departmentId: string;
+	departmentId?: number;
+}
+
+export interface LegalEmployeeUserRequest extends BaseUserRequest {
+	departmentId?: number;
 }
 
 export interface SalesmanUserRequest extends BaseUserRequest {
-	departmentId: string;
+	departmentId?: number;
+}
+
+export interface SalesManagerUserRequest extends BaseUserRequest {
+	departmentId?: number;
+	salesTerritory?: string;
+	salesTeam?: string;
+	salesTarget?: number;
+	managerNotes?: string;
 }
 
 // Union type for all role-specific requests
@@ -48,99 +68,95 @@ export type RoleSpecificUserRequest =
 	| TechnicianUserRequest
 	| AdminUserRequest
 	| FinanceManagerUserRequest
+	| FinanceEmployeeUserRequest
 	| LegalManagerUserRequest
-	| SalesmanUserRequest;
+	| LegalEmployeeUserRequest
+	| SalesmanUserRequest
+	| SalesManagerUserRequest;
 
-// Base response data
+// Profile image response data
+export interface ProfileImageResponse {
+	id: number;
+	userId: string;
+	fileName: string;
+	filePath: string;
+	contentType: string;
+	fileSize: number;
+	altText: string;
+	uploadedAt: string;
+	isActive: boolean;
+	isProfileImage: boolean;
+}
+
+// Base response data - matches new API response structure
 export interface BaseUserResponse {
-	success: boolean;
+	userId: string;
+	email: string;
+	role: string;
+	departmentName: string;
+	createdAt: string;
+	profileImage?: ProfileImageResponse;
 	message: string;
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: string;
-	};
 }
 
 // Role-specific response data
 export interface DoctorUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'Doctor';
-		specialty: string;
-		hospitalId: string;
-	};
+	role: 'Doctor';
+	doctorId: number;
+	specialty: string;
+	hospitalName: string;
 }
 
 export interface EngineerUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'Engineer';
-		departmentId: string;
-	};
+	role: 'Engineer';
+	engineerId: number;
+	specialty: string;
+	governorateNames: string[];
 }
 
 export interface TechnicianUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'Technician';
-		hospitalId: string;
-	};
+	role: 'Technician';
+	technicianId: number;
+	hospitalName: string;
 }
 
 export interface AdminUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'Admin';
-		departmentId: string;
-	};
+	role: 'Admin';
+	adminId: number;
 }
 
 export interface FinanceManagerUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'FinanceManager';
-		departmentId: string;
-	};
+	role: 'FinanceManager';
+	financeManagerId: number;
+}
+
+export interface FinanceEmployeeUserResponse extends BaseUserResponse {
+	role: 'FinanceEmployee';
+	financeEmployeeId: number;
 }
 
 export interface LegalManagerUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'LegalManager';
-		departmentId: string;
-	};
+	role: 'LegalManager';
+	legalManagerId: number;
+}
+
+export interface LegalEmployeeUserResponse extends BaseUserResponse {
+	role: 'LegalEmployee';
+	legalEmployeeId: number;
 }
 
 export interface SalesmanUserResponse extends BaseUserResponse {
-	data: {
-		userId: string;
-		email: string;
-		firstName: string;
-		lastName: string;
-		role: 'Salesman';
-		departmentId: string;
-	};
+	role: 'Salesman';
+	salesmanId: number;
+}
+
+export interface SalesManagerUserResponse extends BaseUserResponse {
+	role: 'SalesManager';
+	salesManagerId: number;
+	salesTerritory?: string;
+	salesTeam?: string;
+	salesTarget?: number;
+	managerNotes?: string;
 }
 
 // Union type for all role-specific responses
@@ -150,8 +166,11 @@ export type RoleSpecificUserResponse =
 	| TechnicianUserResponse
 	| AdminUserResponse
 	| FinanceManagerUserResponse
+	| FinanceEmployeeUserResponse
 	| LegalManagerUserResponse
-	| SalesmanUserResponse;
+	| LegalEmployeeUserResponse
+	| SalesmanUserResponse
+	| SalesManagerUserResponse;
 
 // Available roles for user creation
 export type RoleSpecificUserRole =
@@ -160,8 +179,11 @@ export type RoleSpecificUserRole =
 	| 'technician'
 	| 'admin'
 	| 'finance-manager'
+	| 'finance-employee'
 	| 'legal-manager'
-	| 'salesman';
+	| 'legal-employee'
+	| 'salesman'
+	| 'sales-manager';
 
 // Password change request
 export interface ChangePasswordRequest {

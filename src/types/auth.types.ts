@@ -31,6 +31,19 @@ export interface AuthUser {
 	emailConfirmed: boolean;
 	phoneNumberConfirmed: boolean;
 	phoneNumber: string | null;
+	profileImage: {
+		id: number;
+		userId: string;
+		fileName: string;
+		filePath: string;
+		contentType: string;
+		fileSize: number;
+		altText: string;
+		uploadedAt: string;
+		isActive: boolean;
+		isProfileImage: boolean;
+	} | null;
+	userImages: any[];
 }
 
 export interface AuthContextType {

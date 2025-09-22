@@ -15,8 +15,8 @@ export function Layout() {
     return (
         <div className={cn(
             "min-h-screen",
-            isDark 
-                ? "bg-gradient-to-br from-primary/10 via-background to-secondary/10" 
+            isDark
+                ? "bg-gradient-to-br from-primary/10 via-background to-secondary/10"
                 : "bg-gradient-to-br from-primary/5 via-background to-secondary/5"
         )}>
             <Header />

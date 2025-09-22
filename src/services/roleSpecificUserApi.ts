@@ -15,7 +15,22 @@ import { getApiUrl } from '@/config/api';
 // API endpoints
 const API_ENDPOINTS = {
 	ROLE_SPECIFIC_USER: '/RoleSpecificUser',
+	DOCTOR: '/RoleSpecificUser/doctor',
+	ENGINEER: '/RoleSpecificUser/engineer',
+	TECHNICIAN: '/RoleSpecificUser/technician',
+	ADMIN: '/RoleSpecificUser/admin',
+	FINANCE_MANAGER: '/RoleSpecificUser/finance-manager',
+	FINANCE_EMPLOYEE: '/RoleSpecificUser/finance-employee',
+	LEGAL_MANAGER: '/RoleSpecificUser/legal-manager',
+	LEGAL_EMPLOYEE: '/RoleSpecificUser/legal-employee',
+	SALESMAN: '/RoleSpecificUser/salesman',
+	SALES_MANAGER: '/RoleSpecificUser/sales-manager',
 	CHANGE_PASSWORD: '/Account/change-password',
+	USER_IMAGE: '/User/image',
+	USER_IMAGE_GET: '/User/image',
+	USER_IMAGE_POST: '/User/image',
+	USER_IMAGE_PUT: '/User/image',
+	USER_IMAGE_DELETE: '/User/image',
 	DEPARTMENTS: '/Department',
 	HOSPITALS: '/Hospital',
 } as const;
@@ -29,9 +44,12 @@ async function apiRequest<T>(
 	const url = getApiUrl(endpoint);
 	console.log('Making API request to:', url);
 
-	const defaultHeaders: HeadersInit = {
-		'Content-Type': 'application/json',
-	};
+	const defaultHeaders: HeadersInit = {};
+
+	// Only set Content-Type for JSON requests, not for FormData
+	if (!(options.body instanceof FormData)) {
+		defaultHeaders['Content-Type'] = 'application/json';
+	}
 
 	if (token) {
 		defaultHeaders.Authorization = `Bearer ${token}`;
@@ -91,11 +109,47 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 	console.log('User data:', userData);
 	console.log('Endpoint:', endpoint);
 
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with proper field mapping
+	Object.entries(userData).forEach(([key, value]) => {
+		if (value !== undefined && value !== null) {
+			if (key === 'profileImage' && value instanceof File) {
+				formData.append('profileImage', value);
+			} else if (key === 'altText') {
+				formData.append('AltText', value as string);
+			} else if (
+				key === 'governorateIds' &&
+				Array.isArray(value)
+			) {
+				// Handle governorate IDs array - send as individual numbers
+				value.forEach((id, index) => {
+					formData.append(
+						`GovernorateIds[${index}]`,
+						id.toString()
+					);
+				});
+			} else {
+				// Convert camelCase to PascalCase for API
+				const apiKey =
+					key.charAt(0).toUpperCase() +
+					key.slice(1);
+				formData.append(apiKey, value as string);
+			}
+		}
+	});
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
 	return apiRequest<RoleSpecificUserResponse>(
 		endpoint,
 		{
 			method: 'POST',
-			body: JSON.stringify(userData),
+			body: formData,
 		},
 		token
 	);
@@ -106,95 +160,604 @@ export const createDoctor = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: number;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
 		specialty: string;
 		hospitalId: string;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('doctor', userData, token);
+	console.log('Creating doctor:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.DOCTOR);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+	formData.append('Specialty', userData.specialty);
+	formData.append('HospitalId', userData.hospitalId);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.DOCTOR,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createEngineer = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		specialty: string;
+		governorateIds: number[];
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('engineer', userData, token);
+	console.log('Creating engineer:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.ENGINEER);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+	formData.append('Specialty', userData.specialty);
+
+	// Add governorate IDs as individual numbers
+	userData.governorateIds.forEach((id, index) => {
+		formData.append(`GovernorateIds[${index}]`, id.toString());
+	});
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.ENGINEER,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createTechnician = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: number;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
 		hospitalId: string;
 		department: string;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('technician', userData, token);
+	console.log('Creating technician:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.TECHNICIAN);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+	formData.append('Department', userData.department);
+	formData.append('HospitalId', userData.hospitalId);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.TECHNICIAN,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createAdmin = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('admin', userData, token);
+	console.log('Creating admin:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.ADMIN);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.ADMIN,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createFinanceManager = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('finance-manager', userData, token);
+	console.log('Creating finance manager:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.FINANCE_MANAGER);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.FINANCE_MANAGER,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+};
+
+// NEW: Finance Employee creation
+export const createFinanceEmployee = async (
+	userData: {
+		email: string;
+		password: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
+	},
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	console.log('Creating finance employee:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.FINANCE_EMPLOYEE);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.FINANCE_EMPLOYEE,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createLegalManager = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('legal-manager', userData, token);
+	console.log('Creating legal manager:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.LEGAL_MANAGER);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.LEGAL_MANAGER,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+};
+
+// NEW: Legal Employee creation
+export const createLegalEmployee = async (
+	userData: {
+		email: string;
+		password: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
+	},
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	console.log('Creating legal employee:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.LEGAL_EMPLOYEE);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.LEGAL_EMPLOYEE,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 export const createSalesman = async (
 	userData: {
 		email: string;
 		password: string;
-		firstName: string;
-		lastName: string;
-		departmentId: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		profileImage?: File;
+		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	return createRoleSpecificUser('salesman', userData, token);
+	console.log('Creating salesman:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.SALESMAN);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.SALESMAN,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+};
+
+export const createSalesManager = async (
+	userData: {
+		email: string;
+		password: string;
+		firstName?: string;
+		lastName?: string;
+		departmentId?: number;
+		salesTerritory?: string;
+		salesTeam?: string;
+		salesTarget?: number;
+		managerNotes?: string;
+		profileImage?: File;
+		altText?: string;
+	},
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	console.log('Creating sales manager:', userData);
+	console.log('Using endpoint:', API_ENDPOINTS.SALES_MANAGER);
+
+	// Create FormData for multipart/form-data request
+	const formData = new FormData();
+
+	// Add all user data fields to FormData with PascalCase field names
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+
+	// Add optional fields
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.salesTerritory) {
+		formData.append('SalesTerritory', userData.salesTerritory);
+	}
+	if (userData.salesTeam) {
+		formData.append('SalesTeam', userData.salesTeam);
+	}
+	if (userData.salesTarget !== undefined) {
+		formData.append('SalesTarget', userData.salesTarget.toString());
+	}
+	if (userData.managerNotes) {
+		formData.append('ManagerNotes', userData.managerNotes);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	console.log('FormData contents:');
+	for (const [key, value] of formData.entries()) {
+		console.log(`${key}:`, value);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.SALES_MANAGER,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
 };
 
 // Change password
@@ -278,36 +841,18 @@ export const getGovernorates = async (
 	>('/Governorate', { method: 'GET' }, token);
 };
 
-// Password validation
+// Password validation - updated to match backend requirements (min 6 chars, max 100 chars)
 export const validatePassword = (
 	password: string
 ): { isValid: boolean; errors: string[] } => {
 	const errors: string[] = [];
 
-	if (password.length < 8) {
-		errors.push('Password must be at least 8 characters long');
+	if (password.length < 6) {
+		errors.push('Password must be at least 6 characters long');
 	}
 
-	if (!/[A-Z]/.test(password)) {
-		errors.push(
-			'Password must contain at least one uppercase letter'
-		);
-	}
-
-	if (!/[a-z]/.test(password)) {
-		errors.push(
-			'Password must contain at least one lowercase letter'
-		);
-	}
-
-	if (!/\d/.test(password)) {
-		errors.push('Password must contain at least one number');
-	}
-
-	if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-		errors.push(
-			'Password must contain at least one special character'
-		);
+	if (password.length > 100) {
+		errors.push('Password must be at most 100 characters long');
 	}
 
 	return {
@@ -405,3 +950,139 @@ export const updateUserPasswordBySuperAdmin = async (
 	console.log('API response:', response);
 	return response;
 };
+
+// Helper function to create users with proper role mapping
+export const createUserByRole = async (
+	role: RoleSpecificUserRole,
+	userData: any,
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	switch (role) {
+		case 'doctor':
+			return createDoctor(userData, token);
+		case 'engineer':
+			return createEngineer(userData, token);
+		case 'technician':
+			return createTechnician(userData, token);
+		case 'admin':
+			return createAdmin(userData, token);
+		case 'finance-manager':
+			return createFinanceManager(userData, token);
+		case 'finance-employee':
+			return createFinanceEmployee(userData, token);
+		case 'legal-manager':
+			return createLegalManager(userData, token);
+		case 'legal-employee':
+			return createLegalEmployee(userData, token);
+		case 'salesman':
+			return createSalesman(userData, token);
+		case 'sales-manager':
+			return createSalesManager(userData, token);
+		default:
+			throw new Error(`Unsupported role: ${role}`);
+	}
+};
+
+// Profile image upload response interface
+export interface ProfileImageUploadResponse {
+	userId: string;
+	message: string;
+	profileImage: {
+		id: number;
+		fileName: string;
+		filePath: string;
+		contentType: string;
+		fileSize: number;
+		altText: string;
+		isProfileImage: boolean;
+		uploadedAt: string;
+		isActive: boolean;
+	};
+	updatedAt: string;
+}
+
+// Profile image response interface for GET
+export interface ProfileImageGetResponse {
+	id: number;
+	fileName: string;
+	filePath: string;
+	contentType: string;
+	fileSize: number;
+	altText: string;
+	isProfileImage: boolean;
+	uploadedAt: string;
+	isActive: boolean;
+}
+
+// Profile image delete response interface
+export interface ProfileImageDeleteResponse {
+	userId: string;
+	message: string;
+	deletedAt: string;
+}
+
+// Upload profile image (POST - for new image)
+export async function uploadProfileImage(
+	file: File,
+	altText: string = '',
+	token: string
+): Promise<ProfileImageUploadResponse> {
+	const formData = new FormData();
+	formData.append('profileImage', file);
+	formData.append('AltText', altText);
+
+	return apiRequest<ProfileImageUploadResponse>(
+		API_ENDPOINTS.USER_IMAGE_POST,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+}
+
+// Update profile image (PUT - for existing image)
+export async function updateProfileImage(
+	file: File,
+	altText: string = '',
+	token: string
+): Promise<ProfileImageUploadResponse> {
+	const formData = new FormData();
+	formData.append('profileImage', file);
+	formData.append('AltText', altText);
+
+	return apiRequest<ProfileImageUploadResponse>(
+		API_ENDPOINTS.USER_IMAGE_PUT,
+		{
+			method: 'PUT',
+			body: formData,
+		},
+		token
+	);
+}
+
+// Get profile image
+export async function getProfileImage(
+	token: string
+): Promise<ProfileImageGetResponse> {
+	return apiRequest<ProfileImageGetResponse>(
+		API_ENDPOINTS.USER_IMAGE_GET,
+		{
+			method: 'GET',
+		},
+		token
+	);
+}
+
+// Delete profile image
+export async function deleteProfileImage(
+	token: string
+): Promise<ProfileImageDeleteResponse> {
+	return apiRequest<ProfileImageDeleteResponse>(
+		API_ENDPOINTS.USER_IMAGE_DELETE,
+		{
+			method: 'DELETE',
+		},
+		token
+	);
+}

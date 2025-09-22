@@ -117,7 +117,7 @@ export const fetchUsers = async (
 			return response as UserListResponse[];
 		} else if (response && Array.isArray(response.users)) {
 			// New format: paginated response with users array
-			return response.users as UserListResponse[];
+			return response.users as unknown as UserListResponse[];
 		} else {
 			console.warn(
 				'Unexpected API response format:',
