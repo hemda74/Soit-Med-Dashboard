@@ -50,7 +50,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                                 type="button"
                                 variant="outline"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
+                                className="hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                             >
                                 <Upload className="w-4 h-4 mr-2" />
                                 {t('selectProfileImage')}
@@ -83,7 +83,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                                 type="button"
                                 variant="outline"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
+                                className="hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                             >
                                 <Upload className="w-4 h-4 mr-2" />
                                 {t('uploadImage')}

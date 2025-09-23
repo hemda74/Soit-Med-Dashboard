@@ -62,7 +62,7 @@ const GovernorateSelector: React.FC<GovernorateSelectorProps> = ({
                     type="button"
                     variant="outline"
                     onClick={onToggleDropdown}
-                    className="w-full justify-between text-left hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
+                    className="w-full justify-between text-left hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                 >
                     <span className={selectedGovernorateIds?.length === 0 ? "text-muted-foreground" : ""}>
                         {selectedGovernorateIds?.length === 0
@@ -126,7 +126,7 @@ const GovernorateSelector: React.FC<GovernorateSelectorProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={onClearAll}
-                            className="text-blue-600  hover:bg-blue-800 hover:text-white text-xs transition-colors duration-200"
+                            className="text-blue-600  hover:bg-primary hover:text-white text-xs transition-colors duration-200"
                         >
                             {t('clearAll')}
                         </Button>

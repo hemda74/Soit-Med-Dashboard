@@ -49,7 +49,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-primary hover:text-white transition-colors duration-200"
                     onClick={onToggleVisibility}
                 >
                     {showPassword ? (
