@@ -299,14 +299,14 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                             variant="outline"
                             onClick={onBack}
                             disabled={isLoading}
-                            className="hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
+                            className="hover:bg-primary hover:text-white hover:border-primary transition-colors duration-200"
                         >
                             {t('back')}
                         </Button>
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="flex-1 hover:bg-blue-800 hover:text-white transition-colors duration-200"
+                            className="flex-1 hover:bg-primary hover:text-white transition-colors duration-200"
                         >
                             {isLoading ? t('creatingUserLoading') : t('createRoleUser').replace('{role}', roleConfig.name)}
                         </Button>

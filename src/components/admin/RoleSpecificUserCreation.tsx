@@ -418,7 +418,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground">{t('adminAccessRequiredMessage')}</p>
-                        <Button onClick={() => navigate('/')} className="w-full mt-4 hover:bg-blue-800 hover:text-white transition-colors duration-200">
+                        <Button onClick={() => navigate('/')} className="w-full mt-4 hover:bg-primary hover:text-white transition-colors duration-200">
                             {t('goBack')}
                         </Button>
                     </CardContent>
@@ -437,7 +437,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={handleBack}
-                            className="text-white hover:bg-blue-800 hover:text-white transition-colors duration-200"
+                            className="text-white hover:bg-primary hover:text-white transition-colors duration-200"
                         >
                             <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                             {t('back')}
