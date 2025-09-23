@@ -47,7 +47,7 @@ const UserDropdown: React.FC = () => {
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-72 z-[10000]">
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
@@ -59,16 +59,16 @@ const UserDropdown: React.FC = () => {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleProfile} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleProfile} className="cursor-pointer btn-hover-primary">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleSettings} className="cursor-pointer btn-hover-primary">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                 </DropdownMenuItem>
