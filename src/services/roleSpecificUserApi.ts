@@ -18,6 +18,7 @@ const API_ENDPOINTS = {
 	DOCTOR: '/RoleSpecificUser/doctor',
 	ENGINEER: '/RoleSpecificUser/engineer',
 	TECHNICIAN: '/RoleSpecificUser/technician',
+	DELETE_USER: '/User',
 	ADMIN: '/RoleSpecificUser/admin',
 	FINANCE_MANAGER: '/RoleSpecificUser/finance-manager',
 	FINANCE_EMPLOYEE: '/RoleSpecificUser/finance-employee',
@@ -1086,3 +1087,37 @@ export async function deleteProfileImage(
 		token
 	);
 }
+
+// Delete User API Types
+export interface DeleteUserResponse {
+	message: string;
+	userId: string;
+	userName: string;
+	email: string;
+	deletedAt: string;
+	code: string;
+}
+
+export interface DeleteUserError {
+	error: string;
+	code: string;
+	timestamp: string;
+	details?: Array<{
+		code: string;
+		description: string;
+	}>;
+}
+
+// Delete User API Function
+export const deleteUser = async (
+	userId: string,
+	token: string
+): Promise<DeleteUserResponse> => {
+	return apiRequest<DeleteUserResponse>(
+		`${API_ENDPOINTS.DELETE_USER}?userId=${userId}`,
+		{
+			method: 'DELETE',
+		},
+		token
+	);
+};

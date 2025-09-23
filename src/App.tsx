@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { Layout } from '@/components/Layout'
+import AppLayout from '@/components/layout/AppLayout'
 import LoginForm from '@/components/LoginForm'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
@@ -19,13 +19,15 @@ function App() {
           <LoadingScreen />
           {isAuthenticated ? (
             <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
+              <Route path="/" element={<AppLayout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="users" element={<UsersList />} />
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           ) : (
             <LoginForm />
