@@ -43,116 +43,113 @@ export default function LoginForm() {
     }
 
     return (
-        <>
-            <Header />
-            <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
-                <Card className="w-full max-w-md shadow-lg animate-fadeIn">
-                    <CardHeader className="space-y-1">
-                        <div className="flex items-center justify-center mb-4">
-                            <div className="bg-primary/10 p-3 rounded-full">
-                                <LogIn className="h-6 w-6 text-primary" />
-                            </div>
+        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+            <Card className="w-full max-w-md shadow-lg animate-fadeIn">
+                <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-center mb-4">
+                        <div className="bg-primary/10 p-3 rounded-full">
+                            <LogIn className="h-6 w-6 text-primary" />
                         </div>
-                        <CardTitle className="text-2xl font-bold text-center">{t('welcomeBack')}</CardTitle>
-                        <CardDescription className="text-center">
-                            {t('enterCredentials')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="userName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('userName')}</FormLabel>
-                                            <FormControl>
+                    </div>
+                    <CardTitle className="text-2xl font-bold text-center">{t('welcomeBack')}</CardTitle>
+                    <CardDescription className="text-center">
+                        {t('enterCredentials')}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                                control={form.control}
+                                name="userName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t('userName')}</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="text"
+                                                placeholder={t('enterUserName')}
+                                                {...field}
+                                                disabled={isLoading}
+                                                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="password"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t('password')}</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
                                                 <Input
-                                                    type="text"
-                                                    placeholder={t('enterUserName')}
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    placeholder={t('enterPassword')}
                                                     {...field}
                                                     disabled={isLoading}
-                                                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
+                                                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/20 pr-10"
                                                 />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('password')}</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        placeholder={t('enterPassword')}
-                                                        {...field}
-                                                        disabled={isLoading}
-                                                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/20 pr-10"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        disabled={isLoading}
-                                                    >
-                                                        {showPassword ? (
-                                                            <EyeOff className="h-4 w-4" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {form.formState.errors.root && (
-                                    <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-md">
-                                        {form.formState.errors.root.message}
-                                    </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    disabled={isLoading}
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="h-4 w-4" />
+                                                    ) : (
+                                                        <Eye className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
+                            />
 
-                                <Button
-                                    type="submit"
-                                    className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            {t('signingIn')}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <LogIn className="mr-2 h-4 w-4" />
-                                            {t('signIn')}
-                                        </>
-                                    )}
-                                </Button>
-                            </form>
-                        </Form>
+                            {form.formState.errors.root && (
+                                <div className="text-sm text-destructive text-center p-3 bg-destructive/10 rounded-md">
+                                    {form.formState.errors.root.message}
+                                </div>
+                            )}
 
-                        <div className="mt-6 text-center text-sm text-muted-foreground">
-                            <p className="mb-2">{t('demoCredentials')}</p>
-                            <div className="font-mono text-xs bg-muted p-3 rounded-md">
-                                <p>{t('userName')}: Hemdan</p>
-                                <p>{t('password')}: 356120Ahmed@shraf</p>
-                            </div>
+                            <Button
+                                type="submit"
+                                className="w-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        {t('signingIn')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <LogIn className="mr-2 h-4 w-4" />
+                                        {t('signIn')}
+                                    </>
+                                )}
+                            </Button>
+                        </form>
+                    </Form>
+
+                    <div className="mt-6 text-center text-sm text-muted-foreground">
+                        <p className="mb-2">{t('demoCredentials')}</p>
+                        <div className="font-mono text-xs bg-muted p-3 rounded-md">
+                            <p>{t('userName')}: Hemdan</p>
+                            <p>{t('password')}: 356120Ahmed@shraf</p>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     )
 }

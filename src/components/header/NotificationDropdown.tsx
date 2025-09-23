@@ -51,13 +51,13 @@ const NotificationDropdown: React.FC = () => {
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-96 z-[10000]">
                 <div className="p-4 border-b">
                     <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                     {notifications.map((notification) => (
-                        <DropdownMenuItem key={notification.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <DropdownMenuItem key={notification.id} className="p-4 btn-hover-primary">
                             <div className="flex items-start gap-3 w-full">
                                 <div className={`w-2 h-2 rounded-full mt-2 ${notification.unread ? 'bg-blue-500' : 'bg-gray-300'}`} />
                                 <div className="flex-1 min-w-0">
@@ -85,7 +85,7 @@ const NotificationDropdown: React.FC = () => {
                     ))}
                 </div>
                 <div className="p-2 border-t">
-                    <Button variant="ghost" className="w-full text-sm">
+                    <Button variant="ghost" className="w-full text-sm btn-hover-primary">
                         View all notifications
                     </Button>
                 </div>
