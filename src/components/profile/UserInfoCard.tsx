@@ -135,7 +135,7 @@ export default function UserInfoCard({ user, t, onEditPassword }: UserInfoCardPr
                                     size="sm"
                                     variant="outline"
                                     onClick={onEditPassword}
-                                    className="bg-card border-border text-card-foreground hover:bg-accent"
+                                    className="bg-card border-border text-card-foreground hover:bg-primary"
                                 >
                                     <Edit className="h-4 w-4 mr-2" />
                                     Change

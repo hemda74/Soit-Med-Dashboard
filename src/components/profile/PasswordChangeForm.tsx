@@ -189,7 +189,7 @@ export default function PasswordChangeForm({ isOpen, onClose, onSubmit }: Passwo
                             type="button"
                             variant="outline"
                             onClick={handleClose}
-                            className="border-border text-foreground hover:bg-accent"
+                            className="border-border text-foreground hover:bg-primary"
                         >
                             Cancel
                         </Button>
