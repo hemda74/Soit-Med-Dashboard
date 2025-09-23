@@ -120,7 +120,7 @@ export default function EditUserModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto border-0 shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-2xl text-gray-900">
                         <User className="h-6 w-6 text-blue-600" />
@@ -193,7 +193,7 @@ export default function EditUserModal({
                                                     <Trash2 className="w-4 h-4 text-white" />
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent>
+                                            <DialogContent className="sm:max-w-lg border-0 shadow-2xl">
                                                 <DialogHeader>
                                                     <DialogTitle className="flex items-center gap-2">
                                                         <AlertTriangle className="w-5 h-5 text-destructive" />
