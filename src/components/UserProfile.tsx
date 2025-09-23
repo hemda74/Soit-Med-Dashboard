@@ -142,7 +142,7 @@ export default function UserProfile() {
                             onClick={fetchUserData}
                             disabled={loading}
                             variant="outline"
-                            className="bg-card border-border text-card-foreground hover:bg-accent"
+                            className="bg-card border-border text-card-foreground hover:bg-primary"
                         >
                             {loading ? t('refreshing') : t('refreshData')}
                         </Button>

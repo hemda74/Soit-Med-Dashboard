@@ -440,7 +440,7 @@ const UsersList: React.FC = () => {
                             {currentUsers.map((user) => (
                                 <tr
                                     key={user.id}
-                                    className="border-b border-border hover:bg-accent/50"
+                                    className="border-b border-border menu-dropdown-item-inactive"
                                 >
                                     {/* User Column - Image + Name + Email */}
                                     <td className="py-3 px-4">
@@ -516,9 +516,9 @@ const UsersList: React.FC = () => {
                                             {isSuperAdmin && (
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
+                                                    variant="outline-destructive"
                                                     onClick={() => handleDeleteUser(user as UserListResponse)}
-                                                    className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                                    className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-700 border-red-200 "
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                     Delete
