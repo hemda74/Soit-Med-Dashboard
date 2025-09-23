@@ -30,7 +30,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg border-0 shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl text-red-600">
                         <AlertTriangle className="h-6 w-6" />

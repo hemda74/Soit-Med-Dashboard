@@ -66,7 +66,7 @@ export default function PasswordChangeForm({ isOpen, onClose, onSubmit }: Passwo
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg border-0 shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-xl text-foreground">
                         <Key className="h-6 w-6 text-primary" />
