@@ -1,31 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Users, RefreshCw, Edit, Save, X, Key, Camera, Trash2, AlertTriangle } from 'lucide-react';
+import { Edit, Key, Trash2 } from 'lucide-react';
 import type { UserListResponse } from '@/types/user.types';
-import type { Department, DepartmentUsersResponse, UserSearchResponse, Role, RoleUsersResponse, DepartmentUser } from '@/types/department.types';
-import type { UserFilters, PaginatedUserResponse, User } from '@/types/api.types';
-import { fetchUsers, fetchUsersByDepartment, searchUserByUsername, fetchUsersByRole, fetchUsersWithFilters } from '@/services/api';
-import { updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services/roleSpecificUserApi';
+import type { DepartmentUser } from '@/types/department.types';
+import type { UserFilters as UserFiltersType, PaginatedUserResponse, User } from '@/types/api.types';
+import { fetchUsers, fetchUsersWithFilters } from '@/services/api';
+import { updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage, deleteUser } from '@/services/roleSpecificUserApi';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
-import DepartmentSelector from './DepartmentSelector';
-import RoleSelector from './RoleSelector';
-import UserSearchInput from './UserSearchInput';
-import UserFiltersComponent from './UserFilters';
+import UserFiltersComponent from './filters/UserFilters';
 import Pagination from './Pagination';
 import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
-import { UserStatusToggle } from './UserStatusToggle';
 import ProfileImage from './ProfileImage';
+import EditUserModal from './admin/EditUserModal';
+import DeleteUserModal from './admin/DeleteUserModal';
+import Logo from './Logo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-type ViewMode = 'all' | 'department' | 'role' | 'search' | 'filtered';
+type ViewMode = 'all' | 'filtered';
 
 // Department mapping
 const DEPARTMENT_MAP: Record<number, string> = {
@@ -39,7 +35,7 @@ const DEPARTMENT_MAP: Record<number, string> = {
 };
 
 // Union type for all possible user types
-type UserData = User | UserListResponse | DepartmentUser | UserSearchResponse;
+type UserData = User | UserListResponse | DepartmentUser;
 
 // Helper function to get department name by ID
 const getDepartmentName = (departmentId: number): string => {
@@ -68,21 +64,19 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 
 const UsersList: React.FC = () => {
     const [users, setUsers] = useState<UserListResponse[]>([]);
-    const [departmentUsers, setDepartmentUsers] = useState<DepartmentUsersResponse | null>(null);
-    const [roleUsers, setRoleUsers] = useState<RoleUsersResponse | null>(null);
-    const [searchResult, setSearchResult] = useState<UserSearchResponse | null>(null);
     const [filteredUsers, setFilteredUsers] = useState<PaginatedUserResponse | null>(null);
-    const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('all');
     const [error, setError] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
-    const [filters, setFilters] = useState<UserFilters>({});
+    const [selectedUser, setSelectedUser] = useState<UserListResponse | null>(null);
+    const [filters, setFilters] = useState<UserFiltersType>({});
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isDeletingImage, setIsDeletingImage] = useState(false);
     const [showDeleteImageModal, setShowDeleteImageModal] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<UserListResponse | null>(null);
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
 
     const { user } = useAuthStore();
     const { setLoading } = useAppStore();
@@ -115,73 +109,15 @@ const UsersList: React.FC = () => {
             const usersData = await fetchUsers(user.token, setLoading);
             setUsers(usersData);
             setViewMode('all');
-            setDepartmentUsers(null);
-            setRoleUsers(null);
-            setSearchResult(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load users');
         }
     };
 
-    const loadDepartmentUsers = async (department: Department) => {
-        if (!user?.token) {
-            setError('No authentication token found');
-            return;
-        }
 
-        try {
-            setError(null);
-            const departmentData = await fetchUsersByDepartment(department.id, user.token, setLoading);
-            setDepartmentUsers(departmentData);
-            setSelectedDepartment(department);
-            setViewMode('department');
-            setRoleUsers(null);
-            setSearchResult(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load department users');
-        }
-    };
 
-    const loadRoleUsers = async (role: Role) => {
-        if (!user?.token) {
-            setError('No authentication token found');
-            return;
-        }
 
-        try {
-            setError(null);
-            const roleData = await fetchUsersByRole(role.name, user.token, setLoading);
-            setRoleUsers(roleData);
-            setSelectedRole(role);
-            setViewMode('role');
-            setDepartmentUsers(null);
-            setSearchResult(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load role users');
-        }
-    };
-
-    const searchUser = async (username: string) => {
-        if (!user?.token) {
-            setError('No authentication token found');
-            return;
-        }
-
-        try {
-            setError(null);
-            const userData = await searchUserByUsername(username, user.token, setLoading);
-            setSearchResult(userData);
-            setViewMode('search');
-            setDepartmentUsers(null);
-            setRoleUsers(null);
-            setSelectedDepartment(null);
-            setSelectedRole(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to search user');
-        }
-    };
-
-    const loadFilteredUsers = async (filters: UserFilters) => {
+    const loadFilteredUsers = async (filters: UserFiltersType) => {
         if (!user?.token) {
             setError('No authentication token found');
             return;
@@ -192,17 +128,12 @@ const UsersList: React.FC = () => {
             const filteredData = await fetchUsersWithFilters(filters, user.token, setLoading);
             setFilteredUsers(filteredData);
             setViewMode('filtered');
-            setDepartmentUsers(null);
-            setRoleUsers(null);
-            setSearchResult(null);
-            setSelectedDepartment(null);
-            setSelectedRole(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load filtered users');
         }
     };
 
-    const handleFiltersChange = (newFilters: UserFilters) => {
+    const handleFiltersChange = (newFilters: UserFiltersType) => {
         setFilters(newFilters);
     };
 
@@ -224,23 +155,10 @@ const UsersList: React.FC = () => {
         }
     };
 
-    const clearSearch = () => {
-        setSearchResult(null);
-        setError(null);
-        setViewMode('all');
-    };
-
-    const handleDepartmentSelect = (department: Department) => {
-        loadDepartmentUsers(department);
-    };
-
-    const handleRoleSelect = (role: Role) => {
-        loadRoleUsers(role);
-    };
 
     // Handle opening edit modal
     const handleEditUser = (userToEdit: UserData) => {
-        setSelectedUser(userToEdit);
+        setSelectedUser(userToEdit as UserListResponse);
         editForm.reset({
             firstName: userToEdit.firstName,
             lastName: userToEdit.lastName,
@@ -259,9 +177,46 @@ const UsersList: React.FC = () => {
         editForm.reset();
     };
 
+    // Handle delete user
+    const handleDeleteUser = (userToDelete: UserListResponse) => {
+        setUserToDelete(userToDelete);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setUserToDelete(null);
+    };
+
+    const handleConfirmDeleteUser = async () => {
+        if (!userToDelete || !user?.token) return;
+
+        setIsDeletingUser(true);
+        try {
+            const response = await deleteUser(userToDelete.id, user.token);
+
+            if (response) {
+                success('User Deleted Successfully', response.message);
+                handleCloseDeleteModal();
+
+                // Refresh the current view
+                if (viewMode === 'all') {
+                    loadAllUsers();
+                } else if (viewMode === 'filtered') {
+                    loadFilteredUsers(filters);
+                }
+            }
+        } catch (error: any) {
+            console.error('Error deleting user:', error);
+            showError('Delete Failed', error.message || 'Failed to delete user');
+        } finally {
+            setIsDeletingUser(false);
+        }
+    };
+
     // Handle opening password update modal
     const handleUpdatePassword = (userToUpdate: UserData) => {
-        setSelectedUser(userToUpdate);
+        setSelectedUser(userToUpdate as UserListResponse);
         setIsPasswordModalOpen(true);
     };
 
@@ -304,7 +259,10 @@ const UsersList: React.FC = () => {
                 // Update the selected user's profile image
                 setSelectedUser(prev => prev ? {
                     ...prev,
-                    profileImage: response.profileImage
+                    profileImage: response.profileImage ? {
+                        ...response.profileImage,
+                        userId: prev.id
+                    } : null
                 } : null);
                 success('Profile Image Updated', response.message);
             } else {
@@ -359,34 +317,6 @@ const UsersList: React.FC = () => {
                     user.id === userId ? { ...user, isActive: newStatus } : user
                 )
             );
-        } else if (viewMode === 'department' && departmentUsers) {
-            setDepartmentUsers(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    users: prev.users.map(user =>
-                        user.id === userId ? { ...user, isActive: newStatus } : user
-                    )
-                };
-            });
-        } else if (viewMode === 'role' && roleUsers) {
-            setRoleUsers(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    users: prev.users.map(user =>
-                        user.id === userId ? { ...user, isActive: newStatus } : user
-                    )
-                };
-            });
-        } else if (viewMode === 'search' && searchResult) {
-            setSearchResult(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    isActive: newStatus
-                };
-            });
         }
 
         // Update the selectedUser if it's the same user being edited
@@ -422,12 +352,8 @@ const UsersList: React.FC = () => {
                 // Refresh the current view
                 if (viewMode === 'all') {
                     loadAllUsers();
-                } else if (viewMode === 'department' && selectedDepartment) {
-                    loadDepartmentUsers(selectedDepartment);
-                } else if (viewMode === 'role' && selectedRole) {
-                    loadRoleUsers(selectedRole);
-                } else if (viewMode === 'search' && searchResult) {
-                    searchUser(searchResult.userName);
+                } else if (viewMode === 'filtered') {
+                    loadFilteredUsers(filters);
                 }
             } else {
                 showError('User Update Failed', response.message);
@@ -449,27 +375,15 @@ const UsersList: React.FC = () => {
     // Get current users to display
     const currentUsers = viewMode === 'all'
         ? users
-        : viewMode === 'department'
-            ? departmentUsers?.users || []
-            : viewMode === 'role'
-                ? roleUsers?.users || []
-                : viewMode === 'search'
-                    ? searchResult ? [searchResult] : []
-                    : viewMode === 'filtered'
-                        ? filteredUsers?.users || []
-                        : [];
+        : viewMode === 'filtered'
+            ? filteredUsers?.users || []
+            : [];
 
     const currentDescription = viewMode === 'all'
         ? 'View all users across all departments'
-        : viewMode === 'department'
-            ? `View users in ${selectedDepartment?.name} department (${departmentUsers?.userCount || 0} users)`
-            : viewMode === 'role'
-                ? `View users with ${selectedRole?.name} role (${roleUsers?.userCount || 0} users)`
-                : viewMode === 'search'
-                    ? searchResult ? `Found user: ${searchResult.fullName}` : 'Search for a user by username'
-                    : viewMode === 'filtered'
-                        ? `Filtered results (${filteredUsers?.totalCount || 0} users)`
-                        : 'Search for a user by username';
+        : viewMode === 'filtered'
+            ? `Filtered results (${filteredUsers?.totalCount || 0} users)`
+            : 'No users to display';
 
     if (error) {
         return (
@@ -482,75 +396,17 @@ const UsersList: React.FC = () => {
     return (
         <div className="p-6">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Users Management
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-bold text-foreground">
+                        Users Management
+                    </h1>
+                    <Logo />
+                </div>
+                <p className="text-muted-foreground mt-2">
                     {currentDescription}
                 </p>
             </div>
 
-            {/* Search Section */}
-            <div className="mb-6">
-                <UserSearchInput
-                    onSearch={searchUser}
-                    onClear={clearSearch}
-                    isSearching={false}
-                    searchResult={searchResult}
-                    error={error}
-                    onStatusChange={(newStatus) => {
-                        if (searchResult) {
-                            setSearchResult(prev => prev ? { ...prev, isActive: newStatus } : null);
-                        }
-                    }}
-                />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mb-6 flex flex-col lg:flex-row gap-4">
-                <Button
-                    onClick={loadAllUsers}
-                    variant={viewMode === 'all' ? 'default' : 'outline'}
-                    className="flex items-center gap-2"
-                >
-                    <Users className="h-4 w-4" />
-                    All Users
-                </Button>
-
-                <div className="flex-1 max-w-md">
-                    <DepartmentSelector
-                        onDepartmentSelect={handleDepartmentSelect}
-                        selectedDepartment={selectedDepartment}
-                    />
-                </div>
-
-                <div className="flex-1 max-w-md">
-                    <RoleSelector
-                        onRoleSelect={handleRoleSelect}
-                        selectedRole={selectedRole}
-                    />
-                </div>
-
-                <Button
-                    onClick={() => {
-                        if (viewMode === 'all') {
-                            loadAllUsers();
-                        } else if (viewMode === 'department' && selectedDepartment) {
-                            loadDepartmentUsers(selectedDepartment);
-                        } else if (viewMode === 'role' && selectedRole) {
-                            loadRoleUsers(selectedRole);
-                        } else if (viewMode === 'search' && searchResult) {
-                            searchUser(searchResult.userName);
-                        }
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                >
-                    <RefreshCw className="h-4 w-4" />
-                    Refresh
-                </Button>
-            </div>
 
             {/* Advanced Filters */}
             <UserFiltersComponent
@@ -565,23 +421,17 @@ const UsersList: React.FC = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full table-auto">
                         <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-700">
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                                    Image
+                            <tr className="border-b border-border">
+                                <th className="text-start py-3 px-4 font-semibold text-foreground">
+                                    User
                                 </th>
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                                    Name
+                                <th className="text-start py-3 px-4 font-semibold text-foreground">
+                                    Role & Department
                                 </th>
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                                    Department
-                                </th>
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
-                                    Email
-                                </th>
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                <th className="text-start py-3 px-4 font-semibold text-foreground">
                                     Status
                                 </th>
-                                <th className="text-start py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                                <th className="text-start py-3 px-4 font-semibold text-foreground">
                                     Actions
                                 </th>
                             </tr>
@@ -590,27 +440,45 @@ const UsersList: React.FC = () => {
                             {currentUsers.map((user) => (
                                 <tr
                                     key={user.id}
-                                    className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                    className="border-b border-border hover:bg-accent/50"
                                 >
+                                    {/* User Column - Image + Name + Email */}
                                     <td className="py-3 px-4">
-                                        <ProfileImage
-                                            src={'profileImage' in user ? user.profileImage : undefined}
-                                            alt={`${user.fullName} profile picture`}
-                                            size="sm"
-                                        />
+                                        <div className="flex items-center gap-3">
+                                            <ProfileImage
+                                                src={'profileImage' in user ? user.profileImage : undefined}
+                                                alt={`${user.fullName} profile picture`}
+                                                size="sm"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-foreground truncate">
+                                                    {user.fullName}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground truncate">
+                                                    {user.email}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td className="py-3 px-4 text-gray-900 dark:text-white">
-                                        {user.fullName}
+
+                                    {/* Role & Department Column */}
+                                    <td className="py-3 px-4">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                                    {'roles' in user ? (user.roles?.[0] || 'No Role') : 'No Role'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                {'departmentName' in user
+                                                    ? user.departmentName
+                                                    : getDepartmentName(user.departmentId)
+                                                }
+                                            </p>
+                                        </div>
                                     </td>
-                                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                                        {'departmentName' in user
-                                            ? user.departmentName
-                                            : getDepartmentName(user.departmentId)
-                                        }
-                                    </td>
-                                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                                        {user.email}
-                                    </td>
+
+                                    {/* Status Column */}
                                     <td className="py-3 px-4">
                                         <span
                                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.isActive
@@ -621,6 +489,8 @@ const UsersList: React.FC = () => {
                                             {user.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
+
+                                    {/* Actions Column */}
                                     <td className="py-3 px-4">
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -643,6 +513,17 @@ const UsersList: React.FC = () => {
                                                     Password
                                                 </Button>
                                             )}
+                                            {isSuperAdmin && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleDeleteUser(user as UserListResponse)}
+                                                    className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    Delete
+                                                </Button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>
@@ -655,11 +536,9 @@ const UsersList: React.FC = () => {
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                         {viewMode === 'all'
                             ? 'No users found'
-                            : viewMode === 'department'
-                                ? 'No users found in this department'
-                                : viewMode === 'role'
-                                    ? 'No users found with this role'
-                                    : 'No user found with this username'
+                            : viewMode === 'filtered'
+                                ? 'No users found matching the filters'
+                                : 'No users to display'
                         }
                     </div>
                 )}
@@ -680,332 +559,28 @@ const UsersList: React.FC = () => {
             )}
 
             {/* Edit User Modal */}
-            {isEditModalOpen && selectedUser && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Edit className="h-5 w-5" />
-                                        Edit User
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Update user information for {selectedUser.fullName}
-                                    </CardDescription>
-                                </div>
-                                <Button
-                                    className="hover:text-white hover:bg-red-500"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleCloseEditModal}
-                                >
-                                    <X className="h-4 w-4 " />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    {/* First Name */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="firstName">First Name</Label>
-                                        <Input
-                                            id="firstName"
-                                            {...editForm.register("firstName")}
-                                            placeholder="Enter first name"
-                                        />
-                                        {editForm.formState.errors.firstName && (
-                                            <p className="text-sm text-red-600">
-                                                {editForm.formState.errors.firstName.message}
-                                            </p>
-                                        )}
-                                    </div>
+            <EditUserModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                user={selectedUser}
+                onSubmit={onSubmitEdit}
+                onImageUpload={handleImageUpload}
+                onImageDelete={handleImageDelete}
+                isUploadingImage={isUploadingImage}
+                isDeletingImage={isDeletingImage}
+                showDeleteImageModal={showDeleteImageModal}
+                setShowDeleteImageModal={setShowDeleteImageModal}
+                onStatusChange={handleUserStatusChange}
+                isSuperAdmin={isSuperAdmin}
+            />
 
-                                    {/* Last Name */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="lastName">Last Name</Label>
-                                        <Input
-                                            id="lastName"
-                                            {...editForm.register("lastName")}
-                                            placeholder="Enter last name"
-                                        />
-                                        {editForm.formState.errors.lastName && (
-                                            <p className="text-sm text-red-600">
-                                                {editForm.formState.errors.lastName.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Username */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="userName">Username</Label>
-                                        <Input
-                                            id="userName"
-                                            {...editForm.register("userName")}
-                                            placeholder="Enter username"
-                                        />
-                                        {editForm.formState.errors.userName && (
-                                            <p className="text-sm text-red-600">
-                                                {editForm.formState.errors.userName.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Email */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            {...editForm.register("email")}
-                                            placeholder="Enter email address"
-                                        />
-                                        {editForm.formState.errors.email && (
-                                            <p className="text-sm text-red-600">
-                                                {editForm.formState.errors.email.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Phone Number */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phoneNumber">Phone Number</Label>
-                                        <Input
-                                            id="phoneNumber"
-                                            {...editForm.register("phoneNumber")}
-                                            placeholder="Enter phone number"
-                                        />
-                                        {editForm.formState.errors.phoneNumber && (
-                                            <p className="text-sm text-red-600">
-                                                {editForm.formState.errors.phoneNumber.message}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Profile Image */}
-                                    <div className="space-y-2 md:col-span-2">
-                                        <Label>Profile Image</Label>
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center border-4 border-primary/20 overflow-hidden">
-                                                    {selectedUser?.profileImage && selectedUser.profileImage.filePath ? (
-                                                        <img
-                                                            src={selectedUser.profileImage.filePath}
-                                                            alt={selectedUser.profileImage.altText || selectedUser.fullName}
-                                                            className="w-full h-full rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full rounded-full bg-gradient-to-br from-primary/30 to-primary/50 flex items-center justify-center">
-                                                            <Users className="w-8 h-8 text-primary/70" />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Camera Button for Upload/Update */}
-                                                <label
-                                                    htmlFor="edit-profile-image-upload"
-                                                    className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 p-0 cursor-pointer"
-                                                    title={isUploadingImage ? "Uploading..." : (selectedUser?.profileImage && selectedUser.profileImage.filePath) ? "Change profile picture" : "Upload profile picture"}
-                                                >
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={handleImageUpload}
-                                                        disabled={isUploadingImage}
-                                                        className="hidden"
-                                                        id="edit-profile-image-upload"
-                                                    />
-                                                    <Button
-                                                        size="sm"
-                                                        className="w-full h-full rounded-full"
-                                                        variant="secondary"
-                                                        disabled={isUploadingImage}
-                                                        asChild
-                                                    >
-                                                        <div>
-                                                            {isUploadingImage ? (
-                                                                <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                                            ) : (
-                                                                <Camera className="w-3 h-3" />
-                                                            )}
-                                                        </div>
-                                                    </Button>
-                                                </label>
-
-                                                {/* Delete Button (only show if image exists) */}
-                                                {selectedUser?.profileImage && selectedUser.profileImage.filePath && (
-                                                    <Dialog open={showDeleteImageModal} onOpenChange={setShowDeleteImageModal}>
-                                                        <DialogTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                className="absolute -top-1 -right-1 rounded-full w-6 h-6 p-0"
-                                                                variant="destructive"
-                                                                title="Delete profile picture"
-                                                            >
-                                                                <Trash2 className="w-2 h-2" />
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent>
-                                                            <DialogHeader>
-                                                                <DialogTitle className="flex items-center gap-2">
-                                                                    <AlertTriangle className="w-5 h-5 text-destructive" />
-                                                                    Delete Profile Image
-                                                                </DialogTitle>
-                                                                <DialogDescription>
-                                                                    Are you sure you want to delete this user's profile image? This action cannot be undone.
-                                                                </DialogDescription>
-                                                            </DialogHeader>
-                                                            <DialogFooter>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    onClick={() => setShowDeleteImageModal(false)}
-                                                                    disabled={isDeletingImage}
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                                <Button
-                                                                    variant="destructive"
-                                                                    onClick={handleImageDelete}
-                                                                    disabled={isDeletingImage}
-                                                                >
-                                                                    {isDeletingImage ? (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                            Deleting...
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                            Delete Image
-                                                                        </div>
-                                                                    )}
-                                                                </Button>
-                                                            </DialogFooter>
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm text-muted-foreground">
-                                                    {selectedUser?.profileImage && selectedUser.profileImage.filePath
-                                                        ? `Current image: ${selectedUser.profileImage.fileName}`
-                                                        : 'No profile image set'
-                                                    }
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Click the camera icon to upload or change the profile image
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Department (Read-only) */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="department">De partment</Label>
-                                        <Input
-                                            id="department"
-                                            value={
-                                                'departmentName' in selectedUser
-                                                    ? selectedUser.departmentName
-                                                    : getDepartmentName(selectedUser.departmentId)
-                                            }
-                                            disabled
-                                            className="bg-gray-50 dark:bg-gray-800"
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            Department cannot be changed here
-                                        </p>
-                                    </div>
-
-                                    {/* Created At (Read-only) */}
-                                    <div className="space-y-2">
-                                        <Label htmlFor="createdAt">Created At</Label>
-                                        <Input
-                                            id="createdAt"
-                                            value={
-                                                'createdAt' in selectedUser
-                                                    ? new Date(selectedUser.createdAt).toLocaleString('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        second: '2-digit'
-                                                    })
-                                                    : 'N/A'
-                                            }
-                                            disabled
-                                            className="bg-gray-50 dark:bg-gray-800"
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            Account creation date
-                                        </p>
-                                    </div>
-                                </div>
-                                {/* User Status Actions - Only for SuperAdmin */}
-                                {isSuperAdmin && (
-                                    <div className="border-t pt-4 mt-4">
-                                        <div className="space-y-3">
-                                            <div>
-                                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                                    User Status Management
-                                                </h4>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-                                                    Change the user's active status. This will affect their ability to access the system.
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium">Current Status:</span>
-                                                    <span
-                                                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedUser.isActive
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                                            : 'bg-red-100 text-red-500 dark:bg-red-900/20 dark:text-red-400'
-                                                            }`}
-                                                    >
-                                                        {selectedUser.isActive ? 'Active' : 'Inactive'}
-                                                    </span>
-                                                </div>
-                                                <UserStatusToggle
-                                                    userId={selectedUser.id}
-                                                    userName={selectedUser.fullName}
-                                                    email={selectedUser.email}
-                                                    isActive={selectedUser.isActive}
-                                                    onStatusChange={(newStatus) => {
-                                                        handleUserStatusChange(selectedUser.id, newStatus);
-                                                        // Update the form's isActive field to reflect the change
-                                                        editForm.setValue('isActive', newStatus);
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Form Actions */}
-                                <div className="flex gap-2 pt-4">
-                                    <Button
-                                        type="submit"
-                                        disabled={editForm.formState.isSubmitting}
-                                        className="flex items-center gap-2"
-                                    >
-                                        <Save className="h-4 w-4" />
-                                        {editForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleCloseEditModal}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
-            )}
+            <DeleteUserModal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseDeleteModal}
+                onConfirm={handleConfirmDeleteUser}
+                user={userToDelete}
+                isLoading={isDeletingUser}
+            />
 
             {/* Password Update Modal */}
             <PasswordUpdateModal
