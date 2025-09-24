@@ -5,7 +5,7 @@ export const API_ENDPOINTS = {
 	AUTH: {
 		LOGIN: '/Account/login',
 		REFRESH: '/Account/refresh',
-		CURRENT_USER: '/Account/current-user',
+		CURRENT_USER: '/User/me',
 		CHANGE_PASSWORD: '/Account/change-password',
 		SUPERADMIN_UPDATE_PASSWORD:
 			'/Account/superadmin-update-password',
@@ -23,6 +23,8 @@ export const API_ENDPOINTS = {
 		ACTIVATE_DEACTIVATE: '/User/activate-deactivate',
 		DELETE: (userId: string) => `/User?userId=${userId}`,
 		IMAGE: '/User/image',
+		STATISTICS: '/User/statistics',
+		COUNTS: '/User/counts',
 	},
 
 	// Role Management
