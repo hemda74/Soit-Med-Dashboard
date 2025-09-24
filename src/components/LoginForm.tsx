@@ -25,7 +25,7 @@ export default function LoginForm() {
     const { t } = useTranslation()
 
     const form = useForm<LoginFormData>({
-        resolver: zodResolver(createLoginSchema(t)),
+        resolver: zodResolver(createLoginSchema(t as any)),
         defaultValues: {
             userName: '',
             password: '',
@@ -140,14 +140,6 @@ export default function LoginForm() {
                             </Button>
                         </form>
                     </Form>
-
-                    <div className="mt-6 text-center text-sm text-muted-foreground">
-                        <p className="mb-2">{t('demoCredentials')}</p>
-                        <div className="font-mono text-xs bg-muted p-3 rounded-md">
-                            <p>{t('userName')}: Hemdan</p>
-                            <p>{t('password')}: 356120Ahmed@shraf</p>
-                        </div>
-                    </div>
                 </CardContent>
             </Card>
         </div>

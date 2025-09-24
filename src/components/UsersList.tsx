@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Key, Trash2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
 import type { DepartmentUser } from '@/types/department.types';
 import type { UserFilters as UserFiltersType, PaginatedUserResponse, User } from '@/types/api.types';
-import { fetchUsers, fetchUsersWithFilters } from '@/services/api';
-import { updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage, deleteUser } from '@/services/roleSpecificUserApi';
+import { fetchUsers, fetchUsersWithFilters, updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage, deleteUser } from '@/services';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,6 +63,16 @@ const userEditSchema = z.object({
 type UserEditFormData = z.infer<typeof userEditSchema>;
 
 const UsersList: React.FC = () => {
+    const { user, hasAnyRole } = useAuthStore();
+
+    // Check if user has access to users page (Admin or Super Admin only)
+    const hasAccess = hasAnyRole(['Admin', 'SuperAdmin']);
+
+    // Redirect to dashboard if user doesn't have access
+    if (!hasAccess) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
     const [users, setUsers] = useState<UserListResponse[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<PaginatedUserResponse | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('all');
@@ -78,7 +88,6 @@ const UsersList: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<UserListResponse | null>(null);
     const [isDeletingUser, setIsDeletingUser] = useState(false);
 
-    const { user } = useAuthStore();
     const { setLoading } = useAppStore();
     const { success, error: showError } = useNotificationStore();
 

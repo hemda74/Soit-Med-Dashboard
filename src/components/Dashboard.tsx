@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
-import { fetchUserStatistics } from '@/services/dashboardApi'
+import { fetchUserStatistics } from '@/services'
 import type { UserStatistics } from '@/types/api.types'
 import { useState, useEffect } from 'react'
 export default function Dashboard() {

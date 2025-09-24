@@ -6,6 +6,7 @@ export type UserRole =
 	| 'Doctor'
 	| 'Technician'
 	| 'Salesman'
+	| 'SalesManager'
 	| 'Engineer'
 	| 'FinanceManager'
 	| 'FinanceEmployee'
