@@ -4,19 +4,12 @@ import { useAuthStore } from "@/stores/authStore";
 
 // Import icons
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
   UserCircleIcon,
 } from "../icons";
-import { Settings } from "lucide-react";
+import { Settings, BarChart3 } from "lucide-react";
 import { useSidebar } from "../../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 import Logo from "../Logo";
@@ -27,24 +20,6 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
-
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/dashboard",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Users",
-    path: "/users",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-];
 
 const othersItems: NavItem[] = [
   {
@@ -57,6 +32,44 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { hasAnyRole } = useAuthStore();
+
+  const baseNavItems: NavItem[] = [
+    {
+      icon: <GridIcon />,
+      name: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      icon: <UserCircleIcon />,
+      name: "User Profile",
+      path: "/profile",
+    },
+  ];
+
+  // Users menu - only for Admin and Super Admin
+  const adminNavItems: NavItem[] = hasAnyRole(['Admin', 'SuperAdmin']) ? [{
+    icon: <UserCircleIcon />,
+    name: "Users",
+    path: "/users",
+  }] : [];
+
+  const navItems: NavItem[] = [
+    ...baseNavItems,
+    ...adminNavItems,
+    // Only show Reports for Finance Manager and Super Admin
+    ...(hasAnyRole(['FinanceManager', 'SuperAdmin']) ? [{
+      icon: <BarChart3 />,
+      name: "Reports",
+      path: "/reports",
+    }] : []),
+    // Only show Sales Reports for Sales Employee, Sales Manager and Super Admin
+    ...(hasAnyRole(['Salesman', 'SalesManager', 'SuperAdmin']) ? [{
+      icon: <BarChart3 />,
+      name: "Sales Reports",
+      path: "/sales-reports",
+    }] : []),
+  ];
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";

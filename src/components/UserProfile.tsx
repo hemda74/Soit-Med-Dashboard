@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/stores/appStore';
-import { changePassword, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services/roleSpecificUserApi';
+import { changePassword, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services';
 import { useNotificationStore } from '@/stores/notificationStore';
 import ProfileImageSection from './profile/ProfileImageSection';
 import UserInfoCard from './profile/UserInfoCard';

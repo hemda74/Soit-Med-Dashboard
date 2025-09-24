@@ -10,7 +10,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
-import { updateUserStatus } from '@/services/api';
+import { updateUserStatus } from '@/services';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';

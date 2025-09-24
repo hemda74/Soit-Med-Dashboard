@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { activateDeactivateUser } from '@/services/dashboardApi';
+import { activateDeactivateUser } from '@/services';
 import type { ActivateDeactivateRequest } from '@/types/api.types';
 import toast from 'react-hot-toast';
 
@@ -61,5 +61,3 @@ export function useActivateDeactivate() {
 		isLoading,
 	};
 }
-
-

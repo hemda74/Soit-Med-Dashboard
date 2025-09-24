@@ -8,6 +8,9 @@ import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
 import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
+import ReportsScreen from '@/components/finance/ReportsScreen'
+import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
+import SalesApiTest from '@/components/debug/SalesApiTest'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -24,6 +27,9 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="users" element={<UsersList />} />
                 <Route path="profile" element={<UserProfile />} />
+                <Route path="reports" element={<ReportsScreen />} />
+                <Route path="sales-reports" element={<SalesReportsScreen />} />
+                <Route path="debug/sales-api" element={<SalesApiTest />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

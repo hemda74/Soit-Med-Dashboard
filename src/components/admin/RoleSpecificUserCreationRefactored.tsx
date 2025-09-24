@@ -21,7 +21,7 @@ import {
     getHospitals,
     getGovernorates,
     validateForm,
-} from '@/services/roleSpecificUserApi';
+} from '@/services';
 import type {
     RoleSpecificUserRole,
     HospitalInfo,
