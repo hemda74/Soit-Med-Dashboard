@@ -10,8 +10,10 @@ export interface RegisterDTO {
 }
 
 export interface AuthResponse {
+	success: boolean;
 	token: string;
 	expired: string;
+	message?: string;
 }
 
 export interface AuthUser {
@@ -53,4 +55,39 @@ export interface AuthContextType {
 	logout: () => void;
 	isAuthenticated: boolean;
 	isAdmin: boolean;
+}
+
+// Additional auth-related types
+export interface LoginRequest {
+	UserName: string;
+	Password: string;
+}
+
+export interface LoginResponse {
+	success: boolean;
+	token: string;
+	expired: string;
+	message?: string;
+}
+
+export interface ChangePasswordRequest {
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+	success: boolean;
+	message: string;
+}
+
+export interface RefreshTokenRequest {
+	token: string;
+}
+
+export interface RefreshTokenResponse {
+	success: boolean;
+	token: string;
+	expired: string;
+	message?: string;
 }
