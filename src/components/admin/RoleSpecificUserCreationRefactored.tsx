@@ -30,7 +30,7 @@ import type {
 import UserCreationSuccessModal from '../ui/user-creation-success-modal';
 import RoleSelectionCard from './RoleSelectionCard';
 import UserCreationForm from './UserCreationForm';
-import { useUserCreationForm, type FormData } from '@/hooks/useUserCreationForm';
+import { useUserCreationForm } from '@/hooks/useUserCreationForm';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -309,14 +309,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                 success: true,
                 message: 'User created successfully',
                 data: {
-                    userId: (response as any).userId,
-                    email: (response as any).email,
-                    firstName: (response as any).firstName,
-                    lastName: (response as any).lastName,
-                    role: (response as any).role || selectedRole,
-                    departmentId: (response as any).departmentId || getDepartmentIdForRole(selectedRole).toString(),
+                    userId: (response as any).userId || (response as any).data?.userId,
+                    email: (response as any).email || (response as any).data?.email,
+                    firstName: (response as any).firstName || (response as any).data?.firstName,
+                    lastName: (response as any).lastName || (response as any).data?.lastName,
+                    role: (response as any).role || (response as any).data?.role || selectedRole,
+                    departmentId: (response as any).departmentId || (response as any).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
                 }
-            } as RoleSpecificUserResponse;
+            } as unknown as RoleSpecificUserResponse;
 
             setCreatedUser(transformedResponse);
             setCreatedPassword(formData.password);
@@ -503,16 +503,16 @@ const RoleSpecificUserCreation: React.FC = () => {
             </div>
 
             {/* Success Modal */}
-            {createdUser && createdUser.data && showSuccessModal && (
+            {createdUser && (createdUser as any).data && showSuccessModal && (
                 <UserCreationSuccessModal
                     isOpen={showSuccessModal}
                     onClose={handleSuccessModalClose}
                     userData={{
-                        email: createdUser.data.email,
-                        firstName: createdUser.data.firstName,
-                        lastName: createdUser.data.lastName,
-                        role: createdUser.data.role,
-                        userId: createdUser.data.userId,
+                        email: (createdUser as any).data.email,
+                        firstName: (createdUser as any).data.firstName,
+                        lastName: (createdUser as any).data.lastName,
+                        role: (createdUser as any).data.role,
+                        userId: (createdUser as any).data.userId,
                     }}
                     password={createdPassword}
                 />
