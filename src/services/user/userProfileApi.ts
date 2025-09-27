@@ -111,20 +111,28 @@ export async function deleteProfileImage(
 export const updateUser = async (
 	userId: string,
 	userData: {
+		email: string;
+		role: string;
 		firstName: string;
 		lastName: string;
-		userName: string;
-		email: string;
-		phoneNumber?: string;
-		isActive: boolean;
+		password?: string;
 	},
 	token: string
 ): Promise<{ success: boolean; message: string }> => {
+	// Only send the fields that the API expects
+	const apiData = {
+		email: userData.email,
+		role: userData.role,
+		firstName: userData.firstName,
+		lastName: userData.lastName,
+		...(userData.password && { password: userData.password }),
+	};
+
 	return apiRequest<{ success: boolean; message: string }>(
 		API_ENDPOINTS.USER.BY_ID(userId),
 		{
-			method: 'PUT',
-			body: JSON.stringify(userData),
+			method: 'PATCH',
+			body: JSON.stringify(apiData),
 		},
 		token
 	);

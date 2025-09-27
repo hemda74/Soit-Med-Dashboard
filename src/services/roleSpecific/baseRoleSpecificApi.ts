@@ -6,9 +6,11 @@ import type {
 	RoleSpecificUserRole,
 	ChangePasswordRequest,
 	ChangePasswordResponse,
-	RoleSpecificApiError,
 	DepartmentInfo,
 	HospitalInfo,
+	DoctorUserRequest,
+	EngineerUserRequest,
+	TechnicianUserRequest,
 } from '@/types/roleSpecificUser.types';
 import { apiRequest } from '../shared/apiClient';
 import { API_ENDPOINTS } from '../shared/endpoints';
@@ -74,65 +76,84 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 // Helper function to create users with proper role mapping
 export const createUserByRole = async (
 	role: RoleSpecificUserRole,
-	userData: any,
+	userData: RoleSpecificUserRequest,
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
 	switch (role) {
-		case 'doctor':
+		case 'doctor': {
 			const { createDoctor } = await import(
 				'./medicalRoleApi'
 			);
-			return createDoctor(userData, token);
-		case 'engineer':
+			return createDoctor(
+				userData as DoctorUserRequest,
+				token
+			);
+		}
+		case 'engineer': {
 			const { createEngineer } = await import(
 				'./technicalRoleApi'
 			);
-			return createEngineer(userData, token);
-		case 'technician':
+			return createEngineer(
+				userData as EngineerUserRequest,
+				token
+			);
+		}
+		case 'technician': {
 			const { createTechnician } = await import(
 				'./medicalRoleApi'
 			);
-			return createTechnician(userData, token);
-		case 'admin':
+			return createTechnician(
+				userData as TechnicianUserRequest,
+				token
+			);
+		}
+		case 'admin': {
 			const { createAdmin } = await import('./adminRoleApi');
 			return createAdmin(userData, token);
-		case 'finance-manager':
+		}
+		case 'finance-manager': {
 			const { createFinanceManager } = await import(
 				'./financeRoleApi'
 			);
 			return createFinanceManager(userData, token);
-		case 'finance-employee':
+		}
+		case 'finance-employee': {
 			const { createFinanceEmployee } = await import(
 				'./financeRoleApi'
 			);
 			return createFinanceEmployee(userData, token);
-		case 'legal-manager':
+		}
+		case 'legal-manager': {
 			const { createLegalManager } = await import(
 				'./legalRoleApi'
 			);
 			return createLegalManager(userData, token);
-		case 'legal-employee':
+		}
+		case 'legal-employee': {
 			const { createLegalEmployee } = await import(
 				'./legalRoleApi'
 			);
 			return createLegalEmployee(userData, token);
-		case 'salesman':
+		}
+		case 'salesman': {
 			const { createSalesman } = await import(
 				'./salesRoleApi'
 			);
 			return createSalesman(userData, token);
-		case 'sales-manager':
+		}
+		case 'sales-manager': {
 			const { createSalesManager } = await import(
 				'./salesRoleApi'
 			);
 			return createSalesManager(userData, token);
+		}
 		default:
 			throw new Error(`Unsupported role: ${role}`);
 	}
 };
 
-// Change password
-export const changePassword = async (
+// Change password for role-specific users
+export const changeRoleSpecificPassword = async (
 	passwordData: ChangePasswordRequest,
 	token: string
 ): Promise<ChangePasswordResponse> => {

@@ -99,35 +99,64 @@ class UserApiClient {
 
 export const userApiClient = new UserApiClient(API_BASE_URL);
 
-// Function to fetch all users with loading state
+// Function to fetch all users with loading state and pagination
 export const fetchUsers = async (
 	token: string,
-	setLoading?: (loading: boolean) => void
-): Promise<UserListResponse[]> => {
+	setLoading?: (loading: boolean) => void,
+	pageNumber: number = 1,
+	pageSize: number = 10
+): Promise<PaginatedUserResponse> => {
 	if (!token) {
 		throw new Error('No authentication token provided');
 	}
 
 	try {
 		setLoading?.(true);
+
+		// Build query parameters for pagination
+		const queryParams = new URLSearchParams();
+		queryParams.append('PageNumber', pageNumber.toString());
+		queryParams.append('PageSize', pageSize.toString());
+
+		const endpoint = `${
+			API_ENDPOINTS.USER.ALL
+		}?${queryParams.toString()}`;
+
 		const response = await userApiClient.get<PaginatedUserResponse>(
-			API_ENDPOINTS.USER.ALL,
+			endpoint,
 			token
 		);
 
 		// Handle both old and new API response formats
 		if (Array.isArray(response)) {
-			// Old format: direct array
-			return response as UserListResponse[];
+			// Old format: direct array - convert to paginated format
+			const users = response as UserListResponse[];
+			return {
+				users: users,
+				totalCount: users.length,
+				pageNumber: 1,
+				pageSize: users.length,
+				totalPages: 1,
+				hasPreviousPage: false,
+				hasNextPage: false,
+			};
 		} else if (response && Array.isArray(response.users)) {
-			// New format: paginated response with users array
-			return response.users as unknown as UserListResponse[];
+			// New format: paginated response
+			return response;
 		} else {
 			console.warn(
 				'Unexpected API response format:',
 				response
 			);
-			return [];
+			return {
+				users: [],
+				totalCount: 0,
+				pageNumber: 1,
+				pageSize: pageSize,
+				totalPages: 0,
+				hasPreviousPage: false,
+				hasNextPage: false,
+			};
 		}
 	} finally {
 		setLoading?.(false);

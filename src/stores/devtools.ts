@@ -1,13 +1,25 @@
 // Development tools configuration for Zustand stores
 import { devtools } from 'zustand/middleware';
+import type { StateCreator } from 'zustand';
 
 // Check if we're in development mode
 const isDevelopment = import.meta.env.MODE === 'development';
 
+// Extend Window interface for devtools
+declare global {
+	interface Window {
+		__ZUSTAND_DEVTOOLS__?: {
+			getState?: (storeName: string) => any;
+		};
+		__STORE_DEBUG__?: any;
+	}
+}
+
 // Devtools configuration
-export const createDevtools = <T>(name: string) =>
+export const createDevtools = (name: string) =>
 	isDevelopment
-		? devtools<T>(undefined, { name })
+		? <T extends object>(config: StateCreator<T, [], [], T>) =>
+				devtools(config, { name })
 		: <T extends object>(config: T) => config;
 
 // Store names for devtools

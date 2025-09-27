@@ -412,10 +412,16 @@ export function useSalesReports(): UseSalesReportsReturn {
 		await fetchReports();
 	}, [fetchReports]);
 
-	// Set filters
-	const setFilters = useCallback((filters: FilterSalesReportsDto) => {
-		setState((prev) => ({ ...prev, filters }));
-	}, []);
+	// Set filters and trigger API call
+	const setFilters = useCallback(
+		(filters: FilterSalesReportsDto) => {
+			setState((prev) => ({ ...prev, filters }));
+			// Reset to page 1 when filters change
+			const filtersWithPage = { ...filters, page: 1 };
+			fetchReports(filtersWithPage);
+		},
+		[fetchReports]
+	);
 
 	// Clear error
 	const clearError = useCallback(() => {

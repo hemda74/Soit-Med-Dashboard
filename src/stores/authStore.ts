@@ -272,7 +272,7 @@ export const useAuthStore = create<AuthState>()(
 					);
 				},
 
-				hasPermission: (permission: string) => {
+				hasPermission: (_permission: string) => {
 					// This would typically check against a permissions system
 					// For now, we'll use role-based permissions
 					const { user } = get();

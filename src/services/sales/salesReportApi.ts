@@ -11,7 +11,6 @@ import type {
 	PaginatedApiResponse,
 } from '@/types/salesReport.types';
 import { getAuthToken } from '@/utils/authUtils';
-import { apiRequest } from '../shared/apiClient';
 import { API_ENDPOINTS } from '../shared/endpoints';
 
 const API_BASE_URL =
@@ -84,6 +83,8 @@ class SalesReportApiService {
 			queryParams.append('endDate', filters.endDate);
 		if (filters.employeeId)
 			queryParams.append('employeeId', filters.employeeId);
+		if (filters.searchTerm)
+			queryParams.append('searchTerm', filters.searchTerm);
 
 		const queryString = queryParams.toString();
 		const endpoint = queryString

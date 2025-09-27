@@ -21,7 +21,7 @@ export const API_ENDPOINTS = {
 		BY_ROLE: (role: string) =>
 			`/User/role/${encodeURIComponent(role)}`,
 		ACTIVATE_DEACTIVATE: '/User/activate-deactivate',
-		DELETE: (userId: string) => `/User?userId=${userId}`,
+		DELETE: (userId: string) => `/User/${userId}`,
 		IMAGE: '/User/image',
 		STATISTICS: '/User/statistics',
 		COUNTS: '/User/counts',

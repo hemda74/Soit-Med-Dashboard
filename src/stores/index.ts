@@ -12,7 +12,6 @@ export { useAppStore } from './appStore';
 export { useNotificationStore } from './notificationStore';
 export {
 	useApiStore,
-	useApiLoading,
 	useApiError,
 	useGlobalLoading,
 	useApiCallHistory,

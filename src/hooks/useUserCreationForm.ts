@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { RoleSpecificUserRole } from '@/types/roleSpecificUser.types';
 
 export interface FormData {
 	email: string;
