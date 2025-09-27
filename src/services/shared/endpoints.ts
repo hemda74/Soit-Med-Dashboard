@@ -9,6 +9,9 @@ export const API_ENDPOINTS = {
 		CHANGE_PASSWORD: '/Account/change-password',
 		SUPERADMIN_UPDATE_PASSWORD:
 			'/Account/superadmin-update-password',
+		FORGOT_PASSWORD: '/Account/forgot-password',
+		VERIFY_CODE: '/Account/verify-code',
+		RESET_PASSWORD: '/Account/reset-password',
 	},
 
 	// User Management

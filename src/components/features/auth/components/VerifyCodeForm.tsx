@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import Label from '@/components/ui/template/Label';
 import Button from '@/components/ui/template/Button';
 import { ChevronLeftIcon } from '@/components/icons/template';
@@ -9,31 +9,84 @@ import { ChevronLeftIcon } from '@/components/icons/template';
 const SimpleInput = React.forwardRef<HTMLInputElement, any>(({ className, error, ...props }, ref) => (
     <input
         ref={ref}
-        className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm text-black dark:text-black ${error ? 'border-red-500' : 'border-gray-300'
+        className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm text-black dark:text-black text-center ${error ? 'border-red-500' : 'border-gray-300'
             } ${className}`}
         {...props}
     />
 ));
 SimpleInput.displayName = "SimpleInput";
 
-interface ForgotPasswordFormProps {
-    onSubmit: (email: string) => void;
+interface VerifyCodeFormProps {
+    email: string;
+    onSubmit: (code: string) => void;
+    onResendCode: () => void;
     isLoading: boolean;
     error: string | null;
     success: boolean;
 }
 
-export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
+export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
+    email,
     onSubmit,
+    onResendCode,
     isLoading,
     error,
     success,
 }) => {
-    const [email, setEmail] = useState('');
+    const [code, setCode] = useState(['', '', '', '', '', '']);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    useEffect(() => {
+        // Focus first input on mount
+        if (inputRefs.current[0]) {
+            inputRefs.current[0].focus();
+        }
+    }, []);
+
+    const handleInputChange = (index: number, value: string) => {
+        // Only allow digits
+        if (!/^\d*$/.test(value)) return;
+
+        const newCode = [...code];
+        newCode[index] = value;
+        setCode(newCode);
+
+        // Auto-focus next input
+        if (value && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+
+        // Auto-submit when all digits are entered
+        if (newCode.every(digit => digit !== '') && newCode.join('').length === 6) {
+            onSubmit(newCode.join(''));
+        }
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+        // Handle backspace
+        if (e.key === 'Backspace' && !code[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        const newCode = pastedData.split('').concat(Array(6 - pastedData.length).fill(''));
+        setCode(newCode);
+
+        // Focus the next empty input or the last one
+        const nextEmptyIndex = newCode.findIndex(digit => digit === '');
+        const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
+        inputRefs.current[focusIndex]?.focus();
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(email);
+        const fullCode = code.join('');
+        if (fullCode.length === 6) {
+            onSubmit(fullCode);
+        }
     };
 
     if (success) {
@@ -67,26 +120,11 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                 </svg>
                             </div>
                             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                                Check your email
+                                Code Verified!
                             </h1>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                We've sent a verification code to your email address.
+                                You can now proceed to reset your password.
                             </p>
-                        </div>
-                        <div className="space-y-4">
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                                Didn't receive the email? Check your spam folder or try again.
-                            </p>
-                            <Button
-                                onClick={() => {
-                                    setEmail('');
-                                    window.location.reload();
-                                }}
-                                className="w-full"
-                                size="sm"
-                            >
-                                Send another code
-                            </Button>
                         </div>
                     </div>
                 </div>
@@ -98,21 +136,21 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         <div className="flex flex-col flex-1">
             <div className="w-full max-w-md pt-10 mx-auto">
                 <Link
-                    to="/login"
+                    to="/forgot-password"
                     className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                 >
                     <ChevronLeftIcon className="size-5" />
-                    Back to login
+                    Back
                 </Link>
             </div>
             <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
                 <div>
                     <div className="mb-5 sm:mb-8">
                         <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-                            Forgot Password?
+                            Enter Verification Code
                         </h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            No worries, we'll send you reset instructions.
+                            We've sent a 6-digit code to <span className="font-medium text-gray-700 dark:text-gray-300">{email}</span>
                         </p>
                     </div>
                     <div>
@@ -125,17 +163,28 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                 )}
 
                                 <div>
-                                    <Label htmlFor="email">
-                                        Email <span className="text-error-500">*</span>
+                                    <Label htmlFor="code">
+                                        Verification Code <span className="text-error-500">*</span>
                                     </Label>
-                                    <SimpleInput
-                                        id="email"
-                                        type="email"
-                                        placeholder="Enter your email address"
-                                        value={email}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                                        required
-                                    />
+                                    <div className="flex gap-2 justify-center">
+                                        {code.map((digit, index) => (
+                                            <SimpleInput
+                                                key={index}
+                                                ref={(el) => (inputRefs.current[index] = el)}
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={1}
+                                                value={digit}
+                                                onChange={(e) => handleInputChange(index, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                                onPaste={handlePaste}
+                                                className="w-12 h-12 text-lg font-semibold"
+                                            />
+                                        ))}
+                                    </div>
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        Code expires in 15 minutes
+                                    </p>
                                 </div>
 
                                 <div>
@@ -143,17 +192,31 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                         type="submit"
                                         className="w-full"
                                         size="sm"
-                                        disabled={isLoading || !email}
+                                        disabled={isLoading || code.join('').length !== 6}
                                     >
                                         {isLoading ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Sending...
+                                                Verifying...
                                             </>
                                         ) : (
-                                            'Send verification code'
+                                            'Verify Code'
                                         )}
                                     </Button>
+                                </div>
+
+                                <div className="text-center">
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Didn't receive the code?
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={onResendCode}
+                                        className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium"
+                                        disabled={isLoading}
+                                    >
+                                        Resend Code
+                                    </button>
                                 </div>
                             </div>
                         </form>
@@ -163,4 +226,3 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
         </div>
     );
 };
-

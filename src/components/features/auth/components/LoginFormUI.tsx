@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Label from '@/components/ui/template/Label';
-import Input from '@/components/ui/template/InputField';
-import Checkbox from '@/components/ui/template/Checkbox';
 import Button from '@/components/ui/template/Button';
-import { ChevronLeftIcon, EyeIcon, EyeCloseIcon } from '@/components/icons/template';
+import { EyeIcon, EyeCloseIcon } from '@/components/icons/template';
+import Logo from '@/components/Logo';
 
 // Temporary simple input for debugging
 const SimpleInput = React.forwardRef<HTMLInputElement, any>(({ className, error, ...props }, ref) => (
@@ -39,18 +38,11 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
     handleSubmit,
     togglePasswordVisibility,
 }) => {
-    const [isChecked, setIsChecked] = useState(false);
 
     return (
         <div className="flex flex-col flex-1">
-            <div className="w-full max-w-md pt-10 mx-auto">
-                <Link
-                    to="/"
-                    className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                >
-                    <ChevronLeftIcon className="size-5" />
-                    Back to dashboard
-                </Link>
+            <div className="w-full max-w-md pt-10 mx-auto flex justify-center">
+                <Logo />
             </div>
             <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
                 <div>
@@ -134,17 +126,7 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <Checkbox
-                                            checked={isChecked}
-                                            onChange={setIsChecked}
-                                            id="remember-me"
-                                        />
-                                        <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                                            Keep me logged in
-                                        </span>
-                                    </div>
+                                <div className="flex items-center justify-end">
                                     <Link
                                         to="/forgot-password"
                                         className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"

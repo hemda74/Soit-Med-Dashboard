@@ -1,12 +1,11 @@
 import React from 'react';
 import { PasswordResetFlow } from '@/components/features/auth/components/PasswordResetFlow';
 
-export default function ForgotPassword() {
+export default function ResetPassword() {
     return (
         <PasswordResetFlow
-            initialStep="forgot"
+            initialStep="reset"
             onComplete={() => {
-                // Optional: Handle completion (e.g., redirect to login)
                 console.log('Password reset completed');
             }}
         />

@@ -3,8 +3,9 @@ import { useSidebar } from '@/context/SidebarContext';
 
 export const useAppHeader = () => {
 	const {
-		isMobileOpen: isSidebarOpen,
-		toggleMobileSidebar: toggleSidebar,
+		toggleSidebar: toggleDesktopSidebar,
+		toggleMobileSidebar,
+		isExpanded,
 	} = useSidebar();
 	const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
 
@@ -12,10 +13,18 @@ export const useAppHeader = () => {
 		setIsAppMenuOpen(!isAppMenuOpen);
 	};
 
+	const handleToggle = () => {
+		if (window.innerWidth >= 1024) {
+			toggleDesktopSidebar();
+		} else {
+			toggleMobileSidebar();
+		}
+	};
+
 	return {
-		isSidebarOpen,
-		toggleSidebar,
+		toggleSidebar: handleToggle,
 		isAppMenuOpen,
 		toggleAppMenu,
+		isExpanded,
 	};
 };
