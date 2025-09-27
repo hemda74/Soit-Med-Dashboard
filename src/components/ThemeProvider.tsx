@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 if (parsed.state?.language) {
                     setLanguage(parsed.state.language);
                 }
-            } catch (e) {
+            } catch {
                 // Fallback to system preference
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 setTheme(prefersDark ? 'dark' : 'light');
