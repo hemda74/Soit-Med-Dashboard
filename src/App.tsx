@@ -2,7 +2,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from '@/stores/authStore'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import AppLayout from '@/components/layout/AppLayout'
+import AuthLayout from '@/components/layout/AuthLayout'
 import LoginForm from '@/components/LoginForm'
+import ForgotPassword from '@/pages/ForgotPassword'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
@@ -36,7 +38,12 @@ function App() {
               </Route>
             </Routes>
           ) : (
-            <LoginForm />
+            <Routes>
+              <Route path="/" element={<AuthLayout><LoginForm /></AuthLayout>} />
+              <Route path="login" element={<AuthLayout><LoginForm /></AuthLayout>} />
+              <Route path="forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
           )}
         </div>
       </Router>

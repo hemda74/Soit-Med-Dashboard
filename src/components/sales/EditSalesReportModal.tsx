@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,9 +14,7 @@ import type { UpdateSalesReportDto, SalesReportResponseDto } from '@/types/sales
 const editReportSchema = z.object({
     title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
     body: z.string().min(1, 'Body is required').max(2000, 'Body must be less than 2000 characters'),
-    type: z.enum(['daily', 'weekly'], {
-        required_error: 'Please select a report type',
-    }),
+    type: z.enum(['daily', 'weekly', 'monthly', 'custom']),
     reportDate: z.string().min(1, 'Report date is required'),
 });
 
@@ -41,7 +39,6 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
         formState: { errors },
         setValue,
         watch,
-        reset,
     } = useForm<EditReportFormData>({
         resolver: zodResolver(editReportSchema),
         defaultValues: {
@@ -53,16 +50,6 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
     });
 
     const watchedType = watch('type');
-
-    // Reset form when report changes
-    useEffect(() => {
-        reset({
-            title: report.title,
-            body: report.body,
-            type: report.type,
-            reportDate: report.reportDate,
-        });
-    }, [report, reset]);
 
     const handleFormSubmit = async (data: EditReportFormData) => {
         setIsSubmitting(true);
@@ -112,7 +99,7 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                         Edit Sales Report
                     </DialogTitle>
                     <DialogDescription>
-                        Update your sales report details and content.
+                        Update the sales report details below.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -122,7 +109,7 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                         <Label htmlFor="type">Report Type *</Label>
                         <Select
                             value={watchedType}
-                            onValueChange={(value) => setValue('type', value as any)}
+                            onValueChange={(value) => setValue('type', value as 'daily' | 'weekly' | 'monthly' | 'custom')}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select report type" />
@@ -130,6 +117,8 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                             <SelectContent>
                                 <SelectItem value="daily">Daily Report</SelectItem>
                                 <SelectItem value="weekly">Weekly Report</SelectItem>
+                                <SelectItem value="monthly">Monthly Report</SelectItem>
+                                <SelectItem value="custom">Custom Report</SelectItem>
                             </SelectContent>
                         </Select>
                         {errors.type && (
@@ -152,7 +141,7 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                                 type="date"
                                 {...register('reportDate')}
                                 className="pl-10"
-                                max={new Date().toISOString().split('T')[0]} // Cannot select future dates
+                                max={new Date().toISOString().split('T')[0]}
                             />
                         </div>
                         {errors.reportDate && (
@@ -160,27 +149,21 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                                 {errors.reportDate.message}
                             </p>
                         )}
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Select the date this report covers (cannot be in the future)
-                        </p>
                     </div>
 
                     {/* Title */}
                     <div className="space-y-2">
-                        <Label htmlFor="title">Report Title *</Label>
+                        <Label htmlFor="title">Title *</Label>
                         <Input
                             id="title"
-                            placeholder="Enter a descriptive title for your report"
                             {...register('title')}
+                            placeholder="Enter report title"
                         />
                         {errors.title && (
                             <p className="text-sm text-red-600 dark:text-red-400">
                                 {errors.title.message}
                             </p>
                         )}
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {watch('title')?.length || 0}/100 characters
-                        </p>
                     </div>
 
                     {/* Body */}
@@ -188,54 +171,22 @@ const EditSalesReportModal: React.FC<EditSalesReportModalProps> = ({
                         <Label htmlFor="body">Report Content *</Label>
                         <Textarea
                             id="body"
-                            placeholder="Describe your sales activities, achievements, challenges, and insights..."
-                            rows={8}
                             {...register('body')}
-                            className="resize-none"
+                            placeholder="Enter report details..."
+                            rows={6}
                         />
                         {errors.body && (
                             <p className="text-sm text-red-600 dark:text-red-400">
                                 {errors.body.message}
                             </p>
                         )}
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {watch('body')?.length || 0}/2000 characters
+                        <p className="text-sm text-gray-500">
+                            {watch('body')?.length || 0} / 2000 characters
                         </p>
                     </div>
 
-                    {/* Report Info */}
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 dark:text-white mb-2">Report Information</h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span className="text-gray-600 dark:text-gray-400">Created:</span>
-                                <span className="ml-2 text-gray-900 dark:text-white">
-                                    {new Date(report.createdAt).toLocaleDateString()}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600 dark:text-gray-400">Last Updated:</span>
-                                <span className="ml-2 text-gray-900 dark:text-white">
-                                    {new Date(report.updatedAt).toLocaleDateString()}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600 dark:text-gray-400">Employee:</span>
-                                <span className="ml-2 text-gray-900 dark:text-white">
-                                    {report.employeeName}
-                                </span>
-                            </div>
-                            <div>
-                                <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                                <span className="ml-2 text-gray-900 dark:text-white">
-                                    {report.isActive ? 'Active' : 'Inactive'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                    {/* Actions */}
+                    <div className="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
                             variant="outline"

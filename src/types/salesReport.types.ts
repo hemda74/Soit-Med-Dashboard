@@ -3,14 +3,14 @@
 export interface CreateSalesReportDto {
 	title: string; // Required, max 100 characters
 	body: string; // Required, max 2000 characters
-	type: 'daily' | 'weekly'; // Required, only these values allowed
+	type: 'daily' | 'weekly' | 'monthly' | 'custom'; // Required, only these values allowed
 	reportDate: string; // Required, format: YYYY-MM-DD
 }
 
 export interface UpdateSalesReportDto {
 	title?: string; // Optional, max 100 characters
 	body?: string; // Optional, max 2000 characters
-	type?: 'daily' | 'weekly'; // Optional, only these values allowed
+	type?: 'daily' | 'weekly' | 'monthly' | 'custom'; // Optional, only these values allowed
 	reportDate?: string; // Optional, format: YYYY-MM-DD
 }
 
@@ -22,17 +22,18 @@ export interface RateSalesReportDto {
 export interface FilterSalesReportsDto {
 	page?: number; // Optional, default: 1
 	pageSize?: number; // Optional, default: 10, max: 100
-	type?: 'daily' | 'weekly'; // Optional filter
+	type?: 'daily' | 'weekly' | 'monthly' | 'custom'; // Optional filter
 	startDate?: string; // Optional, format: YYYY-MM-DD
 	endDate?: string; // Optional, format: YYYY-MM-DD
 	employeeId?: string; // Optional, for managers to filter by employee
+	searchTerm?: string; // Optional, for searching in title and body
 }
 
 export interface SalesReportResponseDto {
 	id: number;
 	title: string;
 	body: string;
-	type: 'daily' | 'weekly';
+	type: 'daily' | 'weekly' | 'monthly' | 'custom';
 	reportDate: string; // Format: YYYY-MM-DD
 	rating?: number; // 1-5, only if rated
 	comment?: string; // Manager's comment, only if rated
@@ -67,3 +68,10 @@ export interface PaginatedApiResponse<T> {
 	data: T;
 	timestamp: string;
 }
+// User selection for filtering
+export interface UserOption {
+	id: string;
+	name: string;
+	email: string;
+}
+
