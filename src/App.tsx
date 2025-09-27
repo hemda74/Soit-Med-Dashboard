@@ -5,6 +5,8 @@ import AppLayout from '@/components/layout/AppLayout'
 import AuthLayout from '@/components/layout/AuthLayout'
 import LoginForm from '@/components/LoginForm'
 import ForgotPassword from '@/pages/ForgotPassword'
+import VerifyCode from '@/pages/VerifyCode'
+import ResetPassword from '@/pages/ResetPassword'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
@@ -42,6 +44,8 @@ function App() {
               <Route path="/" element={<AuthLayout><LoginForm /></AuthLayout>} />
               <Route path="login" element={<AuthLayout><LoginForm /></AuthLayout>} />
               <Route path="forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+              <Route path="verify-code" element={<AuthLayout><VerifyCode /></AuthLayout>} />
+              <Route path="reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           )}

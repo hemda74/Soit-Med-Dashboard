@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Import icons
 import {
@@ -9,10 +10,18 @@ import {
   HorizontaLDots,
   UserCircleIcon,
 } from "../icons";
-import { Settings, BarChart3 } from "lucide-react";
+import {
+  Calendar,
+  List,
+  Table,
+  FileText,
+  PieChart,
+  Box,
+  Plug
+} from "lucide-react";
 import { useSidebar } from "../../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
 import Logo from "../Logo";
+import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -21,54 +30,92 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const othersItems: NavItem[] = [
-  {
-    icon: <Settings />,
-    name: "Settings",
-    path: "/settings",
-  },
-];
-
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const { hasAnyRole } = useAuthStore();
+  const { t, language } = useTranslation();
 
-  const baseNavItems: NavItem[] = [
+  const navItems: NavItem[] = [
     {
       icon: <GridIcon />,
-      name: "Dashboard",
+      name: t('dashboard'),
       path: "/dashboard",
     },
     {
+      icon: <Calendar />,
+      name: t('calendar'),
+      path: "/calendar",
+    },
+    {
       icon: <UserCircleIcon />,
-      name: "User Profile",
+      name: t('userProfile'),
       path: "/profile",
+    },
+    {
+      name: t('forms'),
+      icon: <List />,
+      subItems: [{ name: t('formElements'), path: "/form-elements", pro: false }],
+    },
+    {
+      name: t('tables'),
+      icon: <Table />,
+      subItems: [{ name: t('basicTables'), path: "/basic-tables", pro: false }],
+    },
+    {
+      name: t('pages'),
+      icon: <FileText />,
+      subItems: [
+        { name: t('blankPage'), path: "/blank", pro: false },
+        { name: t('error404'), path: "/error-404", pro: false },
+      ],
     },
   ];
 
-  // Users menu - only for Admin and Super Admin
+  const othersItems: NavItem[] = [
+    {
+      icon: <PieChart />,
+      name: t('charts'),
+      subItems: [
+        { name: t('lineChart'), path: "/line-chart", pro: false },
+        { name: t('barChart'), path: "/bar-chart", pro: false },
+      ],
+    },
+    {
+      icon: <Box />,
+      name: t('uiElements'),
+      subItems: [
+        { name: t('alerts'), path: "/alerts", pro: false },
+        { name: t('avatar'), path: "/avatars", pro: false },
+        { name: t('badge'), path: "/badge", pro: false },
+        { name: t('buttons'), path: "/buttons", pro: false },
+        { name: t('images'), path: "/images", pro: false },
+        { name: t('videos'), path: "/videos", pro: false },
+      ],
+    },
+    {
+      icon: <Plug />,
+      name: t('authentication'),
+      subItems: [
+        { name: t('signIn'), path: "/signin", pro: false },
+        { name: "Sign Up", path: "/signup", pro: false },
+      ],
+    },
+  ];
+
+  // Admin menu - only for Admin and Super Admin
   const adminNavItems: NavItem[] = hasAnyRole(['Admin', 'SuperAdmin']) ? [{
     icon: <UserCircleIcon />,
-    name: "Users",
-    path: "/users",
+    name: t('users'),
+    subItems: [
+      { name: t('allUsers'), path: "/admin/users", pro: false },
+      { name: t('createUser'), path: "/admin/create-role-user", pro: false },
+    ],
   }] : [];
 
-  const navItems: NavItem[] = [
-    ...baseNavItems,
+  const allNavItems: NavItem[] = [
+    ...navItems,
     ...adminNavItems,
-    // Only show Reports for Finance Manager and Super Admin
-    ...(hasAnyRole(['FinanceManager', 'SuperAdmin']) ? [{
-      icon: <BarChart3 />,
-      name: "Reports",
-      path: "/reports",
-    }] : []),
-    // Only show Sales Reports for Sales Employee, Sales Manager and Super Admin
-    ...(hasAnyRole(['Salesman', 'SalesManager', 'SuperAdmin']) ? [{
-      icon: <BarChart3 />,
-      name: "Sales Reports",
-      path: "/sales-reports",
-    }] : []),
   ];
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -89,7 +136,7 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? allNavItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -224,7 +271,7 @@ const AppSidebar: React.FC = () => {
                               : "menu-dropdown-badge-inactive"
                               } menu-dropdown-badge`}
                           >
-                            new
+                            {t('new')}
                           </span>
                         )}
                         {subItem.pro && (
@@ -234,7 +281,7 @@ const AppSidebar: React.FC = () => {
                               : "menu-dropdown-badge-inactive"
                               } menu-dropdown-badge`}
                           >
-                            pro
+                            {t('pro')}
                           </span>
                         )}
                       </span>
@@ -249,16 +296,19 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
+  const isRTL = language === 'ar';
+
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-[9998] border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-[9998] border-gray-200 
+        ${isRTL ? 'right-0 border-l' : 'left-0 border-r'}
         ${isExpanded || isMobileOpen
           ? "w-[290px]"
           : isHovered
             ? "w-[290px]"
             : "w-[90px]"
         }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        ${isMobileOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"}
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -280,12 +330,12 @@ const AppSidebar: React.FC = () => {
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  t('menu')
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(allNavItems, "main")}
             </div>
             <div className="">
               <h2
@@ -295,7 +345,7 @@ const AppSidebar: React.FC = () => {
                   }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
+                  t('others')
                 ) : (
                   <HorizontaLDots />
                 )}
