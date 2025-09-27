@@ -4,6 +4,7 @@ import type { UserRole, RoleObject } from '@/types/userCreation.types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/shared';
 
 interface RoleSelectorProps {
     availableRoles: RoleObject[];
@@ -16,7 +17,7 @@ const ROLE_CONFIG: Record<UserRole, {
     icon: React.ComponentType<{ className?: string }>;
     color: string;
     description: string;
-    category: 'admin' | 'medical' | 'technical' | 'business' | 'legal';
+    category: 'admin' | 'medical' | 'technical' | 'business' | 'legal' | 'sales';
 }> = {
     SuperAdmin: {
         icon: Shield,
@@ -78,23 +79,18 @@ const ROLE_CONFIG: Record<UserRole, {
         description: 'Legal support and compliance',
         category: 'legal',
     },
-    Hello: {
-        icon: Users,
-        color: 'text-pink-600',
-        description: 'Custom role - Hello',
-        category: 'admin',
-    },
+
     admin: {
         icon: Users,
         color: 'text-blue-500',
         description: 'Administrative access',
         category: 'admin',
     },
-    user: {
-        icon: Users,
-        color: 'text-gray-600',
-        description: 'Basic user access',
-        category: 'admin',
+    SalesManager: {
+        icon: TrendingUp,
+        color: 'text-cyan-600',
+        description: 'Sales and customer relationship management',
+        category: 'sales',
     },
 };
 
@@ -139,10 +135,11 @@ export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSe
     if (isLoading) {
         return (
             <div className="space-y-6">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="mt-2 text-sm text-muted-foreground">{t('loadingRoles')}</p>
-                </div>
+                <LoadingSpinner
+                    size="md"
+                    text={t('loadingRoles')}
+                    className="text-center"
+                />
             </div>
         );
     }

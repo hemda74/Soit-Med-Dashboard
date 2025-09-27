@@ -42,17 +42,18 @@ export const translations = {
 		successRate: 'Success Rate',
 		usersManagement: 'Users Management',
 		usersManagementDescription: 'View and manage all users',
-		usersManagementDetails: 'Browse, search, and manage user accounts across all departments.',
+		usersManagementDetails:
+			'Browse, search, and manage user accounts across all departments.',
 		createUser: 'Create User',
 		createUserDescription: 'Create new users with specific roles',
-		createUserDetails: 'Create doctors, engineers, technicians, and other role-specific users.',
+		createUserDetails:
+			'Create doctors, engineers, technicians, and other role-specific users.',
 		filters: 'Filters',
 		clearFilters: 'Clear Filters',
 		showFilters: 'Show Filters',
 		hideFilters: 'Hide Filters',
 		searchTerm: 'Search Term',
 		searchUsersPlaceholder: 'Search by name, email, or username...',
-		selectRole: 'Select Role',
 		allRoles: 'All Roles',
 		selectDepartment: 'Select Department',
 		allDepartments: 'All Departments',
@@ -160,6 +161,37 @@ export const translations = {
 		complete: 'Complete',
 		back: 'Back',
 
+		// User Delete Specific
+		confirmUserDeletion: 'Confirm User Deletion',
+		deleteUserConfirmation:
+			'Are you sure you want to delete user "{userName}" ({userEmail})?',
+		thisActionCannotBeUndone: 'This action cannot be undone.',
+		typeToConfirm: 'Type "{text}" to confirm',
+		deleting: 'Deleting',
+		superAdminWarning: 'SuperAdmin Account',
+		superAdminCannotBeDeleted:
+			'SuperAdmin accounts are protected and cannot be deleted.',
+		deleteUserWarning:
+			'This action will permanently delete the user and all associated data.',
+		cancel: 'Cancel',
+		delete: 'Delete',
+		confirmDelete: 'Confirm Delete',
+		deleteUser: 'Delete User',
+
+		// User Update Specific
+		updateUser: 'Update User',
+		updateUserDescription: 'Update user information and settings',
+		startUpdate: 'Start Update',
+		newPassword: 'New Password',
+		optional: 'Optional',
+		enterNewPassword: 'Enter new password',
+		leaveEmptyToKeepCurrentPassword:
+			'Leave empty to keep current password',
+		updating: 'Updating',
+		selectRole: 'Select Role',
+		superAdminCannotBeUpdated:
+			'SuperAdmin accounts are protected and cannot be updated.',
+
 		// Role Specific User Creation
 		createNewUserTitle: 'Create New User',
 		selectRoleToCreateUser: 'Select a role to create a new user',
@@ -169,8 +201,11 @@ export const translations = {
 		technician: 'Technician',
 		admin: 'Admin',
 		financeManager: 'Finance Manager',
+		financeEmployee: 'Finance Employee',
 		legalManager: 'Legal Manager',
+		legalEmployee: 'Legal Employee',
 		salesman: 'Salesman',
+		salesManager: 'Sales Manager',
 		doctorDescription:
 			'Medical staff including doctors and technicians',
 		engineerDescription: 'Technical and engineering staff',
@@ -178,8 +213,21 @@ export const translations = {
 		adminDescription: 'Administrative and management roles',
 		financeManagerDescription:
 			'Financial management and accounting',
+		financeEmployeeDescription:
+			'Finance department staff and employees',
 		legalManagerDescription: 'Legal affairs and compliance',
+		legalEmployeeDescription:
+			'Legal department staff and employees',
 		salesmanDescription: 'Sales team and customer relations',
+		salesManagerDescription: 'Sales management and team leadership',
+		salesTerritory: 'Sales Territory',
+		enterSalesTerritory: 'Enter sales territory',
+		salesTeam: 'Sales Team',
+		enterSalesTeam: 'Enter sales team name',
+		salesTarget: 'Sales Target',
+		enterSalesTarget: 'Enter sales target amount',
+		managerNotes: 'Manager Notes',
+		enterManagerNotes: 'Enter manager notes',
 		confirmPassword: 'Confirm Password',
 		enterFirstName: 'Enter first name',
 		enterLastName: 'Enter last name',
@@ -228,6 +276,21 @@ export const translations = {
 		passwordsDoNotMatchError: 'Passwords do not match',
 		accessDeniedTitle: 'Access Denied',
 		adminAccessRequiredMessage: 'Admin access required',
+
+		// Image Upload
+		profileImage: 'Profile Image',
+		selectProfileImage: 'Select Profile Image',
+		uploadImage: 'Upload Image',
+		imageAltText: 'Image Alt Text',
+		enterImageAltText: 'Enter image alt text',
+		imagePreview: 'Image Preview',
+		removeImage: 'Remove Image',
+		imageUploaded: 'Image uploaded successfully',
+		imageUploadError: 'Failed to upload image',
+		imageSizeError: 'Image size must be less than 5MB',
+		imageTypeError:
+			'Please select a valid image file (JPG, PNG, GIF)',
+		noImageSelected: 'No image selected',
 	},
 	ar: {
 		Hello: 'مرحبا',
@@ -271,17 +334,19 @@ export const translations = {
 		successRate: 'معدل النجاح',
 		usersManagement: 'إدارة المستخدمين',
 		usersManagementDescription: 'عرض وإدارة جميع المستخدمين',
-		usersManagementDetails: 'تصفح والبحث وإدارة حسابات المستخدمين عبر جميع الأقسام.',
+		usersManagementDetails:
+			'تصفح والبحث وإدارة حسابات المستخدمين عبر جميع الأقسام.',
 		createUser: 'إنشاء مستخدم',
 		createUserDescription: 'إنشاء مستخدمين جدد بأدوار محددة',
-		createUserDetails: 'إنشاء أطباء ومهندسين وفنيين ومستخدمين آخرين بأدوار محددة.',
+		createUserDetails:
+			'إنشاء أطباء ومهندسين وفنيين ومستخدمين آخرين بأدوار محددة.',
 		filters: 'المرشحات',
 		clearFilters: 'مسح المرشحات',
 		showFilters: 'إظهار المرشحات',
 		hideFilters: 'إخفاء المرشحات',
 		searchTerm: 'مصطلح البحث',
-		searchUsersPlaceholder: 'البحث بالاسم أو البريد الإلكتروني أو اسم المستخدم...',
-		selectRole: 'اختر الدور',
+		searchUsersPlaceholder:
+			'البحث بالاسم أو البريد الإلكتروني أو اسم المستخدم...',
 		allRoles: 'جميع الأدوار',
 		selectDepartment: 'اختر القسم',
 		allDepartments: 'جميع الأقسام',
@@ -383,6 +448,37 @@ export const translations = {
 		complete: 'اكتمال',
 		back: 'عودة',
 
+		// User Delete Specific
+		confirmUserDeletion: 'تأكيد حذف المستخدم',
+		deleteUserConfirmation:
+			'هل أنت متأكد من حذف المستخدم "{userName}" ({userEmail})؟',
+		thisActionCannotBeUndone: 'لا يمكن التراجع عن هذا الإجراء.',
+		typeToConfirm: 'اكتب "{text}" للتأكيد',
+		deleting: 'جاري الحذف',
+		superAdminWarning: 'حساب المدير العام',
+		superAdminCannotBeDeleted:
+			'حسابات المدير العام محمية ولا يمكن حذفها.',
+		deleteUserWarning:
+			'سيؤدي هذا الإجراء إلى حذف المستخدم وجميع البيانات المرتبطة به نهائياً.',
+		cancel: 'إلغاء',
+		delete: 'حذف',
+		confirmDelete: 'تأكيد الحذف',
+		deleteUser: 'حذف المستخدم',
+
+		// User Update Specific
+		updateUser: 'تحديث المستخدم',
+		updateUserDescription: 'تحديث معلومات المستخدم والإعدادات',
+		startUpdate: 'بدء التحديث',
+		newPassword: 'كلمة مرور جديدة',
+		optional: 'اختياري',
+		enterNewPassword: 'أدخل كلمة مرور جديدة',
+		leaveEmptyToKeepCurrentPassword:
+			'اترك فارغاً للاحتفاظ بكلمة المرور الحالية',
+		updating: 'جاري التحديث',
+		selectRole: 'اختر الدور',
+		superAdminCannotBeUpdated:
+			'حسابات المدير العام محمية ولا يمكن تحديثها.',
+
 		// Role Specific User Creation
 		createNewUserTitle: 'إنشاء مستخدم جديد',
 		selectRoleToCreateUser: 'اختر دوراً لإنشاء مستخدم جديد',
@@ -392,15 +488,29 @@ export const translations = {
 		technician: 'فني',
 		admin: 'مدير',
 		financeManager: 'مدير مالي',
+		financeEmployee: 'موظف مالي',
 		legalManager: 'مدير قانوني',
+		legalEmployee: 'موظف قانوني',
 		salesman: 'بائع',
+		salesManager: 'مدير مبيعات',
 		doctorDescription: 'الطاقم الطبي بما في ذلك الأطباء والفنيين',
 		engineerDescription: 'الطاقم التقني والهندسي',
 		technicianDescription: 'الفنيون الطبيون',
 		adminDescription: 'الأدوار الإدارية والإدارية',
 		financeManagerDescription: 'الإدارة المالية والمحاسبة',
+		financeEmployeeDescription: 'موظفو وطاقم القسم المالي',
 		legalManagerDescription: 'الشؤون القانونية والامتثال',
+		legalEmployeeDescription: 'موظفو وطاقم القسم القانوني',
 		salesmanDescription: 'فريق المبيعات وعلاقات العملاء',
+		salesManagerDescription: 'إدارة المبيعات وقيادة الفريق',
+		salesTerritory: 'منطقة المبيعات',
+		enterSalesTerritory: 'أدخل منطقة المبيعات',
+		salesTeam: 'فريق المبيعات',
+		enterSalesTeam: 'أدخل اسم فريق المبيعات',
+		salesTarget: 'هدف المبيعات',
+		enterSalesTarget: 'أدخل مبلغ هدف المبيعات',
+		managerNotes: 'ملاحظات المدير',
+		enterManagerNotes: 'أدخل ملاحظات المدير',
 		confirmPassword: 'تأكيد كلمة المرور',
 		enterFirstName: 'أدخل الاسم الأول',
 		enterLastName: 'أدخل اسم العائلة',
@@ -449,6 +559,20 @@ export const translations = {
 		passwordsDoNotMatchError: 'كلمات المرور غير متطابقة',
 		accessDeniedTitle: 'تم رفض الوصول',
 		adminAccessRequiredMessage: 'مطلوب صلاحيات المدير',
+
+		// Image Upload
+		profileImage: 'صورة الملف الشخصي',
+		selectProfileImage: 'اختر صورة الملف الشخصي',
+		uploadImage: 'رفع صورة',
+		imageAltText: 'نص بديل للصورة',
+		enterImageAltText: 'أدخل نص بديل للصورة',
+		imagePreview: 'معاينة الصورة',
+		removeImage: 'إزالة الصورة',
+		imageUploaded: 'تم رفع الصورة بنجاح',
+		imageUploadError: 'فشل في رفع الصورة',
+		imageSizeError: 'يجب أن يكون حجم الصورة أقل من 5 ميجابايت',
+		imageTypeError: 'يرجى اختيار ملف صورة صالح (JPG, PNG, GIF)',
+		noImageSelected: 'لم يتم اختيار صورة',
 	},
 };
 

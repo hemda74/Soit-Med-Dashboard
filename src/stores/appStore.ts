@@ -51,7 +51,7 @@ export interface AppState {
 export const useAppStore = create<AppState>()(
 	subscribeWithSelector(
 		persist(
-			(set, get) => ({
+			(set) => ({
 				// Initial state
 				sidebarOpen: false,
 				loading: false,

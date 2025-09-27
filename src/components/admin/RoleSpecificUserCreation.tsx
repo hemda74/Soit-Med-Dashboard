@@ -1,32 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, AlertCircle, ArrowLeft, UserPlus, Eye, EyeOff, X, ChevronDown } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     createDoctor,
     createEngineer,
     createTechnician,
     createAdmin,
     createFinanceManager,
+    createFinanceEmployee,
     createLegalManager,
+    createLegalEmployee,
     createSalesman,
+    createSalesManager,
     getHospitals,
     getGovernorates,
     validateForm,
-} from '@/services/roleSpecificUserApi';
+} from '@/services';
 import type {
     RoleSpecificUserRole,
     HospitalInfo,
     RoleSpecificUserResponse,
 } from '@/types/roleSpecificUser.types';
 import UserCreationSuccessModal from '../ui/user-creation-success-modal';
+import RoleSelectionCard from './RoleSelectionCard';
+import UserCreationForm from './UserCreationForm';
+import { useUserCreationForm } from '@/hooks/useUserCreationForm';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -35,35 +39,6 @@ interface GovernorateInfo {
     createdAt: string;
     isActive: boolean;
     engineerCount: number;
-}
-
-// Medical department options for technicians
-const MEDICAL_DEPARTMENTS = [
-    'Radiology',
-    'Laboratory',
-    'Biomedical Engineering',
-    'Cardiology',
-    'Respiratory Therapy',
-    'Emergency Department',
-    'Operating Room',
-    'ICU/Critical Care',
-    'Blood Bank',
-    'Equipment Maintenance'
-];
-
-// Role configuration - will be created inside component to use translations
-
-interface FormData {
-    email: string;
-    password: string;
-    confirmPassword: string;
-    firstName: string;
-    lastName: string;
-    specialty?: string;
-    hospitalId?: string;
-    departmentId?: string;
-    department?: string;
-    governorateIds?: number[];
 }
 
 const RoleSpecificUserCreation: React.FC = () => {
@@ -117,9 +92,25 @@ const RoleSpecificUserCreation: React.FC = () => {
             requiresDepartment: false,
             autoDepartmentId: 5,
         },
+        'finance-employee': {
+            name: t('financeEmployee'),
+            description: t('financeEmployeeDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 5,
+        },
         'legal-manager': {
             name: t('legalManager'),
             description: t('legalManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 6,
+        },
+        'legal-employee': {
+            name: t('legalEmployee'),
+            description: t('legalEmployeeDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
             requiresHospital: false,
             requiresDepartment: false,
@@ -134,76 +125,56 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 3,
             role: 'Salesman'
         },
+        'sales-manager': {
+            name: t('salesManager'),
+            description: t('salesManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'salesTerritory', 'salesTeam', 'salesTarget', 'managerNotes'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 3,
+            role: 'SalesManager'
+        },
     };
 
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
-    const [formData, setFormData] = useState<FormData>({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        specialty: '',
-        hospitalId: '',
-        departmentId: '',
-        department: '',
-        governorateIds: [],
-    });
     const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
     const [governorates, setGovernorates] = useState<GovernorateInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [errors, setErrors] = useState<string[]>([]);
     const [createdUser, setCreatedUser] = useState<RoleSpecificUserResponse | null>(null);
-    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [showGovernorateDropdown, setShowGovernorateDropdown] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [createdPassword, setCreatedPassword] = useState('');
-    const governorateDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Use the custom hook for form management
+    const {
+        formData,
+        setFormData,
+        isLoading,
+        setIsLoading,
+        errors,
+        setErrors,
+        passwordErrors,
+        showPassword,
+        showConfirmPassword,
+        showGovernorateDropdown,
+        setShowGovernorateDropdown,
+        imagePreview,
+        imageError,
+        governorateDropdownRef,
+        validatePasswordStrength,
+        togglePasswordVisibility,
+        toggleConfirmPasswordVisibility,
+        handleImageSelect,
+        handleRemoveImage,
+        handleImageAltTextChange,
+        handleInputChange,
+        handleGovernorateToggle,
+        removeGovernorate,
+        handleHospitalSelect,
+        resetForm,
+    } = useUserCreationForm();
 
     // Check permissions
     const { hasRole } = useAuthStore();
     const canCreateUsers = hasRole('SuperAdmin') || hasRole('Admin');
-
-    // Custom password validation function
-    const validatePasswordStrength = (password: string): { isValid: boolean; errors: string[] } => {
-        const errors: string[] = [];
-
-        if (password.length < 8) {
-            errors.push(t('passwordMustBeAtLeast8'));
-        }
-
-        if (!/[A-Z]/.test(password)) {
-            errors.push(t('passwordMustContainUppercase'));
-        }
-
-        if (!/[a-z]/.test(password)) {
-            errors.push(t('passwordMustContainLowercase'));
-        }
-
-        if (!/\d/.test(password)) {
-            errors.push(t('passwordMustContainNumber'));
-        }
-
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-            errors.push(t('passwordMustContainSpecial'));
-        }
-
-        return {
-            isValid: errors.length === 0,
-            errors,
-        };
-    };
-
-    // Toggle password visibility
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
-
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(!showConfirmPassword);
-    };
 
     useEffect(() => {
         if (!canCreateUsers) {
@@ -215,23 +186,6 @@ const RoleSpecificUserCreation: React.FC = () => {
         loadReferenceData();
     }, [canCreateUsers, user?.token]);
 
-    // Handle click outside to close dropdowns
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (governorateDropdownRef.current && !governorateDropdownRef.current.contains(event.target as Node)) {
-                setShowGovernorateDropdown(false);
-            }
-        };
-
-        if (showGovernorateDropdown) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showGovernorateDropdown]);
-
     const loadReferenceData = async () => {
         if (!user?.token) return;
         try {
@@ -240,7 +194,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                 getHospitals(user.token),
                 getGovernorates(user.token),
             ]);
-
 
             setHospitals(hospitalsData);
             setGovernorates(governoratesData);
@@ -254,96 +207,8 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     const handleRoleSelect = (role: RoleSpecificUserRole) => {
         setSelectedRole(role);
-        setFormData({
-            email: '',
-            password: '',
-            confirmPassword: '',
-            firstName: '',
-            lastName: '',
-            specialty: '',
-            hospitalId: '',
-            departmentId: '',
-            department: '',
-            governorateIds: [],
-        });
-        setErrors([]);
-        setPasswordErrors([]);
-        setShowPassword(false);
-        setShowConfirmPassword(false);
+        resetForm();
         setCreatedUser(null);
-        setShowGovernorateDropdown(false);
-
-
-    };
-
-    const handleInputChange = (field: keyof FormData, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-
-        // Clear errors when user starts typing
-        if (errors.length > 0) {
-            setErrors([]);
-        }
-
-        // Real-time password validation
-        if (field === 'password') {
-            const passwordValidation = validatePasswordStrength(value);
-            setPasswordErrors(passwordValidation.errors);
-        } else if (field === 'confirmPassword') {
-            // Clear password errors when user starts typing confirm password
-            if (passwordErrors.length > 0) {
-                setPasswordErrors([]);
-            }
-        }
-    };
-
-    const handleGovernorateToggle = (governorateId: number) => {
-        if (!governorateId || isNaN(governorateId)) {
-            console.error('Invalid governorate ID:', governorateId);
-            return;
-        }
-
-        setFormData(prev => {
-            const currentIds = prev.governorateIds || [];
-            const isSelected = currentIds.includes(governorateId);
-            let newIds;
-
-            if (isSelected) {
-                // Remove if already selected
-                newIds = currentIds.filter(id => id !== governorateId);
-            } else {
-                // Add if not selected
-                newIds = [...currentIds, governorateId];
-            }
-
-
-            return { ...prev, governorateIds: newIds };
-        });
-
-        // Clear errors when user makes selection
-        if (errors.length > 0) {
-            setErrors([]);
-        }
-    };
-
-    const removeGovernorate = (governorateId: number) => {
-        setFormData(prev => {
-            const currentIds = prev.governorateIds || [];
-            const newIds = currentIds.filter(id => id !== governorateId);
-
-            return { ...prev, governorateIds: newIds };
-        });
-    };
-
-    const handleHospitalSelect = (hospitalId: string) => {
-        setFormData(prev => {
-            const updated = { ...prev, hospitalId };
-            return updated;
-        });
-
-        // Clear errors when user makes selection
-        if (errors.length > 0) {
-            setErrors([]);
-        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -352,9 +217,6 @@ const RoleSpecificUserCreation: React.FC = () => {
 
         const config = ROLE_CONFIG[selectedRole];
         const requiredFields = config.fields;
-
-
-
 
         // Validate form
         const validationErrors = validateForm(formData, requiredFields);
@@ -397,8 +259,13 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'engineer' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
                 ...(selectedRole === 'technician' && formData.department && { department: formData.department }),
+                ...(selectedRole === 'sales-manager' && formData.salesTerritory && { salesTerritory: formData.salesTerritory }),
+                ...(selectedRole === 'sales-manager' && formData.salesTeam && { salesTeam: formData.salesTeam }),
+                ...(selectedRole === 'sales-manager' && formData.salesTarget && { salesTarget: parseFloat(formData.salesTarget) }),
+                ...(selectedRole === 'sales-manager' && formData.managerNotes && { managerNotes: formData.managerNotes }),
+                ...(formData.profileImage && { profileImage: formData.profileImage }),
+                ...(formData.imageAltText && { imageAltText: formData.imageAltText }),
             };
-
 
             let response: RoleSpecificUserResponse;
 
@@ -418,11 +285,20 @@ const RoleSpecificUserCreation: React.FC = () => {
                 case 'finance-manager':
                     response = await createFinanceManager(userData as any, user.token);
                     break;
+                case 'finance-employee':
+                    response = await createFinanceEmployee(userData as any, user.token);
+                    break;
                 case 'legal-manager':
                     response = await createLegalManager(userData as any, user.token);
                     break;
+                case 'legal-employee':
+                    response = await createLegalEmployee(userData as any, user.token);
+                    break;
                 case 'salesman':
                     response = await createSalesman(userData as any, user.token);
+                    break;
+                case 'sales-manager':
+                    response = await createSalesManager(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
@@ -433,20 +309,19 @@ const RoleSpecificUserCreation: React.FC = () => {
                 success: true,
                 message: 'User created successfully',
                 data: {
-                    userId: (response as any).userId,
-                    email: (response as any).email,
-                    firstName: (response as any).firstName,
-                    lastName: (response as any).lastName,
-                    role: (response as any).role || selectedRole,
-                    departmentId: (response as any).departmentId || getDepartmentIdForRole(selectedRole).toString(),
+                    userId: (response as any).userId || (response as any).data?.userId,
+                    email: (response as any).email || (response as any).data?.email,
+                    firstName: (response as any).firstName || (response as any).data?.firstName,
+                    lastName: (response as any).lastName || (response as any).data?.lastName,
+                    role: (response as any).role || (response as any).data?.role || selectedRole,
+                    departmentId: (response as any).departmentId || (response as any).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
                 }
-            } as RoleSpecificUserResponse;
+            } as unknown as RoleSpecificUserResponse;
 
             setCreatedUser(transformedResponse);
             setCreatedPassword(formData.password);
             setShowSuccessModal(true);
 
-            // success('User Created Successfully', response.message);
         } catch (err: any) {
             console.error('=== API ERROR ===');
             console.error('Error creating user:', err);
@@ -458,7 +333,6 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             // Parse API error response to extract specific error messages
             let errorMessages: string[] = [];
-
 
             try {
                 // Try to parse the error response
@@ -488,7 +362,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                     }
                 }
             } catch (parseError) {
-
+                // Ignore parse errors
             }
             if (errorMessages.length === 0) {
                 errorMessages.push(err.message || 'Failed to create user');
@@ -504,26 +378,23 @@ const RoleSpecificUserCreation: React.FC = () => {
     const handleBack = () => {
         if (selectedRole) {
             setSelectedRole(null);
-            setFormData({
-                email: '',
-                password: '',
-                confirmPassword: '',
-                firstName: '',
-                lastName: '',
-                specialty: '',
-                hospitalId: '',
-                departmentId: '',
-                governorateIds: [],
-            });
-            setErrors([]);
-            setPasswordErrors([]);
-            setShowPassword(false);
-            setShowConfirmPassword(false);
+            resetForm();
             setCreatedUser(null);
-            setShowGovernorateDropdown(false);
         } else {
             navigate('/admin/users');
         }
+    };
+
+    const handleDepartmentChange = (department: string) => {
+        setFormData(prev => ({ ...prev, department }));
+    };
+
+    const handleClearAllGovernorates = () => {
+        setFormData(prev => ({ ...prev, governorateIds: [] }));
+    };
+
+    const handleToggleGovernorateDropdown = () => {
+        setShowGovernorateDropdown(!showGovernorateDropdown);
     };
 
     const handleSuccessModalClose = () => {
@@ -532,25 +403,8 @@ const RoleSpecificUserCreation: React.FC = () => {
         setCreatedPassword('');
         // Reset form and go back to role selection
         setSelectedRole(null);
-        setFormData({
-            email: '',
-            password: '',
-            confirmPassword: '',
-            firstName: '',
-            lastName: '',
-            specialty: '',
-            hospitalId: '',
-            departmentId: '',
-            department: '',
-            governorateIds: [],
-        });
-        setErrors([]);
-        setPasswordErrors([]);
-        setShowPassword(false);
-        setShowConfirmPassword(false);
-        setShowGovernorateDropdown(false);
+        resetForm();
     };
-
 
     if (!canCreateUsers) {
         return (
@@ -564,14 +418,14 @@ const RoleSpecificUserCreation: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground">{t('adminAccessRequiredMessage')}</p>
-                        <Button onClick={() => navigate('/')} className="w-full mt-4 hover:bg-blue-800 hover:text-white transition-colors duration-200">
+                        <Button onClick={() => navigate('/')} className="w-full mt-4 hover:bg-primary hover:text-white transition-colors duration-200">
                             {t('goBack')}
                         </Button>
                     </CardContent>
                 </Card>
             </div>
         );
-    };
+    }
 
     return (
         <div className="space-y-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -583,7 +437,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             onClick={handleBack}
-                            className="text-white hover:bg-blue-800 hover:text-white transition-colors duration-200"
+                            className="text-white hover:bg-primary hover:text-white transition-colors duration-200"
                         >
                             <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                             {t('back')}
@@ -604,412 +458,61 @@ const RoleSpecificUserCreation: React.FC = () => {
 
                 {!selectedRole ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(ROLE_CONFIG).map(([roleKey, config], index) => {
-                            const colors = [
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                                { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-                            ];
-                            const colorScheme = colors[index % colors.length];
-
-                            return (
-                                <Card
-                                    key={roleKey}
-                                    className={`cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-110 ${colorScheme.bg} ${colorScheme.border} group shadow-lg`}
-                                    onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
-                                >
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-4 text-foreground group-hover:scale-105 transition-transform font-bold text-lg">
-                                            <div className={`w-12 h-12 ${colorScheme.icon} rounded-xl flex items-center justify-center shadow-lg`}>
-                                                <UserPlus className="h-6 w-6 text-white" />
-                                            </div>
-                                            {config.name}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground font-medium opacity-90">{config.description}</p>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })}
+                        {Object.entries(ROLE_CONFIG).map(([roleKey, config], index) => (
+                            <RoleSelectionCard
+                                key={roleKey}
+                                roleKey={roleKey}
+                                config={config}
+                                index={index}
+                                onSelect={handleRoleSelect}
+                            />
+                        ))}
                     </div>
                 ) : (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <UserPlus className="h-5 w-5" />
-                                {t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name)}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {errors.length > 0 && (
-                                    <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                                        <div className="flex">
-                                            <AlertCircle className="h-5 w-5 text-red-400" />
-                                            <div className="ml-3">
-                                                <h3 className="text-sm font-medium text-red-800">{t('pleaseFixFollowingErrors')}</h3>
-                                                <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
-                                                    {errors.map((error, index) => (
-                                                        <li key={index}>{error}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="firstName">{t('firstName')} *</Label>
-                                        <Input
-                                            id="firstName"
-                                            value={formData.firstName}
-                                            onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                            placeholder={t('enterFirstName')}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="lastName">{t('lastName')} *</Label>
-                                        <Input
-                                            id="lastName"
-                                            value={formData.lastName}
-                                            onChange={(e) => handleInputChange('lastName', e.target.value)}
-                                            placeholder={t('enterLastName')}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">{t('email')} *</Label>
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            value={formData.email}
-                                            onChange={(e) => handleInputChange('email', e.target.value)}
-                                            placeholder={t('enterEmailAddress')}
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="password">{t('password')} *</Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="password"
-                                                type={showPassword ? "text" : "password"}
-                                                value={formData.password}
-                                                onChange={(e) => handleInputChange('password', e.target.value)}
-                                                placeholder={t('enterPasswordField')}
-                                                required
-                                                className={`pr-10 ${passwordErrors.length > 0 ? 'border-red-500' : ''}`}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
-                                                onClick={togglePasswordVisibility}
-                                            >
-                                                {showPassword ? (
-                                                    <EyeOff className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('passwordRequirements')}
-                                        </p>
-                                        {passwordErrors.length > 0 && (
-                                            <div className="text-xs text-red-600">
-                                                <ul className="list-disc list-inside space-y-1">
-                                                    {passwordErrors.map((error, index) => (
-                                                        <li key={index}>{error}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="confirmPassword">{t('confirmPassword')} *</Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="confirmPassword"
-                                                type={showConfirmPassword ? "text" : "password"}
-                                                value={formData.confirmPassword}
-                                                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                                                placeholder={t('confirmPasswordPlaceholder')}
-                                                required
-                                                className={`pr-10 ${formData.confirmPassword && formData.password !== formData.confirmPassword
-                                                    ? 'border-red-500'
-                                                    : formData.confirmPassword && formData.password === formData.confirmPassword
-                                                        ? 'border-green-500'
-                                                        : ''
-                                                    }`}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
-                                                onClick={toggleConfirmPasswordVisibility}
-                                            >
-                                                {showConfirmPassword ? (
-                                                    <EyeOff className="h-4 w-4" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                                            <p className="text-xs text-red-600">{t('passwordsDoNotMatch')}</p>
-                                        )}
-                                        {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                                            <p className="text-xs text-green-600">{t('passwordsMatch')}</p>
-                                        )}
-                                    </div>
-
-                                    {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="specialty">{t('specialty')} *</Label>
-                                            <Input
-                                                id="specialty"
-                                                value={formData.specialty}
-                                                onChange={(e) => handleInputChange('specialty', e.target.value)}
-                                                placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
-                                                required
-                                            />
-                                        </div>
-                                    )}
-
-                                    {ROLE_CONFIG[selectedRole].requiresHospital && (
-                                        <div className="space-y-2">
-                                            <Label>{t('hospital')} *</Label>
-
-                                            {/* Simple select dropdown */}
-                                            <select
-                                                value={formData.hospitalId || ""}
-                                                onChange={(e) => {
-                                                    console.log('Select onChange called with:', e.target.value);
-                                                    console.log('Selected hospital:', hospitals.find(h => h.id === e.target.value));
-                                                    handleHospitalSelect(e.target.value);
-                                                }}
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                            >
-                                                <option value="">{t('selectHospital')}</option>
-                                                {hospitals && hospitals.length > 0 ? (
-                                                    hospitals.map((hospital) => {
-                                                        // Handle different possible field names
-                                                        const hospitalId = hospital.id || hospital.hospitalId || hospital.HospitalId;
-                                                        const hospitalName = hospital.name || hospital.hospitalName || hospital.HospitalName;
-                                                        return (
-                                                            <option key={hospitalId} value={hospitalId}>
-                                                                {hospitalName} (ID: {hospitalId})
-                                                            </option>
-                                                        );
-                                                    })
-                                                ) : (
-                                                    <option value="" disabled>
-                                                        {hospitals ? 'No hospitals available' : 'Loading hospitals...'}
-                                                    </option>
-                                                )}
-                                            </select>
-
-                                            {/* Debug display */}
-                                            <div className="text-sm text-gray-600 mt-1">
-                                                Current hospitalId: {formData.hospitalId || 'None'}
-                                            </div>
-                                            {formData.hospitalId && (
-                                                <div className="text-sm text-green-600 mt-1">
-                                                    Selected: {hospitals.find(h => (h.id || h.hospitalId || h.HospitalId) === formData.hospitalId)?.name || formData.hospitalId}
-                                                </div>
-                                            )}
-
-
-                                        </div>
-                                    )}
-
-                                    {selectedRole === 'technician' && ROLE_CONFIG[selectedRole].requiresMedicalDepartment && (
-                                        <div className="space-y-2">
-                                            <Label>{t('medicalDepartment')} *</Label>
-                                            <select
-                                                value={formData.department || ""}
-                                                onChange={(e) => {
-                                                    console.log('Medical department selected:', e.target.value);
-                                                    setFormData(prev => ({ ...prev, department: e.target.value }));
-                                                }}
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-blue-800 hover:text-white transition-colors duration-200"
-                                            >
-                                                <option value="">{t('selectMedicalDepartment')}</option>
-                                                {MEDICAL_DEPARTMENTS.map((dept) => (
-                                                    <option key={dept} value={dept}>
-                                                        {dept}
-                                                    </option>
-                                                ))}
-                                            </select>
-
-                                            {/* Debug display */}
-                                            <div className="text-sm text-gray-600 mt-1">
-                                                Current department: {formData.department || 'None'}
-                                            </div>
-                                            {formData.department && (
-                                                <div className="text-sm text-green-600 mt-1">
-                                                    Selected: {formData.department}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {selectedRole === 'engineer' && (
-                                        <div className="space-y-2 md:col-span-2">
-                                            <Label>{t('governorates')} * (Select multiple)</Label>
-
-                                            {/* Multi-select dropdown with better visual feedback */}
-                                            <div className="relative" ref={governorateDropdownRef}>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    onClick={() => setShowGovernorateDropdown(!showGovernorateDropdown)}
-                                                    className="w-full justify-between text-left hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
-                                                >
-                                                    <span className={formData.governorateIds?.length === 0 ? "text-muted-foreground" : ""}>
-                                                        {formData.governorateIds?.length === 0
-                                                            ? t('selectGovernorates')
-                                                            : t('governoratesSelected').replace('{count}', formData.governorateIds?.length.toString() || '0')
-                                                        }
-                                                    </span>
-                                                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showGovernorateDropdown ? 'rotate-180' : ''}`} />
-                                                </Button>
-
-                                                {showGovernorateDropdown && (
-                                                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                                        {governorates && governorates.length > 0 ? (
-                                                            governorates.map((governorate) => {
-                                                                const isSelected = formData.governorateIds?.includes(governorate.governorateId) || false;
-                                                                return (
-                                                                    <div
-                                                                        key={governorate.governorateId}
-                                                                        className={`flex items-center space-x-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}
-                                                                        onClick={() => handleGovernorateToggle(governorate.governorateId)}
-                                                                    >
-                                                                        {/* Custom checkbox with better visual feedback */}
-                                                                        <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all ${isSelected
-                                                                            ? 'bg-blue-500 border-blue-500 text-white'
-                                                                            : 'border-gray-300 hover:border-blue-400'
-                                                                            }`}>
-                                                                            {isSelected && (
-                                                                                <CheckCircle className="w-3 h-3 text-white" />
-                                                                            )}
-                                                                        </div>
-                                                                        <label
-                                                                            className={`text-sm font-medium cursor-pointer flex-1 ${isSelected ? 'text-blue-700' : 'text-gray-700'
-                                                                                }`}
-                                                                        >
-                                                                            {governorate.name}
-                                                                        </label>
-                                                                        {isSelected && (
-                                                                            <span className="text-xs text-blue-600 font-medium">✓ Selected</span>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            })
-                                                        ) : (
-                                                            <div className="p-3 text-sm text-gray-500 text-center">
-                                                                {governorates ? 'No governorates available' : 'Loading governorates...'}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Selected Governorates Display */}
-                                            {formData.governorateIds && formData.governorateIds.length > 0 && (
-                                                <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="text-sm font-medium text-blue-800">
-                                                            {t('selectedGovernorates').replace('{count}', formData.governorateIds.length.toString())}
-                                                        </p>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => setFormData(prev => ({ ...prev, governorateIds: [] }))}
-                                                            className="text-blue-600  hover:bg-blue-800 hover:text-white text-xs transition-colors duration-200"
-                                                        >
-                                                            {t('clearAll')}
-                                                        </Button>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {formData.governorateIds.map((id) => {
-                                                            const governorate = governorates.find(g => g.governorateId === id);
-                                                            return governorate ? (
-                                                                <div
-                                                                    key={id}
-                                                                    className="flex items-center gap-2 bg-white border border-blue-300 text-blue-800 px-3 py-2 rounded-lg text-sm shadow-sm"
-                                                                >
-                                                                    <CheckCircle className="h-3 w-3 text-blue-600" />
-                                                                    <span className="font-medium">{governorate.name}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeGovernorate(id)}
-                                                                        className="ml-1 hover:bg-red-100 rounded-full p-1 transition-colors"
-                                                                        aria-label={`Remove ${governorate.name}`}
-                                                                    >
-                                                                        <X className="h-3 w-3 text-red-600 hover:text-red-800" />
-                                                                    </button>
-                                                                </div>
-                                                            ) : null;
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex gap-2 pt-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleBack}
-                                        disabled={isLoading}
-                                        className="hover:bg-blue-800 hover:text-white hover:border-blue-800 transition-colors duration-200"
-                                    >
-                                        {t('back')}
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="flex-1 hover:bg-blue-800 hover:text-white transition-colors duration-200"
-                                    >
-                                        {isLoading ? t('creatingUserLoading') : t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name)}
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
+                    <UserCreationForm
+                        selectedRole={selectedRole}
+                        roleConfig={ROLE_CONFIG[selectedRole]}
+                        formData={formData}
+                        hospitals={hospitals}
+                        governorates={governorates}
+                        errors={errors}
+                        passwordErrors={passwordErrors}
+                        showPassword={showPassword}
+                        showConfirmPassword={showConfirmPassword}
+                        showGovernorateDropdown={showGovernorateDropdown}
+                        imagePreview={imagePreview}
+                        imageError={imageError}
+                        isLoading={isLoading}
+                        governorateDropdownRef={governorateDropdownRef}
+                        onInputChange={handleInputChange}
+                        onPasswordToggle={togglePasswordVisibility}
+                        onConfirmPasswordToggle={toggleConfirmPasswordVisibility}
+                        onImageSelect={handleImageSelect}
+                        onRemoveImage={handleRemoveImage}
+                        onImageAltTextChange={handleImageAltTextChange}
+                        onHospitalSelect={handleHospitalSelect}
+                        onGovernorateToggle={handleGovernorateToggle}
+                        onRemoveGovernorate={removeGovernorate}
+                        onClearAllGovernorates={handleClearAllGovernorates}
+                        onToggleGovernorateDropdown={handleToggleGovernorateDropdown}
+                        onDepartmentChange={handleDepartmentChange}
+                        onSubmit={handleSubmit}
+                        onBack={handleBack}
+                    />
                 )}
             </div>
 
             {/* Success Modal */}
-            {createdUser && createdUser.data && showSuccessModal && (
+            {createdUser && (createdUser as any).data && showSuccessModal && (
                 <UserCreationSuccessModal
                     isOpen={showSuccessModal}
                     onClose={handleSuccessModalClose}
                     userData={{
-                        email: createdUser.data.email,
-                        firstName: createdUser.data.firstName,
-                        lastName: createdUser.data.lastName,
-                        role: createdUser.data.role,
-                        userId: createdUser.data.userId,
+                        email: (createdUser as any).data.email,
+                        firstName: (createdUser as any).data.firstName,
+                        lastName: (createdUser as any).data.lastName,
+                        role: (createdUser as any).data.role,
+                        userId: (createdUser as any).data.userId,
                     }}
                     password={createdPassword}
                 />

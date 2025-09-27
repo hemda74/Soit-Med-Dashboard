@@ -1,13 +1,18 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { Layout } from '@/components/Layout'
+import AppLayout from '@/components/layout/AppLayout'
+import AuthLayout from '@/components/layout/AuthLayout'
 import LoginForm from '@/components/LoginForm'
+import ForgotPassword from '@/pages/ForgotPassword'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
 import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
+import ReportsScreen from '@/components/finance/ReportsScreen'
+import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
+import SalesApiTest from '@/components/debug/SalesApiTest'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -19,16 +24,26 @@ function App() {
           <LoadingScreen />
           {isAuthenticated ? (
             <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
+              <Route path="/" element={<AppLayout />}>
+                <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="users" element={<UsersList />} />
                 <Route path="profile" element={<UserProfile />} />
+                <Route path="reports" element={<ReportsScreen />} />
+                <Route path="sales-reports" element={<SalesReportsScreen />} />
+                <Route path="debug/sales-api" element={<SalesApiTest />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           ) : (
-            <LoginForm />
+            <Routes>
+              <Route path="/" element={<AuthLayout><LoginForm /></AuthLayout>} />
+              <Route path="login" element={<AuthLayout><LoginForm /></AuthLayout>} />
+              <Route path="forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
           )}
         </div>
       </Router>

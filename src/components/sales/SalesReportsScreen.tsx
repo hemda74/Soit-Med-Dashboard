@@ -1,0 +1,1 @@
+export { SalesReportsScreen as default } from '../features/sales';
