@@ -5,34 +5,8 @@ import { API_ENDPOINTS } from '../shared/endpoints';
 import type { DashboardStats } from '@/types/dashboard.types';
 import type { UserStatistics, UserCounts } from '@/types/api.types';
 
-// Fetch dashboard statistics
-export const fetchDashboardStats = async (
-	token: string,
-	setLoading?: (loading: boolean) => void
-): Promise<DashboardStats> => {
-	try {
-		setLoading?.(true);
-		console.log('Fetching dashboard statistics...');
-
-		const response = await apiRequest<DashboardStats>(
-			API_ENDPOINTS.DASHBOARD.STATS,
-			{
-				method: 'GET',
-			},
-			token
-		);
-
-		console.log('Dashboard stats fetched successfully:', response);
-		return response;
-	} catch (error) {
-		console.error('Failed to fetch dashboard stats:', error);
-		throw error;
-	} finally {
-		setLoading?.(false);
-	}
-};
-
-// Fetch user statistics (legacy function for backward compatibility)
+// Fetch comprehensive user statistics with role and department breakdown
+// GET /api/User/statistics
 export const fetchUserStatistics = async (
 	token: string,
 	setLoading?: (loading: boolean) => void
@@ -42,7 +16,7 @@ export const fetchUserStatistics = async (
 		console.log('Fetching user statistics...');
 
 		const response = await apiRequest<UserStatistics>(
-			API_ENDPOINTS.DASHBOARD.STATS,
+			API_ENDPOINTS.USER.STATISTICS,
 			{
 				method: 'GET',
 			},
@@ -59,34 +33,8 @@ export const fetchUserStatistics = async (
 	}
 };
 
-// Fetch detailed user statistics with role and department breakdown
-export const fetchDetailedUserStatistics = async (
-	token: string,
-	setLoading?: (loading: boolean) => void
-): Promise<UserStatistics> => {
-	try {
-		setLoading?.(true);
-		console.log('Fetching detailed user statistics...');
-
-		const response = await apiRequest<UserStatistics>(
-			API_ENDPOINTS.USER.STATISTICS,
-			{
-				method: 'GET',
-			},
-			token
-		);
-
-		console.log('Detailed user statistics fetched successfully:', response);
-		return response;
-	} catch (error) {
-		console.error('Failed to fetch detailed user statistics:', error);
-		throw error;
-	} finally {
-		setLoading?.(false);
-	}
-};
-
 // Fetch basic user counts (total, active, inactive)
+// GET /api/User/counts
 export const fetchUserCounts = async (
 	token: string,
 	setLoading?: (loading: boolean) => void
@@ -112,3 +60,41 @@ export const fetchUserCounts = async (
 		setLoading?.(false);
 	}
 };
+
+// Legacy function for backward compatibility - now uses user statistics
+export const fetchDashboardStats = async (
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<DashboardStats> => {
+	try {
+		setLoading?.(true);
+		console.log('Fetching dashboard statistics...');
+
+		// Use the new user statistics API
+		const userStats = await fetchUserStatistics(token);
+
+		// Transform to DashboardStats format
+		const dashboardStats: DashboardStats = {
+			totalUsers: userStats.totalUsers,
+			activeUsers: userStats.activeUsers,
+			inactiveUsers: userStats.inactiveUsers,
+			totalReports: 0, // Not available in user statistics
+			pendingReports: 0, // Not available in user statistics
+			completedReports: 0, // Not available in user statistics
+		};
+
+		console.log(
+			'Dashboard stats fetched successfully:',
+			dashboardStats
+		);
+		return dashboardStats;
+	} catch (error) {
+		console.error('Failed to fetch dashboard stats:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Alias for backward compatibility
+export const fetchDetailedUserStatistics = fetchUserStatistics;

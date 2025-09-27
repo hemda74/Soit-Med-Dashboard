@@ -2,14 +2,14 @@
 
 import { apiRequest } from '../shared/apiClient';
 import { API_ENDPOINTS } from '../shared/endpoints';
-import type { 
-	AuthUser, 
-	LoginDTO, 
-	AuthResponse, 
+import type {
+	AuthUser,
+	LoginDTO,
+	AuthResponse,
 	ChangePasswordRequest,
 	ChangePasswordResponse,
 	RefreshTokenRequest,
-	RefreshTokenResponse
+	RefreshTokenResponse,
 } from '@/types/auth.types';
 
 // Login user
@@ -166,7 +166,7 @@ export const isTokenExpired = (token: string): boolean => {
 	try {
 		const decoded = decodeToken(token);
 		if (!decoded || !decoded.exp) return true;
-		
+
 		const currentTime = Date.now() / 1000;
 		return decoded.exp < currentTime;
 	} catch (error) {
@@ -180,7 +180,7 @@ export const getTokenExpiration = (token: string): Date | null => {
 	try {
 		const decoded = decodeToken(token);
 		if (!decoded || !decoded.exp) return null;
-		
+
 		return new Date(decoded.exp * 1000);
 	} catch (error) {
 		console.error('Failed to get token expiration:', error);

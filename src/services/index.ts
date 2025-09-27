@@ -9,6 +9,8 @@ export * from './shared/endpoints';
 export * from './user/userApi';
 export * from './user/userProfileApi';
 export * from './user/userDeletionApi';
+export * from './user/userDeleteApi';
+export * from './user/userUpdateApi';
 
 // Authentication
 export * from './auth/authApi';
@@ -31,3 +33,15 @@ export * from './dashboard/dashboardApi';
 // Legacy exports for backward compatibility
 export { userApiClient } from './user/userApi';
 export { salesReportApi } from './sales/salesReportApi';
+
+// User activation/deactivation
+export const activateDeactivateUser = async (
+	userId: string,
+	isActive: boolean,
+	reason: string
+) => {
+	// This is a placeholder implementation
+	// You should implement the actual API call here
+	console.log('Activate/Deactivate user:', { userId, isActive, reason });
+	return Promise.resolve(true);
+};

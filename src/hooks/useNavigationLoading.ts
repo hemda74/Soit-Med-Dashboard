@@ -1,22 +1,22 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAppStore } from '@/stores/appStore';
+import { useLoading } from '@/utils/loadingUtils';
 
 export function useNavigationLoading() {
 	const location = useLocation();
-	const { setLoading } = useAppStore();
+	const { showLoading, hideLoading } = useLoading();
 
 	useEffect(() => {
 		// Show loading when route changes
-		setLoading(true);
+		showLoading();
 
 		// Hide loading after a short delay to ensure smooth transition
 		const timer = setTimeout(() => {
-			setLoading(false);
-		}, 500); // Adjust timing as needed
+			hideLoading();
+		}, 300); // Reduced timing for better UX
 
 		return () => clearTimeout(timer);
-	}, [location.pathname, setLoading]);
+	}, [location.pathname, showLoading, hideLoading]);
 }
 
 export default useNavigationLoading;

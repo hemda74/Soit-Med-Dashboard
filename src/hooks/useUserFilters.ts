@@ -58,9 +58,7 @@ export interface UseUserFiltersProps {
 
 export const useUserFilters = ({
 	onFiltersChange,
-	onApplyFilters,
 	onClearFilters,
-	isLoading = false,
 }: UseUserFiltersProps) => {
 	const [filters, setFilters] = useState<UserFilters>(DEFAULT_FILTERS);
 	const [isExpanded, setIsExpanded] = useState(false);

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { activateDeactivateUser } from '@/services';
-import type { ActivateDeactivateRequest } from '@/types/api.types';
 import toast from 'react-hot-toast';
 
 export function useActivateDeactivate() {
@@ -10,8 +9,8 @@ export function useActivateDeactivate() {
 
 	const handleActivateDeactivate = async (
 		userId: string,
-		userName: string,
-		userEmail: string,
+		_userName: string,
+		_userEmail: string,
 		isActive: boolean,
 		reason: string
 	) => {
@@ -23,20 +22,14 @@ export function useActivateDeactivate() {
 		try {
 			setIsLoading(true);
 
-			const request: ActivateDeactivateRequest = {
-				userId,
-				action: isActive ? 'deactivate' : 'activate',
-				reason,
-			};
-
 			const response = await activateDeactivateUser(
-				request,
-				user.token,
-				setIsLoading
+				userId,
+				isActive,
+				reason
 			);
 
 			// Show success message
-			toast.success(response.message);
+			toast.success('User status updated successfully');
 
 			// Return the response for any additional handling
 			return response;
