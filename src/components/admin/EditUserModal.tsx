@@ -120,24 +120,24 @@ export default function EditUserModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto border-0 shadow-2xl">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl z-50">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-2xl text-gray-900">
-                        <User className="h-6 w-6 text-blue-600" />
+                    <DialogTitle className="flex items-center gap-2 text-xl text-gray-900">
+                        <User className="h-5 w-5 text-blue-600" />
                         Edit User
                     </DialogTitle>
-                    <DialogDescription className="text-gray-600">
+                    <DialogDescription className="text-gray-600 text-sm">
                         Update user information for {user.fullName}
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {/* Profile Image Section */}
                     <Card className="bg-gray-50">
-                        <CardContent className="p-6">
-                            <div className="flex items-center gap-6">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-4">
                                 <div className="relative">
-                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border-2 border-white shadow-lg overflow-hidden">
                                         {user.profileImage && user.profileImage.filePath && !imageLoadError ? (
                                             <img
                                                 src={getImageUrl(user.profileImage.filePath)}
@@ -161,7 +161,7 @@ export default function EditUserModal({
                                     {/* Camera Button for Upload/Update */}
                                     <label
                                         htmlFor="edit-profile-image-upload"
-                                        className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0 cursor-pointer bg-blue-600 hover:bg-blue-700 transition-colors"
+                                        className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 p-0 cursor-pointer bg-blue-600 hover:bg-blue-700 transition-colors"
                                         title={isUploadingImage ? "Uploading..." : (user.profileImage && user.profileImage.filePath) ? "Change profile picture" : "Upload profile picture"}
                                     >
                                         <input
@@ -174,9 +174,9 @@ export default function EditUserModal({
                                         />
                                         <div className="w-full h-full rounded-full flex items-center justify-center">
                                             {isUploadingImage ? (
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                             ) : (
-                                                <Camera className="w-4 h-4 text-white" />
+                                                <Camera className="w-3 h-3 text-white" />
                                             )}
                                         </div>
                                     </label>
@@ -187,10 +187,10 @@ export default function EditUserModal({
                                             <DialogTrigger asChild>
                                                 <Button
                                                     size="sm"
-                                                    className="absolute -top-2 -right-2 rounded-full w-8 h-8 p-0 bg-red-500 hover:bg-red-600"
+                                                    className="absolute -top-1 -right-1 rounded-full w-6 h-6 p-0 bg-red-500 hover:bg-red-600"
                                                     title="Delete profile picture"
                                                 >
-                                                    <Trash2 className="w-4 h-4 text-white" />
+                                                    <Trash2 className="w-3 h-3 text-white" />
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent className="sm:max-w-lg border-0 shadow-2xl">
@@ -234,8 +234,8 @@ export default function EditUserModal({
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-900">{user.fullName}</h3>
-                                    <p className="text-sm text-gray-600 mb-2">
+                                    <h3 className="text-base font-semibold text-gray-900">{user.fullName}</h3>
+                                    <p className="text-xs text-gray-600 mb-1">
                                         {user.profileImage && user.profileImage.filePath
                                             ? `Current image: ${user.profileImage.fileName}`
                                             : 'No profile image set'
@@ -250,8 +250,8 @@ export default function EditUserModal({
                     </Card>
 
                     {/* User Information Form */}
-                    <form onSubmit={editForm.handleSubmit(handleSubmit)} className="space-y-6">
-                        <div className="grid gap-6 md:grid-cols-2">
+                    <form onSubmit={editForm.handleSubmit(handleSubmit)} className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
                             {/* First Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
@@ -372,13 +372,13 @@ export default function EditUserModal({
                         {/* User Status Management - Only for SuperAdmin */}
                         {isSuperAdmin && (
                             <Card className="bg-blue-50 border-blue-200">
-                                <CardContent className="p-6">
-                                    <div className="space-y-4">
+                                <CardContent className="p-4">
+                                    <div className="space-y-3">
                                         <div>
-                                            <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                                            <h4 className="text-base font-semibold text-blue-900 mb-1">
                                                 User Status Management
                                             </h4>
-                                            <p className="text-sm text-blue-800">
+                                            <p className="text-xs text-blue-800">
                                                 Change the user's active status. This will affect their ability to access the system.
                                             </p>
                                         </div>
@@ -411,7 +411,7 @@ export default function EditUserModal({
                         )}
 
                         {/* Form Actions */}
-                        <DialogFooter className="flex gap-3 pt-6">
+                        <DialogFooter className="flex gap-3 pt-4">
                             <Button
                                 type="button"
                                 variant="outline"
