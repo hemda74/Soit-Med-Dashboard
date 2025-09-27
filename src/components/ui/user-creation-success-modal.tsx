@@ -40,7 +40,7 @@ const UserCreationSuccessModal: React.FC<UserCreationSuccessModalProps> = ({
         try {
             await navigator.clipboard.writeText(text);
             success('Copied!', `${label} copied to clipboard`);
-        } catch (err) {
+        } catch {
             error('Copy Failed', 'Failed to copy to clipboard');
         }
     };
@@ -50,7 +50,7 @@ const UserCreationSuccessModal: React.FC<UserCreationSuccessModalProps> = ({
         try {
             await navigator.clipboard.writeText(credentials);
             success('Copied!', 'Username and password copied to clipboard');
-        } catch (err) {
+        } catch {
             error('Copy Failed', 'Failed to copy credentials to clipboard');
         }
     };

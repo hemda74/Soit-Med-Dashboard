@@ -35,7 +35,7 @@ export function SuccessModal({
                 setCopied(true);
                 success('Password copied to clipboard!');
                 setTimeout(() => setCopied(false), 2000);
-            } catch (error) {
+            } catch {
                 showError('Failed to copy password');
             }
         }

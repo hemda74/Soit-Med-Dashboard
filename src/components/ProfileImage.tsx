@@ -53,7 +53,7 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
         return null;
     };
 
-    const imageUrl = getImageUrl(src);
+    const imageUrl = getImageUrl(src ?? null);
 
     if (imageUrl) {
         return (
