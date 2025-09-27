@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Edit, Key, Trash2 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
@@ -64,16 +64,11 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 
 const UsersList: React.FC = () => {
     const { user, hasAnyRole } = useAuthStore();
+    const { setLoading } = useAppStore();
+    const { success, error: showError } = useNotificationStore();
 
-    // Check if user has access to users page (Admin or Super Admin only)
-    const hasAccess = hasAnyRole(['Admin', 'SuperAdmin']);
-
-    // Redirect to dashboard if user doesn't have access
-    if (!hasAccess) {
-        return <Navigate to="/dashboard" replace />;
-    }
-
-    const [users, setUsers] = useState<UserListResponse[]>([]);
+    // All state hooks must be called at the top level
+    const [allUsers, setAllUsers] = useState<PaginatedUserResponse | null>(null);
     const [filteredUsers, setFilteredUsers] = useState<PaginatedUserResponse | null>(null);
     const [viewMode, setViewMode] = useState<ViewMode>('all');
     const [error, setError] = useState<string | null>(null);
@@ -87,12 +82,8 @@ const UsersList: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<UserListResponse | null>(null);
     const [isDeletingUser, setIsDeletingUser] = useState(false);
-
-    const { setLoading } = useAppStore();
-    const { success, error: showError } = useNotificationStore();
-
-    // Check if current user is super admin
-    const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(10);
 
     // Form for editing user
     const editForm = useForm<UserEditFormData>({
@@ -107,7 +98,13 @@ const UsersList: React.FC = () => {
         }
     });
 
-    const loadAllUsers = async () => {
+    // Check if user has access to users page (Admin or Super Admin only)
+    const hasAccess = hasAnyRole(['Admin', 'SuperAdmin']);
+
+    // Check if current user is super admin
+    const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+
+    const loadAllUsers = useCallback(async (page: number = 1) => {
         if (!user?.token) {
             setError('No authentication token found');
             return;
@@ -115,13 +112,26 @@ const UsersList: React.FC = () => {
 
         try {
             setError(null);
-            const usersData = await fetchUsers(user.token, setLoading);
-            setUsers(usersData);
+            const usersData = await fetchUsers(user.token, setLoading, page, pageSize);
+            setAllUsers(usersData);
+            setCurrentPage(page);
             setViewMode('all');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load users');
         }
-    };
+    }, [user?.token, setLoading, pageSize]);
+
+    // Load all users on component mount
+    useEffect(() => {
+        if (hasAccess) {
+            loadAllUsers();
+        }
+    }, [user?.token, hasAccess, loadAllUsers]);
+
+    // Redirect to dashboard if user doesn't have access
+    if (!hasAccess) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
 
 
@@ -136,6 +146,7 @@ const UsersList: React.FC = () => {
             setError(null);
             const filteredData = await fetchUsersWithFilters(filters, user.token, setLoading);
             setFilteredUsers(filteredData);
+            setCurrentPage(filters.pageNumber || 1);
             setViewMode('filtered');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load filtered users');
@@ -153,14 +164,18 @@ const UsersList: React.FC = () => {
     const handleClearFilters = () => {
         setFilters({});
         setFilteredUsers(null);
+        setCurrentPage(1);
         setViewMode('all');
+        loadAllUsers(1);
     };
 
     const handlePageChange = (page: number) => {
-        if (filteredUsers) {
+        if (viewMode === 'filtered' && filteredUsers) {
             const newFilters = { ...filters, pageNumber: page };
             setFilters(newFilters);
             loadFilteredUsers(newFilters);
+        } else if (viewMode === 'all') {
+            loadAllUsers(page);
         }
     };
 
@@ -210,7 +225,7 @@ const UsersList: React.FC = () => {
 
                 // Refresh the current view
                 if (viewMode === 'all') {
-                    loadAllUsers();
+                    loadAllUsers(currentPage);
                 } else if (viewMode === 'filtered') {
                     loadFilteredUsers(filters);
                 }
@@ -320,12 +335,20 @@ const UsersList: React.FC = () => {
     // Handle user status change
     const handleUserStatusChange = (userId: string, newStatus: boolean) => {
         // Update the user status in the current view
-        if (viewMode === 'all') {
-            setUsers(prevUsers =>
-                prevUsers.map(user =>
+        if (viewMode === 'all' && allUsers) {
+            setAllUsers(prev => prev ? {
+                ...prev,
+                users: prev.users.map(user =>
                     user.id === userId ? { ...user, isActive: newStatus } : user
                 )
-            );
+            } : null);
+        } else if (viewMode === 'filtered' && filteredUsers) {
+            setFilteredUsers(prev => prev ? {
+                ...prev,
+                users: prev.users.map(user =>
+                    user.id === userId ? { ...user, isActive: newStatus } : user
+                )
+            } : null);
         }
 
         // Update the selectedUser if it's the same user being edited
@@ -345,12 +368,10 @@ const UsersList: React.FC = () => {
             const response = await updateUser(
                 selectedUser.id,
                 {
+                    email: data.email,
+                    role: 'Admin', // Default role since UserListResponse doesn't include roles
                     firstName: data.firstName,
                     lastName: data.lastName,
-                    userName: data.userName,
-                    email: data.email,
-                    phoneNumber: data.phoneNumber || '',
-                    isActive: data.isActive,
                 },
                 user.token
             );
@@ -360,7 +381,7 @@ const UsersList: React.FC = () => {
                 handleCloseEditModal();
                 // Refresh the current view
                 if (viewMode === 'all') {
-                    loadAllUsers();
+                    loadAllUsers(currentPage);
                 } else if (viewMode === 'filtered') {
                     loadFilteredUsers(filters);
                 }
@@ -374,22 +395,15 @@ const UsersList: React.FC = () => {
         }
     };
 
-    // Load all users on component mount
-    useEffect(() => {
-        loadAllUsers();
-    }, [user?.token]);
-
-
-
     // Get current users to display
     const currentUsers = viewMode === 'all'
-        ? users
+        ? allUsers?.users || []
         : viewMode === 'filtered'
             ? filteredUsers?.users || []
             : [];
 
     const currentDescription = viewMode === 'all'
-        ? 'View all users across all departments'
+        ? `View all users across all departments (${allUsers?.totalCount || 0} users)`
         : viewMode === 'filtered'
             ? `Filtered results (${filteredUsers?.totalCount || 0} users)`
             : 'No users to display';
@@ -481,7 +495,9 @@ const UsersList: React.FC = () => {
                                             <p className="text-sm text-muted-foreground">
                                                 {'departmentName' in user
                                                     ? user.departmentName
-                                                    : getDepartmentName(user.departmentId)
+                                                    : (user as any).departmentId
+                                                        ? getDepartmentName((user as any).departmentId)
+                                                        : 'No Department'
                                                 }
                                             </p>
                                         </div>
@@ -526,7 +542,7 @@ const UsersList: React.FC = () => {
                                                 <Button
                                                     size="sm"
                                                     variant="outline-destructive"
-                                                    onClick={() => handleDeleteUser(user as UserListResponse)}
+                                                    onClick={() => handleDeleteUser(user as unknown as UserListResponse)}
                                                     className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-700 border-red-200 "
                                                 >
                                                     <Trash2 className="h-4 w-4" />
@@ -552,6 +568,20 @@ const UsersList: React.FC = () => {
                     </div>
                 )}
             </Card>
+
+            {/* Pagination for all users */}
+            {viewMode === 'all' && allUsers && allUsers.totalPages > 1 && (
+                <Pagination
+                    currentPage={allUsers.pageNumber}
+                    totalPages={allUsers.totalPages}
+                    hasPreviousPage={allUsers.hasPreviousPage}
+                    hasNextPage={allUsers.hasNextPage}
+                    onPageChange={handlePageChange}
+                    totalCount={allUsers.totalCount}
+                    pageSize={allUsers.pageSize}
+                    isLoading={false}
+                />
+            )}
 
             {/* Pagination for filtered results */}
             {viewMode === 'filtered' && filteredUsers && filteredUsers.totalPages > 1 && (

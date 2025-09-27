@@ -54,7 +54,6 @@ export const translations = {
 		hideFilters: 'Hide Filters',
 		searchTerm: 'Search Term',
 		searchUsersPlaceholder: 'Search by name, email, or username...',
-		selectRole: 'Select Role',
 		allRoles: 'All Roles',
 		selectDepartment: 'Select Department',
 		allDepartments: 'All Departments',
@@ -161,6 +160,37 @@ export const translations = {
 		fillDetails: 'Fill Details',
 		complete: 'Complete',
 		back: 'Back',
+
+		// User Delete Specific
+		confirmUserDeletion: 'Confirm User Deletion',
+		deleteUserConfirmation:
+			'Are you sure you want to delete user "{userName}" ({userEmail})?',
+		thisActionCannotBeUndone: 'This action cannot be undone.',
+		typeToConfirm: 'Type "{text}" to confirm',
+		deleting: 'Deleting',
+		superAdminWarning: 'SuperAdmin Account',
+		superAdminCannotBeDeleted:
+			'SuperAdmin accounts are protected and cannot be deleted.',
+		deleteUserWarning:
+			'This action will permanently delete the user and all associated data.',
+		cancel: 'Cancel',
+		delete: 'Delete',
+		confirmDelete: 'Confirm Delete',
+		deleteUser: 'Delete User',
+
+		// User Update Specific
+		updateUser: 'Update User',
+		updateUserDescription: 'Update user information and settings',
+		startUpdate: 'Start Update',
+		newPassword: 'New Password',
+		optional: 'Optional',
+		enterNewPassword: 'Enter new password',
+		leaveEmptyToKeepCurrentPassword:
+			'Leave empty to keep current password',
+		updating: 'Updating',
+		selectRole: 'Select Role',
+		superAdminCannotBeUpdated:
+			'SuperAdmin accounts are protected and cannot be updated.',
 
 		// Role Specific User Creation
 		createNewUserTitle: 'Create New User',
@@ -317,7 +347,6 @@ export const translations = {
 		searchTerm: 'مصطلح البحث',
 		searchUsersPlaceholder:
 			'البحث بالاسم أو البريد الإلكتروني أو اسم المستخدم...',
-		selectRole: 'اختر الدور',
 		allRoles: 'جميع الأدوار',
 		selectDepartment: 'اختر القسم',
 		allDepartments: 'جميع الأقسام',
@@ -418,6 +447,37 @@ export const translations = {
 		fillDetails: 'املأ التفاصيل',
 		complete: 'اكتمال',
 		back: 'عودة',
+
+		// User Delete Specific
+		confirmUserDeletion: 'تأكيد حذف المستخدم',
+		deleteUserConfirmation:
+			'هل أنت متأكد من حذف المستخدم "{userName}" ({userEmail})؟',
+		thisActionCannotBeUndone: 'لا يمكن التراجع عن هذا الإجراء.',
+		typeToConfirm: 'اكتب "{text}" للتأكيد',
+		deleting: 'جاري الحذف',
+		superAdminWarning: 'حساب المدير العام',
+		superAdminCannotBeDeleted:
+			'حسابات المدير العام محمية ولا يمكن حذفها.',
+		deleteUserWarning:
+			'سيؤدي هذا الإجراء إلى حذف المستخدم وجميع البيانات المرتبطة به نهائياً.',
+		cancel: 'إلغاء',
+		delete: 'حذف',
+		confirmDelete: 'تأكيد الحذف',
+		deleteUser: 'حذف المستخدم',
+
+		// User Update Specific
+		updateUser: 'تحديث المستخدم',
+		updateUserDescription: 'تحديث معلومات المستخدم والإعدادات',
+		startUpdate: 'بدء التحديث',
+		newPassword: 'كلمة مرور جديدة',
+		optional: 'اختياري',
+		enterNewPassword: 'أدخل كلمة مرور جديدة',
+		leaveEmptyToKeepCurrentPassword:
+			'اترك فارغاً للاحتفاظ بكلمة المرور الحالية',
+		updating: 'جاري التحديث',
+		selectRole: 'اختر الدور',
+		superAdminCannotBeUpdated:
+			'حسابات المدير العام محمية ولا يمكن تحديثها.',
 
 		// Role Specific User Creation
 		createNewUserTitle: 'إنشاء مستخدم جديد',

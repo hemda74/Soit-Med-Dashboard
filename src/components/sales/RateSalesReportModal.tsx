@@ -6,19 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Star, MessageSquare, X, Save } from 'lucide-react';
+import { Star, X, Save } from 'lucide-react';
 import type { RateSalesReportDto, SalesReportResponseDto } from '@/types/salesReport.types';
 
 const rateReportSchema = z.object({
-    rating: z.number().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5').optional(),
+    rating: z.number().min(1, 'Rating is required').max(5, 'Rating must be between 1 and 5'),
     comment: z.string().max(500, 'Comment must be less than 500 characters').optional(),
-}).refine(
-    (data) => data.rating || data.comment,
-    {
-        message: "Either rating or comment must be provided",
-        path: ["rating"],
-    }
-);
+});
 
 type RateReportFormData = z.infer<typeof rateReportSchema>;
 
@@ -34,7 +28,8 @@ const RateSalesReportModal: React.FC<RateSalesReportModalProps> = ({
     onSubmit,
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hoveredStar, setHoveredStar] = useState(0);
+    const [rating, setRating] = useState(0);
+    const [hoveredRating, setHoveredRating] = useState(0);
 
     const {
         register,
@@ -42,16 +37,14 @@ const RateSalesReportModal: React.FC<RateSalesReportModalProps> = ({
         formState: { errors },
         setValue,
         watch,
-        reset,
     } = useForm<RateReportFormData>({
         resolver: zodResolver(rateReportSchema),
         defaultValues: {
-            rating: report.rating || undefined,
-            comment: report.comment || '',
+            rating: 0,
+            comment: '',
         },
     });
 
-    const watchedRating = watch('rating');
     const watchedComment = watch('comment');
 
     const handleFormSubmit = async (data: RateReportFormData) => {
@@ -69,98 +62,75 @@ const RateSalesReportModal: React.FC<RateSalesReportModalProps> = ({
         }
     };
 
-    const handleStarClick = (rating: number) => {
-        setValue('rating', rating);
+    const handleRatingClick = (selectedRating: number) => {
+        setRating(selectedRating);
+        setValue('rating', selectedRating);
     };
 
-    const handleStarHover = (rating: number) => {
-        setHoveredStar(rating);
+    const handleRatingHover = (hoveredRating: number) => {
+        setHoveredRating(hoveredRating);
     };
 
-    const handleStarLeave = () => {
-        setHoveredStar(0);
+    const handleRatingLeave = () => {
+        setHoveredRating(0);
     };
 
     const renderStars = () => {
-        const stars = [];
-        const currentRating = hoveredStar || watchedRating || 0;
+        return [...Array(5)].map((_, index) => {
+            const starValue = index + 1;
+            const isFilled = starValue <= (hoveredRating || rating);
 
-        for (let i = 1; i <= 5; i++) {
-            stars.push(
+            return (
                 <button
-                    key={i}
+                    key={index}
                     type="button"
-                    className={`h-8 w-8 transition-colors ${i <= currentRating
-                        ? 'text-yellow-400 hover:text-yellow-500'
-                        : 'text-gray-300 hover:text-yellow-400'
-                        }`}
-                    onClick={() => handleStarClick(i)}
-                    onMouseEnter={() => handleStarHover(i)}
-                    onMouseLeave={handleStarLeave}
+                    className={`p-1 transition-colors ${isFilled ? 'text-yellow-400' : 'text-gray-300'
+                        } hover:text-yellow-400`}
+                    onClick={() => handleRatingClick(starValue)}
+                    onMouseEnter={() => handleRatingHover(starValue)}
+                    onMouseLeave={handleRatingLeave}
                 >
-                    <Star className="h-full w-full fill-current" />
+                    <Star className="h-6 w-6 fill-current" />
                 </button>
             );
-        }
-
-        return stars;
-    };
-
-    const getRatingText = (rating: number) => {
-        switch (rating) {
-            case 1: return 'Poor';
-            case 2: return 'Fair';
-            case 3: return 'Good';
-            case 4: return 'Very Good';
-            case 5: return 'Excellent';
-            default: return '';
-        }
+        });
     };
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Star className="h-5 w-5" />
                         Rate Sales Report
                     </DialogTitle>
                     <DialogDescription>
-                        Provide feedback and rating for this sales report.
+                        Rate and provide feedback for this sales report.
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
                     {/* Report Info */}
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                        <h4 className="font-medium text-gray-900 dark:text-white mb-2">{report.title}</h4>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                            <p><strong>Type:</strong> {report.type.charAt(0).toUpperCase() + report.type.slice(1)}</p>
-                            <p><strong>Date:</strong> {new Date(report.reportDate).toLocaleDateString()}</p>
-                            <p><strong>Employee:</strong> {report.employeeName}</p>
-                        </div>
+                    <div className="space-y-2">
+                        <h3 className="font-medium text-gray-900 dark:text-white">{report.title}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {report.type.charAt(0).toUpperCase() + report.type.slice(1)} Report
+                        </p>
                     </div>
 
                     {/* Rating */}
-                    <div className="space-y-3">
-                        <Label>Rating (1-5 stars) *</Label>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                                {renderStars()}
-                            </div>
-                            {watchedRating && (
-                                <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                                    {getRatingText(watchedRating)}
-                                </span>
-                            )}
+                    <div className="space-y-2">
+                        <Label>Rating *</Label>
+                        <div className="flex items-center gap-1">
+                            {renderStars()}
                         </div>
                         {errors.rating && (
                             <p className="text-sm text-red-600 dark:text-red-400">
                                 {errors.rating.message}
                             </p>
                         )}
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Click on a star to rate this report (1 = Poor, 5 = Excellent)
+                        <p className="text-sm text-gray-500">
+                            {rating > 0 ? `${rating} out of 5 stars` : 'Click to rate'}
                         </p>
                     </div>
 
@@ -169,32 +139,22 @@ const RateSalesReportModal: React.FC<RateSalesReportModalProps> = ({
                         <Label htmlFor="comment">Comment (Optional)</Label>
                         <Textarea
                             id="comment"
-                            placeholder="Provide additional feedback or comments about this report..."
-                            rows={4}
                             {...register('comment')}
-                            className="resize-none"
+                            placeholder="Share your feedback about this report..."
+                            rows={3}
                         />
                         {errors.comment && (
                             <p className="text-sm text-red-600 dark:text-red-400">
                                 {errors.comment.message}
                             </p>
                         )}
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {watchedComment?.length || 0}/500 characters
+                        <p className="text-sm text-gray-500">
+                            {watchedComment?.length || 0} / 500 characters
                         </p>
                     </div>
 
-                    {/* Validation Message */}
-                    {errors.rating && errors.rating.type === 'custom' && (
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                            <p className="text-sm text-red-800 dark:text-red-200">
-                                Either rating or comment must be provided
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                    {/* Actions */}
+                    <div className="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
                             variant="outline"
@@ -206,12 +166,12 @@ const RateSalesReportModal: React.FC<RateSalesReportModalProps> = ({
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isSubmitting || (!watchedRating && !watchedComment)}
+                            disabled={isSubmitting || rating === 0}
                         >
                             {isSubmitting ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Submitting...
+                                    Rating...
                                 </>
                             ) : (
                                 <>

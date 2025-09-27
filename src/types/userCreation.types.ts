@@ -12,9 +12,7 @@ export type UserRole =
 	| 'FinanceEmployee'
 	| 'LegalManager'
 	| 'LegalEmployee'
-	| 'Hello'
-	| 'admin'
-	| 'user';
+	| 'admin';
 
 // Role object from API
 export interface RoleObject {
