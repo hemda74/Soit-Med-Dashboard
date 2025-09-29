@@ -42,3 +42,4 @@ export const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
 };
 
 export default SearchBar;
+
