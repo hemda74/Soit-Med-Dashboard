@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus, Shield, Users, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -25,10 +25,7 @@ import {
 import type {
     RoleSpecificUserRole,
     HospitalInfo,
-    RoleSpecificUserResponse,
 } from '@/types/roleSpecificUser.types';
-import UserCreationSuccessModal from '../ui/user-creation-success-modal';
-import RoleSelectionCard from './RoleSelectionCard';
 import UserCreationForm from './UserCreationForm';
 import { useUserCreationForm } from '@/hooks/useUserCreationForm';
 
@@ -47,6 +44,20 @@ const RoleSpecificUserCreation: React.FC = () => {
     const { error: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
+
+    // Role icons mapping
+    const ROLE_ICONS = {
+        doctor: Stethoscope,
+        engineer: Wrench,
+        technician: Settings,
+        admin: Shield,
+        'finance-manager': DollarSign,
+        'finance-employee': DollarSign,
+        'legal-manager': Scale,
+        'legal-employee': Scale,
+        salesman: ShoppingCart,
+        'sales-manager': UserCheck,
+    };
 
     // Role configuration with translations
     const ROLE_CONFIG = {
@@ -139,9 +150,7 @@ const RoleSpecificUserCreation: React.FC = () => {
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
     const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
     const [governorates, setGovernorates] = useState<GovernorateInfo[]>([]);
-    const [createdUser, setCreatedUser] = useState<RoleSpecificUserResponse | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [createdPassword, setCreatedPassword] = useState('');
 
     // Use the custom hook for form management
     const {
@@ -208,7 +217,6 @@ const RoleSpecificUserCreation: React.FC = () => {
     const handleRoleSelect = (role: RoleSpecificUserRole) => {
         setSelectedRole(role);
         resetForm();
-        setCreatedUser(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -267,59 +275,41 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(formData.imageAltText && { imageAltText: formData.imageAltText }),
             };
 
-            let response: RoleSpecificUserResponse;
-
             switch (selectedRole) {
                 case 'doctor':
-                    response = await createDoctor(userData as any, user.token);
+                    await createDoctor(userData as any, user.token);
                     break;
                 case 'engineer':
-                    response = await createEngineer(userData as any, user.token);
+                    await createEngineer(userData as any, user.token);
                     break;
                 case 'technician':
-                    response = await createTechnician(userData as any, user.token);
+                    await createTechnician(userData as any, user.token);
                     break;
                 case 'admin':
-                    response = await createAdmin(userData as any, user.token);
+                    await createAdmin(userData as any, user.token);
                     break;
                 case 'finance-manager':
-                    response = await createFinanceManager(userData as any, user.token);
+                    await createFinanceManager(userData as any, user.token);
                     break;
                 case 'finance-employee':
-                    response = await createFinanceEmployee(userData as any, user.token);
+                    await createFinanceEmployee(userData as any, user.token);
                     break;
                 case 'legal-manager':
-                    response = await createLegalManager(userData as any, user.token);
+                    await createLegalManager(userData as any, user.token);
                     break;
                 case 'legal-employee':
-                    response = await createLegalEmployee(userData as any, user.token);
+                    await createLegalEmployee(userData as any, user.token);
                     break;
                 case 'salesman':
-                    response = await createSalesman(userData as any, user.token);
+                    await createSalesman(userData as any, user.token);
                     break;
                 case 'sales-manager':
-                    response = await createSalesManager(userData as any, user.token);
+                    await createSalesManager(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
             }
 
-            // Transform the response to match expected structure
-            const transformedResponse = {
-                success: true,
-                message: 'User created successfully',
-                data: {
-                    userId: (response as any).userId || (response as any).data?.userId,
-                    email: (response as any).email || (response as any).data?.email,
-                    firstName: (response as any).firstName || (response as any).data?.firstName,
-                    lastName: (response as any).lastName || (response as any).data?.lastName,
-                    role: (response as any).role || (response as any).data?.role || selectedRole,
-                    departmentId: (response as any).departmentId || (response as any).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
-                }
-            } as unknown as RoleSpecificUserResponse;
-
-            setCreatedUser(transformedResponse);
-            setCreatedPassword(formData.password);
             setShowSuccessModal(true);
 
         } catch (err: any) {
@@ -379,7 +369,6 @@ const RoleSpecificUserCreation: React.FC = () => {
         if (selectedRole) {
             setSelectedRole(null);
             resetForm();
-            setCreatedUser(null);
         } else {
             navigate('/admin/users');
         }
@@ -399,8 +388,6 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     const handleSuccessModalClose = () => {
         setShowSuccessModal(false);
-        setCreatedUser(null);
-        setCreatedPassword('');
         // Reset form and go back to role selection
         setSelectedRole(null);
         resetForm();
@@ -428,95 +415,137 @@ const RoleSpecificUserCreation: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <div className="max-w-4xl mx-auto">
-                {/* Colorful Header */}
-                <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 text-white mb-8 shadow-lg">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleBack}
-                            className="text-white hover:bg-primary hover:text-white transition-colors duration-200"
-                        >
-                            <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                            {t('back')}
-                        </Button>
-                        <div className="flex-1">
-                            <h1 className="text-4xl font-bold mb-2">{t('createNewUserTitle')}</h1>
-                            <p className="text-primary-foreground/80 text-lg">
-                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
-                            </p>
-                        </div>
-                        <div className="hidden md:block">
-                            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                <UserPlus className="w-8 h-8 text-white" />
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="container mx-auto px-4 py-8">
+                <div className="max-w-6xl mx-auto space-y-8">
+                    {/* Enhanced Header */}
+                    <div className="relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-secondary rounded-3xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+                        <div className="relative p-8 md:p-12 text-white">
+                            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                                <Button
+                                    variant="ghost"
+                                    size="lg"
+                                    onClick={handleBack}
+                                    className="text-white hover:bg-white/20 hover:text-white transition-all duration-200 backdrop-blur-sm border border-white/20"
+                                >
+                                    <ArrowLeft className={`h-5 w-5 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                                    {t('back')}
+                                </Button>
+                                <div className="flex-1 space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                            <UserPlus className="w-8 h-8 text-white" />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
+                                                {t('createNewUserTitle')}
+                                            </h1>
+                                            <p className="text-white/80 text-lg md:text-xl mt-2">
+                                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {selectedRole && (
+                                        <div className="flex items-center gap-3 mt-4">
+                                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                                {React.createElement(ROLE_ICONS[selectedRole], { className: "w-6 h-6 text-white" })}
+                                            </div>
+                                            <span className="text-white/90 font-medium">
+                                                {ROLE_CONFIG[selectedRole].description}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="hidden lg:block">
+                                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
+                                        <Users className="w-12 h-12 text-white" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    {!selectedRole ? (
+                        <div className="space-y-8">
+                            <div className="text-center space-y-4">
+                                <h2 className="text-3xl font-bold text-foreground">
+                                    Choose User Role
+                                </h2>
+                                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                                    Select the appropriate role for the new user. Each role has specific permissions and requirements.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {Object.entries(ROLE_CONFIG).map(([roleKey, config]) => {
+                                    const IconComponent = ROLE_ICONS[roleKey as keyof typeof ROLE_ICONS];
+                                    return (
+                                        <Card
+                                            key={roleKey}
+                                            className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-card to-muted/20 hover:from-primary/5 hover:to-primary/10"
+                                            onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
+                                        >
+                                            <CardContent className="p-6 text-center space-y-4">
+                                                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center group-hover:from-primary/20 group-hover:to-primary/30 transition-all duration-300">
+                                                    <IconComponent className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-300" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                                                        {config.name}
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground line-clamp-3">
+                                                        {config.description}
+                                                    </p>
+                                                </div>
+                                                <div className="pt-2">
+                                                    <div className="inline-flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all duration-300">
+                                                        <span>Create User</span>
+                                                        <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <UserCreationForm
+                            selectedRole={selectedRole}
+                            roleConfig={ROLE_CONFIG[selectedRole]}
+                            formData={formData}
+                            hospitals={hospitals}
+                            governorates={governorates}
+                            errors={errors}
+                            passwordErrors={passwordErrors}
+                            showPassword={showPassword}
+                            showConfirmPassword={showConfirmPassword}
+                            showGovernorateDropdown={showGovernorateDropdown}
+                            imagePreview={imagePreview}
+                            imageError={imageError}
+                            isLoading={isLoading}
+                            showSuccessModal={showSuccessModal}
+                            governorateDropdownRef={governorateDropdownRef}
+                            onInputChange={handleInputChange}
+                            onPasswordToggle={togglePasswordVisibility}
+                            onConfirmPasswordToggle={toggleConfirmPasswordVisibility}
+                            onImageSelect={handleImageSelect}
+                            onRemoveImage={handleRemoveImage}
+                            onImageAltTextChange={handleImageAltTextChange}
+                            onHospitalSelect={handleHospitalSelect}
+                            onGovernorateToggle={handleGovernorateToggle}
+                            onRemoveGovernorate={removeGovernorate}
+                            onClearAllGovernorates={handleClearAllGovernorates}
+                            onToggleGovernorateDropdown={handleToggleGovernorateDropdown}
+                            onDepartmentChange={handleDepartmentChange}
+                            onSubmit={handleSubmit}
+                            onBack={handleBack}
+                            onCloseSuccessModal={handleSuccessModalClose}
+                        />
+                    )}
                 </div>
-
-                {!selectedRole ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(ROLE_CONFIG).map(([roleKey, config], index) => (
-                            <RoleSelectionCard
-                                key={roleKey}
-                                roleKey={roleKey}
-                                config={config}
-                                index={index}
-                                onSelect={handleRoleSelect}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <UserCreationForm
-                        selectedRole={selectedRole}
-                        roleConfig={ROLE_CONFIG[selectedRole]}
-                        formData={formData}
-                        hospitals={hospitals}
-                        governorates={governorates}
-                        errors={errors}
-                        passwordErrors={passwordErrors}
-                        showPassword={showPassword}
-                        showConfirmPassword={showConfirmPassword}
-                        showGovernorateDropdown={showGovernorateDropdown}
-                        imagePreview={imagePreview}
-                        imageError={imageError}
-                        isLoading={isLoading}
-                        governorateDropdownRef={governorateDropdownRef}
-                        onInputChange={handleInputChange}
-                        onPasswordToggle={togglePasswordVisibility}
-                        onConfirmPasswordToggle={toggleConfirmPasswordVisibility}
-                        onImageSelect={handleImageSelect}
-                        onRemoveImage={handleRemoveImage}
-                        onImageAltTextChange={handleImageAltTextChange}
-                        onHospitalSelect={handleHospitalSelect}
-                        onGovernorateToggle={handleGovernorateToggle}
-                        onRemoveGovernorate={removeGovernorate}
-                        onClearAllGovernorates={handleClearAllGovernorates}
-                        onToggleGovernorateDropdown={handleToggleGovernorateDropdown}
-                        onDepartmentChange={handleDepartmentChange}
-                        onSubmit={handleSubmit}
-                        onBack={handleBack}
-                    />
-                )}
             </div>
-
-            {/* Success Modal */}
-            {createdUser && (createdUser as any).data && showSuccessModal && (
-                <UserCreationSuccessModal
-                    isOpen={showSuccessModal}
-                    onClose={handleSuccessModalClose}
-                    userData={{
-                        email: (createdUser as any).data.email,
-                        firstName: (createdUser as any).data.firstName,
-                        lastName: (createdUser as any).data.lastName,
-                        role: (createdUser as any).data.role,
-                        userId: (createdUser as any).data.userId,
-                    }}
-                    password={createdPassword}
-                />
-            )}
         </div>
     );
 };
