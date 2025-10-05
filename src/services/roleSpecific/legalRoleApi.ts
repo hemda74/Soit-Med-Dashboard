@@ -10,6 +10,7 @@ export const createLegalManager = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		profileImage?: File;
 		altText?: string;
@@ -35,6 +36,9 @@ export const createLegalManager = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(
@@ -70,6 +74,7 @@ export const createLegalEmployee = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		profileImage?: File;
 		altText?: string;
@@ -95,6 +100,9 @@ export const createLegalEmployee = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(

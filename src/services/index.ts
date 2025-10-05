@@ -23,9 +23,13 @@ export * from './roleSpecific/adminRoleApi';
 export * from './roleSpecific/financeRoleApi';
 export * from './roleSpecific/legalRoleApi';
 export * from './roleSpecific/salesRoleApi';
+export * from './roleSpecific/maintenanceRoleApi';
 
-// Sales reports
+// Sales reports (Legacy)
 export * from './sales/salesReportApi';
+
+// Weekly Plans (New To-Do List System)
+export * from './weeklyPlan/weeklyPlanApi';
 
 // Dashboard
 export * from './dashboard/dashboardApi';

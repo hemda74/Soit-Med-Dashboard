@@ -10,6 +10,7 @@ export const createSalesman = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		profileImage?: File;
 		altText?: string;
@@ -35,6 +36,9 @@ export const createSalesman = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(
@@ -70,6 +74,7 @@ export const createSalesManager = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		salesTerritory?: string;
 		salesTeam?: string;
@@ -99,6 +104,9 @@ export const createSalesManager = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(

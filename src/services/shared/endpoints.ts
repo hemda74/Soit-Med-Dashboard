@@ -64,13 +64,30 @@ export const API_ENDPOINTS = {
 		LEGAL_EMPLOYEE: '/RoleSpecificUser/legal-employee',
 		SALESMAN: '/RoleSpecificUser/salesman',
 		SALES_MANAGER: '/RoleSpecificUser/sales-manager',
+		MAINTENANCE_MANAGER: '/RoleSpecificUser/maintenance-manager',
+		MAINTENANCE_SUPPORT: '/RoleSpecificUser/maintenance-support',
 	},
 
-	// Sales Reports
+	// Sales Reports (Legacy - kept for backward compatibility)
 	SALES_REPORT: {
 		BASE: '/api/SalesReport',
 		BY_ID: (id: number) => `/api/SalesReport/${id}`,
 		RATE: (id: number) => `/api/SalesReport/${id}/rate`,
+	},
+
+	// Weekly Plan (New To-Do List System)
+	WEEKLY_PLAN: {
+		BASE: '/api/WeeklyPlan',
+		BY_ID: (id: number) => `/api/WeeklyPlan/${id}`,
+		REVIEW: (id: number) => `/api/WeeklyPlan/${id}/review`,
+		TASKS: (weeklyPlanId: number) =>
+			`/api/WeeklyPlan/${weeklyPlanId}/tasks`,
+		TASK_BY_ID: (weeklyPlanId: number, taskId: number) =>
+			`/api/WeeklyPlan/${weeklyPlanId}/tasks/${taskId}`,
+		PROGRESS: (weeklyPlanId: number) =>
+			`/api/WeeklyPlan/${weeklyPlanId}/progress`,
+		PROGRESS_BY_ID: (weeklyPlanId: number, progressId: number) =>
+			`/api/WeeklyPlan/${weeklyPlanId}/progress/${progressId}`,
 	},
 
 	// Dashboard
