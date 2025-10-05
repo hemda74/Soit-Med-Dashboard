@@ -9,7 +9,7 @@ This document describes the role-based access control restrictions implemented i
 The following roles are **NOT** authorized to access the dashboard application:
 
 - **Doctor**
-- **Engineer** 
+- **Engineer**
 - **Technician**
 - **Salesman**
 
@@ -20,47 +20,51 @@ Users with any of these roles will be denied access to the application, even if 
 ### 1. Authentication Store (authStore.ts)
 
 #### Restricted Roles List
+
 ```typescript
 const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
 ```
 
 #### Authorization Check Method
+
 A new method `isAuthorizedToAccess()` has been added to the auth store:
 
 ```typescript
 isAuthorizedToAccess: () => {
-    const { user } = get();
-    if (!user) return false;
-    
-    // Check if user has any restricted roles
-    const hasRestrictedRole = user.roles.some(
-        (role) => RESTRICTED_ROLES.includes(role)
-    );
-    
-    return !hasRestrictedRole;
-}
+	const { user } = get();
+	if (!user) return false;
+
+	// Check if user has any restricted roles
+	const hasRestrictedRole = user.roles.some((role) =>
+		RESTRICTED_ROLES.includes(role)
+	);
+
+	return !hasRestrictedRole;
+};
 ```
 
 #### Login Process Enhancement
+
 During the login process, after successful authentication with the backend, the application checks if the user has any restricted roles:
 
 ```typescript
 // Check if user has authorization to access the application
-const hasRestrictedRole = user.roles.some(
-    (role) => RESTRICTED_ROLES.includes(role)
+const hasRestrictedRole = user.roles.some((role) =>
+	RESTRICTED_ROLES.includes(role)
 );
 
 if (hasRestrictedRole) {
-    setLoading(false);
-    throw new Error(
-        'Access denied. Your role is not authorized to access this application.'
-    );
+	setLoading(false);
+	throw new Error(
+		'Access denied. Your role is not authorized to access this application.'
+	);
 }
 ```
 
 ### 2. Application Router (App.tsx)
 
 #### Route Guard Implementation
+
 The main App component now includes an authorization check that runs on mount and when authentication state changes:
 
 ```typescript
@@ -83,19 +87,19 @@ This ensures that even if a restricted user somehow bypasses the login check, th
 3. Application fetches user data including roles
 4. Application checks if user has any restricted roles
 5. If restricted role detected:
-   - Login process is aborted
-   - Error message is displayed: "Access denied. Your role is not authorized to access this application."
-   - User remains on login page
-   - Login attempt is counted (for security lockout mechanism)
+      - Login process is aborted
+      - Error message is displayed: "Access denied. Your role is not authorized to access this application."
+      - User remains on login page
+      - Login attempt is counted (for security lockout mechanism)
 
 ### Session Check
 
 1. On application load, if user is authenticated
 2. Application checks `isAuthorizedToAccess()`
 3. If user has restricted role:
-   - User is immediately logged out
-   - Redirected to login page
-   - Session is cleared from local storage
+      - User is immediately logged out
+      - Redirected to login page
+      - Session is cleared from local storage
 
 ## Authorized Roles
 
@@ -114,6 +118,7 @@ The following roles **ARE** authorized to access the application:
 ## Error Messages
 
 When a restricted user attempts to login, they will see:
+
 ```
 Access denied. Your role is not authorized to access this application.
 ```
@@ -128,8 +133,15 @@ To add or remove roles from the restriction list:
 4. Ensure role names match exactly with the backend role definitions (case-sensitive)
 
 Example:
+
 ```typescript
-const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman', 'NewRestrictedRole'];
+const RESTRICTED_ROLES = [
+	'Doctor',
+	'Engineer',
+	'Technician',
+	'Salesman',
+	'NewRestrictedRole',
+];
 ```
 
 ## Testing
@@ -168,3 +180,4 @@ Potential improvements to the security system:
 4. Add audit logging for access denial attempts
 5. Implement temporary access grants for restricted roles
 6. Add admin interface to manage role restrictions dynamically
+
