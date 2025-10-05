@@ -17,7 +17,23 @@ import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
 import { WeeklyPlansScreen } from '@/components/weeklyPlan'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isAuthorizedToAccess, logout } = useAuthStore()
+
+  // Check authorization on mount and when authentication changes
+  if (isAuthenticated && !isAuthorizedToAccess()) {
+    logout()
+    return (
+      <ThemeProvider>
+        <Router>
+          <div className="min-h-screen bg-background text-foreground">
+            <Routes>
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </ThemeProvider>
+    )
+  }
 
   return (
     <ThemeProvider>

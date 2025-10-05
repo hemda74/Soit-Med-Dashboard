@@ -9,6 +9,9 @@ export interface User extends AuthUser {
 	token: string;
 }
 
+// Roles that are not authorized to access the application
+const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
+
 interface AuthState {
 	user: User | null;
 	isAuthenticated: boolean;
@@ -40,6 +43,7 @@ interface AuthState {
 	hasRole: (role: string) => boolean;
 	hasAnyRole: (roles: string[]) => boolean;
 	hasPermission: (permission: string) => boolean;
+	isAuthorizedToAccess: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -100,22 +104,37 @@ export const useAuthStore = create<AuthState>()(
 										60 *
 										1000;
 
-						const user: User = {
-							...userData,
-							token: response.token,
-						};
+					const user: User = {
+						...userData,
+						token: response.token,
+					};
 
-						set({
-							user,
-							isAuthenticated: true,
-							sessionExpiry,
-							loginAttempts: 0,
-							lastLoginAttempt: null,
-						});
+					// Check if user has authorization to access the application
+					const hasRestrictedRole = user.roles.some(
+						(role) =>
+							RESTRICTED_ROLES.includes(
+								role
+							)
+					);
 
-						toast.success(
-							`Welcome back, ${user.firstName}!`
+					if (hasRestrictedRole) {
+						setLoading(false);
+						throw new Error(
+							'Access denied. Your role is not authorized to access this application.'
 						);
+					}
+
+					set({
+						user,
+						isAuthenticated: true,
+						sessionExpiry,
+						loginAttempts: 0,
+						lastLoginAttempt: null,
+					});
+
+					toast.success(
+						`Welcome back, ${user.firstName}!`
+					);
 					} catch (error: any) {
 						get().incrementLoginAttempts();
 						setLoading(false);
@@ -284,6 +303,21 @@ export const useAuthStore = create<AuthState>()(
 
 					// Add more granular permission logic here
 					return false;
+				},
+
+				isAuthorizedToAccess: () => {
+					const { user } = get();
+					if (!user) return false;
+
+					// Check if user has any restricted roles
+					const hasRestrictedRole = user.roles.some(
+						(role) =>
+							RESTRICTED_ROLES.includes(
+								role
+							)
+					);
+
+					return !hasRestrictedRole;
 				},
 			}),
 			{
