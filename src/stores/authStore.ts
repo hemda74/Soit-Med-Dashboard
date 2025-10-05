@@ -228,7 +228,7 @@ export const useAuthStore = create<AuthState>()(
 					} = get();
 					if (loginAttempts < 5) return false;
 
-					const lockoutDuration = 15 * 60 * 1000; // 15 minutes
+					const lockoutDuration = 1 * 60 * 1000; // 15 minutes
 					if (!lastLoginAttempt) return false;
 
 					return (

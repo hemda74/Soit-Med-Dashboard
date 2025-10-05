@@ -29,6 +29,7 @@ export const STORE_NAMES = {
 	APP: 'AppStore',
 	NOTIFICATION: 'NotificationStore',
 	API: 'ApiStore',
+	STATISTICS: 'StatisticsStore',
 } as const;
 
 // Development utilities
