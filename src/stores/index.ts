@@ -4,6 +4,7 @@ export * from './themeStore';
 export * from './appStore';
 export * from './notificationStore';
 export * from './apiStore';
+export * from './statisticsStore';
 
 // Re-export commonly used hooks for convenience
 export { useAuthStore } from './authStore';
@@ -16,6 +17,18 @@ export {
 	useGlobalLoading,
 	useApiCallHistory,
 } from './apiStore';
+export {
+	useStatisticsStore,
+	useStatistics,
+	useStatisticsLoading,
+	useStatisticsError,
+	useFetchStatistics,
+	useClearStatistics,
+	useClearError,
+	useStatisticsDebugInfo,
+	useApiCallCount,
+	useLastApiCallTime,
+} from './statisticsStore';
 
 // Store types for external use
 export type { User } from './authStore';
@@ -23,3 +36,4 @@ export type { Theme, Language } from './themeStore';
 export type { AppState } from './appStore';
 export type { Notification, NotificationType } from './notificationStore';
 export type { ApiCall, ApiState } from './apiStore';
+export type { StatisticsState } from './statisticsStore';
