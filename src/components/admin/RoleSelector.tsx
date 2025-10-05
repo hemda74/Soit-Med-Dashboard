@@ -105,12 +105,6 @@ const CATEGORY_LABELS = {
 export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSelectorProps) {
     const { t } = useTranslation();
 
-    // Debug logging
-    console.log('🎭 RoleSelector received availableRoles:', availableRoles);
-    console.log('📊 availableRoles type:', typeof availableRoles);
-    console.log('📏 availableRoles length:', Array.isArray(availableRoles) ? availableRoles.length : 'Not an array');
-    console.log('🔍 availableRoles content:', JSON.stringify(availableRoles, null, 2));
-
     // Group roles by category
     const rolesByCategory = availableRoles.reduce((acc, roleObject) => {
         const roleConfig = ROLE_CONFIG[roleObject.name as UserRole];
