@@ -1,10 +1,10 @@
-// Medical role-specific user creation API services (Doctor, Technician)
+// Maintenance role-specific user creation API services (Maintenance Manager, Maintenance Support)
 
 import { apiRequest } from '../shared/apiClient';
 import { API_ENDPOINTS } from '../shared/endpoints';
 import type { RoleSpecificUserResponse } from '@/types/roleSpecificUser.types';
 
-export const createDoctor = async (
+export const createMaintenanceManager = async (
 	userData: {
 		email: string;
 		password: string;
@@ -12,15 +12,18 @@ export const createDoctor = async (
 		lastName?: string;
 		phoneNumber?: string;
 		departmentId?: number;
-		specialty: string;
-		hospitalId: string;
+		maintenanceSpecialty?: string;
+		certification?: string;
 		profileImage?: File;
 		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating doctor:', userData);
-	console.log('Using endpoint:', API_ENDPOINTS.ROLE_SPECIFIC_USER.DOCTOR);
+	console.log('Creating maintenance manager:', userData);
+	console.log(
+		'Using endpoint:',
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.MAINTENANCE_MANAGER
+	);
 
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
@@ -28,8 +31,15 @@ export const createDoctor = async (
 	// Add all user data fields to FormData with PascalCase field names
 	formData.append('Email', userData.email);
 	formData.append('Password', userData.password);
-	formData.append('Specialty', userData.specialty);
-	formData.append('HospitalId', userData.hospitalId);
+	if (userData.maintenanceSpecialty) {
+		formData.append(
+			'MaintenanceSpecialty',
+			userData.maintenanceSpecialty
+		);
+	}
+	if (userData.certification) {
+		formData.append('Certification', userData.certification);
+	}
 
 	// Add optional fields
 	if (userData.firstName) {
@@ -60,7 +70,7 @@ export const createDoctor = async (
 	}
 
 	return apiRequest<RoleSpecificUserResponse>(
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.DOCTOR,
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.MAINTENANCE_MANAGER,
 		{
 			method: 'POST',
 			body: formData,
@@ -69,7 +79,7 @@ export const createDoctor = async (
 	);
 };
 
-export const createTechnician = async (
+export const createMaintenanceSupport = async (
 	userData: {
 		email: string;
 		password: string;
@@ -77,17 +87,17 @@ export const createTechnician = async (
 		lastName?: string;
 		phoneNumber?: string;
 		departmentId?: number;
-		hospitalId: string;
-		department: string;
+		jobTitle?: string;
+		technicalSkills?: string;
 		profileImage?: File;
 		altText?: string;
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating technician:', userData);
+	console.log('Creating maintenance support:', userData);
 	console.log(
 		'Using endpoint:',
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.TECHNICIAN
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.MAINTENANCE_SUPPORT
 	);
 
 	// Create FormData for multipart/form-data request
@@ -96,8 +106,12 @@ export const createTechnician = async (
 	// Add all user data fields to FormData with PascalCase field names
 	formData.append('Email', userData.email);
 	formData.append('Password', userData.password);
-	formData.append('Department', userData.department);
-	formData.append('HospitalId', userData.hospitalId);
+	if (userData.jobTitle) {
+		formData.append('JobTitle', userData.jobTitle);
+	}
+	if (userData.technicalSkills) {
+		formData.append('TechnicalSkills', userData.technicalSkills);
+	}
 
 	// Add optional fields
 	if (userData.firstName) {
@@ -128,7 +142,7 @@ export const createTechnician = async (
 	}
 
 	return apiRequest<RoleSpecificUserResponse>(
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.TECHNICIAN,
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.MAINTENANCE_SUPPORT,
 		{
 			method: 'POST',
 			body: formData,
