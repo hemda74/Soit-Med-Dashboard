@@ -18,6 +18,8 @@ import {
     createLegalEmployee,
     createSalesman,
     createSalesManager,
+    createMaintenanceManager,
+    createMaintenanceSupport,
     getHospitals,
     getGovernorates,
     validateForm,
@@ -133,6 +135,24 @@ const RoleSpecificUserCreation: React.FC = () => {
             requiresDepartment: false,
             autoDepartmentId: 3,
             role: 'SalesManager'
+        },
+        'maintenance-manager': {
+            name: t('maintenanceManager'),
+            description: t('maintenanceManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'maintenanceSpecialty', 'certification'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceManager'
+        },
+        'maintenance-support': {
+            name: t('maintenanceSupport'),
+            description: t('maintenanceSupportDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'jobTitle', 'technicalSkills'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceSupport'
         },
     };
 
@@ -252,6 +272,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
+                phoneNumber: formData.phoneNumber,
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
@@ -263,6 +284,10 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'sales-manager' && formData.salesTeam && { salesTeam: formData.salesTeam }),
                 ...(selectedRole === 'sales-manager' && formData.salesTarget && { salesTarget: parseFloat(formData.salesTarget) }),
                 ...(selectedRole === 'sales-manager' && formData.managerNotes && { managerNotes: formData.managerNotes }),
+                ...(selectedRole === 'maintenance-manager' && formData.maintenanceSpecialty && { maintenanceSpecialty: formData.maintenanceSpecialty }),
+                ...(selectedRole === 'maintenance-manager' && formData.certification && { certification: formData.certification }),
+                ...(selectedRole === 'maintenance-support' && formData.jobTitle && { jobTitle: formData.jobTitle }),
+                ...(selectedRole === 'maintenance-support' && formData.technicalSkills && { technicalSkills: formData.technicalSkills }),
                 ...(formData.profileImage && { profileImage: formData.profileImage }),
                 ...(formData.imageAltText && { imageAltText: formData.imageAltText }),
             };
@@ -299,6 +324,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                     break;
                 case 'sales-manager':
                     response = await createSalesManager(userData as any, user.token);
+                    break;
+                case 'maintenance-manager':
+                    response = await createMaintenanceManager(userData as any, user.token);
+                    break;
+                case 'maintenance-support':
+                    response = await createMaintenanceSupport(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
@@ -483,6 +514,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                         imagePreview={imagePreview}
                         imageError={imageError}
                         isLoading={isLoading}
+                        showSuccessModal={showSuccessModal}
                         governorateDropdownRef={governorateDropdownRef}
                         onInputChange={handleInputChange}
                         onPasswordToggle={togglePasswordVisibility}
@@ -498,6 +530,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                         onDepartmentChange={handleDepartmentChange}
                         onSubmit={handleSubmit}
                         onBack={handleBack}
+                        onCloseSuccessModal={() => setShowSuccessModal(false)}
                     />
                 )}
             </div>

@@ -7,6 +7,7 @@ export interface FormData {
 	confirmPassword: string;
 	firstName: string;
 	lastName: string;
+	phoneNumber?: string;
 	specialty?: string;
 	hospitalId?: string;
 	departmentId?: string;
@@ -16,6 +17,10 @@ export interface FormData {
 	salesTeam?: string;
 	salesTarget?: string;
 	managerNotes?: string;
+	maintenanceSpecialty?: string;
+	certification?: string;
+	jobTitle?: string;
+	technicalSkills?: string;
 	profileImage?: File;
 	imageAltText?: string;
 }
@@ -29,6 +34,7 @@ export const useUserCreationForm = () => {
 		confirmPassword: '',
 		firstName: '',
 		lastName: '',
+		phoneNumber: '',
 		specialty: '',
 		hospitalId: '',
 		departmentId: '',
@@ -38,6 +44,10 @@ export const useUserCreationForm = () => {
 		salesTeam: '',
 		salesTarget: '',
 		managerNotes: '',
+		maintenanceSpecialty: '',
+		certification: '',
+		jobTitle: '',
+		technicalSkills: '',
 	});
 
 	const [isLoading, setIsLoading] = useState(false);
@@ -232,11 +242,20 @@ export const useUserCreationForm = () => {
 			confirmPassword: '',
 			firstName: '',
 			lastName: '',
+			phoneNumber: '',
 			specialty: '',
 			hospitalId: '',
 			departmentId: '',
 			department: '',
 			governorateIds: [],
+			salesTerritory: '',
+			salesTeam: '',
+			salesTarget: '',
+			managerNotes: '',
+			maintenanceSpecialty: '',
+			certification: '',
+			jobTitle: '',
+			technicalSkills: '',
 			profileImage: undefined,
 			imageAltText: '',
 		});
