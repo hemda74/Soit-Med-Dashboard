@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus, Shield, Users, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -18,6 +18,8 @@ import {
     createLegalEmployee,
     createSalesman,
     createSalesManager,
+    createMaintenanceManager,
+    createMaintenanceSupport,
     getHospitals,
     getGovernorates,
     validateForm,
@@ -28,6 +30,7 @@ import type {
 } from '@/types/roleSpecificUser.types';
 import UserCreationForm from './UserCreationForm';
 import { useUserCreationForm } from '@/hooks/useUserCreationForm';
+import Logo from '@/components/Logo';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -57,6 +60,8 @@ const RoleSpecificUserCreation: React.FC = () => {
         'legal-employee': Scale,
         salesman: ShoppingCart,
         'sales-manager': UserCheck,
+        'maintenance-manager': HardHat,
+        'maintenance-support': Cog,
     };
 
     // Role configuration with translations
@@ -144,6 +149,24 @@ const RoleSpecificUserCreation: React.FC = () => {
             requiresDepartment: false,
             autoDepartmentId: 3,
             role: 'SalesManager'
+        },
+        'maintenance-manager': {
+            name: t('maintenanceManager'),
+            description: t('maintenanceManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'maintenanceSpecialty', 'certification'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceManager'
+        },
+        'maintenance-support': {
+            name: t('maintenanceSupport'),
+            description: t('maintenanceSupportDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'jobTitle', 'technicalSkills'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceSupport'
         },
     };
 
@@ -260,6 +283,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
+                phoneNumber: formData.phoneNumber,
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
@@ -305,6 +329,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                     break;
                 case 'sales-manager':
                     await createSalesManager(userData as any, user.token);
+                    break;
+                case 'maintenance-manager':
+                    await createMaintenanceManager(userData as any, user.token);
+                    break;
+                case 'maintenance-support':
+                    await createMaintenanceSupport(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
@@ -418,90 +448,111 @@ const RoleSpecificUserCreation: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-6xl mx-auto space-y-8">
-                    {/* Enhanced Header */}
-                    <div className="relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-secondary rounded-3xl"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
-                        <div className="relative p-8 md:p-12 text-white">
-                            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                    {/* Professional Header with Logo */}
+                    <div className=" group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-card to-muted/20 hover:from-primary/5 hover:to-primary/10 border-gray-200 rounded-lg shadow-sm">
+                        <div className="p-6">
+                            {/* Top Navigation */}
+                            <div className="flex items-center justify-between mb-6 ">
                                 <Button
-                                    variant="ghost"
-                                    size="lg"
+
+                                    size="sm"
                                     onClick={handleBack}
-                                    className="text-white hover:bg-white/20 hover:text-white transition-all duration-200 backdrop-blur-sm border border-white/20"
+                                    className=" hover:bg-gray-50"
                                 >
-                                    <ArrowLeft className={`h-5 w-5 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                                    <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                                     {t('back')}
                                 </Button>
-                                <div className="flex-1 space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                                            <UserPlus className="w-8 h-8 text-white" />
+                                <div className="flex items-center">
+                                    <Logo
+                                        asLink={false}
+                                        className="opacity-80 hover:opacity-100 transition-opacity duration-200"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-gray-100 rounded-lg">
+                                        <UserPlus className="w-6 h-6 text-gray-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                                            {t('createNewUserTitle')}
+                                        </h1>
+                                        <p className="text-gray-600">
+                                            {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                                        </p>
+                                    </div>
+                                </div>
+                                {/* Logo */}
+
+                            </div>
+
+                            {/* Main Content */}
+                            <div className="flex items-center gap-6">
+
+                                {selectedRole && (
+                                    <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="p-2 bg-white rounded-md">
+                                            {React.createElement(ROLE_ICONS[selectedRole], { className: "w-5 h-5 text-gray-600" })}
                                         </div>
                                         <div>
-                                            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
-                                                {t('createNewUserTitle')}
-                                            </h1>
-                                            <p className="text-white/80 text-lg md:text-xl mt-2">
-                                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {ROLE_CONFIG[selectedRole].name}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                {ROLE_CONFIG[selectedRole].description}
                                             </p>
                                         </div>
                                     </div>
-                                    {selectedRole && (
-                                        <div className="flex items-center gap-3 mt-4">
-                                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                                {React.createElement(ROLE_ICONS[selectedRole], { className: "w-6 h-6 text-white" })}
-                                            </div>
-                                            <span className="text-white/90 font-medium">
-                                                {ROLE_CONFIG[selectedRole].description}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="hidden lg:block">
-                                    <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/30">
-                                        <Users className="w-12 h-12 text-white" />
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {!selectedRole ? (
-                        <div className="space-y-8">
-                            <div className="text-center space-y-4">
-                                <h2 className="text-3xl font-bold text-foreground">
+                        <div className="space-y-10">
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                                    <UserPlus className="h-6 w-6 text-primary" />
+                                    <span className="text-primary font-semibold">User Creation</span>
+                                </div>
+                                <h2 className="text-4xl font-bold text-foreground">
                                     Choose User Role
                                 </h2>
-                                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                                    Select the appropriate role for the new user. Each role has specific permissions and requirements.
+                                <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
+                                    Select the appropriate role for the new user. Each role has specific permissions, requirements, and access levels.
                                 </p>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {Object.entries(ROLE_CONFIG).map(([roleKey, config]) => {
                                     const IconComponent = ROLE_ICONS[roleKey as keyof typeof ROLE_ICONS];
                                     return (
                                         <Card
                                             key={roleKey}
-                                            className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-card to-muted/20 hover:from-primary/5 hover:to-primary/10"
+                                            className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-card via-card to-muted/10 hover:from-primary/5 hover:via-primary/10 hover:to-primary/15 overflow-hidden"
                                             onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
                                         >
-                                            <CardContent className="p-6 text-center space-y-4">
-                                                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center group-hover:from-primary/20 group-hover:to-primary/30 transition-all duration-300">
-                                                    <IconComponent className="w-8 h-8 text-primary group-hover:scale-110 transition-transform duration-300" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
-                                                        {config.name}
-                                                    </h3>
-                                                    <p className="text-sm text-muted-foreground line-clamp-3">
-                                                        {config.description}
-                                                    </p>
-                                                </div>
-                                                <div className="pt-2">
-                                                    <div className="inline-flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all duration-300">
-                                                        <span>Create User</span>
-                                                        <ArrowLeft className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                            <CardContent className="p-8 text-center space-y-6 relative">
+                                                {/* Background decoration */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                                <div className="relative z-10">
+                                                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/10 via-primary/15 to-primary/20 rounded-3xl flex items-center justify-center group-hover:from-primary/20 group-hover:via-primary/25 group-hover:to-primary/30 transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                                                        <IconComponent className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+                                                    </div>
+
+                                                    <div className="space-y-3 mt-6">
+                                                        <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                                                            {config.name}
+                                                        </h3>
+                                                        <p className="text-muted-foreground line-clamp-3 leading-relaxed">
+                                                            {config.description}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="pt-4">
+                                                        <div className="inline-flex items-center gap-3 text-primary font-semibold text-base group-hover:gap-4 transition-all duration-300 bg-primary/10 group-hover:bg-primary/20 px-6 py-3 rounded-full">
+                                                            <span>Create User</span>
+                                                            <ArrowLeft className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </CardContent>
