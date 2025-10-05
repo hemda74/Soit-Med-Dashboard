@@ -7,6 +7,7 @@ import LoginForm from '@/components/LoginForm'
 import ForgotPassword from '@/pages/ForgotPassword'
 import VerifyCode from '@/pages/VerifyCode'
 import ResetPassword from '@/pages/ResetPassword'
+import NotFound from '@/pages/NotFound'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
@@ -52,8 +53,8 @@ function App() {
                 <Route path="weekly-plans" element={<WeeklyPlansScreen />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           ) : (
             <Routes>
@@ -62,7 +63,7 @@ function App() {
               <Route path="forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
               <Route path="verify-code" element={<AuthLayout><VerifyCode /></AuthLayout>} />
               <Route path="reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           )}
         </div>
