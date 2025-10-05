@@ -117,16 +117,16 @@ export function useSalesReports(): UseSalesReportsReturn {
 				error: null,
 			}));
 
-		try {
-			const filters = newFilters || state.filters;
+			try {
+				const filters = newFilters || state.filters;
 
-			// Use single endpoint - backend handles role-based filtering
-			const response =
-				await salesReportApi.getReports(
-					filters
-				);
+				// Use single endpoint - backend handles role-based filtering
+				const response =
+					await salesReportApi.getReports(
+						filters
+					);
 
-			if (response.success && response.data) {
+				if (response.success && response.data) {
 					setState((prev) => ({
 						...prev,
 						reports:

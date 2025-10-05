@@ -376,6 +376,21 @@ export const translations = {
 		reviewed: 'Reviewed',
 		pendingReview: 'Pending Review',
 		reviewStatus: 'Review Status',
+
+		// Analytics Dashboard
+		analyticsDashboard: 'Analytics Dashboard',
+		analyticsDescription:
+			'Comprehensive user analytics and distribution',
+		loadingAnalyticsData: 'Loading analytics data...',
+		departments: 'Departments',
+		departmentBreakdown: 'Department Breakdown',
+		roleBreakdown: 'Role Breakdown',
+		statusOverview: 'Status Overview',
+		currentlyActiveInSystem: 'Currently active in the system',
+		currentlyInactiveInSystem: 'Currently inactive in the system',
+		activeUsersPercentage: 'Active users percentage',
+		excellent: 'Excellent',
+		total: 'Total',
 	},
 	ar: {
 		Hello: 'مرحبا',
@@ -743,6 +758,20 @@ export const translations = {
 		reviewed: 'تمت المراجعة',
 		pendingReview: 'في انتظار المراجعة',
 		reviewStatus: 'حالة المراجعة',
+
+		// Analytics Dashboard (لوحة تحليلات البيانات)
+		analyticsDashboard: 'لوحة تحليلات المستخدمين',
+		analyticsDescription: 'تحليلات شاملة لتوزيع المستخدمين',
+		loadingAnalyticsData: 'جاري تحميل بيانات التحليلات...',
+		departments: 'الأقسام',
+		departmentBreakdown: 'توزيع الأقسام',
+		roleBreakdown: 'توزيع الأدوار',
+		statusOverview: 'نظرة عامة على الحالة',
+		currentlyActiveInSystem: 'نشط حالياً في النظام',
+		currentlyInactiveInSystem: 'غير نشط حالياً في النظام',
+		activeUsersPercentage: 'نسبة المستخدمين النشطين',
+		excellent: 'ممتاز',
+		total: 'الإجمالي',
 	},
 };
 
