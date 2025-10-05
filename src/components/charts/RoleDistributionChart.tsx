@@ -4,21 +4,21 @@ import { useStatistics, useStatisticsLoading, useStatisticsError } from "@/store
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, AlertCircle } from "lucide-react";
 
-export default function DepartmentDistributionChart() {
+export default function RoleDistributionChart() {
     // Use statistics store instead of local state
     const statistics = useStatistics();
     const loading = useStatisticsLoading();
     const error = useStatisticsError();
 
     // Prepare chart data from API
-    const chartData = statistics?.usersByDepartment ? {
-        labels: Object.keys(statistics.usersByDepartment),
-        series: Object.values(statistics.usersByDepartment),
-        total: Object.values(statistics.usersByDepartment).reduce((sum, count) => sum + count, 0)
+    const chartData = statistics?.usersByRoleBreakdown ? {
+        labels: Object.keys(statistics.usersByRoleBreakdown),
+        series: Object.values(statistics.usersByRoleBreakdown),
+        total: Object.values(statistics.usersByRoleBreakdown).reduce((sum, count) => sum + count, 0)
     } : null;
 
     const options: ApexOptions = {
-        colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316"],
+        colors: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16", "#ec4899", "#6366f1", "#14b8a6", "#f43f5e", "#8b5cf6"],
         chart: {
             fontFamily: "Inter, sans-serif",
             type: "donut",
@@ -30,7 +30,7 @@ export default function DepartmentDistributionChart() {
             position: "bottom",
             horizontalAlign: "center",
             fontFamily: "Inter",
-            fontSize: "14px",
+            fontSize: "12px",
         },
         plotOptions: {
             pie: {
@@ -61,7 +61,7 @@ export default function DepartmentDistributionChart() {
         dataLabels: {
             enabled: true,
             style: {
-                fontSize: "12px",
+                fontSize: "10px",
                 fontWeight: 600,
             },
         },
@@ -77,16 +77,16 @@ export default function DepartmentDistributionChart() {
         return (
             <Card className="w-full">
                 <CardHeader>
-                    <CardTitle>Employee Distribution</CardTitle>
+                    <CardTitle>Role Distribution</CardTitle>
                     <CardDescription>
-                        User distribution across different departments
+                        User distribution across different roles
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center h-[300px]">
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Loading department data...</span>
+                            <span>Loading role data...</span>
                         </div>
                     </div>
                 </CardContent>
@@ -98,9 +98,9 @@ export default function DepartmentDistributionChart() {
         return (
             <Card className="w-full">
                 <CardHeader>
-                    <CardTitle>Employee Distribution</CardTitle>
+                    <CardTitle>Role Distribution</CardTitle>
                     <CardDescription>
-                        User distribution across different departments
+                        User distribution across different roles
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -119,15 +119,15 @@ export default function DepartmentDistributionChart() {
         return (
             <Card className="w-full">
                 <CardHeader>
-                    <CardTitle>Employee Distribution</CardTitle>
+                    <CardTitle>Role Distribution</CardTitle>
                     <CardDescription>
-                        User distribution across different departments
+                        User distribution across different roles
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center h-[300px]">
                         <div className="text-center text-muted-foreground">
-                            <p>No department data available</p>
+                            <p>No role data available</p>
                         </div>
                     </div>
                 </CardContent>
@@ -138,9 +138,9 @@ export default function DepartmentDistributionChart() {
     return (
         <Card className="w-full">
             <CardHeader>
-                <CardTitle>Employee Distribution</CardTitle>
+                <CardTitle>Role Distribution</CardTitle>
                 <CardDescription>
-                    User distribution across different departments
+                    User distribution across different roles
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -153,21 +153,21 @@ export default function DepartmentDistributionChart() {
                     />
                 </div>
 
-                {/* Department Statistics Table */}
+                {/* Role Statistics Table */}
                 <div className="mt-6 space-y-2">
-                    <h4 className="text-sm font-medium text-gray-900 mb-3">Department Breakdown</h4>
-                    <div className="space-y-2">
-                        {chartData.labels.map((department, index) => {
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Role Breakdown</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {chartData.labels.map((role, index) => {
                             const count = chartData.series[index];
                             const percentage = chartData.total > 0 ? ((count / chartData.total) * 100).toFixed(1) : "0";
                             return (
-                                <div key={department} className="flex items-center justify-between text-sm">
+                                <div key={role} className="flex items-center justify-between text-sm">
                                     <div className="flex items-center gap-2">
                                         <div
                                             className="w-3 h-3 rounded-full"
                                             style={{ backgroundColor: options.colors?.[index] || "#3b82f6" }}
                                         ></div>
-                                        <span className="text-gray-700">{department}</span>
+                                        <span className="text-gray-700">{role}</span>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-gray-600">{count} users</span>
