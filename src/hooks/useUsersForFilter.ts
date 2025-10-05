@@ -26,13 +26,18 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 			setLoading(true);
 			setError(null);
 
-			const usersData = await fetchUsers(
+			const response = await fetchUsers(
 				user.token,
 				setLoading
 			);
 
+			// Extract users array from response
+			const usersArray = Array.isArray(response)
+				? response
+				: response.users || [];
+
 			// Transform the user data to UserOption format
-			const transformedUsers: UserOption[] = usersData.map(
+			const transformedUsers: UserOption[] = usersArray.map(
 				(user) => ({
 					id: user.id,
 					name: `${user.firstName} ${user.lastName}`.trim(),
@@ -71,4 +76,3 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 		refetch,
 	};
 }
-
