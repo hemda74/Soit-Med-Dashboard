@@ -19,8 +19,7 @@ export const useLoginForm = () => {
 		formState: { errors },
 		reset,
 	} = useForm<LoginFormData>({
-		// Temporarily remove zodResolver to test
-		// resolver: zodResolver(loginSchema),
+		resolver: zodResolver(loginSchema),
 		defaultValues: {
 			userName: '',
 			password: '',
@@ -28,7 +27,6 @@ export const useLoginForm = () => {
 	});
 
 	const onSubmit = async (data: LoginFormData) => {
-		console.log('Form submitted with data:', data);
 		setIsLoading(true);
 		setError(null);
 		setLoading(true);
