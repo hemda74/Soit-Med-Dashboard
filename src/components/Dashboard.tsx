@@ -1,12 +1,11 @@
 import { Users, UserPlus, Settings, TestTube, BarChart3 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
-import { fetchUserStatistics } from '@/services'
-import type { UserStatistics } from '@/types/api.types'
-import { useState, useEffect } from 'react'
+import { useStatistics, useStatisticsLoading, useStatisticsError, useStatisticsStore } from '@/stores/statisticsStore'
+import { useEffect } from 'react'
 import {
     UserGrowthChart,
-    DepartmentDistributionChart,
+    UnifiedAnalyticsCard,
     MonthlyActivityChart,
     SystemHealthChart
 } from '@/components/charts'
@@ -15,37 +14,18 @@ export default function Dashboard() {
     const { t } = useTranslation()
     const isSuperAdmin = hasRole('SuperAdmin')
 
-    const [statistics, setStatistics] = useState<UserStatistics | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    // Use statistics store
+    const statistics = useStatistics()
+    const loading = useStatisticsLoading()
+    const error = useStatisticsError()
+    const fetchStatistics = useStatisticsStore((state) => state.fetchStatistics)
 
     useEffect(() => {
-        const fetchStatistics = async () => {
-            // Only fetch statistics for SuperAdmin users
-            if (!isSuperAdmin) {
-                setLoading(false)
-                return
-            }
-
-            if (!user?.token) {
-                setError('No authentication token available')
-                setLoading(false)
-                return
-            }
-
-            try {
-                setError(null)
-                const data = await fetchUserStatistics(user.token, setLoading)
-                setStatistics(data)
-            } catch (err) {
-                console.error('Failed to fetch statistics:', err)
-                setError('Failed to load statistics')
-                setLoading(false)
-            }
+        // Only fetch statistics for SuperAdmin users
+        if (isSuperAdmin && user?.token) {
+            fetchStatistics(user.token)
         }
-
-        fetchStatistics()
-    }, [user?.token, isSuperAdmin])
+    }, [user?.token, isSuperAdmin, fetchStatistics])
 
     return (
         <div className="space-y-8">
@@ -144,10 +124,10 @@ export default function Dashboard() {
                             <h2 className="text-2xl font-bold text-foreground">Analytics & Insights</h2>
                         </div>
 
-                        {/* First Row - User Growth and Department Distribution */}
+                        {/* First Row - User Growth and Unified Analytics */}
                         <div className="grid gap-6 lg:grid-cols-2">
                             <UserGrowthChart />
-                            <DepartmentDistributionChart />
+                            <UnifiedAnalyticsCard />
                         </div>
 
                         {/* Second Row - Monthly Activity */}
