@@ -17,7 +17,8 @@ import {
   FileText,
   PieChart,
   Box,
-  Plug
+  Plug,
+  ListChecks
 } from "lucide-react";
 import { useSidebar } from "../../context/SidebarContext";
 import Logo from "../Logo";
@@ -113,8 +114,16 @@ const AppSidebar: React.FC = () => {
     ],
   }] : [];
 
+  // Sales menu - for Salesman, Sales Manager, and Super Admin
+  const salesNavItems: NavItem[] = hasAnyRole(['Salesman', 'SalesManager', 'SuperAdmin']) ? [{
+    icon: <ListChecks />,
+    name: t('weeklyPlans'),
+    path: "/weekly-plans",
+  }] : [];
+
   const allNavItems: NavItem[] = [
     ...navItems,
+    ...salesNavItems,
     ...adminNavItems,
   ];
 
