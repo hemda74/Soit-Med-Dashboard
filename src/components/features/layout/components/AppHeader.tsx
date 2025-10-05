@@ -3,14 +3,12 @@ import { AppHeaderUI } from './AppHeaderUI';
 import { useAppHeader } from '../hooks/useAppHeader';
 
 export const AppHeader: React.FC = () => {
-    const { toggleSidebar, isAppMenuOpen, toggleAppMenu, isExpanded } = useAppHeader();
+    const { isAppMenuOpen, toggleAppMenu } = useAppHeader();
 
     return (
         <AppHeaderUI
-            toggleSidebar={toggleSidebar}
             isAppMenuOpen={isAppMenuOpen}
             toggleAppMenu={toggleAppMenu}
-            isExpanded={isExpanded}
         />
     );
 };

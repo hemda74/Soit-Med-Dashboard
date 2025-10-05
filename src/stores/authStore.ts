@@ -104,37 +104,38 @@ export const useAuthStore = create<AuthState>()(
 										60 *
 										1000;
 
-					const user: User = {
-						...userData,
-						token: response.token,
-					};
+						const user: User = {
+							...userData,
+							token: response.token,
+						};
 
-					// Check if user has authorization to access the application
-					const hasRestrictedRole = user.roles.some(
-						(role) =>
-							RESTRICTED_ROLES.includes(
-								role
-							)
-					);
+						// Check if user has authorization to access the application
+						const hasRestrictedRole =
+							user.roles.some(
+								(role) =>
+									RESTRICTED_ROLES.includes(
+										role
+									)
+							);
 
-					if (hasRestrictedRole) {
-						setLoading(false);
-						throw new Error(
-							'Access denied. Your role is not authorized to access this application.'
+						if (hasRestrictedRole) {
+							setLoading(false);
+							throw new Error(
+								'Access denied. Your role is not authorized to access this application.'
+							);
+						}
+
+						set({
+							user,
+							isAuthenticated: true,
+							sessionExpiry,
+							loginAttempts: 0,
+							lastLoginAttempt: null,
+						});
+
+						toast.success(
+							`Welcome back, ${user.firstName}!`
 						);
-					}
-
-					set({
-						user,
-						isAuthenticated: true,
-						sessionExpiry,
-						loginAttempts: 0,
-						lastLoginAttempt: null,
-					});
-
-					toast.success(
-						`Welcome back, ${user.firstName}!`
-					);
 					} catch (error: any) {
 						get().incrementLoginAttempts();
 						setLoading(false);
@@ -310,12 +311,12 @@ export const useAuthStore = create<AuthState>()(
 					if (!user) return false;
 
 					// Check if user has any restricted roles
-					const hasRestrictedRole = user.roles.some(
-						(role) =>
+					const hasRestrictedRole =
+						user.roles.some((role) =>
 							RESTRICTED_ROLES.includes(
 								role
 							)
-					);
+						);
 
 					return !hasRestrictedRole;
 				},
