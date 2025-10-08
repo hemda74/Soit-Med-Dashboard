@@ -6,7 +6,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     ListChecks,
     Calendar,
@@ -14,9 +13,7 @@ import {
     CheckCircle2,
     Circle,
     Star,
-    MessageSquare,
-    Clock,
-    X,
+    Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WeeklyPlan } from '@/types/weeklyPlan.types';
@@ -34,8 +31,8 @@ const renderStars = (rating: number) => {
                 <Star
                     key={star}
                     className={`h-5 w-5 ${star <= rating
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-300'
                         }`}
                 />
             ))}
@@ -80,13 +77,6 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                 </div>
                             </div>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onClose}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
                     </div>
                 </DialogHeader>
 
@@ -144,8 +134,8 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                     <div
                                         key={task.id}
                                         className={`p-3 border rounded-lg ${task.isCompleted
-                                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200'
-                                                : 'bg-white dark:bg-gray-800'
+                                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200'
+                                            : 'bg-white dark:bg-gray-800'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -157,8 +147,8 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                             <div className="flex-1">
                                                 <p
                                                     className={`font-medium ${task.isCompleted
-                                                            ? 'line-through text-gray-500'
-                                                            : ''
+                                                        ? 'line-through text-gray-500'
+                                                        : ''
                                                         }`}
                                                 >
                                                     {
@@ -315,6 +305,7 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
 };
 
 export default ViewWeeklyPlanModal;
+
 
 
 
