@@ -5,6 +5,9 @@ import AppLayout from '@/components/layout/AppLayout'
 import AuthLayout from '@/components/layout/AuthLayout'
 import LoginForm from '@/components/LoginForm'
 import ForgotPassword from '@/pages/ForgotPassword'
+import VerifyCode from '@/pages/VerifyCode'
+import ResetPassword from '@/pages/ResetPassword'
+import NotFound from '@/pages/NotFound'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
@@ -12,10 +15,26 @@ import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
 import ReportsScreen from '@/components/finance/ReportsScreen'
 import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
-import SalesApiTest from '@/components/debug/SalesApiTest'
+import { WeeklyPlansScreen } from '@/components/weeklyPlan'
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isAuthorizedToAccess, logout } = useAuthStore()
+
+  // Check authorization on mount and when authentication changes
+  if (isAuthenticated && !isAuthorizedToAccess()) {
+    logout()
+    return (
+      <ThemeProvider>
+        <Router>
+          <div className="min-h-screen bg-background text-foreground">
+            <Routes>
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </ThemeProvider>
+    )
+  }
 
   return (
     <ThemeProvider>
@@ -31,18 +50,20 @@ function App() {
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="reports" element={<ReportsScreen />} />
                 <Route path="sales-reports" element={<SalesReportsScreen />} />
-                <Route path="debug/sales-api" element={<SalesApiTest />} />
+                <Route path="weekly-plans" element={<WeeklyPlansScreen />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           ) : (
             <Routes>
               <Route path="/" element={<AuthLayout><LoginForm /></AuthLayout>} />
               <Route path="login" element={<AuthLayout><LoginForm /></AuthLayout>} />
               <Route path="forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="verify-code" element={<AuthLayout><VerifyCode /></AuthLayout>} />
+              <Route path="reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           )}
         </div>

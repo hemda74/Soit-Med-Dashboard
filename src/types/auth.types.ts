@@ -91,3 +91,38 @@ export interface RefreshTokenResponse {
 	expired: string;
 	message?: string;
 }
+
+// Password Reset Types
+export interface ForgotPasswordRequest {
+	email: string;
+}
+
+export interface ForgotPasswordResponse {
+	success: boolean;
+	message: string;
+	email?: string;
+}
+
+export interface VerifyCodeRequest {
+	email: string;
+	code: string;
+}
+
+export interface VerifyCodeResponse {
+	success: boolean;
+	message: string;
+	resetToken?: string;
+	email?: string;
+}
+
+export interface ResetPasswordRequest {
+	email: string;
+	resetToken: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+	success: boolean;
+	message: string;
+}

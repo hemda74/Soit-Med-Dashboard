@@ -10,6 +10,12 @@ import type {
 	ChangePasswordResponse,
 	RefreshTokenRequest,
 	RefreshTokenResponse,
+	ForgotPasswordRequest,
+	ForgotPasswordResponse,
+	VerifyCodeRequest,
+	VerifyCodeResponse,
+	ResetPasswordRequest,
+	ResetPasswordResponse,
 } from '@/types/auth.types';
 
 // Login user
@@ -185,5 +191,94 @@ export const getTokenExpiration = (token: string): Date | null => {
 	} catch (error) {
 		console.error('Failed to get token expiration:', error);
 		return null;
+	}
+};
+
+// Password Reset Functions
+
+// Forgot password - Step 1: Send verification code
+export const forgotPassword = async (
+	request: ForgotPasswordRequest,
+	setLoading?: (loading: boolean) => void
+): Promise<ForgotPasswordResponse> => {
+	try {
+		setLoading?.(true);
+		console.log(
+			'Sending forgot password request for email:',
+			request.email
+		);
+
+		const response = await apiRequest<ForgotPasswordResponse>(
+			API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
+			{
+				method: 'POST',
+				body: JSON.stringify(request),
+			}
+		);
+
+		console.log(
+			'Forgot password request successful:',
+			response.success
+		);
+		return response;
+	} catch (error) {
+		console.error('Failed to send forgot password request:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Verify code - Step 2: Verify code and get reset token
+export const verifyCode = async (
+	request: VerifyCodeRequest,
+	setLoading?: (loading: boolean) => void
+): Promise<VerifyCodeResponse> => {
+	try {
+		setLoading?.(true);
+		console.log('Verifying code for email:', request.email);
+
+		const response = await apiRequest<VerifyCodeResponse>(
+			API_ENDPOINTS.AUTH.VERIFY_CODE,
+			{
+				method: 'POST',
+				body: JSON.stringify(request),
+			}
+		);
+
+		console.log('Code verification successful:', response.success);
+		return response;
+	} catch (error) {
+		console.error('Failed to verify code:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Reset password - Step 3: Reset password with token
+export const resetPassword = async (
+	request: ResetPasswordRequest,
+	setLoading?: (loading: boolean) => void
+): Promise<ResetPasswordResponse> => {
+	try {
+		setLoading?.(true);
+		console.log('Resetting password for email:', request.email);
+
+		const response = await apiRequest<ResetPasswordResponse>(
+			API_ENDPOINTS.AUTH.RESET_PASSWORD,
+			{
+				method: 'POST',
+				body: JSON.stringify(request),
+			}
+		);
+
+		console.log('Password reset successful:', response.success);
+		return response;
+	} catch (error) {
+		console.error('Failed to reset password:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
 	}
 };

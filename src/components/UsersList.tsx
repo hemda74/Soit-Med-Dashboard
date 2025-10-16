@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Edit, Key, Trash2 } from 'lucide-react';
+import { Edit, Key } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
 import type { DepartmentUser } from '@/types/department.types';
 import type { UserFilters as UserFiltersType, PaginatedUserResponse, User } from '@/types/api.types';
-import { fetchUsers, fetchUsersWithFilters, updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage, deleteUser } from '@/services';
+import { fetchUsers, fetchUsersWithFilters, updateUser, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,11 @@ import Pagination from './Pagination';
 import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
 import ProfileImage from './ProfileImage';
 import EditUserModal from './admin/EditUserModal';
-import DeleteUserModal from './admin/DeleteUserModal';
 import Logo from './Logo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { UserStatusToggle } from './UserStatusToggle';
 
 type ViewMode = 'all' | 'filtered';
 
@@ -79,9 +79,6 @@ const UsersList: React.FC = () => {
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isDeletingImage, setIsDeletingImage] = useState(false);
     const [showDeleteImageModal, setShowDeleteImageModal] = useState(false);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<UserListResponse | null>(null);
-    const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
 
@@ -201,40 +198,26 @@ const UsersList: React.FC = () => {
         editForm.reset();
     };
 
-    // Handle delete user
-    const handleDeleteUser = (userToDelete: UserListResponse) => {
-        setUserToDelete(userToDelete);
-        setIsDeleteModalOpen(true);
-    };
+    // Handle user status change
+    const handleUserStatusChange = (userId: string, newStatus: boolean) => {
+        // Update the user status in the current view
+        const updateUserInList = (users: PaginatedUserResponse | null) => {
+            if (!users) return users;
 
-    const handleCloseDeleteModal = () => {
-        setIsDeleteModalOpen(false);
-        setUserToDelete(null);
-    };
+            return {
+                ...users,
+                users: users.users.map(user =>
+                    user.id === userId
+                        ? { ...user, isActive: newStatus }
+                        : user
+                )
+            };
+        };
 
-    const handleConfirmDeleteUser = async () => {
-        if (!userToDelete || !user?.token) return;
-
-        setIsDeletingUser(true);
-        try {
-            const response = await deleteUser(userToDelete.id, user.token);
-
-            if (response) {
-                success('User Deleted Successfully', response.message);
-                handleCloseDeleteModal();
-
-                // Refresh the current view
-                if (viewMode === 'all') {
-                    loadAllUsers(currentPage);
-                } else if (viewMode === 'filtered') {
-                    loadFilteredUsers(filters);
-                }
-            }
-        } catch (error: any) {
-            console.error('Error deleting user:', error);
-            showError('Delete Failed', error.message || 'Failed to delete user');
-        } finally {
-            setIsDeletingUser(false);
+        if (viewMode === 'all' && allUsers) {
+            setAllUsers(updateUserInList(allUsers));
+        } else if (viewMode === 'filtered' && filteredUsers) {
+            setFilteredUsers(updateUserInList(filteredUsers));
         }
     };
 
@@ -332,30 +315,6 @@ const UsersList: React.FC = () => {
         }
     };
 
-    // Handle user status change
-    const handleUserStatusChange = (userId: string, newStatus: boolean) => {
-        // Update the user status in the current view
-        if (viewMode === 'all' && allUsers) {
-            setAllUsers(prev => prev ? {
-                ...prev,
-                users: prev.users.map(user =>
-                    user.id === userId ? { ...user, isActive: newStatus } : user
-                )
-            } : null);
-        } else if (viewMode === 'filtered' && filteredUsers) {
-            setFilteredUsers(prev => prev ? {
-                ...prev,
-                users: prev.users.map(user =>
-                    user.id === userId ? { ...user, isActive: newStatus } : user
-                )
-            } : null);
-        }
-
-        // Update the selectedUser if it's the same user being edited
-        if (selectedUser && selectedUser.id === userId) {
-            setSelectedUser(prev => prev ? { ...prev, isActive: newStatus } : null);
-        }
-    };
 
     // Handle form submission
     const onSubmitEdit = async (data: UserEditFormData) => {
@@ -539,15 +498,13 @@ const UsersList: React.FC = () => {
                                                 </Button>
                                             )}
                                             {isSuperAdmin && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline-destructive"
-                                                    onClick={() => handleDeleteUser(user as unknown as UserListResponse)}
-                                                    className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-700 border-red-200 "
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </Button>
+                                                <UserStatusToggle
+                                                    userId={user.id}
+                                                    userName={user.fullName}
+                                                    email={user.email}
+                                                    isActive={user.isActive}
+                                                    onStatusChange={(newStatus) => handleUserStatusChange(user.id, newStatus)}
+                                                />
                                             )}
                                         </div>
                                     </td>
@@ -613,13 +570,6 @@ const UsersList: React.FC = () => {
                 isSuperAdmin={isSuperAdmin}
             />
 
-            <DeleteUserModal
-                isOpen={isDeleteModalOpen}
-                onClose={handleCloseDeleteModal}
-                onConfirm={handleConfirmDeleteUser}
-                user={userToDelete}
-                isLoading={isDeletingUser}
-            />
 
             {/* Password Update Modal */}
             <PasswordUpdateModal

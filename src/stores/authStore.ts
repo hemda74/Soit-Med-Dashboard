@@ -9,6 +9,9 @@ export interface User extends AuthUser {
 	token: string;
 }
 
+// Roles that are not authorized to access the application
+const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
+
 interface AuthState {
 	user: User | null;
 	isAuthenticated: boolean;
@@ -40,6 +43,7 @@ interface AuthState {
 	hasRole: (role: string) => boolean;
 	hasAnyRole: (roles: string[]) => boolean;
 	hasPermission: (permission: string) => boolean;
+	isAuthorizedToAccess: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -104,6 +108,22 @@ export const useAuthStore = create<AuthState>()(
 							...userData,
 							token: response.token,
 						};
+
+						// Check if user has authorization to access the application
+						const hasRestrictedRole =
+							user.roles.some(
+								(role) =>
+									RESTRICTED_ROLES.includes(
+										role
+									)
+							);
+
+						if (hasRestrictedRole) {
+							setLoading(false);
+							throw new Error(
+								'Access denied. Your role is not authorized to access this application.'
+							);
+						}
 
 						set({
 							user,
@@ -228,7 +248,7 @@ export const useAuthStore = create<AuthState>()(
 					} = get();
 					if (loginAttempts < 5) return false;
 
-					const lockoutDuration = 15 * 60 * 1000; // 15 minutes
+					const lockoutDuration = 1 * 60 * 1000; // 15 minutes
 					if (!lastLoginAttempt) return false;
 
 					return (
@@ -284,6 +304,21 @@ export const useAuthStore = create<AuthState>()(
 
 					// Add more granular permission logic here
 					return false;
+				},
+
+				isAuthorizedToAccess: () => {
+					const { user } = get();
+					if (!user) return false;
+
+					// Check if user has any restricted roles
+					const hasRestrictedRole =
+						user.roles.some((role) =>
+							RESTRICTED_ROLES.includes(
+								role
+							)
+						);
+
+					return !hasRestrictedRole;
 				},
 			}),
 			{

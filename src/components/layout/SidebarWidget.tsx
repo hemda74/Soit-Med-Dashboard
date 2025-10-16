@@ -1,18 +1,25 @@
+import { useTranslation } from '@/hooks/useTranslation';
+
 export default function SidebarWidget() {
+  const { t } = useTranslation();
+
   return (
     <div
       className={`
         mx-auto mb-10 w-full max-w-60 rounded-2xl bg-gray-50 px-4 py-5 text-center dark:bg-white/[0.03]`}
     >
       <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
-        Soit-Med Dashboard
+        {t('soitronMedical')}
       </h3>
       <p className="mb-4 text-gray-500 text-sm dark:text-gray-400">
-        Medical management system for healthcare professionals.
+        {t('dashboardDescription')}
       </p>
-      <div className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-blue-600 text-sm hover:bg-blue-700">
-        Version 1.0
-      </div>
+      <a
+        href="/dashboard"
+        className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-primary text-sm hover:bg-primary/90"
+      >
+        {t('quickStats')}
+      </a>
     </div>
   );
 }

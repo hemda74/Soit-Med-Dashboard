@@ -1,36 +1,25 @@
-import { SidebarProvider, useSidebar } from "../../context/SidebarContext";
 import { Outlet } from "react-router-dom";
 import AppHeader from "./AppHeader";
-import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
+import { useTranslation } from "@/hooks/useTranslation";
 
-const LayoutContent: React.FC = () => {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+const AppLayout: React.FC = () => {
+  const { language } = useTranslation();
+  const isRTL = language === 'ar';
 
   return (
-    <div className="min-h-screen xl:flex">
-      <div>
-        <AppSidebar />
-        <Backdrop />
-      </div>
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${isExpanded || isHovered ? "lg:ml-[290px]" : "lg:ml-[90px]"
-          } ${isMobileOpen ? "ml-0" : ""}`}
-      >
+    <div className="min-h-screen">
+      <AppSidebar />
+      <div className={`w-full transition-all duration-300 ease-in-out ${isRTL
+        ? "lg:pr-[290px]"
+        : "lg:pl-[290px]"
+        }`}>
         <AppHeader />
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
           <Outlet />
         </div>
       </div>
     </div>
-  );
-};
-
-const AppLayout: React.FC = () => {
-  return (
-    <SidebarProvider>
-      <LayoutContent />
-    </SidebarProvider>
   );
 };
 

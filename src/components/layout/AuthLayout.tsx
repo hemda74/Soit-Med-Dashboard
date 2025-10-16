@@ -19,16 +19,14 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                         <div className="flex flex-col items-center max-w-xs">
                             <Link to="/" className="block mb-4">
                                 <img
-                                    width={231}
-                                    height={48}
+                                    width={431}
+                                    height={248}
                                     src="/src/assets/Logo.png"
                                     alt="Soit-Med Logo"
                                     className="h-12 w-auto"
                                 />
                             </Link>
-                            <p className="text-center text-gray-400 dark:text-white/60">
-                                Soit-Med Dashboard - Medical Management System
-                            </p>
+
                         </div>
                     </div>
                 </div>

@@ -6,6 +6,7 @@ export interface BaseUserRequest {
 	password: string;
 	firstName: string;
 	lastName: string;
+	phoneNumber?: string;
 	profileImage?: File;
 	altText?: string;
 }
@@ -61,6 +62,18 @@ export interface SalesManagerUserRequest extends BaseUserRequest {
 	managerNotes?: string;
 }
 
+export interface MaintenanceManagerUserRequest extends BaseUserRequest {
+	departmentId?: number;
+	maintenanceSpecialty: string;
+	certification: string;
+}
+
+export interface MaintenanceSupportUserRequest extends BaseUserRequest {
+	departmentId?: number;
+	jobTitle: string;
+	technicalSkills: string;
+}
+
 // Union type for all role-specific requests
 export type RoleSpecificUserRequest =
 	| DoctorUserRequest
@@ -72,7 +85,9 @@ export type RoleSpecificUserRequest =
 	| LegalManagerUserRequest
 	| LegalEmployeeUserRequest
 	| SalesmanUserRequest
-	| SalesManagerUserRequest;
+	| SalesManagerUserRequest
+	| MaintenanceManagerUserRequest
+	| MaintenanceSupportUserRequest;
 
 // Profile image response data
 export interface ProfileImageResponse {
@@ -92,6 +107,9 @@ export interface ProfileImageResponse {
 export interface BaseUserResponse {
 	userId: string;
 	email: string;
+	firstName: string;
+	lastName: string;
+	phoneNumber?: string;
 	role: string;
 	departmentName: string;
 	createdAt: string;
@@ -159,6 +177,20 @@ export interface SalesManagerUserResponse extends BaseUserResponse {
 	managerNotes?: string;
 }
 
+export interface MaintenanceManagerUserResponse extends BaseUserResponse {
+	role: 'MaintenanceManager';
+	maintenanceManagerId: number;
+	maintenanceSpecialty: string;
+	certification: string;
+}
+
+export interface MaintenanceSupportUserResponse extends BaseUserResponse {
+	role: 'MaintenanceSupport';
+	maintenanceSupportId: number;
+	jobTitle: string;
+	technicalSkills: string;
+}
+
 // Union type for all role-specific responses
 export type RoleSpecificUserResponse =
 	| DoctorUserResponse
@@ -170,7 +202,9 @@ export type RoleSpecificUserResponse =
 	| LegalManagerUserResponse
 	| LegalEmployeeUserResponse
 	| SalesmanUserResponse
-	| SalesManagerUserResponse;
+	| SalesManagerUserResponse
+	| MaintenanceManagerUserResponse
+	| MaintenanceSupportUserResponse;
 
 // Available roles for user creation
 export type RoleSpecificUserRole =
@@ -183,7 +217,9 @@ export type RoleSpecificUserRole =
 	| 'legal-manager'
 	| 'legal-employee'
 	| 'salesman'
-	| 'sales-manager';
+	| 'sales-manager'
+	| 'maintenance-manager'
+	| 'maintenance-support';
 
 // Password change request
 export interface ChangePasswordRequest {

@@ -10,6 +10,7 @@ export const createDoctor = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		specialty: string;
 		hospitalId: string;
@@ -36,6 +37,9 @@ export const createDoctor = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(
@@ -71,6 +75,7 @@ export const createTechnician = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		hospitalId: string;
 		department: string;
@@ -100,6 +105,9 @@ export const createTechnician = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(

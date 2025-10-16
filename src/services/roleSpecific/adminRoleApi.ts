@@ -10,6 +10,7 @@ export const createAdmin = async (
 		password: string;
 		firstName?: string;
 		lastName?: string;
+		phoneNumber?: string;
 		departmentId?: number;
 		profileImage?: File;
 		altText?: string;
@@ -32,6 +33,9 @@ export const createAdmin = async (
 	}
 	if (userData.lastName) {
 		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
 	}
 	if (userData.departmentId) {
 		formData.append(

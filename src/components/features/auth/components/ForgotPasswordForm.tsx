@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Label from '@/components/ui/template/Label';
-import Input from '@/components/ui/template/InputField';
 import Button from '@/components/ui/template/Button';
 import { ChevronLeftIcon } from '@/components/icons/template';
+
+// Temporary simple input for debugging
+const SimpleInput = React.forwardRef<HTMLInputElement, any>(({ className, error, ...props }, ref) => (
+    <input
+        ref={ref}
+        className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm text-black dark:text-black ${error ? 'border-red-500' : 'border-gray-300'
+            } ${className}`}
+        {...props}
+    />
+));
+SimpleInput.displayName = "SimpleInput";
 
 interface ForgotPasswordFormProps {
     onSubmit: (email: string) => void;
@@ -60,7 +70,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                 Check your email
                             </h1>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                We've sent a password reset link to your email address.
+                                We've sent a verification code to your email address.
                             </p>
                         </div>
                         <div className="space-y-4">
@@ -68,11 +78,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                 Didn't receive the email? Check your spam folder or try again.
                             </p>
                             <Button
-                                onClick={() => setEmail('')}
+                                onClick={() => {
+                                    setEmail('');
+                                    window.location.reload();
+                                }}
                                 className="w-full"
                                 size="sm"
                             >
-                                Send another email
+                                Send another code
                             </Button>
                         </div>
                     </div>
@@ -115,12 +128,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                     <Label htmlFor="email">
                                         Email <span className="text-error-500">*</span>
                                     </Label>
-                                    <Input
+                                    <SimpleInput
                                         id="email"
                                         type="email"
                                         placeholder="Enter your email address"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                                         required
                                     />
                                 </div>
@@ -138,7 +151,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                                                 Sending...
                                             </>
                                         ) : (
-                                            'Send reset link'
+                                            'Send verification code'
                                         )}
                                     </Button>
                                 </div>

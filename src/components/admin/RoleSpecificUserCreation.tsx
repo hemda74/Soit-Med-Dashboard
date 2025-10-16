@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -18,6 +18,8 @@ import {
     createLegalEmployee,
     createSalesman,
     createSalesManager,
+    createMaintenanceManager,
+    createMaintenanceSupport,
     getHospitals,
     getGovernorates,
     validateForm,
@@ -25,12 +27,10 @@ import {
 import type {
     RoleSpecificUserRole,
     HospitalInfo,
-    RoleSpecificUserResponse,
 } from '@/types/roleSpecificUser.types';
-import UserCreationSuccessModal from '../ui/user-creation-success-modal';
-import RoleSelectionCard from './RoleSelectionCard';
 import UserCreationForm from './UserCreationForm';
 import { useUserCreationForm } from '@/hooks/useUserCreationForm';
+import Logo from '@/components/Logo';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -47,6 +47,22 @@ const RoleSpecificUserCreation: React.FC = () => {
     const { error: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
+
+    // Role icons mapping
+    const ROLE_ICONS = {
+        doctor: Stethoscope,
+        engineer: Wrench,
+        technician: Settings,
+        admin: Shield,
+        'finance-manager': DollarSign,
+        'finance-employee': DollarSign,
+        'legal-manager': Scale,
+        'legal-employee': Scale,
+        salesman: ShoppingCart,
+        'sales-manager': UserCheck,
+        'maintenance-manager': HardHat,
+        'maintenance-support': Cog,
+    };
 
     // Role configuration with translations
     const ROLE_CONFIG = {
@@ -134,14 +150,30 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 3,
             role: 'SalesManager'
         },
+        'maintenance-manager': {
+            name: t('maintenanceManager'),
+            description: t('maintenanceManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'maintenanceSpecialty', 'certification'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceManager'
+        },
+        'maintenance-support': {
+            name: t('maintenanceSupport'),
+            description: t('maintenanceSupportDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'jobTitle', 'technicalSkills'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'MaintenanceSupport'
+        },
     };
 
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
     const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
     const [governorates, setGovernorates] = useState<GovernorateInfo[]>([]);
-    const [createdUser, setCreatedUser] = useState<RoleSpecificUserResponse | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [createdPassword, setCreatedPassword] = useState('');
 
     // Use the custom hook for form management
     const {
@@ -208,7 +240,6 @@ const RoleSpecificUserCreation: React.FC = () => {
     const handleRoleSelect = (role: RoleSpecificUserRole) => {
         setSelectedRole(role);
         resetForm();
-        setCreatedUser(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -252,6 +283,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
+                phoneNumber: formData.phoneNumber,
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
@@ -267,59 +299,47 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(formData.imageAltText && { imageAltText: formData.imageAltText }),
             };
 
-            let response: RoleSpecificUserResponse;
-
             switch (selectedRole) {
                 case 'doctor':
-                    response = await createDoctor(userData as any, user.token);
+                    await createDoctor(userData as any, user.token);
                     break;
                 case 'engineer':
-                    response = await createEngineer(userData as any, user.token);
+                    await createEngineer(userData as any, user.token);
                     break;
                 case 'technician':
-                    response = await createTechnician(userData as any, user.token);
+                    await createTechnician(userData as any, user.token);
                     break;
                 case 'admin':
-                    response = await createAdmin(userData as any, user.token);
+                    await createAdmin(userData as any, user.token);
                     break;
                 case 'finance-manager':
-                    response = await createFinanceManager(userData as any, user.token);
+                    await createFinanceManager(userData as any, user.token);
                     break;
                 case 'finance-employee':
-                    response = await createFinanceEmployee(userData as any, user.token);
+                    await createFinanceEmployee(userData as any, user.token);
                     break;
                 case 'legal-manager':
-                    response = await createLegalManager(userData as any, user.token);
+                    await createLegalManager(userData as any, user.token);
                     break;
                 case 'legal-employee':
-                    response = await createLegalEmployee(userData as any, user.token);
+                    await createLegalEmployee(userData as any, user.token);
                     break;
                 case 'salesman':
-                    response = await createSalesman(userData as any, user.token);
+                    await createSalesman(userData as any, user.token);
                     break;
                 case 'sales-manager':
-                    response = await createSalesManager(userData as any, user.token);
+                    await createSalesManager(userData as any, user.token);
+                    break;
+                case 'maintenance-manager':
+                    await createMaintenanceManager(userData as any, user.token);
+                    break;
+                case 'maintenance-support':
+                    await createMaintenanceSupport(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
             }
 
-            // Transform the response to match expected structure
-            const transformedResponse = {
-                success: true,
-                message: 'User created successfully',
-                data: {
-                    userId: (response as any).userId || (response as any).data?.userId,
-                    email: (response as any).email || (response as any).data?.email,
-                    firstName: (response as any).firstName || (response as any).data?.firstName,
-                    lastName: (response as any).lastName || (response as any).data?.lastName,
-                    role: (response as any).role || (response as any).data?.role || selectedRole,
-                    departmentId: (response as any).departmentId || (response as any).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
-                }
-            } as unknown as RoleSpecificUserResponse;
-
-            setCreatedUser(transformedResponse);
-            setCreatedPassword(formData.password);
             setShowSuccessModal(true);
 
         } catch (err: any) {
@@ -379,7 +399,6 @@ const RoleSpecificUserCreation: React.FC = () => {
         if (selectedRole) {
             setSelectedRole(null);
             resetForm();
-            setCreatedUser(null);
         } else {
             navigate('/admin/users');
         }
@@ -399,8 +418,6 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     const handleSuccessModalClose = () => {
         setShowSuccessModal(false);
-        setCreatedUser(null);
-        setCreatedPassword('');
         // Reset form and go back to role selection
         setSelectedRole(null);
         resetForm();
@@ -428,95 +445,157 @@ const RoleSpecificUserCreation: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <div className="max-w-4xl mx-auto">
-                {/* Colorful Header */}
-                <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 text-white mb-8 shadow-lg">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleBack}
-                            className="text-white hover:bg-primary hover:text-white transition-colors duration-200"
-                        >
-                            <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                            {t('back')}
-                        </Button>
-                        <div className="flex-1">
-                            <h1 className="text-4xl font-bold mb-2">{t('createNewUserTitle')}</h1>
-                            <p className="text-primary-foreground/80 text-lg">
-                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
-                            </p>
-                        </div>
-                        <div className="hidden md:block">
-                            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                <UserPlus className="w-8 h-8 text-white" />
+        <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="container mx-auto px-4 py-8">
+                <div className="max-w-6xl mx-auto space-y-8">
+                    {/* Professional Header with Logo */}
+                    <div className=" group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 bg-gradient-to-br from-card to-muted/20 hover:from-primary/5 hover:to-primary/10 border-gray-200 rounded-lg shadow-sm">
+                        <div className="p-6">
+                            {/* Top Navigation */}
+                            <div className="flex items-center justify-between mb-6 ">
+                                <Button
+
+                                    size="sm"
+                                    onClick={handleBack}
+                                    className=" hover:bg-gray-50"
+                                >
+                                    <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                                    {t('back')}
+                                </Button>
+                                <div className="flex items-center">
+                                    <Logo
+                                        asLink={false}
+                                        className="opacity-80 hover:opacity-100 transition-opacity duration-200"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-gray-100 rounded-lg">
+                                        <UserPlus className="w-6 h-6 text-gray-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                                            {t('createNewUserTitle')}
+                                        </h1>
+                                        <p className="text-gray-600">
+                                            {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                                        </p>
+                                    </div>
+                                </div>
+                                {/* Logo */}
+
+                            </div>
+
+                            {/* Main Content */}
+                            <div className="flex items-center gap-6">
+
+                                {selectedRole && (
+                                    <div className="flex items-center gap-3 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="p-2 bg-white rounded-md">
+                                            {React.createElement(ROLE_ICONS[selectedRole], { className: "w-5 h-5 text-gray-600" })}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {ROLE_CONFIG[selectedRole].name}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                {ROLE_CONFIG[selectedRole].description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
+
+                    {!selectedRole ? (
+                        <div className="space-y-10">
+                            <div className="text-center space-y-6">
+                                <div className="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                                    <UserPlus className="h-6 w-6 text-primary" />
+                                    <span className="text-primary font-semibold">User Creation</span>
+                                </div>
+                                <h2 className="text-4xl font-bold text-foreground">
+                                    Choose User Role
+                                </h2>
+                                <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
+                                    Select the appropriate role for the new user. Each role has specific permissions, requirements, and access levels.
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                {Object.entries(ROLE_CONFIG).map(([roleKey, config]) => {
+                                    const IconComponent = ROLE_ICONS[roleKey as keyof typeof ROLE_ICONS];
+                                    return (
+                                        <Card
+                                            key={roleKey}
+                                            className="group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:scale-105 border-0 bg-gradient-to-br from-card via-card to-muted/10 hover:from-primary/5 hover:via-primary/10 hover:to-primary/15 overflow-hidden"
+                                            onClick={() => handleRoleSelect(roleKey as RoleSpecificUserRole)}
+                                        >
+                                            <CardContent className="p-8 text-center space-y-6 relative">
+                                                {/* Background decoration */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                                <div className="relative z-10">
+                                                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/10 via-primary/15 to-primary/20 rounded-3xl flex items-center justify-center group-hover:from-primary/20 group-hover:via-primary/25 group-hover:to-primary/30 transition-all duration-500 shadow-lg group-hover:shadow-xl">
+                                                        <IconComponent className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+                                                    </div>
+
+                                                    <div className="space-y-3 mt-6">
+                                                        <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                                                            {config.name}
+                                                        </h3>
+                                                        <p className="text-muted-foreground line-clamp-3 leading-relaxed">
+                                                            {config.description}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="pt-4">
+                                                        <div className="inline-flex items-center gap-3 text-primary font-semibold text-base group-hover:gap-4 transition-all duration-300 bg-primary/10 group-hover:bg-primary/20 px-6 py-3 rounded-full">
+                                                            <span>Create User</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <UserCreationForm
+                            selectedRole={selectedRole}
+                            roleConfig={ROLE_CONFIG[selectedRole]}
+                            formData={formData}
+                            hospitals={hospitals}
+                            governorates={governorates}
+                            errors={errors}
+                            passwordErrors={passwordErrors}
+                            showPassword={showPassword}
+                            showConfirmPassword={showConfirmPassword}
+                            showGovernorateDropdown={showGovernorateDropdown}
+                            imagePreview={imagePreview}
+                            imageError={imageError}
+                            isLoading={isLoading}
+                            showSuccessModal={showSuccessModal}
+                            governorateDropdownRef={governorateDropdownRef}
+                            onInputChange={handleInputChange}
+                            onPasswordToggle={togglePasswordVisibility}
+                            onConfirmPasswordToggle={toggleConfirmPasswordVisibility}
+                            onImageSelect={handleImageSelect}
+                            onRemoveImage={handleRemoveImage}
+                            onImageAltTextChange={handleImageAltTextChange}
+                            onHospitalSelect={handleHospitalSelect}
+                            onGovernorateToggle={handleGovernorateToggle}
+                            onRemoveGovernorate={removeGovernorate}
+                            onClearAllGovernorates={handleClearAllGovernorates}
+                            onToggleGovernorateDropdown={handleToggleGovernorateDropdown}
+                            onDepartmentChange={handleDepartmentChange}
+                            onSubmit={handleSubmit}
+                            onBack={handleBack}
+                            onCloseSuccessModal={handleSuccessModalClose}
+                        />
+                    )}
                 </div>
-
-                {!selectedRole ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {Object.entries(ROLE_CONFIG).map(([roleKey, config], index) => (
-                            <RoleSelectionCard
-                                key={roleKey}
-                                roleKey={roleKey}
-                                config={config}
-                                index={index}
-                                onSelect={handleRoleSelect}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <UserCreationForm
-                        selectedRole={selectedRole}
-                        roleConfig={ROLE_CONFIG[selectedRole]}
-                        formData={formData}
-                        hospitals={hospitals}
-                        governorates={governorates}
-                        errors={errors}
-                        passwordErrors={passwordErrors}
-                        showPassword={showPassword}
-                        showConfirmPassword={showConfirmPassword}
-                        showGovernorateDropdown={showGovernorateDropdown}
-                        imagePreview={imagePreview}
-                        imageError={imageError}
-                        isLoading={isLoading}
-                        governorateDropdownRef={governorateDropdownRef}
-                        onInputChange={handleInputChange}
-                        onPasswordToggle={togglePasswordVisibility}
-                        onConfirmPasswordToggle={toggleConfirmPasswordVisibility}
-                        onImageSelect={handleImageSelect}
-                        onRemoveImage={handleRemoveImage}
-                        onImageAltTextChange={handleImageAltTextChange}
-                        onHospitalSelect={handleHospitalSelect}
-                        onGovernorateToggle={handleGovernorateToggle}
-                        onRemoveGovernorate={removeGovernorate}
-                        onClearAllGovernorates={handleClearAllGovernorates}
-                        onToggleGovernorateDropdown={handleToggleGovernorateDropdown}
-                        onDepartmentChange={handleDepartmentChange}
-                        onSubmit={handleSubmit}
-                        onBack={handleBack}
-                    />
-                )}
             </div>
-
-            {/* Success Modal */}
-            {createdUser && (createdUser as any).data && showSuccessModal && (
-                <UserCreationSuccessModal
-                    isOpen={showSuccessModal}
-                    onClose={handleSuccessModalClose}
-                    userData={{
-                        email: (createdUser as any).data.email,
-                        firstName: (createdUser as any).data.firstName,
-                        lastName: (createdUser as any).data.lastName,
-                        role: (createdUser as any).data.role,
-                        userId: (createdUser as any).data.userId,
-                    }}
-                    password={createdPassword}
-                />
-            )}
         </div>
     );
 };
