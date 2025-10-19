@@ -15,7 +15,6 @@ const RESTRICTED_ROLES = [
 	'Engineer',
 	'Technician',
 	'Salesman',
-	'SalesSupport',
 ];
 
 interface AuthState {
