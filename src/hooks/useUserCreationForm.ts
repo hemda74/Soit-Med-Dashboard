@@ -21,6 +21,10 @@ export interface FormData {
 	certification?: string;
 	jobTitle?: string;
 	technicalSkills?: string;
+	personalMail?: string;
+	supportSpecialization?: string;
+	supportLevel?: string;
+	notes?: string;
 	profileImage?: File;
 	imageAltText?: string;
 }
@@ -48,6 +52,12 @@ export const useUserCreationForm = () => {
 		certification: '',
 		jobTitle: '',
 		technicalSkills: '',
+		personalMail: '',
+		supportSpecialization: '',
+		supportLevel: '',
+		notes: '',
+		profileImage: undefined,
+		imageAltText: '',
 	});
 
 	const [isLoading, setIsLoading] = useState(false);

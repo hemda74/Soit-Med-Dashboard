@@ -102,6 +102,15 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
 }) => {
     const { t } = useTranslation();
 
+    // Helper function to check if a specific field has an error
+    const hasFieldError = (fieldName: string): boolean => {
+        return errors.some(error =>
+            error.toLowerCase().includes(fieldName.toLowerCase()) ||
+            error.toLowerCase().includes('required') ||
+            error.toLowerCase().includes('valid')
+        );
+    };
+
     return (
         <>
             <Card className="shadow-2xl border-0 bg-gradient-to-br from-background via-background to-muted/10 overflow-hidden">
@@ -190,7 +199,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                 <h2 className="text-xl font-semibold text-foreground">Personal Information</h2>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <Label htmlFor="firstName" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                         {t('firstName')} <span className="text-destructive text-lg">*</span>
@@ -200,7 +209,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         value={formData.firstName}
                                         onChange={(e) => onInputChange('firstName', e.target.value)}
                                         placeholder={t('enterFirstName')}
-                                        className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        error={hasFieldError('firstName')}
                                         required
                                     />
                                 </div>
@@ -214,27 +224,119 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         value={formData.lastName}
                                         onChange={(e) => onInputChange('lastName', e.target.value)}
                                         placeholder={t('enterLastName')}
-                                        className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        error={hasFieldError('lastName')}
                                         required
                                     />
                                 </div>
                             </div>
 
                             {/* Phone Number Field */}
-                            <div className="space-y-3">
-                                <Label htmlFor="phoneNumber" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                    {t('phoneNumber')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
-                                </Label>
-                                <Input
-                                    id="phoneNumber"
-                                    value={formData.phoneNumber || ''}
-                                    onChange={(e) => onInputChange('phoneNumber', e.target.value)}
-                                    placeholder={t('enterPhoneNumber')}
-                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
-                                    type="tel"
-                                />
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                    <Label htmlFor="phoneNumber" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                        {t('phoneNumber')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                    </Label>
+                                    <Input
+                                        id="phoneNumber"
+                                        value={formData.phoneNumber || ''}
+                                        onChange={(e) => onInputChange('phoneNumber', e.target.value)}
+                                        placeholder={t('enterPhoneNumber')}
+                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        error={hasFieldError('phoneNumber')}
+                                        type="tel"
+                                    />
+                                </div>
+                                <div></div> {/* Empty div to maintain grid structure */}
                             </div>
                         </div>
+
+                        {/* Sales Support Specific Fields */}
+                        {selectedRole === 'sales-support' && (
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-3 pb-4 border-b border-border/50">
+                                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                                        <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <h2 className="text-xl font-semibold text-foreground">Sales Support Information</h2>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* Personal Email */}
+                                    <div className="space-y-3">
+                                        <Label htmlFor="personalMail" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                            {t('salesSupportFields.personalMail')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                        </Label>
+                                        <Input
+                                            id="personalMail"
+                                            type="email"
+                                            value={formData.personalMail || ''}
+                                            onChange={(e) => onInputChange('personalMail', e.target.value)}
+                                            placeholder={t('salesSupportFields.personalMailPlaceholder')}
+                                            className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                            error={hasFieldError('personalMail')}
+                                        />
+                                    </div>
+
+                                    {/* Support Specialization */}
+                                    <div className="space-y-3">
+                                        <Label htmlFor="supportSpecialization" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                            {t('salesSupportFields.supportSpecialization')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                        </Label>
+                                        <select
+                                            id="supportSpecialization"
+                                            value={formData.supportSpecialization || ''}
+                                            onChange={(e) => onInputChange('supportSpecialization', e.target.value)}
+                                            className="h-12 w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground transition-all duration-300 focus:border-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        >
+                                            <option value="">{t('salesSupportFields.supportSpecializationPlaceholder')}</option>
+                                            <option value="Customer Support">{t('salesSupportSpecializations.customerSupport')}</option>
+                                            <option value="Technical Support">{t('salesSupportSpecializations.technicalSupport')}</option>
+                                            <option value="Sales Support">{t('salesSupportSpecializations.salesSupport')}</option>
+                                            <option value="Product Support">{t('salesSupportSpecializations.productSupport')}</option>
+                                            <option value="Billing Support">{t('salesSupportSpecializations.billingSupport')}</option>
+                                            <option value="Account Management">{t('salesSupportSpecializations.accountManagement')}</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Support Level */}
+                                    <div className="space-y-3">
+                                        <Label htmlFor="supportLevel" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                            {t('salesSupportFields.supportLevel')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                        </Label>
+                                        <select
+                                            id="supportLevel"
+                                            value={formData.supportLevel || ''}
+                                            onChange={(e) => onInputChange('supportLevel', e.target.value)}
+                                            className="h-12 w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground transition-all duration-300 focus:border-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                        >
+                                            <option value="">{t('salesSupportFields.supportLevelPlaceholder')}</option>
+                                            <option value="Junior">{t('salesSupportLevels.junior')}</option>
+                                            <option value="Senior">{t('salesSupportLevels.senior')}</option>
+                                            <option value="Lead">{t('salesSupportLevels.lead')}</option>
+                                            <option value="Specialist">{t('salesSupportLevels.specialist')}</option>
+                                        </select>
+                                    </div>
+                                    <div></div> {/* Empty div to maintain grid structure */}
+                                </div>
+
+                                {/* Notes */}
+                                <div className="space-y-3">
+                                    <Label htmlFor="notes" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                        {t('salesSupportFields.notes')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                    </Label>
+                                    <Textarea
+                                        id="notes"
+                                        value={formData.notes || ''}
+                                        onChange={(e) => onInputChange('notes', e.target.value)}
+                                        placeholder={t('salesSupportFields.notesPlaceholder')}
+                                        className="min-h-[100px] transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        error={hasFieldError('notes')}
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Account Credentials Section */}
                         <div className="space-y-6">
@@ -245,7 +347,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                 <h2 className="text-xl font-semibold text-foreground">Account Credentials</h2>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                         {t('email')} <span className="text-destructive text-lg">*</span>
@@ -256,7 +358,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         value={formData.email}
                                         onChange={(e) => onInputChange('email', e.target.value)}
                                         placeholder={t('enterEmailAddress')}
-                                        className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        error={hasFieldError('email')}
                                         required
                                     />
                                 </div>
@@ -272,7 +375,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         errors={passwordErrors}
                                         label={t('password')}
                                         required
-                                        className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
                                     />
                                 </div>
 
@@ -287,12 +390,13 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         errors={[]}
                                         label={t('confirmPassword')}
                                         required
-                                        className={`h-12 transition-all duration-300 border-2 hover:border-primary/50 rounded-xl ${formData.confirmPassword && formData.password !== formData.confirmPassword
-                                            ? 'border-destructive focus:ring-destructive/30 focus:border-destructive'
+                                        className={`h-12 transition-all duration-300 hover:border-primary/50 rounded-xl ${formData.confirmPassword && formData.password !== formData.confirmPassword
+                                            ? 'border-destructive focus:border-destructive'
                                             : formData.confirmPassword && formData.password === formData.confirmPassword
-                                                ? 'border-green-500 focus:ring-green-500/30 focus:border-green-500'
-                                                : 'focus:ring-primary/30 focus:border-primary'
+                                                ? 'border-green-500 focus:border-green-500'
+                                                : 'focus:border-primary'
                                             }`}
+                                        error={formData.confirmPassword && formData.password !== formData.confirmPassword}
                                     />
 
                                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
@@ -308,6 +412,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         </div>
                                     )}
                                 </div>
+                                <div></div> {/* Empty div to maintain grid structure */}
                             </div>
                         </div>
 
@@ -330,18 +435,22 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                             />
 
                             {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
-                                <div className="space-y-3">
-                                    <Label htmlFor="specialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('specialty')} <span className="text-destructive text-lg">*</span>
-                                    </Label>
-                                    <Input
-                                        id="specialty"
-                                        value={formData.specialty}
-                                        onChange={(e) => onInputChange('specialty', e.target.value)}
-                                        placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
-                                        className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
-                                        required
-                                    />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="specialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                            {t('specialty')} <span className="text-destructive text-lg">*</span>
+                                        </Label>
+                                        <Input
+                                            id="specialty"
+                                            value={formData.specialty}
+                                            onChange={(e) => onInputChange('specialty', e.target.value)}
+                                            placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
+                                            className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                            error={hasFieldError('specialty')}
+                                            required
+                                        />
+                                    </div>
+                                    <div></div> {/* Empty div to maintain grid structure */}
                                 </div>
                             )}
                         </div>
@@ -392,7 +501,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             </div>
                                             Sales Manager Details
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="salesTerritory" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('salesTerritory')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
@@ -402,7 +511,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.salesTerritory || ''}
                                                     onChange={(e) => onInputChange('salesTerritory', e.target.value)}
                                                     placeholder={t('enterSalesTerritory')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('salesTerritory')}
                                                 />
                                             </div>
 
@@ -415,7 +525,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.salesTeam || ''}
                                                     onChange={(e) => onInputChange('salesTeam', e.target.value)}
                                                     placeholder={t('enterSalesTeam')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('salesTeam')}
                                                 />
                                             </div>
 
@@ -430,7 +541,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.salesTarget || ''}
                                                     onChange={(e) => onInputChange('salesTarget', e.target.value)}
                                                     placeholder={t('enterSalesTarget')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('salesTarget')}
                                                 />
                                             </div>
 
@@ -444,7 +556,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('managerNotes', e.target.value)}
                                                     placeholder={t('enterManagerNotes')}
                                                     rows={3}
-                                                    className="transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl resize-none"
+                                                    className={`transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl resize-none ${hasFieldError('managerNotes') ? 'border-destructive focus:border-destructive' : 'border-input'}`}
                                                 />
                                             </div>
                                         </div>
@@ -459,7 +571,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             </div>
                                             Maintenance Manager Details
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="maintenanceSpecialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('maintenanceSpecialty')} <span className="text-destructive text-lg">*</span>
@@ -469,7 +581,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.maintenanceSpecialty || ''}
                                                     onChange={(e) => onInputChange('maintenanceSpecialty', e.target.value)}
                                                     placeholder={t('enterMaintenanceSpecialty')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('maintenanceSpecialty')}
                                                     required
                                                 />
                                             </div>
@@ -483,7 +596,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.certification || ''}
                                                     onChange={(e) => onInputChange('certification', e.target.value)}
                                                     placeholder={t('enterCertification')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('certification')}
                                                     required
                                                 />
                                             </div>
@@ -499,7 +613,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             </div>
                                             Maintenance Support Details
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="jobTitle" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('jobTitle')} <span className="text-destructive text-lg">*</span>
@@ -509,7 +623,8 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     value={formData.jobTitle || ''}
                                                     onChange={(e) => onInputChange('jobTitle', e.target.value)}
                                                     placeholder={t('enterJobTitle')}
-                                                    className="h-12 transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl"
+                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    error={hasFieldError('jobTitle')}
                                                     required
                                                 />
                                             </div>
@@ -524,7 +639,7 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('technicalSkills', e.target.value)}
                                                     placeholder={t('enterTechnicalSkills')}
                                                     rows={3}
-                                                    className="transition-all duration-300 focus:ring-2 focus:ring-primary/30 focus:border-primary border-2 hover:border-primary/50 rounded-xl resize-none"
+                                                    className={`transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl resize-none ${hasFieldError('technicalSkills') ? 'border-destructive focus:border-destructive' : 'border-input'}`}
                                                     required
                                                 />
                                             </div>
