@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat, HeadphonesIcon } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -20,6 +20,7 @@ import {
     createSalesManager,
     createMaintenanceManager,
     createMaintenanceSupport,
+    createSalesSupport,
     getHospitals,
     getGovernorates,
     validateForm,
@@ -44,7 +45,7 @@ interface GovernorateInfo {
 const RoleSpecificUserCreation: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { error: showError } = useNotificationStore();
+    const { errorNotification } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
 
@@ -62,6 +63,7 @@ const RoleSpecificUserCreation: React.FC = () => {
         'sales-manager': UserCheck,
         'maintenance-manager': HardHat,
         'maintenance-support': Cog,
+        'sales-support': HeadphonesIcon,
     };
 
     // Role configuration with translations
@@ -168,6 +170,15 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 4,
             role: 'MaintenanceSupport'
         },
+        'sales-support': {
+            name: t('salesSupport'),
+            description: t('salesSupportDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'phoneNumber', 'personalMail', 'supportSpecialization', 'supportLevel', 'notes'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'SalesSupport'
+        },
     };
 
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
@@ -210,7 +221,7 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     useEffect(() => {
         if (!canCreateUsers) {
-            showError('Access Denied', 'Admin access required');
+            errorNotification('Access Denied', 'Admin access required');
             navigate('/');
             return;
         }
@@ -231,7 +242,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             setGovernorates(governoratesData);
         } catch (err) {
             console.error('Error loading reference data:', err);
-            showError('Error', 'Failed to load reference data');
+            errorNotification('Error', 'Failed to load reference data');
         } finally {
             setLoading(false);
         }
@@ -295,6 +306,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'sales-manager' && formData.salesTeam && { salesTeam: formData.salesTeam }),
                 ...(selectedRole === 'sales-manager' && formData.salesTarget && { salesTarget: parseFloat(formData.salesTarget) }),
                 ...(selectedRole === 'sales-manager' && formData.managerNotes && { managerNotes: formData.managerNotes }),
+                ...(selectedRole === 'sales-support' && formData.phoneNumber && { phoneNumber: formData.phoneNumber }),
+                ...(selectedRole === 'sales-support' && formData.personalMail && { personalMail: formData.personalMail }),
+                ...(selectedRole === 'sales-support' && formData.supportSpecialization && { supportSpecialization: formData.supportSpecialization }),
+                ...(selectedRole === 'sales-support' && formData.supportLevel && { supportLevel: formData.supportLevel }),
+                ...(selectedRole === 'sales-support' && formData.notes && { notes: formData.notes }),
                 ...(formData.profileImage && { profileImage: formData.profileImage }),
                 ...(formData.imageAltText && { imageAltText: formData.imageAltText }),
             };
@@ -335,6 +351,9 @@ const RoleSpecificUserCreation: React.FC = () => {
                     break;
                 case 'maintenance-support':
                     await createMaintenanceSupport(userData as any, user.token);
+                    break;
+                case 'sales-support':
+                    await createSalesSupport(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
