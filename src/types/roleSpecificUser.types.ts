@@ -74,6 +74,14 @@ export interface MaintenanceSupportUserRequest extends BaseUserRequest {
 	technicalSkills: string;
 }
 
+export interface SalesSupportUserRequest extends BaseUserRequest {
+	departmentId?: number;
+	supportSpecialization?: string;
+	supportLevel?: string;
+	notes?: string;
+	personalMail?: string;
+}
+
 // Union type for all role-specific requests
 export type RoleSpecificUserRequest =
 	| DoctorUserRequest
@@ -87,7 +95,8 @@ export type RoleSpecificUserRequest =
 	| SalesmanUserRequest
 	| SalesManagerUserRequest
 	| MaintenanceManagerUserRequest
-	| MaintenanceSupportUserRequest;
+	| MaintenanceSupportUserRequest
+	| SalesSupportUserRequest;
 
 // Profile image response data
 export interface ProfileImageResponse {
@@ -191,6 +200,28 @@ export interface MaintenanceSupportUserResponse extends BaseUserResponse {
 	technicalSkills: string;
 }
 
+export interface SalesSupportUserResponse {
+	userId: string;
+	email: string;
+	role: string;
+	departmentName: string;
+	createdAt: string;
+	profileImage?: {
+		id: number;
+		fileName: string;
+		filePath: string;
+		contentType: string;
+		fileSize: number;
+		altText: string;
+		isProfileImage: boolean;
+		uploadedAt: string;
+	};
+	message: string;
+	supportSpecialization?: string;
+	supportLevel?: string;
+	notes?: string;
+}
+
 // Union type for all role-specific responses
 export type RoleSpecificUserResponse =
 	| DoctorUserResponse
@@ -204,7 +235,8 @@ export type RoleSpecificUserResponse =
 	| SalesmanUserResponse
 	| SalesManagerUserResponse
 	| MaintenanceManagerUserResponse
-	| MaintenanceSupportUserResponse;
+	| MaintenanceSupportUserResponse
+	| SalesSupportUserResponse;
 
 // Available roles for user creation
 export type RoleSpecificUserRole =
@@ -219,7 +251,8 @@ export type RoleSpecificUserRole =
 	| 'salesman'
 	| 'sales-manager'
 	| 'maintenance-manager'
-	| 'maintenance-support';
+	| 'maintenance-support'
+	| 'sales-support';
 
 // Password change request
 export interface ChangePasswordRequest {
