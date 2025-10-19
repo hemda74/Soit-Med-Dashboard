@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -12,9 +12,11 @@ import {
 import {
   Calendar,
   List,
-  PieChart,
-  Plug,
-  ListChecks
+  ListChecks,
+  Users,
+  BarChart3,
+  Target,
+  HeadphonesIcon
 } from "lucide-react";
 import Logo from "../Logo";
 import SidebarWidget from "./SidebarWidget";
@@ -31,7 +33,7 @@ const AppSidebar: React.FC = () => {
   const { hasAnyRole } = useAuthStore();
   const { t, language } = useTranslation();
 
-  const navItems: NavItem[] = [
+  const navItems: NavItem[] = useMemo(() => [
     {
       icon: <GridIcon />,
       name: t('dashboard'),
@@ -44,65 +46,94 @@ const AppSidebar: React.FC = () => {
     },
     {
       icon: <UserCircleIcon />,
-      name: t('userProfile'),
-      path: "/profile",
+      name: t('createNewRole'),
+      path: "/admin/create-role-user",
     },
     {
       name: t('forms'),
       icon: <List />,
       subItems: [{ name: t('formElements'), path: "/form-elements", pro: false }],
     },
-
-
-  ];
-
-  const othersItems: NavItem[] = [
-    {
-      icon: <PieChart />,
-      name: t('charts'),
-      subItems: [
-        { name: t('lineChart'), path: "/line-chart", pro: false },
-        { name: t('barChart'), path: "/bar-chart", pro: false },
-      ],
-    },
-    {
-      icon: <Plug />,
-      name: t('authentication'),
-      subItems: [
-        { name: t('signIn'), path: "/signin", pro: false },
-        { name: "Sign Up", path: "/signup", pro: false },
-      ],
-    },
-  ];
+  ], [t]);
 
   // Admin menu - only for Admin and Super Admin
-  const adminNavItems: NavItem[] = hasAnyRole(['Admin', 'SuperAdmin']) ? [{
-    icon: <UserCircleIcon />,
-    name: t('users'),
-    subItems: [
-      { name: t('allUsers'), path: "/admin/users", pro: false },
-      { name: t('createUser'), path: "/admin/create-role-user", pro: false },
-    ],
-  }] : [];
+  const adminNavItems: NavItem[] = useMemo(() =>
+    hasAnyRole(['Admin', 'SuperAdmin']) ? [{
+      icon: <UserCircleIcon />,
+      name: t('users'),
+      subItems: [
+        { name: t('allUsers'), path: "/admin/users", pro: false },
+        { name: t('createUser'), path: "/admin/create-role-user", pro: false },
+      ],
+    }] : [], [hasAnyRole, t]);
 
   // Sales menu - for Salesman, Sales Manager, and Super Admin
-  const salesNavItems: NavItem[] = hasAnyRole(['Salesman', 'SalesManager', 'SuperAdmin']) ? [{
-    icon: <ListChecks />,
-    name: t('weeklyPlans'),
-    path: "/weekly-plans",
-  }] : [];
+  const salesNavItems: NavItem[] = useMemo(() =>
+    hasAnyRole(['Salesman', 'SalesManager', 'SuperAdmin']) ? [
+      {
+        icon: <ListChecks />,
+        name: t('weeklyPlans'),
+        path: "/weekly-plans",
+      },
+      {
+        icon: <BarChart3 />,
+        name: t('salesReports'),
+        path: "/sales-reports",
+      }
+    ] : [], [hasAnyRole, t]);
 
-  const allNavItems: NavItem[] = [
+  // Sales Manager specific menu
+  const salesManagerNavItems: NavItem[] = useMemo(() =>
+    hasAnyRole(['SalesManager', 'SuperAdmin']) ? [{
+      icon: <Users />,
+      name: t('salesManagement'),
+      subItems: [
+        { name: t('salesManagerDashboard'), path: "/sales-manager", pro: false },
+        { name: t('teamManagement'), path: "/sales-manager?tab=team", pro: false },
+        { name: t('salesAnalytics'), path: "/sales-manager?tab=analytics", pro: false },
+      ],
+    }] : [], [hasAnyRole, t]);
+
+  // Salesman specific menu
+  const salesmanNavItems: NavItem[] = useMemo(() =>
+    hasAnyRole(['Salesman', 'SuperAdmin']) ? [{
+      icon: <Target />,
+      name: t('mySales'),
+      subItems: [
+        { name: t('myDashboard'), path: "/salesman", pro: false },
+        { name: t('myClients'), path: "/salesman?tab=clients", pro: false },
+        { name: t('myVisits'), path: "/salesman?tab=visits", pro: false },
+        { name: t('myPerformance'), path: "/salesman?tab=analytics", pro: false },
+      ],
+    }] : [], [hasAnyRole, t]);
+
+  // Sales Support menu - for Sales Support and Super Admin
+  const salesSupportNavItems: NavItem[] = useMemo(() =>
+    hasAnyRole(['SalesSupport', 'SuperAdmin']) ? [{
+      icon: <HeadphonesIcon />,
+      name: t('salesSupport'),
+      subItems: [
+        { name: t('salesSupportDashboard'), path: "/sales-support", pro: false },
+        { name: t('salesSupportManagement'), path: "/sales-support?tab=management", pro: false },
+        { name: t('createSalesSupportUser'), path: "/admin/create-sales-support", pro: false },
+      ],
+    }] : [], [hasAnyRole, t]);
+
+  const allNavItems: NavItem[] = useMemo(() => [
     ...navItems,
     ...salesNavItems,
+    ...salesManagerNavItems,
+    ...salesmanNavItems,
+    ...salesSupportNavItems,
     ...adminNavItems,
-  ];
+  ], [navItems, salesNavItems, salesManagerNavItems, salesmanNavItems, salesSupportNavItems, adminNavItems]);
+
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: "main";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
+  const [subMenuHeight] = useState<Record<string, number>>(
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -113,56 +144,26 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
+  const handleSubmenuToggle = useCallback((index: number, menuType: "main") => {
+    setOpenSubmenu(prev =>
+      prev?.type === menuType && prev?.index === index
+        ? null
+        : { type: menuType, index }
+    );
+  }, []);
+
   useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? allNavItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
+    if (allNavItems.length > 0 && !openSubmenu) {
+      setOpenSubmenu({
+        type: "main",
+        index: 0,
       });
-    });
-
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [allNavItems.length, openSubmenu]);
 
-  useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
-      }
-    }
-  }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
-  };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main") => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
@@ -292,14 +293,6 @@ const AppSidebar: React.FC = () => {
                 {t('menu')}
               </h2>
               {renderMenuItems(allNavItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className="mb-4 text-xs uppercase flex leading-[20px] text-gray-400 justify-start"
-              >
-                {t('others')}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>
