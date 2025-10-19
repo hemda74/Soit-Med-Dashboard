@@ -23,10 +23,14 @@ export * from './roleSpecific/adminRoleApi';
 export * from './roleSpecific/financeRoleApi';
 export * from './roleSpecific/legalRoleApi';
 export * from './roleSpecific/salesRoleApi';
+export * from './roleSpecific/salesSupportRoleApi';
 export * from './roleSpecific/maintenanceRoleApi';
 
 // Sales reports (Legacy)
 export * from './sales/salesReportApi';
+
+// Sales Module (New)
+export * from './sales/salesApi';
 
 // Weekly Plans (New To-Do List System)
 export * from './weeklyPlan/weeklyPlanApi';
@@ -37,6 +41,7 @@ export * from './dashboard/dashboardApi';
 // Legacy exports for backward compatibility
 export { userApiClient } from './user/userApi';
 export { salesReportApi } from './sales/salesReportApi';
+export { salesApi } from './sales/salesApi';
 
 // User activation/deactivation
 export const activateDeactivateUser = async (
