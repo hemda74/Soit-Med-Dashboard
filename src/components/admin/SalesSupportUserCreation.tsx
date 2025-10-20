@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from '@/hooks/useTranslation';
 import { useAuthStore } from '@/stores/authStore';
 import { createSalesSupport } from '@/services/roleSpecific/salesSupportRoleApi';
 import type { SalesSupportUserRequest } from '@/types/roleSpecificUser.types';
@@ -28,7 +27,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus, Upload, X } from 'lucide-react';
+import { Loader2, UserPlus, X } from 'lucide-react';
 
 interface SalesSupportUserCreationProps {
     onSuccess?: (user: any) => void;
@@ -39,7 +38,6 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
     onSuccess,
     onCancel,
 }) => {
-    const { t } = useTranslation();
     const { user } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -50,7 +48,6 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
         handleSubmit,
         formState: { errors },
         reset,
-        watch,
         setValue,
     } = useForm<SalesSupportUserRequest>({
         defaultValues: {
@@ -68,19 +65,19 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
     });
 
     const supportLevels = [
-        { value: 'Junior', label: t('salesSupportLevels.junior') },
-        { value: 'Senior', label: t('salesSupportLevels.senior') },
-        { value: 'Lead', label: t('salesSupportLevels.lead') },
-        { value: 'Specialist', label: t('salesSupportLevels.specialist') },
+        { value: 'Junior', label: 'Junior' },
+        { value: 'Senior', label: 'Senior' },
+        { value: 'Lead', label: 'Lead' },
+        { value: 'Specialist', label: 'Specialist' },
     ];
 
     const supportSpecializations = [
-        { value: 'Customer Support', label: t('salesSupportSpecializations.customerSupport') },
-        { value: 'Technical Support', label: t('salesSupportSpecializations.technicalSupport') },
-        { value: 'Sales Support', label: t('salesSupportSpecializations.salesSupport') },
-        { value: 'Product Support', label: t('salesSupportSpecializations.productSupport') },
-        { value: 'Billing Support', label: t('salesSupportSpecializations.billingSupport') },
-        { value: 'Account Management', label: t('salesSupportSpecializations.accountManagement') },
+        { value: 'Customer Support', label: 'Customer Support' },
+        { value: 'Technical Support', label: 'Technical Support' },
+        { value: 'Sales Support', label: 'Sales Support' },
+        { value: 'Product Support', label: 'Product Support' },
+        { value: 'Billing Support', label: 'Billing Support' },
+        { value: 'Account Management', label: 'Account Management' },
     ];
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +100,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
 
     const onSubmit = async (data: SalesSupportUserRequest) => {
         if (!user?.token) {
-            toast.error(t('common.errors.noAuthToken'));
+            toast.error('No authentication token found');
             return;
         }
 
@@ -119,7 +116,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
             const response = await createSalesSupport(formData, user.token);
 
             // Show success message from API response or fallback
-            const successMessage = response.message || t('salesSupportMessages.createSuccess');
+            const successMessage = response.message || 'Sales support user created successfully';
             toast.success(successMessage);
 
             reset();
@@ -133,7 +130,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
             console.error('Error creating Sales Support user:', error);
 
             // Handle API error response format
-            let errorMessage = t('salesSupportMessages.createError');
+            let errorMessage = 'Failed to create sales support user';
             if (error.response?.data) {
                 if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
@@ -157,10 +154,10 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <UserPlus className="h-5 w-5" />
-                    {t('salesSupportCreateUser.title')}
+                    Create Sales Support User
                 </CardTitle>
                 <CardDescription>
-                    {t('salesSupportCreateUser.description')}
+                    Create a new sales support user with specialized skills and support levels.
                 </CardDescription>
             </CardHeader>
 
@@ -169,26 +166,26 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                     {/* Basic Information */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium">
-                            {t('salesSupportCreateUser.basicInfo')}
+                            Basic Information
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Email */}
                             <div className="space-y-2">
                                 <Label htmlFor="email">
-                                    {t('common.fields.email')} *
+                                    Email *
                                 </Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     {...register('email', {
-                                        required: t('common.validation.required'),
+                                        required: 'Email is required',
                                         pattern: {
                                             value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                            message: t('common.validation.invalidEmail'),
+                                            message: 'Please enter a valid email address',
                                         },
                                     })}
-                                    placeholder={t('common.fields.emailPlaceholder')}
+                                    placeholder="Enter email address"
                                 />
                                 {errors.email && (
                                     <Alert variant="destructive">
@@ -202,19 +199,19 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* Password */}
                             <div className="space-y-2">
                                 <Label htmlFor="password">
-                                    {t('common.fields.password')} *
+                                    Password *
                                 </Label>
                                 <Input
                                     id="password"
                                     type="password"
                                     {...register('password', {
-                                        required: t('common.validation.required'),
+                                        required: 'Email is required',
                                         minLength: {
                                             value: 6,
-                                            message: t('common.validation.passwordMinLength'),
+                                            message: 'Password must be at least 8 characters',
                                         },
                                     })}
-                                    placeholder={t('common.fields.passwordPlaceholder')}
+                                    placeholder="Enter password"
                                 />
                                 {errors.password && (
                                     <Alert variant="destructive">
@@ -230,24 +227,24 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* First Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="firstName">
-                                    {t('common.fields.firstName')}
+                                    First Name
                                 </Label>
                                 <Input
                                     id="firstName"
                                     {...register('firstName')}
-                                    placeholder={t('common.fields.firstNamePlaceholder')}
+                                    placeholder="Enter first name"
                                 />
                             </div>
 
                             {/* Last Name */}
                             <div className="space-y-2">
                                 <Label htmlFor="lastName">
-                                    {t('common.fields.lastName')}
+                                    Last Name
                                 </Label>
                                 <Input
                                     id="lastName"
                                     {...register('lastName')}
-                                    placeholder={t('common.fields.lastNamePlaceholder')}
+                                    placeholder="Enter last name"
                                 />
                             </div>
                         </div>
@@ -256,26 +253,26 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* Phone Number */}
                             <div className="space-y-2">
                                 <Label htmlFor="phoneNumber">
-                                    {t('common.fields.phoneNumber')}
+                                    Phone Number
                                 </Label>
                                 <Input
                                     id="phoneNumber"
                                     type="tel"
                                     {...register('phoneNumber')}
-                                    placeholder={t('common.fields.phoneNumberPlaceholder')}
+                                    placeholder="Enter phone number"
                                 />
                             </div>
 
                             {/* Personal Email */}
                             <div className="space-y-2">
                                 <Label htmlFor="personalMail">
-                                    {t('salesSupportFields.personalMail')}
+                                    Personal Email
                                 </Label>
                                 <Input
                                     id="personalMail"
                                     type="email"
                                     {...register('personalMail')}
-                                    placeholder={t('salesSupportFields.personalMailPlaceholder')}
+                                    placeholder="Enter personal email"
                                 />
                             </div>
                         </div>
@@ -284,14 +281,14 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                     {/* Sales Support Specific Information */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium">
-                            {t('salesSupportCreateUser.salesSupportInfo')}
+                            Sales Support Information
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Support Specialization */}
                             <div className="space-y-2">
                                 <Label htmlFor="supportSpecialization">
-                                    {t('salesSupportFields.supportSpecialization')}
+                                    Support Specialization
                                 </Label>
                                 <Select
                                     onValueChange={(value) =>
@@ -300,7 +297,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                                 >
                                     <SelectTrigger>
                                         <SelectValue
-                                            placeholder={t('salesSupportFields.supportSpecializationPlaceholder')}
+                                            placeholder="Select specialization"
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -316,7 +313,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* Support Level */}
                             <div className="space-y-2">
                                 <Label htmlFor="supportLevel">
-                                    {t('salesSupportFields.supportLevel')}
+                                    Support Level
                                 </Label>
                                 <Select
                                     onValueChange={(value) =>
@@ -325,7 +322,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                                 >
                                     <SelectTrigger>
                                         <SelectValue
-                                            placeholder={t('salesSupportFields.supportLevelPlaceholder')}
+                                            placeholder="Select support level"
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -342,12 +339,12 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                         {/* Notes */}
                         <div className="space-y-2">
                             <Label htmlFor="notes">
-                                {t('salesSupportFields.notes')}
+                                Notes
                             </Label>
                             <Textarea
                                 id="notes"
                                 {...register('notes')}
-                                placeholder={t('salesSupportFields.notesPlaceholder')}
+                                placeholder="Enter additional notes"
                                 rows={3}
                             />
                         </div>
@@ -356,14 +353,14 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                     {/* Profile Image Upload */}
                     <div className="space-y-4">
                         <h3 className="text-lg font-medium">
-                            {t('salesSupportCreateUser.profileImage')}
+                            Profile Image
                         </h3>
 
                         <div className="space-y-4">
                             {/* Image Upload */}
                             <div className="space-y-2">
                                 <Label htmlFor="profileImage">
-                                    {t('common.fields.profileImage')}
+                                    Profile Image
                                 </Label>
                                 <div className="flex items-center gap-4">
                                     <Input
@@ -386,7 +383,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                                 </div>
                                 {profileImage && (
                                     <p className="text-sm text-muted-foreground">
-                                        {t('common.fields.selectedFile')}: {profileImage.name}
+                                        Selected file: {profileImage.name}
                                     </p>
                                 )}
                             </div>
@@ -394,7 +391,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* Image Preview */}
                             {imagePreview && (
                                 <div className="space-y-2">
-                                    <Label>{t('common.fields.imagePreview')}</Label>
+                                    <Label>Image Preview</Label>
                                     <div className="relative w-32 h-32 border rounded-lg overflow-hidden">
                                         <img
                                             src={imagePreview}
@@ -408,12 +405,12 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                             {/* Alt Text */}
                             <div className="space-y-2">
                                 <Label htmlFor="altText">
-                                    {t('common.fields.altText')}
+                                    Alt Text
                                 </Label>
                                 <Input
                                     id="altText"
                                     {...register('altText')}
-                                    placeholder={t('common.fields.altTextPlaceholder')}
+                                    placeholder="Enter alt text"
                                 />
                             </div>
                         </div>
@@ -428,19 +425,19 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
                                 onClick={onCancel}
                                 disabled={isLoading}
                             >
-                                {t('common.actions.cancel')}
+                                Cancel
                             </Button>
                         )}
                         <Button type="submit" disabled={isLoading}>
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {t('common.actions.creating')}
+                                    Creating...
                                 </>
                             ) : (
                                 <>
                                     <UserPlus className="mr-2 h-4 w-4" />
-                                    {t('salesSupportActions.createUser')}
+                                    Create User
                                 </>
                             )}
                         </Button>

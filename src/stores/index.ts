@@ -5,6 +5,7 @@ export * from './appStore';
 export * from './notificationStore';
 export * from './apiStore';
 export * from './statisticsStore';
+export * from './salesStore';
 
 // Re-export commonly used hooks for convenience
 export { useAuthStore } from './authStore';
@@ -30,6 +31,39 @@ export {
 	useLastApiCallTime,
 } from './statisticsStore';
 
+// Sales store exports
+export {
+	useSalesStore,
+	useClients,
+	useSelectedClient,
+	useClientSearchResults,
+	useClientsLoading,
+	useClientsError,
+	useClientVisits,
+	useUpcomingVisits,
+	useOverdueVisits,
+	useVisitsLoading,
+	useVisitsError,
+	useClientInteractions,
+	useInteractionsLoading,
+	useInteractionsError,
+	useSalesAnalytics,
+	useSalesPerformance,
+	useSalesDashboard,
+	useAnalyticsLoading,
+	useAnalyticsError,
+	useSalesReports,
+	useReportsLoading,
+	useReportsError,
+	useSelectedTab,
+	useShowClientModal,
+	useShowVisitModal,
+	useShowInteractionModal,
+	useShowReportModal,
+	useSalesFilters,
+	useSalesPagination,
+} from './salesStore';
+
 // Store types for external use
 export type { User } from './authStore';
 export type { Theme, Language } from './themeStore';
@@ -37,3 +71,4 @@ export type { AppState } from './appStore';
 export type { Notification, NotificationType } from './notificationStore';
 export type { ApiCall, ApiState } from './apiStore';
 export type { StatisticsState } from './statisticsStore';
+export type { SalesState, SalesActions, SalesStore } from './salesStore';

@@ -132,13 +132,14 @@ export const fetchUsers = async (
 			// Old format: direct array - convert to paginated format
 			const users = response as UserListResponse[];
 			return {
-				users: users,
+				users: users as any,
 				totalCount: users.length,
 				pageNumber: 1,
 				pageSize: users.length,
 				totalPages: 1,
 				hasPreviousPage: false,
 				hasNextPage: false,
+				appliedFilters: {} as any,
 			};
 		} else if (response && Array.isArray(response.users)) {
 			// New format: paginated response
@@ -149,13 +150,14 @@ export const fetchUsers = async (
 				response
 			);
 			return {
-				users: [],
+				users: [] as any,
 				totalCount: 0,
 				pageNumber: 1,
 				pageSize: pageSize,
 				totalPages: 0,
 				hasPreviousPage: false,
 				hasNextPage: false,
+				appliedFilters: {} as any,
 			};
 		}
 	} finally {
@@ -304,15 +306,7 @@ export const updateUserStatus = async (
 	try {
 		setLoading?.(true);
 
-		// Debug logging
-		console.log('🔄 Making user status update request:', {
-			endpoint: API_ENDPOINTS.USER.ACTIVATE_DEACTIVATE,
-			method: 'PUT',
-			request,
-			token: token
-				? `${token.substring(0, 20)}...`
-				: 'No token',
-		});
+    // Removed verbose console logs for production
 
 		const response = await userApiClient.put<UserStatusResponse>(
 			API_ENDPOINTS.USER.ACTIVATE_DEACTIVATE,
@@ -320,10 +314,10 @@ export const updateUserStatus = async (
 			token
 		);
 
-		console.log('✅ User status update successful:', response);
+        // Removed verbose console logs for production
 		return response;
 	} catch (error) {
-		console.error('❌ User status update failed:', error);
+        console.error('User status update failed');
 		throw error;
 	} finally {
 		setLoading?.(false);
@@ -395,20 +389,17 @@ export const fetchUsersWithFilters = async (
 				: ''
 		}`;
 
-		console.log('🔄 Fetching users with filters:', {
-			endpoint,
-			filters,
-		});
+    // Removed verbose console logs for production
 
 		const response = await userApiClient.get<PaginatedUserResponse>(
 			endpoint,
 			token
 		);
 
-		console.log('✅ Users fetched successfully:', response);
+    // Removed verbose console logs for production
 		return response;
 	} catch (error) {
-		console.error('❌ Failed to fetch users with filters:', error);
+        console.error('Failed to fetch users with filters');
 		throw error;
 	} finally {
 		setLoading?.(false);

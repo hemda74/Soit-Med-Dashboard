@@ -6,8 +6,6 @@ import { useAuthStore } from '@/stores/authStore';
 import {
     getAllSalesSupport,
     getSalesSupportStatistics,
-    getSalesSupportByLevel,
-    getSalesSupportBySpecialization
 } from '@/services/roleSpecific/salesSupportRoleApi';
 import type { SalesSupportUserResponse } from '@/types/roleSpecificUser.types';
 import toast from 'react-hot-toast';
@@ -29,9 +27,7 @@ import {
     HeadphonesIcon,
     Users,
     TrendingUp,
-    Clock,
     CheckCircle,
-    AlertCircle,
     Plus,
     Search,
     Filter
@@ -81,8 +77,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
 
     const filteredUsers = salesSupportUsers.filter(user => {
         const matchesSearch =
-            user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesLevel = !levelFilter || user.supportLevel === levelFilter;
@@ -92,19 +87,19 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
     });
 
     const supportLevels = [
-        { value: 'Junior', label: t('salesSupport.levels.junior') },
-        { value: 'Senior', label: t('salesSupport.levels.senior') },
-        { value: 'Lead', label: t('salesSupport.levels.lead') },
-        { value: 'Specialist', label: t('salesSupport.levels.specialist') },
+        { value: 'Junior', label: 'Junior' },
+        { value: 'Senior', label: 'Senior' },
+        { value: 'Lead', label: 'Lead' },
+        { value: 'Specialist', label: 'Specialist' },
     ];
 
     const specializations = [
-        { value: 'Customer Support', label: t('salesSupport.specializations.customerSupport') },
-        { value: 'Technical Support', label: t('salesSupport.specializations.technicalSupport') },
-        { value: 'Sales Support', label: t('salesSupport.specializations.salesSupport') },
-        { value: 'Product Support', label: t('salesSupport.specializations.productSupport') },
-        { value: 'Billing Support', label: t('salesSupport.specializations.billingSupport') },
-        { value: 'Account Management', label: t('salesSupport.specializations.accountManagement') },
+        { value: 'Customer Support', label: 'Customer Support' },
+        { value: 'Technical Support', label: 'Technical Support' },
+        { value: 'Sales Support', label: 'Sales Support' },
+        { value: 'Product Support', label: 'Product Support' },
+        { value: 'Billing Support', label: 'Billing Support' },
+        { value: 'Account Management', label: 'Account Management' },
     ];
 
     if (loading) {
@@ -142,7 +137,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                {t('common.fields.totalUsers')}
+                                Total Users
                             </CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -157,7 +152,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                {t('salesSupport.levels.senior')} {t('common.fields.users')}
+                                Senior Users
                             </CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -166,7 +161,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                                 {statistics.byLevel?.Senior || 0}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {t('salesSupport.levels.senior')} {t('common.fields.level')}
+                                Senior Level
                             </p>
                         </CardContent>
                     </Card>
@@ -174,7 +169,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                {t('salesSupport.levels.lead')} {t('common.fields.users')}
+                                Lead Users
                             </CardTitle>
                             <CheckCircle className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -183,7 +178,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                                 {statistics.byLevel?.Lead || 0}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {t('salesSupport.levels.lead')} {t('common.fields.level')}
+                                Lead Level
                             </p>
                         </CardContent>
                     </Card>
@@ -191,7 +186,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                {t('salesSupport.levels.specialist')} {t('common.fields.users')}
+                                Specialist Users
                             </CardTitle>
                             <HeadphonesIcon className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
@@ -200,7 +195,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                                 {statistics.byLevel?.Specialist || 0}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {t('salesSupport.levels.specialist')} {t('common.fields.level')}
+                                Specialist Level
                             </p>
                         </CardContent>
                     </Card>
@@ -221,19 +216,19 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Filter className="h-5 w-5" />
-                                {t('common.fields.filters')}
+                                Filters
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">
-                                        {t('common.fields.search')}
+                                        Search
                                     </label>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                                         <Input
-                                            placeholder={t('common.fields.searchPlaceholder')}
+                                            placeholder="Search users..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="pl-10"
@@ -243,14 +238,14 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">
-                                        {t('salesSupport.fields.supportLevel')}
+                                        Support Level
                                     </label>
                                     <Select value={levelFilter} onValueChange={setLevelFilter}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('common.fields.allLevels')} />
+                                            <SelectValue placeholder="All Levels" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">{t('common.fields.allLevels')}</SelectItem>
+                                            <SelectItem value="">All Levels</SelectItem>
                                             {supportLevels.map((level) => (
                                                 <SelectItem key={level.value} value={level.value}>
                                                     {level.label}
@@ -262,14 +257,14 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">
-                                        {t('salesSupport.fields.supportSpecialization')}
+                                        Support Specialization
                                     </label>
                                     <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('common.fields.allSpecializations')} />
+                                            <SelectValue placeholder="All Specializations" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">{t('common.fields.allSpecializations')}</SelectItem>
+                                            <SelectItem value="">All Specializations</SelectItem>
                                             {specializations.map((spec) => (
                                                 <SelectItem key={spec.value} value={spec.value}>
                                                     {spec.label}
@@ -287,19 +282,19 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                         <CardHeader>
                             <CardTitle>{t('salesSupportUsers')}</CardTitle>
                             <CardDescription>
-                                {filteredUsers.length} {t('common.fields.users')} {t('common.fields.found')}
+                                {filteredUsers.length} {t('users')} found
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>{t('common.fields.name')}</TableHead>
-                                        <TableHead>{t('common.fields.email')}</TableHead>
-                                        <TableHead>{t('salesSupport.fields.supportLevel')}</TableHead>
-                                        <TableHead>{t('salesSupport.fields.supportSpecialization')}</TableHead>
-                                        <TableHead>{t('common.fields.status')}</TableHead>
-                                        <TableHead>{t('common.fields.actions')}</TableHead>
+                                        <TableHead>{t('name')}</TableHead>
+                                        <TableHead>{t('email')}</TableHead>
+                                        <TableHead>Support Level</TableHead>
+                                        <TableHead>Support Specialization</TableHead>
+                                        <TableHead>{t('status')}</TableHead>
+                                        <TableHead>Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -320,10 +315,10 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                                                     )}
                                                     <div>
                                                         <div className="font-medium">
-                                                            {user.firstName} {user.lastName}
+                                                            {user.userId}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {user.userId}
+                                                            {user.email}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -331,26 +326,26 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                                             <TableCell>{user.email}</TableCell>
                                             <TableCell>
                                                 <Badge variant="secondary">
-                                                    {user.supportLevel || t('common.fields.notSpecified')}
+                                                    {user.supportLevel || 'Not Specified'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline">
-                                                    {user.supportSpecialization || t('common.fields.notSpecified')}
+                                                    {user.supportSpecialization || 'Not Specified'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="default">
-                                                    {t('common.fields.active')}
+                                                    {t('active')}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
                                                     <Button variant="outline" size="sm">
-                                                        {t('common.actions.view')}
+                                                        View
                                                     </Button>
                                                     <Button variant="outline" size="sm">
-                                                        {t('common.actions.edit')}
+                                                        Edit
                                                     </Button>
                                                 </div>
                                             </TableCell>
@@ -374,7 +369,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                             <div className="text-center py-8">
                                 <HeadphonesIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                                 <p className="text-gray-600">
-                                    {t('common.messages.comingSoon')}
+                                    Coming Soon
                                 </p>
                             </div>
                         </CardContent>
@@ -393,7 +388,7 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
                             <div className="text-center py-8">
                                 <HeadphonesIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                                 <p className="text-gray-600">
-                                    {t('common.messages.comingSoon')}
+                                    Coming Soon
                                 </p>
                             </div>
                         </CardContent>
@@ -405,3 +400,4 @@ const SalesSupportDashboard: React.FC<SalesSupportDashboardProps> = ({ className
 };
 
 export default SalesSupportDashboard;
+

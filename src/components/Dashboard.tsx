@@ -1,4 +1,4 @@
-import { Users, UserPlus, Settings, TestTube, BarChart3, Calendar, History, TrendingUp, Target, FileText, Users2, Building2, UserCheck, HeadphonesIcon } from 'lucide-react'
+import { Users, UserPlus, Settings, TestTube, BarChart3, Calendar, History, TrendingUp, Target, FileText, Users2, HeadphonesIcon } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStatistics, useStatisticsLoading, useStatisticsError, useStatisticsStore } from '@/stores/statisticsStore'
@@ -9,7 +9,7 @@ import {
     MonthlyActivityChart,
     SystemHealthChart
 } from '@/components/charts'
-import NotificationDebugger from '@/components/notifications/NotificationDebugger'
+// Removed development-only notification debugger to clean production UI
 export default function Dashboard() {
     const { user, hasRole } = useAuthStore()
     const { t } = useTranslation()
@@ -628,8 +628,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* Notification Debugger */}
-            <NotificationDebugger />
+            {/* Notification debugger removed for production */}
         </div>
     )
 }

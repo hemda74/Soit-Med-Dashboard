@@ -46,7 +46,7 @@ interface GovernorateInfo {
 const RoleSpecificUserCreation: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { error: showError } = useNotificationStore();
+    const { errorNotification: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
 
@@ -235,7 +235,7 @@ const RoleSpecificUserCreation: React.FC = () => {
         e.preventDefault();
         if (!selectedRole || !user?.token) return;
 
-        const config = ROLE_CONFIG[selectedRole];
+        const config = (ROLE_CONFIG as any)[selectedRole];
         const requiredFields = config.fields;
 
         // Validate form
@@ -264,7 +264,7 @@ const RoleSpecificUserCreation: React.FC = () => {
         try {
             // Auto-assign department IDs based on role
             const getDepartmentIdForRole = (role: RoleSpecificUserRole): number => {
-                return ROLE_CONFIG[role]?.autoDepartmentId || 0;
+                return (ROLE_CONFIG as any)[role]?.autoDepartmentId || 0;
             };
 
             const userData = {
@@ -476,7 +476,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                         <div className="flex-1">
                             <h1 className="text-4xl font-bold mb-2">{t('createNewUserTitle')}</h1>
                             <p className="text-primary-foreground/80 text-lg">
-                                {selectedRole ? t('createRoleUser').replace('{role}', ROLE_CONFIG[selectedRole].name) : t('selectRoleToCreateUser')}
+                                {selectedRole ? `Create ${(ROLE_CONFIG as any)[selectedRole].name} User` : 'Select Role to Create User'}
                             </p>
                         </div>
                         <div className="hidden md:block">
@@ -502,7 +502,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ) : (
                     <UserCreationForm
                         selectedRole={selectedRole}
-                        roleConfig={ROLE_CONFIG[selectedRole]}
+                        roleConfig={(ROLE_CONFIG as any)[selectedRole]}
                         formData={formData}
                         hospitals={hospitals}
                         governorates={governorates}

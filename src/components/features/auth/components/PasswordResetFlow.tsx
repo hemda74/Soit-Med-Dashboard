@@ -23,7 +23,6 @@ export const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
     const [resetToken, setResetToken] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
 
     // Load persisted state on mount
     useEffect(() => {
@@ -49,8 +48,6 @@ export const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
             setCurrentStep('reset');
         }
     }, [location.pathname]);
-
-    const clearError = () => setError(null);
 
     // Step 1: Forgot Password
     const handleForgotPassword = async (emailInput: string) => {
@@ -130,7 +127,6 @@ export const PasswordResetFlow: React.FC<PasswordResetFlowProps> = ({
             }, setIsLoading);
 
             if (response.success) {
-                setSuccess(true);
                 setCurrentStep('success');
                 // Clear stored data
                 localStorage.removeItem('passwordResetEmail');

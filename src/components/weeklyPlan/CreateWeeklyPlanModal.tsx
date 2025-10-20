@@ -73,7 +73,6 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
         handleSubmit,
         control,
         formState: { errors },
-        watch,
     } = useForm<CreatePlanFormData>({
         resolver: zodResolver(createPlanSchema),
         defaultValues: {
@@ -187,8 +186,8 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                             'weekStartDate'
                                         )}
                                         className={`pl-10 ${errors.weekStartDate
-                                                ? 'border-red-500'
-                                                : ''
+                                            ? 'border-red-500'
+                                            : ''
                                             }`}
                                     />
                                 </div>
@@ -213,8 +212,8 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                         type="date"
                                         {...register('weekEndDate')}
                                         className={`pl-10 ${errors.weekEndDate
-                                                ? 'border-red-500'
-                                                : ''
+                                            ? 'border-red-500'
+                                            : ''
                                             }`}
                                     />
                                 </div>

@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
-import type {
-	Notification,
-	NotificationType,
-} from '@/types/notification.types';
+import type { NotificationType } from '@/types/notification.types';
 
 export const useNotifications = () => {
 	const {
