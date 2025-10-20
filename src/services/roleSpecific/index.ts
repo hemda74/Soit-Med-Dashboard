@@ -7,3 +7,4 @@ export * from './adminRoleApi';
 export * from './financeRoleApi';
 export * from './legalRoleApi';
 export * from './salesRoleApi';
+export * from './salesSupportRoleApi';

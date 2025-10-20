@@ -1,21 +1,23 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import toast from 'react-hot-toast';
-
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-export interface Notification {
-	id: string;
-	type: NotificationType;
-	title: string;
-	message?: string;
-	duration?: number;
-	persistent?: boolean;
-	timestamp: number;
-}
+import type {
+	Notification,
+	NotificationType,
+} from '@/types/notification.types';
+import notificationService from '@/services/notificationService';
+import signalRService from '@/services/signalRService';
 
 export interface NotificationState {
 	notifications: Notification[];
+	unreadCount: number;
+	connectionStatus: {
+		isConnected: boolean;
+		isReconnecting: boolean;
+		reconnectAttempts: number;
+	};
+	loading: boolean;
+	error: string | null;
 
 	// Actions
 	addNotification: (
@@ -23,27 +25,60 @@ export interface NotificationState {
 	) => void;
 	removeNotification: (id: string) => void;
 	clearAllNotifications: () => void;
+	markAsRead: (id: string) => void;
+	markAllAsRead: () => void;
+	setUnreadCount: (count: number) => void;
+	setConnectionStatus: (status: {
+		isConnected: boolean;
+		isReconnecting: boolean;
+		reconnectAttempts: number;
+	}) => void;
+	setLoading: (loading: boolean) => void;
+	setError: (error: string | null) => void;
+	clearError: () => void;
+
+	// Role-based methods
+	getNotificationsForCurrentUser: () => Notification[];
+	getNotificationsByRole: (role: string) => Notification[];
+	getNotificationsByType: (type: NotificationType) => Notification[];
+	getUnreadNotifications: () => Notification[];
 
 	// Convenience methods
 	success: (
 		title: string,
 		message?: string,
-		options?: { duration?: number; persistent?: boolean }
+		options?: {
+			duration?: number;
+			persistent?: boolean;
+			roles?: string[];
+		}
 	) => void;
-	error: (
+	errorNotification: (
 		title: string,
 		message?: string,
-		options?: { duration?: number; persistent?: boolean }
+		options?: {
+			duration?: number;
+			persistent?: boolean;
+			roles?: string[];
+		}
 	) => void;
 	warning: (
 		title: string,
 		message?: string,
-		options?: { duration?: number; persistent?: boolean }
+		options?: {
+			duration?: number;
+			persistent?: boolean;
+			roles?: string[];
+		}
 	) => void;
 	info: (
 		title: string,
 		message?: string,
-		options?: { duration?: number; persistent?: boolean }
+		options?: {
+			duration?: number;
+			persistent?: boolean;
+			roles?: string[];
+		}
 	) => void;
 
 	// Toast integration
@@ -52,11 +87,23 @@ export interface NotificationState {
 		title: string,
 		message?: string
 	) => void;
+
+	// Service integration
+	initialize: () => Promise<void>;
+	disconnect: () => Promise<void>;
 }
 
 export const useNotificationStore = create<NotificationState>()(
 	subscribeWithSelector((set, get) => ({
 		notifications: [],
+		unreadCount: 0,
+		connectionStatus: {
+			isConnected: false,
+			isReconnecting: false,
+			reconnectAttempts: 0,
+		},
+		loading: false,
+		error: null,
 
 		addNotification: (notification) => {
 			const id = `notification-${Date.now()}-${Math.random()
@@ -73,6 +120,9 @@ export const useNotificationStore = create<NotificationState>()(
 					newNotification,
 					...state.notifications,
 				],
+				unreadCount:
+					state.unreadCount +
+					(notification.isRead ? 0 : 1),
 			}));
 
 			// Auto-remove non-persistent notifications
@@ -94,15 +144,89 @@ export const useNotificationStore = create<NotificationState>()(
 		},
 
 		removeNotification: (id: string) => {
-			set((state) => ({
-				notifications: state.notifications.filter(
-					(n) => n.id !== id
-				),
-			}));
+			set((state) => {
+				const notification = state.notifications.find(
+					(n) => n.id === id
+				);
+				const wasUnread =
+					notification && !notification.isRead;
+				return {
+					notifications:
+						state.notifications.filter(
+							(n) => n.id !== id
+						),
+					unreadCount: wasUnread
+						? state.unreadCount - 1
+						: state.unreadCount,
+				};
+			});
 		},
 
 		clearAllNotifications: () => {
-			set({ notifications: [] });
+			set({ notifications: [], unreadCount: 0 });
+		},
+
+		markAsRead: (id: string) => {
+			set((state) => {
+				const notification = state.notifications.find(
+					(n) => n.id === id
+				);
+				if (notification && !notification.isRead) {
+					notification.isRead = true;
+					return {
+						unreadCount:
+							state.unreadCount - 1,
+					};
+				}
+				return state;
+			});
+		},
+
+		markAllAsRead: () => {
+			set((state) => ({
+				notifications: state.notifications.map((n) => ({
+					...n,
+					isRead: true,
+				})),
+				unreadCount: 0,
+			}));
+		},
+
+		setUnreadCount: (count: number) => {
+			set({ unreadCount: count });
+		},
+
+		setConnectionStatus: (status) => {
+			set({ connectionStatus: status });
+		},
+
+		setLoading: (loading: boolean) => {
+			set({ loading });
+		},
+
+		setError: (error: string | null) => {
+			set({ error });
+		},
+
+		clearError: () => {
+			set({ error: null });
+		},
+
+		// Role-based methods
+		getNotificationsForCurrentUser: () => {
+			return notificationService.getNotificationsForCurrentUser();
+		},
+
+		getNotificationsByRole: (role: string) => {
+			return notificationService.getNotificationsByRole(role);
+		},
+
+		getNotificationsByType: (type: NotificationType) => {
+			return notificationService.getNotificationsByType(type);
+		},
+
+		getUnreadNotifications: () => {
+			return notificationService.getUnreadNotifications();
 		},
 
 		// Convenience methods
@@ -115,7 +239,11 @@ export const useNotificationStore = create<NotificationState>()(
 			});
 		},
 
-		error: (title: string, message?: string, options = {}) => {
+		errorNotification: (
+			title: string,
+			message?: string,
+			options = {}
+		) => {
 			get().addNotification({
 				type: 'error',
 				title,
@@ -166,6 +294,69 @@ export const useNotificationStore = create<NotificationState>()(
 				case 'info':
 					toast(content, { icon: 'ℹ️' });
 					break;
+			}
+		},
+
+		// Service integration
+		initialize: async () => {
+			try {
+				set({ loading: true, error: null });
+				await notificationService.initialize();
+				await signalRService.connect();
+
+				// Set up listeners
+				notificationService.addEventListener(
+					'notificationAdded',
+					(notification: any) => {
+						get().addNotification(
+							notification
+						);
+					}
+				);
+
+				notificationService.addEventListener(
+					'unreadCountChanged',
+					(count: number) => {
+						get().setUnreadCount(count);
+					}
+				);
+
+				signalRService.addEventListener(
+					'connectionStatus',
+					(status: any) => {
+						get().setConnectionStatus(
+							status
+						);
+					}
+				);
+
+				set({ loading: false });
+			} catch (error) {
+				set({
+					loading: false,
+					error:
+						error instanceof Error
+							? error.message
+							: 'Failed to initialize notifications',
+				});
+			}
+		},
+
+		disconnect: async () => {
+			try {
+				await signalRService.disconnect();
+				set({
+					connectionStatus: {
+						isConnected: false,
+						isReconnecting: false,
+						reconnectAttempts: 0,
+					},
+				});
+			} catch (error) {
+				console.error(
+					'Error disconnecting SignalR:',
+					error
+				);
 			}
 		},
 	}))

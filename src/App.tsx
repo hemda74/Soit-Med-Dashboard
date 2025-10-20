@@ -11,14 +11,27 @@ import NotFound from '@/pages/NotFound'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
 import RoleSpecificUserCreation from '@/components/admin/RoleSpecificUserCreation'
+import SalesSupportUserCreation from '@/components/admin/SalesSupportUserCreation'
 import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
 import ReportsScreen from '@/components/finance/ReportsScreen'
 import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
+import { SalesManagerDashboard, SalesmanDashboard, SalesSupportDashboard } from '@/components/sales'
 import { WeeklyPlansScreen } from '@/components/weeklyPlan'
+import NotificationsPage from '@/pages/NotificationsPage'
+import { useNotificationStore } from '@/stores/notificationStore'
+import { useEffect } from 'react'
 
 function App() {
   const { isAuthenticated, isAuthorizedToAccess, logout } = useAuthStore()
+  const { initialize: initializeNotifications } = useNotificationStore()
+
+  // Initialize notifications when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeNotifications()
+    }
+  }, [isAuthenticated, initializeNotifications])
 
   // Check authorization on mount and when authentication changes
   if (isAuthenticated && !isAuthorizedToAccess()) {
@@ -50,8 +63,13 @@ function App() {
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="reports" element={<ReportsScreen />} />
                 <Route path="sales-reports" element={<SalesReportsScreen />} />
+                <Route path="sales-manager" element={<SalesManagerDashboard />} />
+                <Route path="salesman" element={<SalesmanDashboard />} />
+                <Route path="sales-support" element={<SalesSupportDashboard />} />
                 <Route path="weekly-plans" element={<WeeklyPlansScreen />} />
+                <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
+                <Route path="admin/create-sales-support" element={<SalesSupportUserCreation />} />
                 <Route path="admin/users" element={<UsersList />} />
               </Route>
               <Route path="*" element={<NotFound />} />
