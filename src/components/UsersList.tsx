@@ -65,7 +65,7 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 const UsersList: React.FC = () => {
     const { user, hasAnyRole } = useAuthStore();
     const { setLoading } = useAppStore();
-    const { success, error: showError } = useNotificationStore();
+    const { success, errorNotification: showError } = useNotificationStore();
 
     // All state hooks must be called at the top level
     const [allUsers, setAllUsers] = useState<PaginatedUserResponse | null>(null);

@@ -6,8 +6,8 @@ export const useTranslation = () => {
 
 	const t = (key: TranslationKey): string => {
 		return (
-			translations[language][key] ||
-			translations.en[key] ||
+			(translations[language] as any)[key] ||
+			(translations.en as any)[key] ||
 			key
 		);
 	};

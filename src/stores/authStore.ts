@@ -10,12 +10,7 @@ export interface User extends AuthUser {
 }
 
 // Roles that are not authorized to access the application
-const RESTRICTED_ROLES = [
-	'Doctor',
-	'Engineer',
-	'Technician',
-	'Salesman',
-];
+const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
 
 interface AuthState {
 	user: User | null;

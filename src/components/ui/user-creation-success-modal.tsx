@@ -23,7 +23,7 @@ const UserCreationSuccessModal: React.FC<UserCreationSuccessModalProps> = ({
     userData,
     password,
 }) => {
-    const { success, error } = useNotificationStore();
+    const { success, errorNotification } = useNotificationStore();
 
     console.log('=== MODAL RENDER ===');
     console.log('isOpen:', isOpen);
@@ -41,7 +41,7 @@ const UserCreationSuccessModal: React.FC<UserCreationSuccessModalProps> = ({
             await navigator.clipboard.writeText(text);
             success('Copied!', `${label} copied to clipboard`);
         } catch {
-            error('Copy Failed', 'Failed to copy to clipboard');
+            errorNotification('Copy Failed', 'Failed to copy to clipboard');
         }
     };
 
@@ -51,7 +51,7 @@ const UserCreationSuccessModal: React.FC<UserCreationSuccessModalProps> = ({
             await navigator.clipboard.writeText(credentials);
             success('Copied!', 'Username and password copied to clipboard');
         } catch {
-            error('Copy Failed', 'Failed to copy credentials to clipboard');
+            errorNotification('Copy Failed', 'Failed to copy credentials to clipboard');
         }
     };
 

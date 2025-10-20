@@ -51,7 +51,7 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
     });
 
     const { user: currentUser } = useAuthStore();
-    const { error: showError } = useNotificationStore();
+    const { errorNotification: showError } = useNotificationStore();
 
     const form = useForm<PasswordFormData>({
         resolver: zodResolver(passwordSchema),

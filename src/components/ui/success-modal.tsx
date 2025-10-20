@@ -24,7 +24,7 @@ export function SuccessModal({
     userName
 }: SuccessModalProps) {
     const [copied, setCopied] = useState(false);
-    const { success, error: showError } = useNotificationStore();
+    const { success, errorNotification: showError } = useNotificationStore();
 
     console.log('SuccessModal render:', { isOpen, message, password, userId, userName });
 

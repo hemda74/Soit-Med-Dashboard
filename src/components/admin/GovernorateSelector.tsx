@@ -53,7 +53,7 @@ const GovernorateSelector: React.FC<GovernorateSelectorProps> = ({
     }, [showDropdown, onToggleDropdown, dropdownRef]);
 
     return (
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2">
             <Label>{t('governorates')} * (Select multiple)</Label>
 
             {/* Multi-select dropdown with better visual feedback */}

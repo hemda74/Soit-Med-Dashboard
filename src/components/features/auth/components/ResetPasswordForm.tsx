@@ -160,7 +160,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
                                             type={showPasswords.new ? "text" : "password"}
                                             placeholder="Enter new password"
                                             value={formData.newPassword}
-                                            onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('newPassword', e.target.value)}
                                         />
                                         <button
                                             type="button"
@@ -187,7 +187,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
                                             type={showPasswords.confirm ? "text" : "password"}
                                             placeholder="Confirm new password"
                                             value={formData.confirmPassword}
-                                            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
                                         />
                                         <button
                                             type="button"

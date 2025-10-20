@@ -94,4 +94,49 @@ export const API_ENDPOINTS = {
 	DASHBOARD: {
 		STATS: '/api/Dashboard/stats',
 	},
+
+	// Sales Module
+	SALES: {
+		// Client Management
+		CLIENT: {
+			BASE: '/api/Client',
+			BY_ID: (id: string) => `/api/Client/${id}`,
+			SEARCH: '/api/Client/search',
+			MY_CLIENTS: '/api/Client/my-clients',
+			FOLLOW_UP_NEEDED: '/api/Client/follow-up-needed',
+			STATISTICS: '/api/Client/statistics',
+			FIND_OR_CREATE: '/api/Client/find-or-create',
+		},
+		// Client Visits
+		CLIENT_VISIT: {
+			BASE: '/api/ClientVisit',
+			BY_ID: (id: string) => `/api/ClientVisit/${id}`,
+			BY_CLIENT: (clientId: string) =>
+				`/api/ClientVisit/client/${clientId}`,
+			OVERDUE: '/api/ClientVisit/overdue',
+			UPCOMING: '/api/ClientVisit/upcoming',
+		},
+		// Client Interactions
+		CLIENT_INTERACTION: {
+			BASE: '/api/ClientInteraction',
+			BY_ID: (id: string) => `/api/ClientInteraction/${id}`,
+			BY_CLIENT: (clientId: string) =>
+				`/api/ClientInteraction/client/${clientId}`,
+		},
+		// Sales Analytics
+		SALES_ANALYTICS: {
+			BASE: '/api/SalesAnalytics',
+			DASHBOARD: '/api/SalesAnalytics/dashboard',
+			PERFORMANCE: '/api/SalesAnalytics/performance',
+			TRENDS: '/api/SalesAnalytics/trends',
+			EXPORT: '/api/SalesAnalytics/export',
+		},
+		// Sales Reports
+		SALES_REPORT: {
+			BASE: '/api/SalesReport',
+			BY_ID: (id: string) => `/api/SalesReport/${id}`,
+			GENERATE: '/api/SalesReport/generate',
+			EXPORT: (id: string) => `/api/SalesReport/${id}/export`,
+		},
+	},
 } as const;

@@ -23,9 +23,7 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 ): Promise<RoleSpecificUserResponse> => {
 	const endpoint = `${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/${role}`;
 
-	console.log('Creating role-specific user:', role);
-	console.log('User data:', userData);
-	console.log('Endpoint:', endpoint);
+    // Removed verbose console logs for production
 
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
@@ -58,10 +56,7 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 		}
 	});
 
-	console.log('FormData contents:');
-	for (const [key, value] of formData.entries()) {
-		console.log(`${key}:`, value);
-	}
+    // Avoid logging form data content in production
 
 	return apiRequest<RoleSpecificUserResponse>(
 		endpoint,
@@ -159,6 +154,12 @@ export const createUserByRole = async (
 			);
 			return createMaintenanceSupport(userData, token);
 		}
+		case 'sales-support': {
+			const { createSalesSupport } = await import(
+				'./salesSupportRoleApi'
+			);
+			return createSalesSupport(userData, token);
+		}
 		default:
 			throw new Error(`Unsupported role: ${role}`);
 	}
@@ -191,12 +192,7 @@ export const updateUserPasswordBySuperAdmin = async (
 	userId: string;
 	userName: string;
 }> => {
-	console.log('Calling superadmin password update API with:', {
-		userId,
-		newPassword: '***',
-		confirmPassword: '***',
-		token: token ? 'present' : 'missing',
-	});
+    // Removed verbose console logs for production
 
 	const response = await apiRequest<{
 		success: boolean;
@@ -216,7 +212,7 @@ export const updateUserPasswordBySuperAdmin = async (
 		token
 	);
 
-	console.log('API response:', response);
+    // Avoid logging API response in production
 	return response;
 };
 

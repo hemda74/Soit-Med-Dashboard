@@ -17,9 +17,9 @@ type PasswordFormData = {
 
 export default function UserProfile() {
     const { user, fetchUserData } = useAuthStore();
-    const { loading } = useAppStore();
+    const { errorNotification: showError, success } = useNotificationStore();
     const { t } = useTranslation();
-    const { success, error: showError } = useNotificationStore();
+    const { loading } = useAppStore();
     const [isEditingPassword, setIsEditingPassword] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isDeletingImage, setIsDeletingImage] = useState(false);

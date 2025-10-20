@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle } from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useTranslation } from '@/hooks/useTranslation';
 
 const NotificationPermission: React.FC = () => {
-    const { t } = useTranslation();
     const [permission, setPermission] = useState<NotificationPermission | null>(null);
     const [isRequesting, setIsRequesting] = useState(false);
     const [isDismissed, setIsDismissed] = useState(false);

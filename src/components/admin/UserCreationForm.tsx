@@ -210,7 +210,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         onChange={(e) => onInputChange('firstName', e.target.value)}
                                         placeholder={t('enterFirstName')}
                                         className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                        error={hasFieldError('firstName')}
                                         required
                                     />
                                 </div>
@@ -225,7 +224,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         onChange={(e) => onInputChange('lastName', e.target.value)}
                                         placeholder={t('enterLastName')}
                                         className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                        error={hasFieldError('lastName')}
                                         required
                                     />
                                 </div>
@@ -243,7 +241,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         onChange={(e) => onInputChange('phoneNumber', e.target.value)}
                                         placeholder={t('enterPhoneNumber')}
                                         className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                        error={hasFieldError('phoneNumber')}
                                         type="tel"
                                     />
                                 </div>
@@ -265,23 +262,22 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                     {/* Personal Email */}
                                     <div className="space-y-3">
                                         <Label htmlFor="personalMail" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            {t('salesSupportFields.personalMail')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            Personal Email <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
                                         </Label>
                                         <Input
                                             id="personalMail"
                                             type="email"
                                             value={formData.personalMail || ''}
                                             onChange={(e) => onInputChange('personalMail', e.target.value)}
-                                            placeholder={t('salesSupportFields.personalMailPlaceholder')}
+                                            placeholder="Enter personal email"
                                             className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                            error={hasFieldError('personalMail')}
                                         />
                                     </div>
 
                                     {/* Support Specialization */}
                                     <div className="space-y-3">
                                         <Label htmlFor="supportSpecialization" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            {t('salesSupportFields.supportSpecialization')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            Support Specialization <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
                                         </Label>
                                         <select
                                             id="supportSpecialization"
@@ -289,20 +285,20 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             onChange={(e) => onInputChange('supportSpecialization', e.target.value)}
                                             className="h-12 w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground transition-all duration-300 focus:border-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         >
-                                            <option value="">{t('salesSupportFields.supportSpecializationPlaceholder')}</option>
-                                            <option value="Customer Support">{t('salesSupportSpecializations.customerSupport')}</option>
-                                            <option value="Technical Support">{t('salesSupportSpecializations.technicalSupport')}</option>
-                                            <option value="Sales Support">{t('salesSupportSpecializations.salesSupport')}</option>
-                                            <option value="Product Support">{t('salesSupportSpecializations.productSupport')}</option>
-                                            <option value="Billing Support">{t('salesSupportSpecializations.billingSupport')}</option>
-                                            <option value="Account Management">{t('salesSupportSpecializations.accountManagement')}</option>
+                                            <option value="">Select specialization</option>
+                                            <option value="Customer Support">Customer Support</option>
+                                            <option value="Technical Support">Technical Support</option>
+                                            <option value="Sales Support">Sales Support</option>
+                                            <option value="Product Support">Product Support</option>
+                                            <option value="Billing Support">Billing Support</option>
+                                            <option value="Account Management">Account Management</option>
                                         </select>
                                     </div>
 
                                     {/* Support Level */}
                                     <div className="space-y-3">
                                         <Label htmlFor="supportLevel" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            {t('salesSupportFields.supportLevel')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            Support Level <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
                                         </Label>
                                         <select
                                             id="supportLevel"
@@ -310,11 +306,11 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             onChange={(e) => onInputChange('supportLevel', e.target.value)}
                                             className="h-12 w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground transition-all duration-300 focus:border-primary hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                         >
-                                            <option value="">{t('salesSupportFields.supportLevelPlaceholder')}</option>
-                                            <option value="Junior">{t('salesSupportLevels.junior')}</option>
-                                            <option value="Senior">{t('salesSupportLevels.senior')}</option>
-                                            <option value="Lead">{t('salesSupportLevels.lead')}</option>
-                                            <option value="Specialist">{t('salesSupportLevels.specialist')}</option>
+                                            <option value="">Select support level</option>
+                                            <option value="Junior">Junior</option>
+                                            <option value="Senior">Senior</option>
+                                            <option value="Lead">Lead</option>
+                                            <option value="Specialist">Specialist</option>
                                         </select>
                                     </div>
                                     <div></div> {/* Empty div to maintain grid structure */}
@@ -323,15 +319,14 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                 {/* Notes */}
                                 <div className="space-y-3">
                                     <Label htmlFor="notes" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('salesSupportFields.notes')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                        Notes <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
                                     </Label>
                                     <Textarea
                                         id="notes"
                                         value={formData.notes || ''}
                                         onChange={(e) => onInputChange('notes', e.target.value)}
-                                        placeholder={t('salesSupportFields.notesPlaceholder')}
+                                        placeholder="Enter additional notes..."
                                         className="min-h-[100px] transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                        error={hasFieldError('notes')}
                                         rows={3}
                                     />
                                 </div>
@@ -359,7 +354,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                         onChange={(e) => onInputChange('email', e.target.value)}
                                         placeholder={t('enterEmailAddress')}
                                         className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                        error={hasFieldError('email')}
                                         required
                                     />
                                 </div>
@@ -396,7 +390,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                 ? 'border-green-500 focus:border-green-500'
                                                 : 'focus:border-primary'
                                             }`}
-                                        error={formData.confirmPassword && formData.password !== formData.confirmPassword}
                                     />
 
                                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
@@ -446,7 +439,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                             onChange={(e) => onInputChange('specialty', e.target.value)}
                                             placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
                                             className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                            error={hasFieldError('specialty')}
                                             required
                                         />
                                     </div>
@@ -512,7 +504,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('salesTerritory', e.target.value)}
                                                     placeholder={t('enterSalesTerritory')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('salesTerritory')}
                                                 />
                                             </div>
 
@@ -526,7 +517,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('salesTeam', e.target.value)}
                                                     placeholder={t('enterSalesTeam')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('salesTeam')}
                                                 />
                                             </div>
 
@@ -542,7 +532,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('salesTarget', e.target.value)}
                                                     placeholder={t('enterSalesTarget')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('salesTarget')}
                                                 />
                                             </div>
 
@@ -582,7 +571,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('maintenanceSpecialty', e.target.value)}
                                                     placeholder={t('enterMaintenanceSpecialty')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('maintenanceSpecialty')}
                                                     required
                                                 />
                                             </div>
@@ -597,7 +585,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('certification', e.target.value)}
                                                     placeholder={t('enterCertification')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('certification')}
                                                     required
                                                 />
                                             </div>
@@ -624,7 +611,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
                                                     onChange={(e) => onInputChange('jobTitle', e.target.value)}
                                                     placeholder={t('enterJobTitle')}
                                                     className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
-                                                    error={hasFieldError('jobTitle')}
                                                     required
                                                 />
                                             </div>

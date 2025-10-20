@@ -17,8 +17,7 @@ export const createAdmin = async (
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating admin:', userData);
-	console.log('Using endpoint:', API_ENDPOINTS.ROLE_SPECIFIC_USER.ADMIN);
+    // Removed verbose console logs for production
 
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
@@ -50,10 +49,7 @@ export const createAdmin = async (
 		formData.append('AltText', userData.altText);
 	}
 
-	console.log('FormData contents:');
-	for (const [key, value] of formData.entries()) {
-		console.log(`${key}:`, value);
-	}
+    // Avoid logging form data content in production
 
 	return apiRequest<RoleSpecificUserResponse>(
 		API_ENDPOINTS.ROLE_SPECIFIC_USER.ADMIN,

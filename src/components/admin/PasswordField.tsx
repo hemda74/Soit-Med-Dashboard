@@ -43,7 +43,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     required={required}
-                    className={`pr-10 ${errors.length > 0 ? 'border-red-500' : ''} ${className}`}
+                    className={`pr-10 ${className} ${errors.length > 0 ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
                 <Button
                     type="button"

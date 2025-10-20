@@ -34,16 +34,16 @@ const Input: FC<InputProps> = ({
     error = false,
     hint,
 }) => {
-    let inputClasses = ` h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 text-black dark:text-black dark:placeholder:text-gray-500 ${className}`;
+    let inputClasses = ` h-11 w-full rounded-lg appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 text-black dark:text-black dark:placeholder:text-gray-500 ${className}`;
 
     if (disabled) {
-        inputClasses += ` text-gray-500 border-gray-300 opacity-40 bg-gray-100 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700 opacity-40`;
+        inputClasses += ` text-gray-500 border border-gray-300 opacity-40 bg-gray-100 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700 opacity-40`;
     } else if (error) {
-        inputClasses += `  border-error-500 focus:border-error-300 focus:ring-error-500/20 text-black dark:text-black dark:border-error-500 dark:focus:border-error-800`;
+        inputClasses += `  border-l-4 border-l-red-500 border-r border-b border-t border-red-200 focus:border-l-red-600 focus:border-r-red-300 focus:border-b-red-300 focus:border-t-red-300 focus:ring-red-500/10 text-black dark:text-black dark:border-red-200 dark:focus:border-l-red-600 dark:focus:border-r-red-400 dark:focus:border-b-red-400 dark:focus:border-t-red-400`;
     } else if (success) {
-        inputClasses += `  border-success-500 focus:border-success-300 focus:ring-success-500/20 text-black dark:text-black dark:border-success-500 dark:focus:border-success-800`;
+        inputClasses += `  border border-success-500 focus:border-success-300 focus:ring-success-500/20 text-black dark:text-black dark:border-success-500 dark:focus:border-success-800`;
     } else {
-        inputClasses += ` bg-transparent text-black border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-black dark:focus:border-brand-800`;
+        inputClasses += ` bg-transparent text-black border border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-black dark:focus:border-brand-800`;
     }
 
     return (

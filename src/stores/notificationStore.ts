@@ -5,6 +5,8 @@ import type {
 	Notification,
 	NotificationType,
 } from '@/types/notification.types';
+
+export type { Notification, NotificationType };
 import notificationService from '@/services/notificationService';
 import signalRService from '@/services/signalRService';
 

@@ -26,7 +26,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-2">
             <Label>{t('profileImage')}</Label>
 
             {/* Image Upload Area */}
