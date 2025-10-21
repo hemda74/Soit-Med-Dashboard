@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Edit, Key } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
@@ -81,6 +81,7 @@ const UsersList: React.FC = () => {
     const [showDeleteImageModal, setShowDeleteImageModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
+    const hasLoadedRef = useRef(false);
 
     // Form for editing user
     const editForm = useForm<UserEditFormData>({
@@ -120,10 +121,11 @@ const UsersList: React.FC = () => {
 
     // Load all users on component mount
     useEffect(() => {
-        if (hasAccess) {
+        if (hasAccess && user?.token && !hasLoadedRef.current) {
+            hasLoadedRef.current = true;
             loadAllUsers();
         }
-    }, [user?.token, hasAccess, loadAllUsers]);
+    }, [user?.token, hasAccess]);
 
     // Redirect to dashboard if user doesn't have access
     if (!hasAccess) {

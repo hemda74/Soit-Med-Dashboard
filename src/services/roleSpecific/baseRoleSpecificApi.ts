@@ -23,7 +23,7 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 ): Promise<RoleSpecificUserResponse> => {
 	const endpoint = `${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/${role}`;
 
-    // Removed verbose console logs for production
+	// Removed verbose console logs for production
 
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
@@ -32,7 +32,7 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 	Object.entries(userData).forEach(([key, value]) => {
 		if (value !== undefined && value !== null) {
 			if (key === 'profileImage' && value instanceof File) {
-				formData.append('profileImage', value);
+				formData.append('ProfileImage', value);
 			} else if (key === 'altText') {
 				formData.append('AltText', value as string);
 			} else if (
@@ -56,7 +56,7 @@ export const createRoleSpecificUser = async <T extends RoleSpecificUserRequest>(
 		}
 	});
 
-    // Avoid logging form data content in production
+	// Avoid logging form data content in production
 
 	return apiRequest<RoleSpecificUserResponse>(
 		endpoint,
@@ -192,7 +192,7 @@ export const updateUserPasswordBySuperAdmin = async (
 	userId: string;
 	userName: string;
 }> => {
-    // Removed verbose console logs for production
+	// Removed verbose console logs for production
 
 	const response = await apiRequest<{
 		success: boolean;
@@ -212,7 +212,7 @@ export const updateUserPasswordBySuperAdmin = async (
 		token
 	);
 
-    // Avoid logging API response in production
+	// Avoid logging API response in production
 	return response;
 };
 
