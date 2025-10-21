@@ -306,7 +306,7 @@ export const updateUserStatus = async (
 	try {
 		setLoading?.(true);
 
-    // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		const response = await userApiClient.put<UserStatusResponse>(
 			API_ENDPOINTS.USER.ACTIVATE_DEACTIVATE,
@@ -314,10 +314,10 @@ export const updateUserStatus = async (
 			token
 		);
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return response;
 	} catch (error) {
-        console.error('User status update failed');
+		console.error('User status update failed');
 		throw error;
 	} finally {
 		setLoading?.(false);
@@ -389,17 +389,17 @@ export const fetchUsersWithFilters = async (
 				: ''
 		}`;
 
-    // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		const response = await userApiClient.get<PaginatedUserResponse>(
 			endpoint,
 			token
 		);
 
-    // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return response;
 	} catch (error) {
-        console.error('Failed to fetch users with filters');
+		console.error('Failed to fetch users with filters');
 		throw error;
 	} finally {
 		setLoading?.(false);

@@ -10,8 +10,6 @@ import {
   UserCircleIcon,
 } from "../icons";
 import {
-  Calendar,
-  List,
   ListChecks,
   Users,
   BarChart3,
@@ -33,28 +31,26 @@ const AppSidebar: React.FC = () => {
   const { hasAnyRole } = useAuthStore();
   const { t, language } = useTranslation();
 
-  const navItems: NavItem[] = useMemo(() => [
-    {
-      icon: <GridIcon />,
-      name: t('dashboard'),
-      path: "/dashboard",
-    },
-    {
-      icon: <Calendar />,
-      name: t('calendar'),
-      path: "/calendar",
-    },
-    {
-      icon: <UserCircleIcon />,
-      name: t('createNewRole'),
-      path: "/admin/create-role-user",
-    },
-    {
-      name: t('forms'),
-      icon: <List />,
-      subItems: [{ name: t('formElements'), path: "/form-elements", pro: false }],
-    },
-  ], [t]);
+  const navItems: NavItem[] = useMemo(() => {
+    const items: NavItem[] = [
+      {
+        icon: <GridIcon />,
+        name: t('dashboard'),
+        path: "/dashboard",
+      },
+    ]
+
+    // Only Admin/SuperAdmin can see Create New Role
+    if (hasAnyRole(['Admin', 'SuperAdmin'])) {
+      items.push({
+        icon: <UserCircleIcon />,
+        name: t('createNewRole'),
+        path: "/admin/create-role-user",
+      })
+    }
+
+    return items
+  }, [t, hasAnyRole]);
 
   // Admin menu - only for Admin and Super Admin
   const adminNavItems: NavItem[] = useMemo(() =>
@@ -89,8 +85,9 @@ const AppSidebar: React.FC = () => {
       name: t('salesManagement'),
       subItems: [
         { name: t('salesManagerDashboard'), path: "/sales-manager", pro: false },
-        { name: t('teamManagement'), path: "/sales-manager?tab=team", pro: false },
-        { name: t('salesAnalytics'), path: "/sales-manager?tab=analytics", pro: false },
+        { name: t('salesTargets'), path: "/sales-manager/targets", pro: false },
+        { name: t('reportsReview'), path: "/sales-manager/reports-review", pro: false },
+        { name: t('weeklyPlansReview'), path: "/sales-manager/weekly-plans-review", pro: false },
       ],
     }] : [], [hasAnyRole, t]);
 
@@ -101,9 +98,6 @@ const AppSidebar: React.FC = () => {
       name: t('mySales'),
       subItems: [
         { name: t('myDashboard'), path: "/salesman", pro: false },
-        { name: t('myClients'), path: "/salesman?tab=clients", pro: false },
-        { name: t('myVisits'), path: "/salesman?tab=visits", pro: false },
-        { name: t('myPerformance'), path: "/salesman?tab=analytics", pro: false },
       ],
     }] : [], [hasAnyRole, t]);
 
@@ -114,8 +108,8 @@ const AppSidebar: React.FC = () => {
       name: t('salesSupport'),
       subItems: [
         { name: t('salesSupportDashboard'), path: "/sales-support", pro: false },
-        { name: t('salesSupportManagement'), path: "/sales-support?tab=management", pro: false },
-        { name: t('createSalesSupportUser'), path: "/admin/create-sales-support", pro: false },
+        { name: t('offerCreation'), path: "/sales-support/offer", pro: false },
+        { name: t('requestsInbox'), path: "/sales-support/requests", pro: false },
       ],
     }] : [], [hasAnyRole, t]);
 

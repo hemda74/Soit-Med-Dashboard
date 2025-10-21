@@ -67,7 +67,7 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 		if (user?.token) {
 			fetchUsersList();
 		}
-	}, [user?.token, fetchUsersList]);
+	}, [user?.token]);
 
 	return {
 		users,

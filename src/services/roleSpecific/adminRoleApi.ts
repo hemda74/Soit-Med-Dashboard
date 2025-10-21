@@ -17,7 +17,7 @@ export const createAdmin = async (
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-    // Removed verbose console logs for production
+	// Removed verbose console logs for production
 
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
@@ -43,13 +43,13 @@ export const createAdmin = async (
 		);
 	}
 	if (userData.profileImage) {
-		formData.append('profileImage', userData.profileImage);
+		formData.append('ProfileImage', userData.profileImage);
 	}
 	if (userData.altText) {
 		formData.append('AltText', userData.altText);
 	}
 
-    // Avoid logging form data content in production
+	// Avoid logging form data content in production
 
 	return apiRequest<RoleSpecificUserResponse>(
 		API_ENDPOINTS.ROLE_SPECIFIC_USER.ADMIN,

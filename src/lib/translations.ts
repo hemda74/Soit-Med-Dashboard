@@ -636,6 +636,14 @@ export const translations = {
 			Medium: 'Medium',
 			Low: 'Low',
 		},
+
+		// Sales Manager specific
+		reportsReview: 'Reports Review',
+		weeklyPlansReview: 'Weekly Plans Review',
+
+		// Sales Support specific
+		offerCreation: 'Offer Creation',
+		requestsInbox: 'Requests Inbox',
 	},
 	ar: {
 		Hello: 'مرحبا',
@@ -1135,6 +1143,14 @@ export const translations = {
 			deleteSuccess: 'تم حذف مستخدم دعم المبيعات بنجاح',
 			deleteError: 'فشل في حذف مستخدم دعم المبيعات',
 		},
+
+		// Sales Manager specific
+		reportsReview: 'مراجعة التقارير',
+		weeklyPlansReview: 'مراجعة الخطط الأسبوعية',
+
+		// Sales Support specific
+		offerCreation: 'إنشاء العروض',
+		requestsInbox: 'صندوق الطلبات',
 	},
 };
 

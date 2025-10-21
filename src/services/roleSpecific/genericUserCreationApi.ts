@@ -65,8 +65,8 @@ export class GenericUserCreationApi {
 		userData: RoleSpecificUserRequest,
 		token: string
 	): Promise<UserCreationResult> {
-        try {
-            // Removed verbose console logs for production
+		try {
+			// Removed verbose console logs for production
 
 			// Get role configuration
 			const roleConfig = RoleConfigUtils.getRoleConfig(role);
@@ -84,7 +84,7 @@ export class GenericUserCreationApi {
 			// Get API endpoint for the role
 			const endpoint = RoleConfigUtils.getApiEndpoint(role);
 
-            // Avoid logging form data content in production
+			// Avoid logging form data content in production
 
 			// Make API request
 			const response =
@@ -102,8 +102,8 @@ export class GenericUserCreationApi {
 				data: response,
 			};
 		} catch (error: any) {
-            // Keep error logging concise without exposing sensitive data
-            console.error('Failed to create user');
+			// Keep error logging concise without exposing sensitive data
+			console.error('Failed to create user');
 
 			return this.handleApiError(error);
 		}
@@ -169,7 +169,7 @@ export class GenericUserCreationApi {
 					value instanceof File
 				) {
 					formData.append('ProfileImage', value);
-				} else if (key === 'imageAltText') {
+				} else if (key === 'altText') {
 					formData.append(
 						'AltText',
 						value as string

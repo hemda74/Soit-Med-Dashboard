@@ -38,6 +38,7 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
     onSuccess,
     onCancel,
 }) => {
+    // const { t } = useTranslation();
     const { user } = useAuthStore();
     const [isLoading, setIsLoading] = useState(false);
     const [profileImage, setProfileImage] = useState<File | null>(null);
