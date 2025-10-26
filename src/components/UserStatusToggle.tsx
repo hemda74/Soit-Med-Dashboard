@@ -37,7 +37,7 @@ export const UserStatusToggle: React.FC<UserStatusToggleProps> = ({
     const [reason, setReason] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useAuthStore();
-    const { success, error: showError } = useNotificationStore();
+    const { success, errorNotification: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
 
     const handleToggleClick = () => {

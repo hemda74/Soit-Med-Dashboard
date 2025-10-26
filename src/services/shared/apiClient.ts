@@ -91,3 +91,39 @@ export interface PaginatedApiResponse<T> {
 	data: T;
 	timestamp: string;
 }
+
+// Create a simple API client object for backward compatibility
+export const apiClient = {
+	get: async <T>(url: string, config?: any): Promise<{ data: T }> => {
+		const data = await apiRequest<T>(url, { method: 'GET', ...config });
+		return { data };
+	},
+	post: async <T>(url: string, data?: any, config?: any): Promise<{ data: T }> => {
+		const response = await apiRequest<T>(url, {
+			method: 'POST',
+			body: data ? JSON.stringify(data) : undefined,
+			...config
+		});
+		return { data: response };
+	},
+	put: async <T>(url: string, data?: any, config?: any): Promise<{ data: T }> => {
+		const response = await apiRequest<T>(url, {
+			method: 'PUT',
+			body: data ? JSON.stringify(data) : undefined,
+			...config
+		});
+		return { data: response };
+	},
+	patch: async <T>(url: string, data?: any, config?: any): Promise<{ data: T }> => {
+		const response = await apiRequest<T>(url, {
+			method: 'PATCH',
+			body: data ? JSON.stringify(data) : undefined,
+			...config
+		});
+		return { data: response };
+	},
+	delete: async <T>(url: string, config?: any): Promise<{ data: T }> => {
+		const data = await apiRequest<T>(url, { method: 'DELETE', ...config });
+		return { data };
+	}
+};

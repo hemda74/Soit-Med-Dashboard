@@ -129,7 +129,7 @@ class NotificationService {
 		// Only show to admins and super admins
 		const userRoles = currentUser.roles || [];
 		if (
-			!userRoles.some((role) =>
+			!userRoles.some((role: string) =>
 				['Admin', 'SuperAdmin'].includes(role)
 			)
 		) {
@@ -159,7 +159,7 @@ class NotificationService {
 
 		// Show to the user whose role changed and admins
 		const userRoles = currentUser.roles || [];
-		const isAdmin = userRoles.some((role) =>
+		const isAdmin = userRoles.some((role: string) =>
 			['Admin', 'SuperAdmin'].includes(role)
 		);
 		const isAffectedUser = currentUser.id === user.id;
@@ -179,7 +179,7 @@ class NotificationService {
 		};
 
 		this.addNotification(notification);
-		toast.info(
+		toast(
 			`User role updated for ${user.firstName} ${user.lastName}`
 		);
 	}
@@ -190,7 +190,7 @@ class NotificationService {
 
 		// Show to sales team and managers
 		const userRoles = currentUser.roles || [];
-		const isSalesTeam = userRoles.some((role) =>
+		const isSalesTeam = userRoles.some((role: string) =>
 			['Salesman', 'SalesManager', 'SuperAdmin'].includes(
 				role
 			)
@@ -210,7 +210,7 @@ class NotificationService {
 		};
 
 		this.addNotification(notification);
-		toast.info('Weekly plan has been updated');
+		toast('Weekly plan has been updated');
 	}
 
 	private handleSalesReportUpdate(report: any): void {
@@ -219,7 +219,7 @@ class NotificationService {
 
 		// Show to sales team and managers
 		const userRoles = currentUser.roles || [];
-		const isSalesTeam = userRoles.some((role) =>
+		const isSalesTeam = userRoles.some((role: string) =>
 			['Salesman', 'SalesManager', 'SuperAdmin'].includes(
 				role
 			)
@@ -293,7 +293,7 @@ class NotificationService {
 			notification.isRead = true;
 		});
 		this.unreadCount = 0;
-		this.notifyListeners('allNotificationsRead');
+		this.notifyListeners('allNotificationsRead', null);
 		this.notifyListeners('unreadCountChanged', this.unreadCount);
 	}
 

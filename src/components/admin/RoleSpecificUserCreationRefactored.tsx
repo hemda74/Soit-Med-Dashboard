@@ -46,7 +46,7 @@ interface GovernorateInfo {
 const RoleSpecificUserCreation: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { error: showError } = useNotificationStore();
+    const { errorNotification: showError } = useNotificationStore();
     const { setLoading } = useAppStore();
     const { t, language } = useTranslation();
 
@@ -267,7 +267,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 return ROLE_CONFIG[role]?.autoDepartmentId || 0;
             };
 
-            const userData = {
+            const userData: Record<string, unknown> = {
                 email: formData.email,
                 password: formData.password,
                 firstName: formData.firstName,
@@ -296,40 +296,40 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             switch (selectedRole) {
                 case 'doctor':
-                    response = await createDoctor(userData as any, user.token);
+                    response = await createDoctor(userData, user.token);
                     break;
                 case 'engineer':
-                    response = await createEngineer(userData as any, user.token);
+                    response = await createEngineer(userData, user.token);
                     break;
                 case 'technician':
-                    response = await createTechnician(userData as any, user.token);
+                    response = await createTechnician(userData, user.token);
                     break;
                 case 'admin':
-                    response = await createAdmin(userData as any, user.token);
+                    response = await createAdmin(userData, user.token);
                     break;
                 case 'finance-manager':
-                    response = await createFinanceManager(userData as any, user.token);
+                    response = await createFinanceManager(userData, user.token);
                     break;
                 case 'finance-employee':
-                    response = await createFinanceEmployee(userData as any, user.token);
+                    response = await createFinanceEmployee(userData, user.token);
                     break;
                 case 'legal-manager':
-                    response = await createLegalManager(userData as any, user.token);
+                    response = await createLegalManager(userData, user.token);
                     break;
                 case 'legal-employee':
-                    response = await createLegalEmployee(userData as any, user.token);
+                    response = await createLegalEmployee(userData, user.token);
                     break;
                 case 'salesman':
-                    response = await createSalesman(userData as any, user.token);
+                    response = await createSalesman(userData, user.token);
                     break;
                 case 'sales-manager':
-                    response = await createSalesManager(userData as any, user.token);
+                    response = await createSalesManager(userData, user.token);
                     break;
                 case 'maintenance-manager':
-                    response = await createMaintenanceManager(userData as any, user.token);
+                    response = await createMaintenanceManager(userData, user.token);
                     break;
                 case 'maintenance-support':
-                    response = await createMaintenanceSupport(userData as any, user.token);
+                    response = await createMaintenanceSupport(userData, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
@@ -340,12 +340,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                 success: true,
                 message: 'User created successfully',
                 data: {
-                    userId: (response as any).userId || (response as any).data?.userId,
-                    email: (response as any).email || (response as any).data?.email,
-                    firstName: (response as any).firstName || (response as any).data?.firstName,
-                    lastName: (response as any).lastName || (response as any).data?.lastName,
-                    role: (response as any).role || (response as any).data?.role || selectedRole,
-                    departmentId: (response as any).departmentId || (response as any).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
+                    userId: (response as { userId?: string; data?: { userId?: string } }).userId || (response as { userId?: string; data?: { userId?: string } }).data?.userId || '',
+                    email: (response as { email?: string; data?: { email?: string } }).email || (response as { email?: string; data?: { email?: string } }).data?.email || '',
+                    firstName: (response as { firstName?: string; data?: { firstName?: string } }).firstName || (response as { firstName?: string; data?: { firstName?: string } }).data?.firstName || '',
+                    lastName: (response as { lastName?: string; data?: { lastName?: string } }).lastName || (response as { lastName?: string; data?: { lastName?: string } }).data?.lastName || '',
+                    role: (response as { role?: string; data?: { role?: string } }).role || (response as { role?: string; data?: { role?: string } }).data?.role || selectedRole,
+                    departmentId: (response as { departmentId?: string; data?: { departmentId?: string } }).departmentId || (response as { departmentId?: string; data?: { departmentId?: string } }).data?.departmentId || getDepartmentIdForRole(selectedRole).toString(),
                 }
             } as unknown as RoleSpecificUserResponse;
 
@@ -353,21 +353,21 @@ const RoleSpecificUserCreation: React.FC = () => {
             setCreatedPassword(formData.password);
             setShowSuccessModal(true);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('=== API ERROR ===');
             console.error('Error creating user:', err);
             console.error('Error details:', {
-                message: err.message,
-                response: err.response,
-                stack: err.stack
+                message: (err as { message?: string }).message,
+                response: (err as { response?: unknown }).response,
+                stack: (err as { stack?: string }).stack
             });
 
             // Parse API error response to extract specific error messages
-            let errorMessages: string[] = [];
+            const errorMessages: string[] = [];
 
             try {
                 // Try to parse the error response
-                const errorResponse = err.response || err;
+                const errorResponse = (err as { response?: unknown }).response || err;
 
                 if (errorResponse && typeof errorResponse === 'object') {
                     // Check if it's the API error format we expect
@@ -392,11 +392,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                         errorMessages.push(errorResponse.error);
                     }
                 }
-            } catch (parseError) {
+            } catch {
                 // Ignore parse errors
             }
             if (errorMessages.length === 0) {
-                errorMessages.push(err.message || 'Failed to create user');
+                errorMessages.push((err as { message?: string }).message || 'Failed to create user');
             }
 
             setErrors(errorMessages);
@@ -536,16 +536,16 @@ const RoleSpecificUserCreation: React.FC = () => {
             </div>
 
             {/* Success Modal */}
-            {createdUser && (createdUser as any).data && showSuccessModal && (
+            {createdUser && (createdUser as { data?: { email?: string; firstName?: string; lastName?: string; role?: string; userId?: string } }).data && showSuccessModal && (
                 <UserCreationSuccessModal
                     isOpen={showSuccessModal}
                     onClose={handleSuccessModalClose}
                     userData={{
-                        email: (createdUser as any).data.email,
-                        firstName: (createdUser as any).data.firstName,
-                        lastName: (createdUser as any).data.lastName,
-                        role: (createdUser as any).data.role,
-                        userId: (createdUser as any).data.userId,
+                        email: (createdUser as { data?: { email?: string } }).data?.email || '',
+                        firstName: (createdUser as { data?: { firstName?: string } }).data?.firstName || '',
+                        lastName: (createdUser as { data?: { lastName?: string } }).data?.lastName || '',
+                        role: (createdUser as { data?: { role?: string } }).data?.role || '',
+                        userId: (createdUser as { data?: { userId?: string } }).data?.userId || '',
                     }}
                     password={createdPassword}
                 />

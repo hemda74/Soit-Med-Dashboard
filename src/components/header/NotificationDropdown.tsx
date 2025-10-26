@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Clock, Calendar, Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { Bell, Clock, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ import type { Notification, NotificationType } from '@/types/notification.types'
 const NotificationDropdown: React.FC = () => {
     const { t } = useTranslation();
     const {
-        notifications,
+        // notifications,
         unreadCount,
         connectionStatus,
         loading,

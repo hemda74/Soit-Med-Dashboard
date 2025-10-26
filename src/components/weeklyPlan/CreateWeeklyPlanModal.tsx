@@ -73,7 +73,7 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
         handleSubmit,
         control,
         formState: { errors },
-        watch,
+        // watch,
     } = useForm<CreatePlanFormData>({
         resolver: zodResolver(createPlanSchema),
         defaultValues: {

@@ -51,7 +51,7 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
     });
 
     const { user: currentUser } = useAuthStore();
-    const { error: showError } = useNotificationStore();
+    const { errorNotification: showError } = useNotificationStore();
 
     const form = useForm<PasswordFormData>({
         resolver: zodResolver(passwordSchema),
@@ -87,9 +87,9 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
             } else {
                 showError('Password update failed');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             showError(
-                error.message || 'Failed to update password'
+                (error as { message?: string }).message || 'Failed to update password'
             );
         } finally {
             setLoading(false);

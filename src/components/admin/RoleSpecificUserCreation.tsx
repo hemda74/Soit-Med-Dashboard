@@ -289,7 +289,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 return ROLE_CONFIG[role]?.autoDepartmentId || 0;
             };
 
-            const userData = {
+            const userData: Record<string, unknown> = {
                 email: formData.email,
                 password: formData.password,
                 firstName: formData.firstName,
@@ -317,43 +317,43 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             switch (selectedRole) {
                 case 'doctor':
-                    await createDoctor(userData as any, user.token);
+                    await createDoctor(userData, user.token);
                     break;
                 case 'engineer':
-                    await createEngineer(userData as any, user.token);
+                    await createEngineer(userData, user.token);
                     break;
                 case 'technician':
-                    await createTechnician(userData as any, user.token);
+                    await createTechnician(userData, user.token);
                     break;
                 case 'admin':
-                    await createAdmin(userData as any, user.token);
+                    await createAdmin(userData, user.token);
                     break;
                 case 'finance-manager':
-                    await createFinanceManager(userData as any, user.token);
+                    await createFinanceManager(userData, user.token);
                     break;
                 case 'finance-employee':
-                    await createFinanceEmployee(userData as any, user.token);
+                    await createFinanceEmployee(userData, user.token);
                     break;
                 case 'legal-manager':
-                    await createLegalManager(userData as any, user.token);
+                    await createLegalManager(userData, user.token);
                     break;
                 case 'legal-employee':
-                    await createLegalEmployee(userData as any, user.token);
+                    await createLegalEmployee(userData, user.token);
                     break;
                 case 'salesman':
-                    await createSalesman(userData as any, user.token);
+                    await createSalesman(userData, user.token);
                     break;
                 case 'sales-manager':
-                    await createSalesManager(userData as any, user.token);
+                    await createSalesManager(userData, user.token);
                     break;
                 case 'maintenance-manager':
-                    await createMaintenanceManager(userData as any, user.token);
+                    await createMaintenanceManager(userData, user.token);
                     break;
                 case 'maintenance-support':
-                    await createMaintenanceSupport(userData as any, user.token);
+                    await createMaintenanceSupport(userData, user.token);
                     break;
                 case 'sales-support':
-                    await createSalesSupport(userData as any, user.token);
+                    await createSalesSupport(userData, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');
@@ -361,21 +361,21 @@ const RoleSpecificUserCreation: React.FC = () => {
 
             setShowSuccessModal(true);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('=== API ERROR ===');
             console.error('Error creating user:', err);
             console.error('Error details:', {
-                message: err.message,
-                response: err.response,
-                stack: err.stack
+                message: (err as { message?: string }).message,
+                response: (err as { response?: unknown }).response,
+                stack: (err as { stack?: string }).stack
             });
 
             // Parse API error response to extract specific error messages
-            let errorMessages: string[] = [];
+            const errorMessages: string[] = [];
 
             try {
                 // Try to parse the error response
-                const errorResponse = err.response || err;
+                const errorResponse = (err as { response?: unknown }).response || err;
 
                 if (errorResponse && typeof errorResponse === 'object') {
                     // Check if it's the API error format we expect
@@ -400,11 +400,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                         errorMessages.push(errorResponse.error);
                     }
                 }
-            } catch (parseError) {
+            } catch {
                 // Ignore parse errors
             }
             if (errorMessages.length === 0) {
-                errorMessages.push(err.message || 'Failed to create user');
+                errorMessages.push((err as { message?: string }).message || 'Failed to create user');
             }
 
             setErrors(errorMessages);

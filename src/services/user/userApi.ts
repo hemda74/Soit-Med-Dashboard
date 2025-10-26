@@ -13,7 +13,11 @@ import type {
 	Role,
 	RoleUsersResponse,
 } from '@/types/department.types';
-import type { UserFilters, PaginatedUserResponse } from '@/types/api.types';
+import type {
+	UserFilters,
+	PaginatedUserResponse,
+	User,
+} from '@/types/api.types';
 // Note: apiRequest is imported for potential future use
 import { API_ENDPOINTS } from '../shared/endpoints';
 
@@ -104,7 +108,8 @@ export const fetchUsers = async (
 	token: string,
 	setLoading?: (loading: boolean) => void,
 	pageNumber: number = 1,
-	pageSize: number = 10
+	pageSize: number = 10,
+	filters?: UserFilters
 ): Promise<PaginatedUserResponse> => {
 	if (!token) {
 		throw new Error('No authentication token provided');
@@ -130,7 +135,27 @@ export const fetchUsers = async (
 		// Handle both old and new API response formats
 		if (Array.isArray(response)) {
 			// Old format: direct array - convert to paginated format
-			const users = response as UserListResponse[];
+			const userListResponses =
+				response as UserListResponse[];
+			const users: User[] = userListResponses.map((user) => ({
+				id: user.id,
+				userName: user.userName,
+				email: user.email,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				fullName: user.fullName,
+				roles: [], // Default empty array
+				phoneNumber: user.phoneNumber,
+				profileImage: user.profileImage,
+				language: 'en', // Default language
+				departmentName:
+					user.department || 'No Department',
+				departmentDescription:
+					user.department || 'No Department',
+				isActive: user.isActive,
+				createdAt: user.createdAt,
+				lastLoginAt: user.lastLoginAt,
+			}));
 			return {
 				users: users,
 				totalCount: users.length,
@@ -139,6 +164,7 @@ export const fetchUsers = async (
 				totalPages: 1,
 				hasPreviousPage: false,
 				hasNextPage: false,
+				appliedFilters: filters,
 			};
 		} else if (response && Array.isArray(response.users)) {
 			// New format: paginated response
@@ -156,6 +182,7 @@ export const fetchUsers = async (
 				totalPages: 0,
 				hasPreviousPage: false,
 				hasNextPage: false,
+				appliedFilters: filters,
 			};
 		}
 	} finally {

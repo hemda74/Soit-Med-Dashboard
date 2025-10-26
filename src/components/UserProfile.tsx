@@ -19,7 +19,7 @@ export default function UserProfile() {
     const { user, fetchUserData } = useAuthStore();
     const { loading } = useAppStore();
     const { t } = useTranslation();
-    const { success, error: showError } = useNotificationStore();
+    const { success, errorNotification: showError } = useNotificationStore();
     const [isEditingPassword, setIsEditingPassword] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isDeletingImage, setIsDeletingImage] = useState(false);
@@ -64,8 +64,8 @@ export default function UserProfile() {
             } else {
                 showError('Password Change Failed', response.message);
             }
-        } catch (error: any) {
-            const errorMessage = error.message || 'Failed to change password';
+        } catch (error: unknown) {
+            const errorMessage = (error as { message?: string }).message || 'Failed to change password';
             showError('Password Change Failed', errorMessage);
         }
     };
@@ -97,8 +97,8 @@ export default function UserProfile() {
             } else {
                 showError('Upload Failed', 'Failed to update profile image');
             }
-        } catch (error: any) {
-            const errorMessage = error.message || 'Failed to upload image';
+        } catch (error: unknown) {
+            const errorMessage = (error as { message?: string }).message || 'Failed to upload image';
             showError('Upload Failed', errorMessage);
         } finally {
             setIsUploadingImage(false);
@@ -120,8 +120,8 @@ export default function UserProfile() {
             } else {
                 showError('Delete Failed', 'Failed to delete profile image');
             }
-        } catch (error: any) {
-            const errorMessage = error.message || 'Failed to delete image';
+        } catch (error: unknown) {
+            const errorMessage = (error as { message?: string }).message || 'Failed to delete image';
             showError('Delete Failed', errorMessage);
         } finally {
             setIsDeletingImage(false);
@@ -167,7 +167,7 @@ export default function UserProfile() {
                     <div className="lg:col-span-2">
                         <UserInfoCard
                             user={user}
-                            t={t as (key: any) => string}
+                            t={t as (key: string) => string}
                             onEditPassword={() => setIsEditingPassword(!isEditingPassword)}
                         />
                     </div>

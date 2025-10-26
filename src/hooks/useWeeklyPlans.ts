@@ -79,7 +79,7 @@ interface UseWeeklyPlansReturn extends UseWeeklyPlansState {
 }
 
 export function useWeeklyPlans(): UseWeeklyPlansReturn {
-	const { user, hasAnyRole } = useAuthStore();
+  const { hasAnyRole } = useAuthStore();
 
 	// Check access permissions
 	const hasAccess = hasAnyRole([

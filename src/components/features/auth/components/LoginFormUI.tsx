@@ -1,13 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import type { UseFormRegister, FieldErrors } from 'react-hook-form';
 import Label from '@/components/ui/template/Label';
 import Button from '@/components/ui/template/Button';
 import { EyeIcon, EyeCloseIcon } from '@/components/icons/template';
 import Logo from '@/components/Logo';
+import type { LoginFormData } from '@/schemas/loginSchema';
 
 // Temporary simple input for debugging
-const SimpleInput = React.forwardRef<HTMLInputElement, any>(({ className, error, ...props }, ref) => (
+const SimpleInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(({ className, error, ...props }, ref) => (
     <input
         ref={ref}
         className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm text-black dark:text-black ${error ? 'border-red-500' : 'border-gray-300'
@@ -21,10 +23,10 @@ interface LoginFormUIProps {
     showPassword: boolean;
     isLoading: boolean;
     error: string | null;
-    errors: any;
-    register: any;
-    handleSubmit: any;
-    reset: any;
+    errors: FieldErrors<LoginFormData>;
+    register: UseFormRegister<LoginFormData>;
+    handleSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+    reset: () => void;
     togglePasswordVisibility: () => void;
     clearError: () => void;
 }
@@ -55,10 +57,7 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                         </p>
                     </div>
                     <div>
-                        <form onSubmit={(e) => {
-                            console.log('Form submit event triggered');
-                            handleSubmit(e);
-                        }}>
+                        <form onSubmit={handleSubmit}>
                             <div className="space-y-6">
                                 {error && (
                                     <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -74,13 +73,7 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                                         id="userName"
                                         type="text"
                                         placeholder="Enter your username"
-                                        {...register('userName', {
-                                            required: 'Username is required',
-                                            minLength: {
-                                                value: 1,
-                                                message: 'Username is required'
-                                            }
-                                        })}
+                                        {...register('userName')}
                                         error={!!errors.userName}
                                     />
                                     {errors.userName && (
@@ -99,13 +92,7 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                                             id="password"
                                             type={showPassword ? "text" : "password"}
                                             placeholder="Enter your password"
-                                            {...register('password', {
-                                                required: 'Password is required',
-                                                minLength: {
-                                                    value: 6,
-                                                    message: 'Password must be at least 6 characters'
-                                                }
-                                            })}
+                                            {...register('password')}
                                             error={!!errors.password}
                                         />
                                         <span

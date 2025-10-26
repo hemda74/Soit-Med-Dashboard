@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Bell, TestTube, Trash2, CheckCheck } from 'lucide-react';
+import { Bell, TestTube, Trash2 } from 'lucide-react';
 
 const NotificationTest: React.FC = () => {
-    const { t } = useTranslation();
+    // const { t } = useTranslation();
     const {
         notifications,
         unreadCount,
@@ -16,7 +16,7 @@ const NotificationTest: React.FC = () => {
         addNotification,
         markAsRead,
         markAllAsRead,
-        clearAllNotifications,
+        // clearAllNotifications,
         getNotificationsForCurrentUser,
         success,
         errorNotification,
@@ -67,7 +67,6 @@ const NotificationTest: React.FC = () => {
                 type: 'info',
                 title: 'User Specific',
                 message: 'This notification is for specific users',
-                timestamp: Date.now(),
                 isRead: false,
                 userIds: ['test-user-1', 'test-user-2']
             });
@@ -235,9 +234,9 @@ const NotificationTest: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={`px-2 py-1 rounded text-xs ${notification.type === 'success' ? 'bg-green-100 text-green-800' :
-                                                notification.type === 'error' ? 'bg-red-100 text-red-800' :
-                                                    notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-blue-100 text-blue-800'
+                                            notification.type === 'error' ? 'bg-red-100 text-red-800' :
+                                                notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-blue-100 text-blue-800'
                                             }`}>
                                             {notification.type}
                                         </span>

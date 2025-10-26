@@ -1,4 +1,4 @@
-import { FC, ReactNode } from "react";
+import { type FC, type ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
 

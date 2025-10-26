@@ -65,7 +65,7 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 const UsersList: React.FC = () => {
     const { user, hasAnyRole } = useAuthStore();
     const { setLoading } = useAppStore();
-    const { success, error: showError } = useNotificationStore();
+    const { success, errorNotification: showError } = useNotificationStore();
 
     // All state hooks must be called at the top level
     const [allUsers, setAllUsers] = useState<PaginatedUserResponse | null>(null);
@@ -275,9 +275,9 @@ const UsersList: React.FC = () => {
             } else {
                 showError('Upload Failed', 'Failed to update profile image');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error uploading image:', error);
-            const errorMessage = error.message || 'Failed to upload image';
+            const errorMessage = (error as { message?: string }).message || 'Failed to upload image';
             showError('Upload Failed', errorMessage);
         } finally {
             setIsUploadingImage(false);
@@ -306,9 +306,9 @@ const UsersList: React.FC = () => {
             } else {
                 showError('Delete Failed', 'Failed to delete profile image');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error deleting image:', error);
-            const errorMessage = error.message || 'Failed to delete image';
+            const errorMessage = (error as { message?: string }).message || 'Failed to delete image';
             showError('Delete Failed', errorMessage);
         } finally {
             setIsDeletingImage(false);
@@ -347,9 +347,9 @@ const UsersList: React.FC = () => {
             } else {
                 showError('User Update Failed', response.message);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating user:', error);
-            const errorMessage = error.message || 'Failed to update user';
+            const errorMessage = (error as { message?: string }).message || 'Failed to update user';
             showError('User Update Failed', errorMessage);
         }
     };
@@ -454,8 +454,8 @@ const UsersList: React.FC = () => {
                                             <p className="text-sm text-muted-foreground">
                                                 {'departmentName' in user
                                                     ? user.departmentName
-                                                    : (user as any).departmentId
-                                                        ? getDepartmentName((user as any).departmentId)
+                                                    : (user as { departmentId?: number }).departmentId
+                                                        ? getDepartmentName((user as { departmentId?: number }).departmentId!)
                                                         : 'No Department'
                                                 }
                                             </p>

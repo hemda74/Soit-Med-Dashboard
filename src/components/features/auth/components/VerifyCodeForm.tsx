@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Label from '@/components/ui/template/Label';
 import Button from '@/components/ui/template/Button';
 import { ChevronLeftIcon } from '@/components/icons/template';
@@ -175,8 +175,8 @@ export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
                                                 inputMode="numeric"
                                                 maxLength={1}
                                                 value={digit}
-                                                onChange={(e) => handleInputChange(index, e.target.value)}
-                                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(index, e.target.value)}
+                                                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => handleKeyDown(index, e)}
                                                 onPaste={handlePaste}
                                                 className="w-12 h-12 text-lg font-semibold"
                                             />

@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { UserUpdateForm } from './UserUpdateForm';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { UserListResponse } from '@/types/user.types';
+import type { UpdateUserRequest } from '@/types/userUpdate.types';
 
 interface UserUpdateModalProps {
     user: UserListResponse;
     isOpen: boolean;
     onClose: () => void;
-    onUpdate: (userId: string, userData: any) => Promise<void>;
+    onUpdate: (userId: string, userData: Record<string, unknown>) => Promise<void>;
 }
 
 export const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
@@ -24,7 +25,7 @@ export const UserUpdateModal: React.FC<UserUpdateModalProps> = ({
     const { t } = useTranslation();
     const [isUpdating, setIsUpdating] = useState(false);
 
-    const handleUpdate = async (userData: any) => {
+    const handleUpdate = async (userData: UpdateUserRequest) => {
         setIsUpdating(true);
         try {
             await onUpdate(user.id, userData);

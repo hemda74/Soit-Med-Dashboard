@@ -34,7 +34,7 @@ export default function UnifiedAnalyticsCard() {
         activePercentage: statistics.totalUsers > 0 ? ((statistics.activeUsers / statistics.totalUsers) * 100).toFixed(1) : "0"
     } : null;
 
-    const getChartOptions = (data: any, colors: string[]): ApexOptions => ({
+    const getChartOptions = (data: { labels: string[]; series: number[]; total?: number } | null, colors: string[]): ApexOptions => ({
         colors: colors,
         chart: {
             fontFamily: language === 'ar' ? "Cairo, Inter, sans-serif" : "Inter, sans-serif",

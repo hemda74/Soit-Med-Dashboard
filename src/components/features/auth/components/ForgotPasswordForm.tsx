@@ -6,7 +6,7 @@ import Button from '@/components/ui/template/Button';
 import { ChevronLeftIcon } from '@/components/icons/template';
 
 // Temporary simple input for debugging
-const SimpleInput = React.forwardRef<HTMLInputElement, any>(({ className, error, ...props }, ref) => (
+const SimpleInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(({ className, error, ...props }, ref) => (
     <input
         ref={ref}
         className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm text-black dark:text-black ${error ? 'border-red-500' : 'border-gray-300'

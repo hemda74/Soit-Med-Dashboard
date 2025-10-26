@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { PasswordResetFlow } from '@/components/features/auth/components/PasswordResetFlow';
 
 export default function VerifyCode() {

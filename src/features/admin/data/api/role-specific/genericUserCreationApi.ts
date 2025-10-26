@@ -6,7 +6,7 @@
  * a consistent interface for all user creation operations.
  */
 
-import { apiRequest } from '../shared/apiClient';
+import { apiRequest } from '@/services/shared/apiClient';
 import { RoleConfigUtils } from '@/config/roleConfig';
 import type {
 	RoleSpecificUserRole,
@@ -126,26 +126,39 @@ export class GenericUserCreationApi {
 			...userData,
 			role,
 			departmentId: roleConfig.requirements.autoDepartmentId,
-			hospitalId: (userData as { hospitalId?: string }).hospitalId
-				? Number((userData as { hospitalId?: string }).hospitalId)
+			hospitalId: (userData as { hospitalId?: string })
+				.hospitalId
+				? Number(
+						(
+							userData as {
+								hospitalId?: string;
+							}
+						).hospitalId
+				  )
 				: undefined,
-			governorateIds: (userData as { governorateIds?: number[] }).governorateIds || [],
+			governorateIds:
+				(userData as { governorateIds?: number[] })
+					.governorateIds || [],
 		};
 
 		// Add role-specific fields based on configuration
-		const roleSpecificFields = roleConfig.fields.filter(
-			(field: { section: string }) => field.section === 'role-specific'
+  const roleSpecificFields = (roleConfig.fields || []).filter(
+			(field: { section: string }) =>
+				field.section === 'role-specific'
 		);
 
-		roleSpecificFields.forEach((field: { key: string; section: string }) => {
-			const value =
-				userData[
-					field.key as keyof RoleSpecificUserRequest
-				];
-			if (value !== undefined && value !== null) {
-				(preparedData as any)[field.key] = value;
+		roleSpecificFields.forEach(
+			(field: { key: string; section: string }) => {
+				const value =
+					userData[
+						field.key as keyof RoleSpecificUserRequest
+					];
+				if (value !== undefined && value !== null) {
+					(preparedData as any)[field.key] =
+						value;
+				}
 			}
-		});
+		);
 
 		return preparedData;
 	}
@@ -218,7 +231,7 @@ export class GenericUserCreationApi {
 
 		try {
 			// Try to parse the error response
-			const errorResponse = error.response || error;
+  const errorResponse = (error as any).response || error;
 
 			if (
 				errorResponse &&
@@ -269,7 +282,9 @@ export class GenericUserCreationApi {
 			}
 		} catch {
 			// If parsing fails, use the original error message
-			errorMessage = (error as { message?: string }).message || 'Failed to create user';
+			errorMessage =
+				(error as { message?: string }).message ||
+				'Failed to create user';
 		}
 
 		return {
@@ -300,7 +315,7 @@ export class GenericUserCreationApi {
 		const requiredFields = RoleConfigUtils.getRequiredFields(role);
 
 		// Check required fields
-		requiredFields.forEach((fieldKey) => {
+  requiredFields.forEach((fieldKey: string) => {
 			const value =
 				userData[
 					fieldKey as keyof RoleSpecificUserRequest
@@ -324,8 +339,10 @@ export class GenericUserCreationApi {
 
 		if (
 			roleConfig.requirements.requiresGovernorates &&
-			(!(userData as { governorateIds?: number[] }).governorateIds ||
-				(userData as { governorateIds?: number[] }).governorateIds.length === 0)
+			(!(userData as { governorateIds?: number[] })
+				.governorateIds ||
+    (userData as { governorateIds?: number[] })
+      .governorateIds?.length === 0)
 		) {
 			errors.push(
 				'At least one governorate must be selected'
@@ -389,4 +406,3 @@ export const validateUserData = (
 ): { isValid: boolean; errors: string[] } => {
 	return GenericUserCreationApi.validateUserData(role, userData);
 };
-

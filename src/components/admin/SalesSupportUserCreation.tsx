@@ -28,10 +28,10 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, UserPlus, Upload, X } from 'lucide-react';
+import { Loader2, UserPlus, X } from 'lucide-react';
 
 interface SalesSupportUserCreationProps {
-    onSuccess?: (user: any) => void;
+    onSuccess?: (user: unknown) => void;
     onCancel?: () => void;
 }
 
@@ -50,7 +50,6 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
         handleSubmit,
         formState: { errors },
         reset,
-        watch,
         setValue,
     } = useForm<SalesSupportUserRequest>({
         defaultValues: {
@@ -129,21 +128,22 @@ const SalesSupportUserCreation: React.FC<SalesSupportUserCreationProps> = ({
             if (onSuccess) {
                 onSuccess(response);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error creating Sales Support user:', error);
 
             // Handle API error response format
             let errorMessage = t('salesSupportMessages.createError');
-            if (error.response?.data) {
-                if (typeof error.response.data === 'string') {
-                    errorMessage = error.response.data;
-                } else if (error.response.data.detail) {
-                    errorMessage = error.response.data.detail;
-                } else if (error.response.data.message) {
-                    errorMessage = error.response.data.message;
+            if ((error as { response?: { data?: unknown } }).response?.data) {
+                const responseData = (error as { response: { data: unknown } }).response.data;
+                if (typeof responseData === 'string') {
+                    errorMessage = responseData;
+                } else if (responseData && typeof responseData === 'object' && 'detail' in responseData) {
+                    errorMessage = (responseData as { detail: string }).detail;
+                } else if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+                    errorMessage = (responseData as { message: string }).message;
                 }
-            } else if (error.message) {
-                errorMessage = error.message;
+            } else if ((error as { message?: string }).message) {
+                errorMessage = (error as { message: string }).message;
             }
 
             toast.error(errorMessage);

@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { TestTube, Bug, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { TestTube, Bug, XCircle } from 'lucide-react';
 
 const NotificationDebugger: React.FC = () => {
     const {
         notifications,
         unreadCount,
         connectionStatus,
-        loading,
-        error,
+        // loading,
+        // error,
         addNotification,
         markAsRead,
         markAllAsRead,
@@ -78,7 +78,6 @@ const NotificationDebugger: React.FC = () => {
                 type: 'info',
                 title: 'User Specific',
                 message: 'This notification is for specific users',
-                timestamp: Date.now(),
                 isRead: false,
                 userIds: ['test-user-1', 'test-user-2']
             });

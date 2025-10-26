@@ -1,4 +1,4 @@
-import { Users, UserPlus, Settings, TestTube, BarChart3, Calendar, History, TrendingUp, Target, FileText, Users2, Building2, UserCheck, HeadphonesIcon } from 'lucide-react'
+import { Users, UserPlus, Settings, TestTube, BarChart3, Calendar, History, TrendingUp, Target, FileText, Users2, HeadphonesIcon } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useStatistics, useStatisticsLoading, useStatisticsError, useStatisticsStore } from '@/stores/statisticsStore'

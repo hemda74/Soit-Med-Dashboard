@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import type {
-	Notification,
+  // Notification,
 	NotificationType,
 } from '@/types/notification.types';
 

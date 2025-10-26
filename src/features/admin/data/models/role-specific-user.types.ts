@@ -1,5 +1,5 @@
 // Admin feature models
-export type RoleSpecificUserRole = 
+export type RoleSpecificUserRole =
 	| 'medical'
 	| 'technical'
 	| 'sales'

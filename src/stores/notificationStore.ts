@@ -5,6 +5,9 @@ import type {
 	Notification,
 	NotificationType,
 } from '@/types/notification.types';
+
+// Export types for external use
+export type { Notification, NotificationType };
 import notificationService from '@/services/notificationService';
 import signalRService from '@/services/signalRService';
 
