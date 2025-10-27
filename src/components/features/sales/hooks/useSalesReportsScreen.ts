@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { useSalesReports } from '@/hooks/useSalesReports';
-import { useUsersForFilter } from '@/hooks/useUsersForFilter';
+// import { useUsersForFilter } from '@/hooks/useUsersForFilter'; // Disabled - SalesManager doesn't have access
 import type {
 	SalesReportResponseDto,
 	FilterSalesReportsDto,
@@ -44,11 +44,15 @@ export const useSalesReportsScreen = () => {
 	} = useSalesReports();
 
 	// Get users for employee filter
-	const {
-		users: availableUsers,
-		loading: usersLoading,
-		error: usersError,
-	} = useUsersForFilter();
+	// Note: Disabled as SalesManager doesn't have access to /api/User/all
+	// const {
+	// 	users: availableUsers,
+	// 	loading: usersLoading,
+	// 	error: usersError,
+	// } = useUsersForFilter();
+	const availableUsers: any[] = [];
+	const usersLoading = false;
+	const usersError = null;
 
 	const handleFilterChange = useCallback(
 		(newFilters: Partial<FilterSalesReportsDto>) => {

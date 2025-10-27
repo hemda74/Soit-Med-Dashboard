@@ -70,24 +70,26 @@ export const API_ENDPOINTS = {
 
 	// Sales Reports (Legacy - kept for backward compatibility)
 	SALES_REPORT: {
-		BASE: '/api/SalesReport',
-		BY_ID: (id: number) => `/api/SalesReport/${id}`,
-		RATE: (id: number) => `/api/SalesReport/${id}/rate`,
+		BASE: '/api/salesreport',
+		BY_ID: (id: number) => `/api/salesreport/${id}`,
+		RATE: (id: number) => `/api/salesreport/${id}/rate`,
 	},
 
 	// Weekly Plan (New To-Do List System)
 	WEEKLY_PLAN: {
 		BASE: '/api/WeeklyPlan',
 		BY_ID: (id: number) => `/api/WeeklyPlan/${id}`,
+		CURRENT: '/api/WeeklyPlan/current',
+		SALESMEN: '/api/WeeklyPlan/salesmen',
+		SUBMIT: (id: number) => `/api/WeeklyPlan/${id}/submit`,
 		REVIEW: (id: number) => `/api/WeeklyPlan/${id}/review`,
-		TASKS: (weeklyPlanId: number) =>
-			`/api/WeeklyPlan/${weeklyPlanId}/tasks`,
-		TASK_BY_ID: (weeklyPlanId: number, taskId: number) =>
-			`/api/WeeklyPlan/${weeklyPlanId}/tasks/${taskId}`,
-		PROGRESS: (weeklyPlanId: number) =>
-			`/api/WeeklyPlan/${weeklyPlanId}/progress`,
-		PROGRESS_BY_ID: (weeklyPlanId: number, progressId: number) =>
-			`/api/WeeklyPlan/${weeklyPlanId}/progress/${progressId}`,
+		TASKS: (id: number) => `/api/WeeklyPlan/${id}/tasks`,
+		TASK_BY_ID: (planId: number, taskId: number) =>
+			`/api/WeeklyPlan/${planId}/tasks/${taskId}`,
+		PROGRESS: (planId: number) =>
+			`/api/WeeklyPlan/${planId}/progress`,
+		PROGRESS_BY_ID: (planId: number, progressId: number) =>
+			`/api/WeeklyPlan/${planId}/progress/${progressId}`,
 	},
 
 	// Dashboard
@@ -99,13 +101,13 @@ export const API_ENDPOINTS = {
 	SALES: {
 		// Client Management
 		CLIENT: {
-			BASE: '/api/Client',
-			BY_ID: (id: string) => `/api/Client/${id}`,
-			SEARCH: '/api/Client/search',
-			MY_CLIENTS: '/api/Client/my-clients',
-			FOLLOW_UP_NEEDED: '/api/Client/follow-up-needed',
-			STATISTICS: '/api/Client/statistics',
-			FIND_OR_CREATE: '/api/Client/find-or-create',
+			BASE: '/api/client',
+			BY_ID: (id: string) => `/api/client/${id}`,
+			SEARCH: '/api/client/search',
+			PROFILE: (id: string) => `/api/client/${id}/profile`,
+			FIND_OR_CREATE: '/api/client/find-or-create',
+			FOLLOW_UP_NEEDED: '/api/client/follow-up-needed',
+			STATISTICS: '/api/client/statistics',
 		},
 		// Client Visits
 		CLIENT_VISIT: {
@@ -123,6 +125,21 @@ export const API_ENDPOINTS = {
 			BY_CLIENT: (clientId: string) =>
 				`/api/ClientInteraction/client/${clientId}`,
 		},
+		// Client Tracking
+		CLIENT_TRACKING: {
+			VISITS: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/visits`,
+			INTERACTIONS: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/interactions`,
+			ANALYTICS: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/analytics`,
+			SUMMARY: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/summary`,
+			TIMELINE: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/timeline`,
+			EXPORT: (clientId: string) =>
+				`/api/ClientTracking/${clientId}/export`,
+		},
 		// Sales Analytics
 		SALES_ANALYTICS: {
 			BASE: '/api/SalesAnalytics',
@@ -137,6 +154,83 @@ export const API_ENDPOINTS = {
 			BY_ID: (id: string) => `/api/SalesReport/${id}`,
 			GENERATE: '/api/SalesReport/generate',
 			EXPORT: (id: string) => `/api/SalesReport/${id}/export`,
+			DASHBOARD: '/api/SalesReport/dashboard',
+			TRENDS: '/api/SalesReport/trends',
+			TOP_PERFORMERS: '/api/SalesReport/top-performers',
 		},
+		// Request Workflows
+		REQUEST_WORKFLOWS: {
+			BASE: '/api/RequestWorkflows',
+			BY_ID: (id: string) => `/api/RequestWorkflows/${id}`,
+			SENT: '/api/RequestWorkflows/sent',
+			ASSIGNED: '/api/RequestWorkflows/assigned',
+			STATUS: (id: string) =>
+				`/api/RequestWorkflows/${id}/status`,
+			ASSIGN: (id: string) =>
+				`/api/RequestWorkflows/${id}/assign`,
+		},
+		// Delivery Terms
+		DELIVERY_TERMS: {
+			BASE: '/api/DeliveryTerms',
+			BY_ID: (id: string) => `/api/DeliveryTerms/${id}`,
+		},
+		// Payment Terms
+		PAYMENT_TERMS: {
+			BASE: '/api/PaymentTerms',
+			BY_ID: (id: string) => `/api/PaymentTerms/${id}`,
+		},
+		// Deals (NEW)
+		DEALS: {
+			BASE: '/api/deal',
+			BY_ID: (id: string) => `/api/deal/${id}`,
+			MANAGER_APPROVAL: (id: string) =>
+				`/api/deal/${id}/manager-approval`,
+			SUPERADMIN_APPROVAL: (id: string) =>
+				`/api/deal/${id}/superadmin-approval`,
+			PENDING_MANAGER: '/api/deal/pending-manager-approvals',
+			PENDING_SUPERADMIN:
+				'/api/deal/pending-superadmin-approvals',
+		},
+		// Offers (ENHANCED) - For SalesManager/SuperAdmin only
+		OFFERS: {
+			BASE: '/api/Offer',
+			BY_ID: (id: string) => `/api/Offer/${id}`,
+			MY_OFFERS: '/api/Offer/my-offers',
+			// Enhanced Offer Features
+			EQUIPMENT: (id: string) => `/api/Offer/${id}/equipment`,
+			EQUIPMENT_BY_ID: (id: string, equipmentId: number) =>
+				`/api/Offer/${id}/equipment/${equipmentId}`,
+			UPLOAD_IMAGE: (id: string, equipmentId: number) =>
+				`/api/Offer/${id}/equipment/${equipmentId}/upload-image`,
+			TERMS: (id: string) => `/api/Offer/${id}/terms`,
+			INSTALLMENTS: (id: string) =>
+				`/api/Offer/${id}/installments`,
+			SEND_TO_SALESMAN: (id: string) =>
+				`/api/Offer/${id}/send-to-salesman`,
+			EXPORT_PDF: (id: string) =>
+				`/api/Offer/${id}/export-pdf`,
+		},
+		// Offer Requests (NEW)
+		OFFER_REQUESTS: {
+			BASE: '/api/offerrequest',
+			BY_ID: (id: string) => `/api/offerrequest/${id}`,
+			ASSIGN: (id: string) =>
+				`/api/offerrequest/${id}/assign`,
+			ASSIGNED: (supportId: string) =>
+				`/api/offerrequest/assigned/${supportId}`,
+		},
+		// Task Progress (NEW)
+		TASK_PROGRESS: {
+			BASE: '/api/taskprogress',
+			BY_ID: (id: string) => `/api/taskprogress/${id}`,
+			BY_TASK: (taskId: number) =>
+				`/api/taskprogress/task/${taskId}`,
+			BY_CLIENT: (clientId: string) =>
+				`/api/taskprogress/by-client/${clientId}`,
+			WITH_OFFER_REQUEST:
+				'/api/taskprogress/with-offer-request',
+		},
+		// Weekly Plan Tasks (removed - use WEEKLY_PLAN.TASKS instead)
+		// WEEKLY_PLAN_TASKS has been removed in favor of WEEKLY_PLAN.TASKS
 	},
 } as const;
