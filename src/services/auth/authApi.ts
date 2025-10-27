@@ -25,10 +25,6 @@ export const loginUser = async (
 ): Promise<AuthResponse> => {
 	try {
 		setLoading?.(true);
-		console.log('Attempting login with credentials:', {
-			userName: credentials.UserName,
-			password: '***',
-		});
 
 		const response = await apiRequest<AuthResponse>(
 			API_ENDPOINTS.AUTH.LOGIN,
@@ -37,11 +33,6 @@ export const loginUser = async (
 				body: JSON.stringify(credentials),
 			}
 		);
-
-		console.log('Login successful:', {
-			success: response.success,
-			hasToken: !!response.token,
-		});
 
 		return response;
 	} catch (error) {
@@ -59,7 +50,6 @@ export const getCurrentUser = async (
 ): Promise<AuthUser> => {
 	try {
 		setLoading?.(true);
-		console.log('Fetching current user data...');
 
 		const response = await apiRequest<AuthUser>(
 			API_ENDPOINTS.AUTH.CURRENT_USER,
@@ -68,12 +58,6 @@ export const getCurrentUser = async (
 			},
 			token
 		);
-
-		console.log('Current user data fetched successfully:', {
-			id: response.id,
-			email: response.email,
-			roles: response.roles,
-		});
 
 		return response;
 	} catch (error) {
@@ -92,7 +76,6 @@ export const changePassword = async (
 ): Promise<ChangePasswordResponse> => {
 	try {
 		setLoading?.(true);
-		console.log('Changing password...');
 
 		const response = await apiRequest<ChangePasswordResponse>(
 			API_ENDPOINTS.AUTH.CHANGE_PASSWORD,
@@ -103,7 +86,6 @@ export const changePassword = async (
 			token
 		);
 
-		console.log('Password changed successfully');
 		return response;
 	} catch (error) {
 		console.error('Failed to change password:', error);
@@ -120,7 +102,6 @@ export const refreshToken = async (
 ): Promise<RefreshTokenResponse> => {
 	try {
 		setLoading?.(true);
-		console.log('Refreshing token...');
 
 		const response = await apiRequest<RefreshTokenResponse>(
 			API_ENDPOINTS.AUTH.REFRESH,
@@ -130,7 +111,6 @@ export const refreshToken = async (
 			}
 		);
 
-		console.log('Token refreshed successfully');
 		return response;
 	} catch (error) {
 		console.error('Failed to refresh token:', error);
@@ -203,10 +183,6 @@ export const forgotPassword = async (
 ): Promise<ForgotPasswordResponse> => {
 	try {
 		setLoading?.(true);
-		console.log(
-			'Sending forgot password request for email:',
-			request.email
-		);
 
 		const response = await apiRequest<ForgotPasswordResponse>(
 			API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
@@ -216,10 +192,6 @@ export const forgotPassword = async (
 			}
 		);
 
-		console.log(
-			'Forgot password request successful:',
-			response.success
-		);
 		return response;
 	} catch (error) {
 		console.error('Failed to send forgot password request:', error);
@@ -236,7 +208,6 @@ export const verifyCode = async (
 ): Promise<VerifyCodeResponse> => {
 	try {
 		setLoading?.(true);
-		console.log('Verifying code for email:', request.email);
 
 		const response = await apiRequest<VerifyCodeResponse>(
 			API_ENDPOINTS.AUTH.VERIFY_CODE,
@@ -246,7 +217,6 @@ export const verifyCode = async (
 			}
 		);
 
-		console.log('Code verification successful:', response.success);
 		return response;
 	} catch (error) {
 		console.error('Failed to verify code:', error);
@@ -263,7 +233,6 @@ export const resetPassword = async (
 ): Promise<ResetPasswordResponse> => {
 	try {
 		setLoading?.(true);
-		console.log('Resetting password for email:', request.email);
 
 		const response = await apiRequest<ResetPasswordResponse>(
 			API_ENDPOINTS.AUTH.RESET_PASSWORD,
@@ -273,7 +242,6 @@ export const resetPassword = async (
 			}
 		);
 
-		console.log('Password reset successful:', response.success);
 		return response;
 	} catch (error) {
 		console.error('Failed to reset password:', error);

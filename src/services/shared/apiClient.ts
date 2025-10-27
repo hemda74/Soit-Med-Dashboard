@@ -9,7 +9,6 @@ export async function apiRequest<T>(
 	token?: string
 ): Promise<T> {
 	const url = getApiUrl(endpoint);
-	console.log('Making API request to:', url);
 
 	const defaultHeaders: HeadersInit = {};
 
@@ -29,9 +28,6 @@ export async function apiRequest<T>(
 			...options.headers,
 		},
 	});
-
-	console.log('Response status:', response.status);
-	console.log('Response ok:', response.ok);
 
 	if (!response.ok) {
 		const errorText = await response.text();

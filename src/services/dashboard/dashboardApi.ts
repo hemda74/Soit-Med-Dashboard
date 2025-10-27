@@ -13,7 +13,6 @@ export const fetchUserStatistics = async (
 ): Promise<UserStatistics> => {
 	try {
 		setLoading?.(true);
-		console.log('Fetching user statistics...');
 
 		const response = await apiRequest<UserStatistics>(
 			API_ENDPOINTS.USER.STATISTICS,
@@ -23,7 +22,6 @@ export const fetchUserStatistics = async (
 			token
 		);
 
-		console.log('User statistics fetched successfully:', response);
 		return response;
 	} catch (error) {
 		console.error('Failed to fetch user statistics:', error);
@@ -41,7 +39,6 @@ export const fetchUserCounts = async (
 ): Promise<UserCounts> => {
 	try {
 		setLoading?.(true);
-		console.log('Fetching user counts...');
 
 		const response = await apiRequest<UserCounts>(
 			API_ENDPOINTS.USER.COUNTS,
@@ -51,7 +48,6 @@ export const fetchUserCounts = async (
 			token
 		);
 
-		console.log('User counts fetched successfully:', response);
 		return response;
 	} catch (error) {
 		console.error('Failed to fetch user counts:', error);
@@ -68,7 +64,6 @@ export const fetchDashboardStats = async (
 ): Promise<DashboardStats> => {
 	try {
 		setLoading?.(true);
-		console.log('Fetching dashboard statistics...');
 
 		// Use the new user statistics API
 		const userStats = await fetchUserStatistics(token);
@@ -83,10 +78,6 @@ export const fetchDashboardStats = async (
 			completedReports: 0, // Not available in user statistics
 		};
 
-		console.log(
-			'Dashboard stats fetched successfully:',
-			dashboardStats
-		);
 		return dashboardStats;
 	} catch (error) {
 		console.error('Failed to fetch dashboard stats:', error);

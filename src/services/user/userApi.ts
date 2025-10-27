@@ -37,13 +37,15 @@ class UserApiClient {
 			...options,
 		};
 
-		const response = await fetch(url, config);
+	const response = await fetch(url, config);
 
-		if (!response.ok) {
-			throw new Error(
-				`HTTP error! status: ${response.status}`
-			);
+	if (!response.ok) {
+		const errorMessage = `HTTP error! status: ${response.status}`;
+		if (response.status === 403) {
+			console.warn('403 Forbidden: User may not have permissions to access this endpoint');
 		}
+		throw new Error(errorMessage);
+	}
 
 		return response.json();
 	}

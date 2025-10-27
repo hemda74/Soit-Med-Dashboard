@@ -82,7 +82,7 @@ function App() {
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/create-sales-support" element={<SalesSupportUserCreation />} />
-                <Route path="admin/users" element={<UsersList />} />
+                <Route path="admin/users" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><UsersList /></RoleGuard>} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

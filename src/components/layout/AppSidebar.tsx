@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -39,15 +39,6 @@ const AppSidebar: React.FC = () => {
         path: "/dashboard",
       },
     ]
-
-    // Only Admin/SuperAdmin can see Create New Role
-    if (hasAnyRole(['Admin', 'SuperAdmin'])) {
-      items.push({
-        icon: <UserCircleIcon />,
-        name: t('createNewRole'),
-        path: "/admin/create-role-user",
-      })
-    }
 
     return items
   }, [t, hasAnyRole]);
@@ -127,10 +118,6 @@ const AppSidebar: React.FC = () => {
     type: "main";
     index: number;
   } | null>(null);
-  const [subMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
@@ -154,6 +141,7 @@ const AppSidebar: React.FC = () => {
       });
     }
   }, [allNavItems.length, openSubmenu]);
+
 
 
 
@@ -207,14 +195,11 @@ const AppSidebar: React.FC = () => {
           )}
           {nav.subItems && (
             <div
-              ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
-              }}
               className="overflow-hidden transition-all duration-300"
               style={{
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
+                    ? "auto"
                     : "0px",
               }}
             >
