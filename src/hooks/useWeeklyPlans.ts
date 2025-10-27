@@ -97,10 +97,10 @@ export function useWeeklyPlans(): UseWeeklyPlansReturn {
 		error: null,
 		pagination: {
 			page: 1,
-			pageSize: 10,
+			pageSize: 20,
 			totalPages: 0,
-			hasNextPage: false,
-			hasPreviousPage: false,
+			hasNextPage: false, // Computed from page < totalPages
+			hasPreviousPage: false, // Computed from page > 1
 			totalCount: 0,
 		},
 		filters: {} as FilterWeeklyPlansDto,
@@ -124,7 +124,11 @@ export function useWeeklyPlans(): UseWeeklyPlansReturn {
 			}));
 
 			try {
-				const filters = newFilters || state.filters;
+				// Always use newFilters if provided, otherwise use default pagination
+				const filters = newFilters || {
+					page: 1,
+					pageSize: 20,
+				};
 
 				console.log(
 					'Fetching weekly plans with filters:',
@@ -137,38 +141,35 @@ export function useWeeklyPlans(): UseWeeklyPlansReturn {
 					);
 
 				if (response.success && response.data) {
+					// Handle new API response format: { plans: [], pagination: {} }
+					const plans = response.data.plans || [];
+					const pagination =
+						response.data.pagination || {};
+
+					const currentPage =
+						pagination.page || 1;
+					const totalPages =
+						pagination.totalPages || 0;
+
 					setState((prev) => ({
 						...prev,
-						plans: response.data.data || [],
+						plans: plans,
 						pagination: {
-							page:
-								response.data
-									.page ||
-								1,
+							page: currentPage,
 							pageSize:
-								response.data
-									.pageSize ||
-								10,
-							totalPages:
-								response.data
-									.totalPages ||
-								0,
+								pagination.pageSize ||
+								20,
+							totalPages: totalPages,
 							hasNextPage:
-								response.data
-									.hasNextPage ||
-								false,
+								currentPage <
+								totalPages,
 							hasPreviousPage:
-								response.data
-									.hasPreviousPage ||
-								false,
+								currentPage > 1,
 							totalCount:
-								response.data
-									.totalCount ||
+								pagination.totalCount ||
 								0,
 						},
-						filters:
-							newFilters ||
-							prev.filters,
+						filters: filters, // Use the actual filters that were sent to the API
 					}));
 				} else {
 					throw new Error(

@@ -15,6 +15,7 @@ import type {
 	DailyProgress,
 	ApiResponse,
 	PaginatedApiResponse,
+	EmployeeInfo,
 } from '@/types/weeklyPlan.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
@@ -126,6 +127,33 @@ class WeeklyPlanApiService {
 	}
 
 	/**
+	 * Get current active weekly plan
+	 */
+	async getCurrentWeeklyPlan(): Promise<ApiResponse<WeeklyPlan>> {
+		console.log('Fetching current weekly plan');
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			API_ENDPOINTS.WEEKLY_PLAN.CURRENT,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get all salesmen (for filter dropdown)
+	 * Only accessible by SalesManager and SuperAdmin
+	 */
+	async getAllSalesmen(): Promise<ApiResponse<EmployeeInfo[]>> {
+		console.log('Fetching all salesmen for filter');
+		return this.makeRequest<ApiResponse<EmployeeInfo[]>>(
+			API_ENDPOINTS.WEEKLY_PLAN.SALESMEN,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
 	 * Get all weekly plans with filtering and pagination
 	 * @param filters - Filter parameters
 	 * @returns Paginated list of weekly plans
@@ -144,10 +172,19 @@ class WeeklyPlanApiService {
 			);
 		if (filters.employeeId)
 			queryParams.append('employeeId', filters.employeeId);
-		if (filters.startDate)
-			queryParams.append('startDate', filters.startDate);
-		if (filters.endDate)
-			queryParams.append('endDate', filters.endDate);
+		if (filters.weekStartDate)
+			queryParams.append(
+				'weekStartDate',
+				filters.weekStartDate
+			);
+		if (filters.weekEndDate)
+			queryParams.append('weekEndDate', filters.weekEndDate);
+		if (filters.isViewed !== undefined)
+			queryParams.append(
+				'isViewed',
+				filters.isViewed.toString()
+			);
+		// Keep hasManagerReview for backward compatibility
 		if (filters.hasManagerReview !== undefined)
 			queryParams.append(
 				'hasManagerReview',
@@ -354,15 +391,3 @@ class WeeklyPlanApiService {
 }
 
 export const weeklyPlanApi = new WeeklyPlanApiService();
-
-
-
-
-
-
-
-
-
-
-
-

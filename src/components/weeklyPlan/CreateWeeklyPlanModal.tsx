@@ -25,15 +25,16 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 import type { CreateWeeklyPlanDto } from '@/types/weeklyPlan.types';
 
 const taskSchema = z.object({
-    title: z
-        .string()
-        .min(1, 'Task title is required')
-        .max(200, 'Task title must be less than 200 characters'),
-    description: z
-        .string()
-        .max(1000, 'Description must be less than 1000 characters')
-        .optional(),
-    displayOrder: z.number(),
+    taskType: z.enum(['Visit', 'FollowUp', 'Call', 'Email', 'Meeting']),
+    clientId: z.number().optional(),
+    clientName: z.string().optional(),
+    clientStatus: z.string().optional(),
+    clientClassification: z.string().optional(),
+    plannedDate: z.string().min(1, 'Planned date is required'),
+    plannedTime: z.string().optional(),
+    purpose: z.string().optional(),
+    priority: z.enum(['High', 'Medium', 'Low']),
+    status: z.enum(['Planned', 'InProgress', 'Completed', 'Cancelled']).default('Planned'),
 });
 
 const createPlanSchema = z.object({
@@ -43,8 +44,8 @@ const createPlanSchema = z.object({
         .max(200, 'Title must be less than 200 characters'),
     description: z
         .string()
-        .max(1000, 'Description must be less than 1000 characters')
-        .optional(),
+        .min(1, 'Description is required')
+        .max(1000, 'Description must be less than 1000 characters'),
     weekStartDate: z.string().min(1, 'Start date is required'),
     weekEndDate: z.string().min(1, 'End date is required'),
     tasks: z.array(taskSchema).optional(),
@@ -105,9 +106,10 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
 
     const addTask = () => {
         append({
-            title: '',
-            description: '',
-            displayOrder: fields.length + 1,
+            taskType: 'Visit' as const,
+            plannedDate: '',
+            priority: 'Medium' as const,
+            status: 'Planned' as const,
         });
     };
 
@@ -266,53 +268,57 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                             <GripVertical className="h-5 w-5 text-gray-400 mt-2" />
                                             <div className="flex-1 space-y-3">
                                                 <div>
-                                                    <Input
+                                                    <Label>Task Type *</Label>
+                                                    <select
                                                         {...register(
-                                                            `tasks.${index}.title`
+                                                            `tasks.${index}.taskType`
                                                         )}
-                                                        placeholder="Task title"
+                                                        className="w-full px-3 py-2 border rounded-lg"
+                                                    >
+                                                        <option value="Visit">Visit</option>
+                                                        <option value="FollowUp">Follow Up</option>
+                                                        <option value="Call">Call</option>
+                                                        <option value="Email">Email</option>
+                                                        <option value="Meeting">Meeting</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <Label>Planned Date *</Label>
+                                                    <Input
+                                                        type="datetime-local"
+                                                        {...register(
+                                                            `tasks.${index}.plannedDate`
+                                                        )}
                                                         className={
                                                             errors
                                                                 .tasks?.[
                                                                 index
                                                             ]
-                                                                ?.title
+                                                                ?.plannedDate
                                                                 ? 'border-red-500'
                                                                 : ''
                                                         }
                                                     />
-                                                    {errors
-                                                        .tasks?.[
-                                                        index
-                                                    ]
-                                                        ?.title && (
-                                                            <p className="text-sm text-red-500 mt-1">
-                                                                {
-                                                                    errors
-                                                                        .tasks[
-                                                                        index
-                                                                    ]
-                                                                        .title
-                                                                        ?.message
-                                                                }
-                                                            </p>
+                                                </div>
+                                                <div>
+                                                    <Label>Priority *</Label>
+                                                    <select
+                                                        {...register(
+                                                            `tasks.${index}.priority`
                                                         )}
+                                                        className="w-full px-3 py-2 border rounded-lg"
+                                                    >
+                                                        <option value="High">High</option>
+                                                        <option value="Medium">Medium</option>
+                                                        <option value="Low">Low</option>
+                                                    </select>
                                                 </div>
                                                 <Textarea
                                                     {...register(
-                                                        `tasks.${index}.description`
+                                                        `tasks.${index}.purpose`
                                                     )}
-                                                    placeholder="Task description (optional)"
+                                                    placeholder="Purpose (optional)"
                                                     rows={2}
-                                                    className={
-                                                        errors
-                                                            .tasks?.[
-                                                            index
-                                                        ]
-                                                            ?.description
-                                                            ? 'border-red-500'
-                                                            : ''
-                                                    }
                                                 />
                                             </div>
                                             <Button
