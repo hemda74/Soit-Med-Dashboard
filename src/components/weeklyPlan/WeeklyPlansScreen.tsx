@@ -19,8 +19,10 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner, EmptyState, ErrorDisplay, PageHeader, FilterCard } from '@/components/shared';
 import { useWeeklyPlans } from '@/hooks/useWeeklyPlans';
-import { useUsersForFilter } from '@/hooks/useUsersForFilter';
+// import { useUsersForFilter } from '@/hooks/useUsersForFilter'; // Disabled - SalesManager doesn't have access
 import { useAuthStore } from '@/stores/authStore';
+import { weeklyPlanApi } from '@/services/weeklyPlan/weeklyPlanApi';
+import type { EmployeeInfo } from '@/types/weeklyPlan.types';
 import CreateWeeklyPlanModal from './CreateWeeklyPlanModal';
 import ViewWeeklyPlanModal from './ViewWeeklyPlanModal';
 import EditWeeklyPlanModal from './EditWeeklyPlanModal';
@@ -73,8 +75,9 @@ export const WeeklyPlansScreen: React.FC = () => {
     } = useWeeklyPlans();
 
     const { user } = useAuthStore();
-    const { users: availableUsers, loading: usersLoading } =
-        useUsersForFilter();
+    // Fetch salesmen for filter dropdown
+    const [availableUsers, setAvailableUsers] = useState<EmployeeInfo[]>([]);
+    const [usersLoading, setUsersLoading] = useState(false);
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -87,9 +90,30 @@ export const WeeklyPlansScreen: React.FC = () => {
 
     useEffect(() => {
         if (hasAccess) {
-            fetchPlans({ page: 1, pageSize: 10 });
+            fetchPlans({ page: 1, pageSize: 20 });
         }
     }, [hasAccess]);
+
+    // Fetch salesmen for filter dropdown
+    useEffect(() => {
+        const fetchSalesmen = async () => {
+            if (!canReview) return; // Only fetch for managers/admins
+
+            try {
+                setUsersLoading(true);
+                const response = await weeklyPlanApi.getAllSalesmen();
+                if (response.success && response.data) {
+                    setAvailableUsers(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch salesmen:', error);
+            } finally {
+                setUsersLoading(false);
+            }
+        };
+
+        fetchSalesmen();
+    }, [canReview]);
 
     const handleFilterChange = (newFilters: Partial<FilterWeeklyPlansDto>) => {
         const updatedFilters = { ...filters, ...newFilters, page: 1 };
@@ -172,18 +196,12 @@ export const WeeklyPlansScreen: React.FC = () => {
                                         All employees
                                     </SelectItem>
                                     {availableUsers.map(
-                                        (user) => (
+                                        (salesman) => (
                                             <SelectItem
-                                                key={
-                                                    user.id
-                                                }
-                                                value={
-                                                    user.id
-                                                }
+                                                key={salesman.id}
+                                                value={salesman.id}
                                             >
-                                                {
-                                                    user.name
-                                                }
+                                                {salesman.firstName} {salesman.lastName}
                                             </SelectItem>
                                         )
                                     )}
@@ -200,10 +218,10 @@ export const WeeklyPlansScreen: React.FC = () => {
                             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 type="date"
-                                value={filters.startDate || ''}
+                                value={filters.weekStartDate || ''}
                                 onChange={(e) =>
                                     handleFilterChange({
-                                        startDate:
+                                        weekStartDate:
                                             e.target
                                                 .value,
                                     })
@@ -221,10 +239,10 @@ export const WeeklyPlansScreen: React.FC = () => {
                             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 type="date"
-                                value={filters.endDate || ''}
+                                value={filters.weekEndDate || ''}
                                 onChange={(e) =>
                                     handleFilterChange({
-                                        endDate:
+                                        weekEndDate:
                                             e.target
                                                 .value,
                                     })
@@ -419,8 +437,9 @@ export const WeeklyPlansScreen: React.FC = () => {
                                             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
                                                 <div className="flex items-center gap-1">
                                                     <User className="h-4 w-4" />
-                                                    {
-                                                        plan.employeeName
+                                                    {plan.employee
+                                                        ? `${plan.employee.firstName} ${plan.employee.lastName}`
+                                                        : plan.employeeId
                                                     }
                                                 </div>
                                                 <div className="flex items-center gap-1">
@@ -441,13 +460,9 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <ListChecks className="h-4 w-4" />
-                                                    {
-                                                        plan.completedTasks
-                                                    }
+                                                    {plan.tasks?.filter(t => t.status === 'Completed').length || 0}
                                                     /
-                                                    {
-                                                        plan.totalTasks
-                                                    }{' '}
+                                                    {plan.tasks?.length || 0}{' '}
                                                     tasks
                                                 </div>
                                             </div>
@@ -457,15 +472,17 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                 <div
                                                     className="bg-green-500 h-2 rounded-full transition-all"
                                                     style={{
-                                                        width: `${plan.completionPercentage}%`,
+                                                        width: `${plan.tasks && plan.tasks.length > 0
+                                                            ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
+                                                            : 0}%`,
                                                     }}
                                                 ></div>
                                             </div>
                                             <p className="text-xs text-gray-500">
-                                                {
-                                                    plan.completionPercentage
-                                                }
-                                                % complete
+                                                {plan.tasks && plan.tasks.length > 0
+                                                    ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
+                                                    : 0
+                                                }% complete
                                             </p>
                                         </div>
 

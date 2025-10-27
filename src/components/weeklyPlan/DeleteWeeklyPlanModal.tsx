@@ -61,8 +61,7 @@ const DeleteWeeklyPlanModal: React.FC<DeleteWeeklyPlanModalProps> = ({
                         This will permanently delete:
                     </p>
                     <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside mt-2 space-y-1">
-                        <li>{plan.totalTasks} tasks</li>
-                        <li>{plan.dailyProgresses.length} daily progress entries</li>
+                        <li>{plan.tasks?.length || 0} tasks</li>
                         <li>All associated data</li>
                     </ul>
                 </div>

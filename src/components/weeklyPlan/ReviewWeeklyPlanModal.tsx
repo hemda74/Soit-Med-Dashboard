@@ -19,19 +19,12 @@ const reviewPlanSchema = z.object({
     rating: z
         .number()
         .min(1, 'Please select a rating')
-        .max(5, 'Rating must be between 1 and 5')
-        .optional(),
+        .max(5, 'Rating must be between 1 and 5'),
     managerComment: z
         .string()
         .max(1000, 'Comment must be less than 1000 characters')
         .optional(),
-}).refine(
-    (data) => data.rating !== undefined || (data.managerComment && data.managerComment.length > 0),
-    {
-        message: 'Please provide either a rating or a comment',
-        path: ['rating'],
-    }
-);
+});
 
 type ReviewPlanFormData = z.infer<typeof reviewPlanSchema>;
 
@@ -72,7 +65,12 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
     const handleFormSubmit = async (data: ReviewPlanFormData) => {
         setIsSubmitting(true);
         try {
-            const success = await onSubmit(data);
+            // Map to ReviewWeeklyPlanDto (rating is required)
+            const reviewData: ReviewWeeklyPlanDto = {
+                rating: data.rating!,
+                managerComment: data.managerComment,
+            };
+            const success = await onSubmit(reviewData);
             if (success) {
                 onClose();
             }
@@ -99,15 +97,15 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
                 <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border mb-4">
                     <h4 className="font-semibold mb-2">{plan.title}</h4>
                     <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        <p>Employee: {plan.employeeName}</p>
+                        <p>Employee: {plan.employee?.firstName} {plan.employee?.lastName}</p>
                         <p>
-                            Progress: {plan.completedTasks}/
-                            {plan.totalTasks} tasks completed (
-                            {plan.completionPercentage}%)
+                            Tasks: {plan.tasks?.length || 0} total
                         </p>
-                        <p>
-                            Daily Updates: {plan.dailyProgresses.length}
-                        </p>
+                        {plan.tasks && plan.tasks.length > 0 && (
+                            <p>
+                                Completed: {plan.tasks.filter(t => t.status === 'Completed').length} tasks
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -132,10 +130,10 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
                                     >
                                         <Star
                                             className={`h-10 w-10 ${selectedRating &&
-                                                    rating <=
-                                                    selectedRating
-                                                    ? 'text-yellow-400 fill-current'
-                                                    : 'text-gray-300 hover:text-yellow-200'
+                                                rating <=
+                                                selectedRating
+                                                ? 'text-yellow-400 fill-current'
+                                                : 'text-gray-300 hover:text-yellow-200'
                                                 }`}
                                         />
                                     </button>

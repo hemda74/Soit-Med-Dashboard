@@ -2,10 +2,10 @@ import React from 'react';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import {
     ListChecks,
     Calendar,
@@ -13,7 +13,6 @@ import {
     CheckCircle2,
     Circle,
     Star,
-    Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WeeklyPlan } from '@/types/weeklyPlan.types';
@@ -48,6 +47,9 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
+                    <DialogDescription>
+                        View weekly plan details and progress
+                    </DialogDescription>
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <DialogTitle className="flex items-center gap-2 text-2xl mb-2">
@@ -57,7 +59,7 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                 <div className="flex items-center gap-1">
                                     <User className="h-4 w-4" />
-                                    {plan.employeeName}
+                                    {plan.employee ? `${plan.employee.firstName} ${plan.employee.lastName}` : plan.employeeId}
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
@@ -100,19 +102,23 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                 Overall Progress
                             </span>
                             <span className="text-2xl font-bold text-green-600">
-                                {plan.completionPercentage}%
+                                {plan.tasks && plan.tasks.length > 0
+                                    ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
+                                    : 0}%
                             </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                             <div
                                 className="bg-green-500 h-3 rounded-full transition-all"
                                 style={{
-                                    width: `${plan.completionPercentage}%`,
+                                    width: `${plan.tasks && plan.tasks.length > 0
+                                        ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
+                                        : 0}%`,
                                 }}
                             ></div>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            {plan.completedTasks} of {plan.totalTasks}{' '}
+                            {plan.tasks?.filter(t => t.status === 'Completed').length || 0} of {plan.tasks?.length || 0}{' '}
                             tasks completed
                         </p>
                     </div>
@@ -121,142 +127,60 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                     <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                             <ListChecks className="h-5 w-5" />
-                            Tasks ({plan.tasks.length})
+                            Tasks ({plan.tasks?.length || 0})
                         </h3>
                         <div className="space-y-2">
                             {plan.tasks
-                                .sort(
-                                    (a, b) =>
-                                        a.displayOrder -
-                                        b.displayOrder
-                                )
-                                .map((task) => (
+                                ?.map((task) => (
                                     <div
                                         key={task.id}
-                                        className={`p-3 border rounded-lg ${task.isCompleted
+                                        className={`p-3 border rounded-lg ${task.status === 'Completed'
                                             ? 'bg-green-50 dark:bg-green-900/20 border-green-200'
                                             : 'bg-white dark:bg-gray-800'
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
-                                            {task.isCompleted ? (
+                                            {task.status === 'Completed' ? (
                                                 <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                                             ) : (
                                                 <Circle className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
                                             )}
                                             <div className="flex-1">
-                                                <p
-                                                    className={`font-medium ${task.isCompleted
-                                                        ? 'line-through text-gray-500'
-                                                        : ''
-                                                        }`}
-                                                >
-                                                    {
-                                                        task.title
-                                                    }
-                                                </p>
-                                                {task.description && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">
+                                                        {task.taskType}
+                                                    </span>
+                                                    <span className={`text-xs px-2 py-1 rounded ${
+                                                        task.priority === 'High' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                                                        task.priority === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                        'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                                                    }`}>
+                                                        {task.priority}
+                                                    </span>
+                                                </div>
+                                                {task.clientName && (
                                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                        {
-                                                            task.description
-                                                        }
+                                                        Client: {task.clientName}
+                                                    </p>
+                                                )}
+                                                {task.plannedDate && (
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                        Scheduled: {format(new Date(task.plannedDate), 'MMM dd, yyyy')}
+                                                    </p>
+                                                )}
+                                                {task.purpose && (
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                        {task.purpose}
                                                     </p>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                )) || []}
                         </div>
                     </div>
 
-                    {/* Daily Progress */}
-                    {plan.dailyProgresses.length > 0 && (
-                        <div>
-                            <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                <Clock className="h-5 w-5" />
-                                Daily Progress (
-                                {plan.dailyProgresses.length})
-                            </h3>
-                            <div className="space-y-3">
-                                {plan.dailyProgresses
-                                    .sort(
-                                        (a, b) =>
-                                            new Date(
-                                                b.progressDate
-                                            ).getTime() -
-                                            new Date(
-                                                a.progressDate
-                                            ).getTime()
-                                    )
-                                    .map((progress) => (
-                                        <div
-                                            key={
-                                                progress.id
-                                            }
-                                            className="p-4 border rounded-lg"
-                                        >
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Calendar className="h-4 w-4 text-gray-400" />
-                                                <span className="font-medium">
-                                                    {format(
-                                                        new Date(
-                                                            progress.progressDate
-                                                        ),
-                                                        'EEEE, MMMM dd, yyyy'
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                                                {
-                                                    progress.notes
-                                                }
-                                            </p>
-                                            {progress.tasksWorkedOn &&
-                                                progress
-                                                    .tasksWorkedOn
-                                                    .length >
-                                                0 && (
-                                                    <div className="mt-2">
-                                                        <p className="text-sm text-gray-500 mb-1">
-                                                            Tasks
-                                                            worked
-                                                            on:
-                                                        </p>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {progress.tasksWorkedOn.map(
-                                                                (
-                                                                    taskId
-                                                                ) => {
-                                                                    const task =
-                                                                        plan.tasks.find(
-                                                                            (
-                                                                                t
-                                                                            ) =>
-                                                                                t.id ===
-                                                                                taskId
-                                                                        );
-                                                                    return task ? (
-                                                                        <Badge
-                                                                            key={
-                                                                                taskId
-                                                                            }
-                                                                            variant="outline"
-                                                                        >
-                                                                            {
-                                                                                task.title
-                                                                            }
-                                                                        </Badge>
-                                                                    ) : null;
-                                                                }
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                        </div>
-                                    ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* Daily Progress section removed - Not part of new WeeklyPlan API structure */}
 
                     {/* Manager Review */}
                     {plan.rating && (
