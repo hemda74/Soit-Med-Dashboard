@@ -24,33 +24,10 @@ class NotificationService {
 		await signalRService.requestNotificationPermission();
 
 		// Set up SignalR listeners
+		// Backend sends all notifications through 'notification' event
 		signalRService.addEventListener(
 			'notification',
 			this.handleNotification.bind(this)
-		);
-		signalRService.addEventListener(
-			'roleBasedNotification',
-			this.handleRoleBasedNotification.bind(this)
-		);
-		signalRService.addEventListener(
-			'newUserRegistration',
-			this.handleNewUserRegistration.bind(this)
-		);
-		signalRService.addEventListener(
-			'userRoleChange',
-			this.handleUserRoleChange.bind(this)
-		);
-		signalRService.addEventListener(
-			'weeklyPlanUpdate',
-			this.handleWeeklyPlanUpdate.bind(this)
-		);
-		signalRService.addEventListener(
-			'salesReportUpdate',
-			this.handleSalesReportUpdate.bind(this)
-		);
-		signalRService.addEventListener(
-			'systemMaintenance',
-			this.handleSystemMaintenance.bind(this)
 		);
 
 		this.isInitialized = true;
@@ -96,21 +73,37 @@ class NotificationService {
 	}
 
 	private handleNotification(data: any): void {
+		// Backend sends notification data with all fields
 		const notification: NotificationData = {
-			id: `notification-${Date.now()}-${Math.random()
-				.toString(36)
-				.substr(2, 9)}`,
-			type: 'info',
-			title: 'New Notification',
-			message: data.message,
+			id:
+				data.id ||
+				`notification-${Date.now()}-${Math.random()
+					.toString(36)
+					.substr(2, 9)}`,
+			type: data.type || 'info',
+			title: data.title || 'New Notification',
+			message: data.message || String(data),
 			link: data.link,
-			data: data.data,
-			timestamp: Date.now(),
-			isRead: false,
+			data: data.data || data,
+			timestamp: data.timestamp || Date.now(),
+			isRead: data.isRead || false,
+			roles: data.roles,
+			departments: data.departments,
+			userIds: data.userIds,
 		};
 
-		if (this.shouldShowNotification(notification)) {
-			this.addNotification(notification);
+		// Backend handles filtering via groups
+		this.addNotification(notification);
+
+		// Show toast based on notification type
+		if (notification.type === 'success') {
+			toast.success(notification.message);
+		} else if (notification.type === 'error') {
+			toast.error(notification.message);
+		} else if (notification.type === 'warning') {
+			toast(notification.message, { icon: '⚠️' });
+		} else {
+			toast(notification.message, { icon: 'ℹ️' });
 		}
 	}
 

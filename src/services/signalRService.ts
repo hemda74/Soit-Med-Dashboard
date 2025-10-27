@@ -27,32 +27,20 @@ class SignalRService {
 				);
 			}
 
+			// Build SignalR URL - use environment variable or default to localhost:5117
+			// Format: http://localhost:5117/notificationHub
+			const baseUrl =
+				import.meta.env.VITE_SIGNALR_URL ||
+				'http://localhost:5117';
+			const hubUrl = `${baseUrl}/notificationHub`;
+
 			this.connection = new HubConnectionBuilder()
-				.withUrl(
-					`${
-						import.meta.env
-							.VITE_SIGNALR_URL ||
-						'https://localhost:5001/notificationHub'
-					}`,
-					{
-						accessTokenFactory: () => token,
-					}
-				)
-				.configureLogging(LogLevel.Information)
-				.withAutomaticReconnect({
-					nextRetryDelayInMilliseconds: (
-						retryContext
-					) => {
-						return Math.min(
-							1000 *
-								Math.pow(
-									2,
-									retryContext.previousRetryCount
-								),
-							30000
-						);
-					},
+				.withUrl(hubUrl, {
+					accessTokenFactory: () => token,
+					withCredentials: false,
 				})
+				.withAutomaticReconnect([0, 2000, 10000, 30000])
+				.configureLogging(LogLevel.Information)
 				.build();
 
 			// Set up event handlers
@@ -72,6 +60,32 @@ class SignalRService {
 			});
 		} catch (error) {
 			console.error('SignalR Connection Error:', error);
+
+			// Check for authentication errors
+			if (
+				error instanceof Error &&
+				error.message.includes('401')
+			) {
+				console.error(
+					'Authentication failed - token may be invalid'
+				);
+				this.notifyListeners('connectionError', {
+					type: 'auth',
+					message: 'Authentication failed - please login again',
+				});
+			} else if (
+				error instanceof Error &&
+				error.message.includes('Failed to connect')
+			) {
+				console.error(
+					'Connection failed - check server status'
+				);
+				this.notifyListeners('connectionError', {
+					type: 'connection',
+					message: 'Failed to connect to server',
+				});
+			}
+
 			this.isReconnecting = true;
 			this.handleReconnect();
 		}
@@ -80,62 +94,15 @@ class SignalRService {
 	private setupEventHandlers(): void {
 		if (!this.connection) return;
 
-		// Handle new notifications
-		this.connection.on(
-			'ReceiveNotification',
-			(message: string, link: string, data: any) => {
-				this.handleNotification(message, link, data);
-			}
-		);
-
-		// Handle role-based notifications
-		this.connection.on(
-			'ReceiveRoleBasedNotification',
-			(notification: NotificationData) => {
-				this.handleRoleBasedNotification(notification);
-			}
-		);
-
-		// Handle new user registrations
-		this.connection.on('NewUserRegistered', (user: any) => {
-			this.handleNewUserRegistration(user);
+		// Handle new notifications - Updated to match backend signature (single data parameter)
+		this.connection.on('ReceiveNotification', (data: any) => {
+			console.log('Received Notification:', data);
+			this.handleNotification(data);
 		});
 
-		// Handle user role changes
-		this.connection.on('UserRoleChanged', (user: any) => {
-			this.handleUserRoleChange(user);
-		});
-
-		// Handle weekly plan updates
-		this.connection.on('WeeklyPlanUpdated', (plan: any) => {
-			this.handleWeeklyPlanUpdate(plan);
-		});
-
-		// Handle sales report updates
-		this.connection.on('SalesReportUpdated', (report: any) => {
-			this.handleSalesReportUpdate(report);
-		});
-
-		// Handle system maintenance
-		this.connection.on('SystemMaintenance', (maintenance: any) => {
-			this.handleSystemMaintenance(maintenance);
-		});
-
-		// Handle connection events
-		this.connection.onclose((error) => {
-			console.log('SignalR Connection Closed:', error);
-			this.isConnected = false;
-			this.isReconnecting = false;
-			this.notifyListeners('connectionStatus', {
-				isConnected: false,
-				isReconnecting: false,
-				reconnectAttempts: this.reconnectAttempts,
-			});
-			this.handleReconnect();
-		});
-
-		this.connection.onreconnecting((error) => {
-			console.log('SignalR Reconnecting:', error);
+		// Connection events
+		this.connection.onreconnecting(() => {
+			console.log('SignalR Reconnecting...');
 			this.isReconnecting = true;
 			this.notifyListeners('connectionStatus', {
 				isConnected: false,
@@ -144,8 +111,8 @@ class SignalRService {
 			});
 		});
 
-		this.connection.onreconnected((connectionId?: string) => {
-			console.log('SignalR Reconnected:', connectionId);
+		this.connection.onreconnected(() => {
+			console.log('SignalR Reconnected!');
 			this.isConnected = true;
 			this.isReconnecting = false;
 			this.reconnectAttempts = 0;
@@ -155,107 +122,51 @@ class SignalRService {
 				reconnectAttempts: 0,
 			});
 		});
+
+		this.connection.onclose((error) => {
+			console.log('SignalR Closed!', error);
+			this.isConnected = false;
+			this.isReconnecting = false;
+			this.notifyListeners('connectionStatus', {
+				isConnected: false,
+				isReconnecting: false,
+				reconnectAttempts: this.reconnectAttempts,
+			});
+
+			// Attempt to reconnect
+			if (
+				this.reconnectAttempts <
+				this.maxReconnectAttempts
+			) {
+				this.handleReconnect();
+			}
+		});
 	}
 
-	private handleNotification(
-		message: string,
-		link: string,
-		data: any
-	): void {
-		console.log('Received Notification:', { message, link, data });
+	private handleNotification(data: any): void {
+		console.log('Received Notification Data:', data);
+
+		// Handle different notification data structures
+		// Backend may send just the data object with all notification info
+		const notificationData =
+			typeof data === 'object'
+				? data
+				: {
+						title: 'New Notification',
+						message: data,
+						data: data,
+				  };
 
 		// Show browser notification if permission is granted
 		this.showBrowserNotification(
-			'New Notification',
-			message,
-			link,
-			data
+			notificationData.title || 'New Notification',
+			notificationData.message || String(data),
+			notificationData.link || null,
+			notificationData
 		);
 
 		// Notify listeners
-		this.notifyListeners('notification', { message, link, data });
-	}
-
-	private handleRoleBasedNotification(
-		notification: NotificationData
-	): void {
-		console.log('Received Role-Based Notification:', notification);
-
-		// Show browser notification if permission is granted
-		this.showBrowserNotification(
-			notification.title,
-			notification.message,
-			notification.link || null,
-			notification
-		);
-
-		// Notify listeners
-		this.notifyListeners('roleBasedNotification', notification);
-	}
-
-	private handleNewUserRegistration(user: any): void {
-		console.log('New User Registered:', user);
-
-		this.showBrowserNotification(
-			'New User Registration',
-			`New user ${user.firstName} ${user.lastName} has been registered with role ${user.role}`,
-			null,
-			{ type: 'userRegistration', ...user }
-		);
-
-		this.notifyListeners('newUserRegistration', user);
-	}
-
-	private handleUserRoleChange(user: any): void {
-		console.log('User Role Changed:', user);
-
-		this.showBrowserNotification(
-			'User Role Updated',
-			`User ${user.firstName} ${user.lastName} role has been changed to ${user.newRole}`,
-			null,
-			{ type: 'userRoleChange', ...user }
-		);
-
-		this.notifyListeners('userRoleChange', user);
-	}
-
-	private handleWeeklyPlanUpdate(plan: any): void {
-		console.log('Weekly Plan Updated:', plan);
-
-		this.showBrowserNotification(
-			'Weekly Plan Updated',
-			`Weekly plan has been updated by ${plan.updatedBy}`,
-			null,
-			{ type: 'weeklyPlanUpdate', ...plan }
-		);
-
-		this.notifyListeners('weeklyPlanUpdate', plan);
-	}
-
-	private handleSalesReportUpdate(report: any): void {
-		console.log('Sales Report Updated:', report);
-
-		this.showBrowserNotification(
-			'Sales Report Updated',
-			`New sales report has been generated for ${report.period}`,
-			null,
-			{ type: 'salesReportUpdate', ...report }
-		);
-
-		this.notifyListeners('salesReportUpdate', report);
-	}
-
-	private handleSystemMaintenance(maintenance: any): void {
-		console.log('System Maintenance:', maintenance);
-
-		this.showBrowserNotification(
-			'System Maintenance',
-			maintenance.message,
-			null,
-			{ type: 'systemMaintenance', ...maintenance }
-		);
-
-		this.notifyListeners('systemMaintenance', maintenance);
+		this.notifyListeners('notification', notificationData);
 	}
 
 	private showBrowserNotification(
@@ -299,6 +210,42 @@ class SignalRService {
 			return permission === 'granted';
 		}
 		return false;
+	}
+
+	// Join a specific group
+	async joinGroup(groupName: string): Promise<void> {
+		if (this.connection && this.isConnected) {
+			try {
+				await this.connection.invoke(
+					'JoinGroup',
+					groupName
+				);
+				console.log(`Joined group: ${groupName}`);
+			} catch (error) {
+				console.error(
+					`Error joining group ${groupName}:`,
+					error
+				);
+			}
+		}
+	}
+
+	// Leave a group
+	async leaveGroup(groupName: string): Promise<void> {
+		if (this.connection && this.isConnected) {
+			try {
+				await this.connection.invoke(
+					'LeaveGroup',
+					groupName
+				);
+				console.log(`Left group: ${groupName}`);
+			} catch (error) {
+				console.error(
+					`Error leaving group ${groupName}:`,
+					error
+				);
+			}
+		}
 	}
 
 	// Add event listener
@@ -400,7 +347,17 @@ class SignalRService {
 	}
 
 	private getAuthToken(): string | null {
-		return localStorage.getItem('authToken');
+		// Try to get token from localStorage (persisted Zustand store)
+		const persistedState = localStorage.getItem('auth-storage');
+		if (persistedState) {
+			try {
+				const parsed = JSON.parse(persistedState);
+				return parsed.state?.user?.token || null;
+			} catch {
+				return null;
+			}
+		}
+		return null;
 	}
 }
 
