@@ -1,457 +1,793 @@
-// Sales Manager Dashboard - Comprehensive management dashboard for sales managers
-
-import { useEffect, useState } from 'react';
-import {
-    Users,
-    TrendingUp,
-    Calendar,
-    BarChart3,
-    AlertCircle,
-    CheckCircle,
-    Clock,
-    UserPlus,
-    Activity,
-    FileText,
-    Download,
-    Filter
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useSalesStore } from '@/stores/salesStore';
+import { useAuthStore } from '@/stores/authStore';
+import {
+	ChartBarIcon,
+	UserGroupIcon,
+	CalendarIcon,
+	// ExclamationTriangleIcon,
+	HandRaisedIcon as HandshakeIconOutline,
+	// ClipboardDocumentListIcon,
+	// CheckCircleIcon,
+	// XCircleIcon,
+	// ClockIcon,
+	CurrencyDollarIcon as DollarSignIcon
+} from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ClientSearch from './ClientSearch';
-import ClientDetails from './ClientDetails';
-import type { Client } from '@/types/sales.types';
+import DealApprovalForm from './DealApprovalForm';
+import type { Deal } from '@/types/sales.types';
 
-export default function SalesManagerDashboard() {
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-    const [selectedTab, setSelectedTab] = useState('overview');
-    const [timeRange, setTimeRange] = useState('monthly');
+// Helper function to safely format dates
+const safeFormatDate = (date: any, fallback: string = 'N/A'): string => {
+	if (!date) return fallback;
+	try {
+		const parsed = new Date(date);
+		if (isNaN(parsed.getTime())) return fallback;
+		return format(parsed, 'MMM dd, yyyy');
+	} catch {
+		return fallback;
+	}
+};
 
-    const {
-        salesDashboard,
-        salesAnalytics,
-        salesPerformance,
-        upcomingVisits,
-        overdueVisits,
-        clients,
-        analyticsLoading,
-        getSalesDashboard,
-        getSalesAnalytics,
-        getSalesPerformance,
-        getUpcomingVisits,
-        getOverdueVisits,
-        getMyClients,
-    } = useSalesStore();
+const SalesManagerDashboard: React.FC = () => {
+	const {
+		getSalesManagerDashboard,
+		getSalesReports,
+		getWeeklyPlans,
+		reviewWeeklyPlan,
+		getDeals,
+		getPendingApprovals,
+		// approveDeal,
+		// failDeal,
+		salesDashboard,
+		salesReports,
+		weeklyPlans,
+		deals,
+		// pendingApprovals,
+		analyticsLoading,
+		reportsLoading,
+		weeklyPlansLoading,
+		dealsLoading,
+		reportsError,
+		weeklyPlansError,
+		dealsError
+	} = useSalesStore();
 
-    useEffect(() => {
-        // Load dashboard data
-        getSalesDashboard();
-        getSalesAnalytics(timeRange);
-        getSalesPerformance(undefined, timeRange);
-        getUpcomingVisits(7);
-        getOverdueVisits();
-        getMyClients();
-    }, [timeRange, getSalesDashboard, getSalesAnalytics, getSalesPerformance, getUpcomingVisits, getOverdueVisits, getMyClients]);
+	const { user } = useAuthStore();
+	const [selectedPlan, setSelectedPlan] = useState<any>(null);
+	const [reviewComment, setReviewComment] = useState('');
+	const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+	const [showDealApproval, setShowDealApproval] = useState(false);
+	const [activeTab, setActiveTab] = useState('overview');
 
-    const handleClientSelect = (client: Client) => {
-        setSelectedClient(client);
-        setSelectedTab('clients');
-    };
+	useEffect(() => {
+		getSalesManagerDashboard();
+		getSalesReports();
+		getWeeklyPlans();
+		getDeals({ status: 'PendingManagerApproval' });
+		getPendingApprovals();
+	}, [getSalesManagerDashboard, getSalesReports, getWeeklyPlans, getDeals, getPendingApprovals]);
 
-    const getStatusColor = (status: string) => {
-        const colors = {
-            Active: 'bg-green-100 text-green-800',
-            Inactive: 'bg-gray-100 text-gray-800',
-            Prospect: 'bg-yellow-100 text-yellow-800',
-            Lost: 'bg-red-100 text-red-800',
-        };
-        return colors[status as keyof typeof colors] || colors.Inactive;
-    };
+	const handlePlanReview = async (planId: number, status: 'Approved' | 'Rejected') => {
+		try {
+			await reviewWeeklyPlan(planId, {
+				status,
+				reviewNotes: reviewComment,
+			});
+			setSelectedPlan(null);
+			setReviewComment('');
+			// Refresh plans after review
+			getWeeklyPlans();
+		} catch (error) {
+			console.error('Error reviewing plan:', error);
+		}
+	};
+
+	const getStatusColor = (status: string) => {
+		switch (status) {
+			case 'Approved':
+				return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+			case 'Rejected':
+				return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+			case 'Submitted':
+				return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+			case 'Draft':
+				return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+			default:
+				return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+		}
+	};
+
+	const getDealStatusColor = (status: string) => {
+		switch (status) {
+			case 'PendingManagerApproval':
+				return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200';
+			case 'PendingSuperAdminApproval':
+				return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
+			case 'Approved':
+				return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+			case 'Success':
+				return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
+			case 'Failed':
+				return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+			case 'Rejected':
+				return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
+			default:
+				return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+		}
+	};
+
+	const handleDealApproval = (deal: Deal) => {
+		setSelectedDeal(deal);
+		setShowDealApproval(true);
+	};
 
 
-    if (analyticsLoading && !salesDashboard) {
-        return (
-            <div className="space-y-6">
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-            </div>
-        );
-    }
+	if (analyticsLoading && reportsLoading && weeklyPlansLoading) {
+		return (
+			<div className="text-center py-8">
+				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+				<p className="mt-4 text-gray-600">Loading dashboard...</p>
+			</div>
+		);
+	}
 
-    return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">Sales Manager Dashboard</h1>
-                    <p className="text-muted-foreground">Manage your sales team and track performance</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <Select value={timeRange} onValueChange={setTimeRange}>
-                        <SelectTrigger className="w-32">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="yearly">Yearly</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export Report
-                    </Button>
-                </div>
-            </div>
+	return (
+		<div className="space-y-6">
+			{/* Header */}
+			<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+				<div className="flex justify-between items-center">
+					<div>
+						<h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+							Sales Manager Dashboard
+						</h1>
+						<p className="text-gray-600 dark:text-gray-400">
+							Welcome back, {user?.firstName} {user?.lastName}
+						</p>
+					</div>
+					<div className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400">
+						Last updated: {format(new Date(), 'MMM dd, yyyy HH:mm')}
+					</div>
+				</div>
+			</div>
 
-            {/* Key Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="flex items-center space-x-2 mb-2">
-                            <Users className="h-5 w-5 text-primary" />
-                            <span className="text-sm font-medium">Total Clients</span>
-                        </div>
-                        <p className="text-2xl font-bold">{salesDashboard?.overview.totalClients || 0}</p>
-                        <p className="text-xs text-muted-foreground">
-                            +{salesDashboard?.overview.newClientsThisMonth || 0} this month
-                        </p>
-                    </CardContent>
-                </Card>
+			{/* Main Content Tabs */}
+			<Tabs value={activeTab} onValueChange={setActiveTab}>
+				<TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800">
+					<TabsTrigger value="overview">Overview</TabsTrigger>
+					<TabsTrigger value="deals">Deal Approvals</TabsTrigger>
+					<TabsTrigger value="plans">Weekly Plans</TabsTrigger>
+					<TabsTrigger value="reports">Reports</TabsTrigger>
+				</TabsList>
 
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="flex items-center space-x-2 mb-2">
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                            <span className="text-sm font-medium">Active Clients</span>
-                        </div>
-                        <p className="text-2xl font-bold">{salesDashboard?.overview.activeClients || 0}</p>
-                        <p className="text-xs text-muted-foreground">
-                            {salesDashboard?.overview.conversionRate || 0}% conversion rate
-                        </p>
-                    </CardContent>
-                </Card>
+				{/* Overview Tab */}
+				<TabsContent value="overview" className="space-y-6">
 
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="flex items-center space-x-2 mb-2">
-                            <Calendar className="h-5 w-5 text-blue-500" />
-                            <span className="text-sm font-medium">Monthly Visits</span>
-                        </div>
-                        <p className="text-2xl font-bold">{salesDashboard?.overview.totalVisitsThisMonth || 0}</p>
-                        <p className="text-xs text-muted-foreground">
-                            {upcomingVisits.length} upcoming
-                        </p>
-                    </CardContent>
-                </Card>
+					{/* Key Metrics */}
+					{salesDashboard && (
+						<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+							<Card>
+								<CardContent className="p-6">
+									<div className="flex items-center">
+										<div className="flex-shrink-0">
+											<ChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+										</div>
+										<div className="ml-4">
+											<h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">
+												Total Clients
+											</h3>
+											<p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+												{salesDashboard.overview?.totalClients?.toLocaleString() || 0}
+											</p>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardContent className="p-6">
+									<div className="flex items-center">
+										<div className="flex-shrink-0">
+											<HandshakeIconOutline className="h-8 w-8 text-green-600 dark:text-green-400" />
+										</div>
+										<div className="ml-4">
+											<h3 className="text-sm font-medium text-green-600 dark:text-green-400">
+												Pending Deals
+											</h3>
+											<p className="text-2xl font-bold text-green-900 dark:text-green-100">
+												{deals.filter(d => d.status === 'PendingManagerApproval').length}
+											</p>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardContent className="p-6">
+									<div className="flex items-center">
+										<div className="flex-shrink-0">
+											<DollarSignIcon className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+										</div>
+										<div className="ml-4">
+											<h3 className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+												Total Revenue
+											</h3>
+											<p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+												EGP {deals.filter(d => d.status === 'Success').reduce((sum, deal) => sum + deal.dealValue, 0).toLocaleString()}
+											</p>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardContent className="p-6">
+									<div className="flex items-center">
+										<div className="flex-shrink-0">
+											<UserGroupIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+										</div>
+										<div className="ml-4">
+											<h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">
+												Team Performance
+											</h3>
+											<p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+												{salesDashboard.overview?.teamPerformance || 0}%
+											</p>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					)}
 
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="flex items-center space-x-2 mb-2">
-                            <TrendingUp className="h-5 w-5 text-purple-500" />
-                            <span className="text-sm font-medium">Team Performance</span>
-                        </div>
-                        <p className="text-2xl font-bold">{salesDashboard?.overview.teamPerformance || 0}%</p>
-                        <p className="text-xs text-muted-foreground">
-                            Average across team
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+					{/* Team Performance Overview */}
+					{salesDashboard?.teamPerformance && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center">
+									<UserGroupIcon className="h-5 w-5 mr-2" />
+									Team Performance
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+									{salesDashboard.teamPerformance.map((member, index) => (
+										<div
+											key={index}
+											className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+										>
+											<div className="flex items-center justify-between mb-2">
+												<h3 className="font-medium text-gray-900 dark:text-gray-100">
+													{member.salesmanName}
+												</h3>
+												<span className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400">
+													{member.successRate}% success
+												</span>
+											</div>
+											<div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
+												<div>
+													<span className="font-medium">{member.clientsCount}</span> clients
+												</div>
+												<div>
+													<span className="font-medium">{member.visitsCount}</span> visits
+												</div>
+											</div>
+											<div className="mt-2 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400">
+												Last activity: {member.lastActivity ? format(new Date(member.lastActivity), 'MMM dd') : 'N/A'}
+											</div>
+										</div>
+									))}
+								</div>
+							</CardContent>
+						</Card>
+					)}
+				</TabsContent>
 
-            {/* Main Content Tabs */}
-            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="clients">Clients</TabsTrigger>
-                    <TabsTrigger value="visits">Visits</TabsTrigger>
-                    <TabsTrigger value="team">Team Performance</TabsTrigger>
-                    <TabsTrigger value="reports">Reports</TabsTrigger>
-                </TabsList>
+				{/* Deal Approvals Tab */}
+				<TabsContent value="deals" className="space-y-6">
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center">
+								<HandshakeIconOutline className="h-5 w-5 mr-2" />
+								Pending Deal Approvals
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{dealsLoading ? (
+								<div className="text-center py-8">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+								</div>
+							) : dealsError ? (
+								<div className="text-center py-8 text-red-500 dark:text-red-400">
+									{dealsError}
+								</div>
+							) : deals.filter(d => d.status === 'PendingManagerApproval').length > 0 ? (
+								<div className="space-y-4">
+									{deals
+										.filter(deal => deal.status === 'PendingManagerApproval')
+										.map((deal) => (
+											<div
+												key={deal.id}
+												className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+											>
+												<div className="flex justify-between items-start mb-3">
+													<div>
+														<h3 className="font-medium text-gray-900 dark:text-gray-100">
+															{deal.clientName}
+														</h3>
+														<p className="text-sm text-gray-600 dark:text-gray-400">
+															{deal.dealDescription}
+														</p>
+														<p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400">
+															Created by: {deal.createdByName} • {deal.createdAt ? format(new Date(deal.createdAt), 'MMM dd, yyyy') : 'N/A'}
+														</p>
+													</div>
+													<Badge className={getDealStatusColor(deal.status)}>
+														{deal.status.replace(/([A-Z])/g, ' $1').trim()}
+													</Badge>
+												</div>
 
-                {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-6">
-                    <div className="grid gap-6 lg:grid-cols-2">
-                        {/* Recent Activity */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center space-x-2">
-                                    <Activity className="h-5 w-5" />
-                                    <span>Recent Activity</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {salesDashboard?.recentActivity?.slice(0, 5).map((activity, index) => (
-                                        <div key={index} className="flex items-center space-x-3">
-                                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm">{activity.description}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {activity.salesmanName || 'Unknown'} • {new Date(activity.timestamp).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    )) || (
-                                            <p className="text-sm text-muted-foreground">No recent activity</p>
-                                        )}
-                                </div>
-                            </CardContent>
-                        </Card>
+												<div className="flex justify-between items-center">
+													<div className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400">
+														<strong>Deal Value:</strong> EGP {deal.dealValue.toLocaleString()}
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															onClick={() => handleDealApproval(deal)}
+															className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+														>
+															Review Deal
+														</Button>
+													</div>
+												</div>
+											</div>
+										))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500 dark:text-gray-400 dark:text-gray-400">
+									No deals pending approval
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-                        {/* Upcoming Visits */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center space-x-2">
-                                    <Calendar className="h-5 w-5" />
-                                    <span>Upcoming Visits</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {upcomingVisits.slice(0, 5).map((visit) => (
-                                        <div key={visit.id} className="flex items-center space-x-3">
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium">{visit.clientName}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {visit.visitType} • {new Date(visit.visitDate).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <Badge variant="outline">Salesman</Badge>
-                                        </div>
-                                    ))}
-                                    {upcomingVisits.length === 0 && (
-                                        <p className="text-sm text-muted-foreground">No upcoming visits</p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+				{/* Weekly Plans Tab */}
+				<TabsContent value="plans" className="space-y-6">
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						{/* Weekly Plans Approval */}
+						<div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+							<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+								<h2 className="text-lg font-semibold flex items-center text-gray-900 dark:text-gray-100">
+									<CalendarIcon className="h-5 w-5 mr-2" />
+									Weekly Plans Pending Approval
+								</h2>
+							</div>
+							<div className="p-6">
+								{weeklyPlansLoading ? (
+									<div className="text-center py-8">
+										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+									</div>
+								) : weeklyPlansError ? (
+									<div className="text-center py-8 text-red-500 dark:text-red-400 dark:text-red-400">
+										{weeklyPlansError}
+									</div>
+								) : weeklyPlans.filter(plan => plan.status === 'Submitted').length > 0 ? (
+									<div className="space-y-4">
+										{weeklyPlans
+											.filter(plan => plan.status === 'Submitted')
+											.map((plan) => (
+												<div
+													key={plan.id}
+													className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+												>
+													<div className="flex justify-between items-start mb-3">
+														<div>
+															<h3 className="font-medium text-gray-900 dark:text-gray-100">
+																{plan.planTitle}
+															</h3>
+															<p className="text-sm text-gray-600 dark:text-gray-400">
+																{plan.employeeName}
+															</p>
+															<p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400">
+																{plan.weekStartDate ? format(new Date(plan.weekStartDate), 'MMM dd') : 'N/A'} - {plan.weekEndDate ? format(new Date(plan.weekEndDate), 'MMM dd, yyyy') : 'N/A'}
+															</p>
+														</div>
+														<span
+															className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+																plan.status
+															)}`}
+														>
+															{plan.status}
+														</span>
+													</div>
 
-                    {/* Overdue Items */}
-                    {overdueVisits.length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center space-x-2 text-destructive">
-                                    <AlertCircle className="h-5 w-5" />
-                                    <span>Overdue Items ({overdueVisits.length})</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {overdueVisits.slice(0, 5).map((visit) => (
-                                        <div key={visit.id} className="flex items-center space-x-3">
-                                            <div className="w-2 h-2 bg-destructive rounded-full"></div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium">{visit.clientName}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {visit.visitType} • Due {new Date(visit.visitDate).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <Badge variant="destructive">Overdue</Badge>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-                </TabsContent>
+													<div className="flex justify-between items-center">
+														<div className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400">
+															{plan.tasks?.length || 0} tasks
+														</div>
+														<div className="flex space-x-2">
+															<button
+																onClick={() => setSelectedPlan(plan)}
+																className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+															>
+																Review
+															</button>
+														</div>
+													</div>
+												</div>
+											))}
+									</div>
+								) : (
+									<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+										No plans pending approval
+									</div>
+								)}
+							</div>
+						</div>
 
-                {/* Clients Tab */}
-                <TabsContent value="clients" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Client Management</h3>
-                        <Button>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add Client
-                        </Button>
-                    </div>
+						{/* Recent Sales Reports */}
+						<div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+							<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+								<h2 className="text-lg font-semibold flex items-center text-gray-900 dark:text-gray-100">
+									<ChartBarIcon className="h-5 w-5 mr-2" />
+									Recent Sales Reports
+								</h2>
+							</div>
+							<div className="p-6">
+								{reportsLoading ? (
+									<div className="text-center py-8">
+										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+									</div>
+								) : reportsError ? (
+									<div className="text-center py-8 text-red-500 dark:text-red-400">
+										{reportsError}
+									</div>
+								) : salesReports.length > 0 ? (
+									<div className="space-y-4">
+										{salesReports.slice(0, 5).map((report) => (
+											<div
+												key={report.id}
+												className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+											>
+												<div className="flex justify-between items-start mb-2">
+													<div>
+														<h3 className="font-medium text-gray-900 dark:text-gray-100">
+															{report.title}
+														</h3>
+														<p className="text-sm text-gray-600 dark:text-gray-400">
+															{report.reportType} Report
+														</p>
+													</div>
+													<span
+														className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+													>
+														Completed
+													</span>
+												</div>
 
-                    {/* Client Search */}
-                    <ClientSearch onClientSelect={handleClientSelect} />
+												<div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+													<span>
+														{safeFormatDate(report.generatedAt)}
+													</span>
+													<span>
+														{report.generatedByName}
+													</span>
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+										No recent reports
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
 
-                    {/* Clients List */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {clients.slice(0, 12).map((client) => (
-                            <Card key={client.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleClientSelect(client)}>
-                                <CardContent className="p-4">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium truncate">{client.name}</h4>
-                                            <p className="text-sm text-muted-foreground">{client.type}</p>
-                                        </div>
-                                        <Badge className={getStatusColor(client.status)}>
-                                            {client.status}
-                                        </Badge>
-                                    </div>
-                                    <div className="space-y-1 text-xs text-muted-foreground">
-                                        {client.location && (
-                                            <p className="truncate">{client.location}</p>
-                                        )}
-                                        {client.phone && (
-                                            <p>{client.phone}</p>
-                                        )}
-                                        <p>{client.totalVisits} visits</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </TabsContent>
+					{/* Weekly Plans Approval */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center">
+								<CalendarIcon className="h-5 w-5 mr-2" />
+								Weekly Plans Pending Approval
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{weeklyPlansLoading ? (
+								<div className="text-center py-8">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+								</div>
+							) : weeklyPlansError ? (
+								<div className="text-center py-8 text-red-500 dark:text-red-400">
+									{weeklyPlansError}
+								</div>
+							) : weeklyPlans.filter(plan => plan.status === 'Submitted').length > 0 ? (
+								<div className="space-y-4">
+									{weeklyPlans
+										.filter(plan => plan.status === 'Submitted')
+										.map((plan) => (
+											<div
+												key={plan.id}
+												className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+											>
+												<div className="flex justify-between items-start mb-3">
+													<div>
+														<h3 className="font-medium text-gray-900">
+															{plan.planTitle}
+														</h3>
+														<p className="text-sm text-gray-600">
+															{plan.employeeName}
+														</p>
+														<p className="text-xs text-gray-500 dark:text-gray-400">
+															{plan.weekStartDate ? format(new Date(plan.weekStartDate), 'MMM dd') : 'N/A'} - {plan.weekEndDate ? format(new Date(plan.weekEndDate), 'MMM dd, yyyy') : 'N/A'}
+														</p>
+													</div>
+													<Badge className={getStatusColor(plan.status)}>
+														{plan.status}
+													</Badge>
+												</div>
 
-                {/* Visits Tab */}
-                <TabsContent value="visits" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Visit Management</h3>
-                        <div className="flex items-center space-x-2">
-                            <Button variant="outline">
-                                <Filter className="h-4 w-4 mr-2" />
-                                Filter
-                            </Button>
-                            <Button>
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Schedule Visit
-                            </Button>
-                        </div>
-                    </div>
+												<div className="flex justify-between items-center">
+													<div className="text-sm text-gray-500 dark:text-gray-400">
+														{plan.tasks?.length || 0} tasks
+													</div>
+													<div className="flex space-x-2">
+														<Button
+															onClick={() => setSelectedPlan(plan)}
+															className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+														>
+															Review
+														</Button>
+													</div>
+												</div>
+											</div>
+										))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+									No plans pending approval
+								</div>
+							)}
+						</CardContent>
+					</Card>
 
-                    {/* Visits Overview */}
-                    <div className="grid gap-4 md:grid-cols-3">
-                        <Card>
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2">
-                                    <Calendar className="h-5 w-5 text-blue-500" />
-                                    <span className="text-sm font-medium">Total Visits</span>
-                                </div>
-                                <p className="text-2xl font-bold">{salesAnalytics?.totalVisits || 0}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2">
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                    <span className="text-sm font-medium">Completed</span>
-                                </div>
-                                <p className="text-2xl font-bold">{salesAnalytics?.completedVisits || 0}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2">
-                                    <Clock className="h-5 w-5 text-yellow-500" />
-                                    <span className="text-sm font-medium">Upcoming</span>
-                                </div>
-                                <p className="text-2xl font-bold">{upcomingVisits.length}</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </TabsContent>
+					{/* Recent Sales Reports */}
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center">
+								<ChartBarIcon className="h-5 w-5 mr-2" />
+								<span>Recent Sales Reports</span>
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{reportsLoading ? (
+								<div className="text-center py-8">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+								</div>
+							) : reportsError ? (
+								<div className="text-center py-8 text-red-500 dark:text-red-400">
+									{reportsError}
+								</div>
+							) : salesReports.length > 0 ? (
+								<div className="space-y-4">
+									{salesReports.slice(0, 5).map((report) => (
+										<div
+											key={report.id}
+											className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+										>
+											<div className="flex justify-between items-start mb-2">
+												<div>
+													<h3 className="font-medium text-gray-900">
+														{report.title}
+													</h3>
+													<p className="text-sm text-gray-600">
+														{report.reportType} Report
+													</p>
+												</div>
+												<Badge className="bg-green-100 text-green-800">
+													Completed
+												</Badge>
+											</div>
 
-                {/* Team Performance Tab */}
-                <TabsContent value="team" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Team Performance</h3>
-                        <Button>
-                            <BarChart3 className="h-4 w-4 mr-2" />
-                            View Analytics
-                        </Button>
-                    </div>
+											<div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+												<span>
+													{safeFormatDate(report.generatedAt)}
+												</span>
+												<span>
+													{report.generatedByName}
+												</span>
+											</div>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+									No recent reports
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
 
-                    {/* Team Performance Cards */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {salesPerformance.map((performance) => (
-                            <Card key={performance.salesmanId}>
-                                <CardContent className="p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h4 className="font-medium">{performance.salesmanName || 'Unknown'}</h4>
-                                        <Badge variant={performance.successRate > 80 ? 'default' : 'secondary'}>
-                                            {performance.successRate}%
-                                        </Badge>
-                                    </div>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Clients:</span>
-                                            <span>{performance.totalClients}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Visits:</span>
-                                            <span>{performance.totalVisits}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Last Activity:</span>
-                                            <span>{new Date(Date.now()).toLocaleDateString()}</span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </TabsContent>
+				{/* Reports Tab */}
+				<TabsContent value="reports" className="space-y-6">
+					<Card>
+						<CardHeader>
+							<CardTitle className="flex items-center">
+								<ChartBarIcon className="h-5 w-5 mr-2" />
+								Sales Reports
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{reportsLoading ? (
+								<div className="text-center py-8">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+								</div>
+							) : reportsError ? (
+								<div className="text-center py-8 text-red-500 dark:text-red-400">
+									{reportsError}
+								</div>
+							) : salesReports.length > 0 ? (
+								<div className="space-y-4">
+									{salesReports.map((report) => (
+										<div
+											key={report.id}
+											className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+										>
+											<div className="flex justify-between items-start mb-2">
+												<div>
+													<h3 className="font-medium text-gray-900">
+														{report.title}
+													</h3>
+													<p className="text-sm text-gray-600">
+														{report.reportType} Report
+													</p>
+													<p className="text-xs text-gray-500 dark:text-gray-400">
+														{report.description}
+													</p>
+												</div>
+												<Badge className="bg-green-100 text-green-800">
+													Completed
+												</Badge>
+											</div>
 
-                {/* Reports Tab */}
-                <TabsContent value="reports" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Sales Reports</h3>
-                        <Button>
-                            <FileText className="h-4 w-4 mr-2" />
-                            Generate Report
-                        </Button>
-                    </div>
+											<div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+												<span>
+													Generated: {safeFormatDate(report.generatedAt)}
+												</span>
+												<span>
+													By: {report.generatedByName}
+												</span>
+											</div>
+										</div>
+									))}
+								</div>
+							) : (
+								<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+									No reports available
+								</div>
+							)}
+						</CardContent>
+					</Card>
+				</TabsContent>
+			</Tabs>
 
-                    {/* Reports Grid */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <BarChart3 className="h-5 w-5 text-primary" />
-                                    <span className="font-medium">Monthly Performance</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">Team performance for current month</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <Users className="h-5 w-5 text-primary" />
-                                    <span className="font-medium">Client Analysis</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">Detailed client breakdown and trends</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                            <CardContent className="p-4">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <TrendingUp className="h-5 w-5 text-primary" />
-                                    <span className="font-medium">Sales Trends</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">Revenue and conversion trends</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </TabsContent>
-            </Tabs>
+			{/* Deal Approval Modal */}
+			{
+				showDealApproval && selectedDeal && (
+					<DealApprovalForm
+						deal={selectedDeal}
+						onSuccess={() => {
+							setShowDealApproval(false);
+							setSelectedDeal(null);
+							getDeals({ status: 'PendingManagerApproval' });
+						}}
+						onCancel={() => {
+							setShowDealApproval(false);
+							setSelectedDeal(null);
+						}}
+					/>
+				)
+			}
 
-            {/* Client Details Modal */}
-            {selectedClient && (
-                <ClientDetails
-                    clientId={selectedClient.id}
-                    onEdit={(client) => {
-                        // Handle client edit
-                        console.log('Edit client:', client);
-                    }}
-                    onDelete={() => {
-                        // Handle client delete
-                        setSelectedClient(null);
-                    }}
-                />
-            )}
-        </div>
-    );
-}
+			{/* Plan Review Modal */}
+			{
+				selectedPlan && (
+					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+						<div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl">
+							<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+								<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+									Review Weekly Plan
+								</h3>
+								<p className="text-sm text-gray-600 dark:text-gray-400">
+									{selectedPlan.planTitle} by {selectedPlan.employeeName}
+								</p>
+							</div>
 
+							<div className="p-6">
+								<div className="space-y-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+											Review Comment
+										</label>
+										<textarea
+											value={reviewComment}
+											onChange={(e) => setReviewComment(e.target.value)}
+											placeholder="Add your review comments..."
+											rows={4}
+											className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+										/>
+									</div>
+
+									{selectedPlan.tasks && selectedPlan.tasks.length > 0 && (
+										<div>
+											<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+												Tasks ({selectedPlan.tasks.length})
+											</label>
+											<div className="space-y-2 max-h-40 overflow-y-auto">
+												{selectedPlan.tasks.map((task: any, index: number) => (
+													<div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														<div className="flex justify-between items-start">
+															<div>
+																<p className="font-medium text-sm dark:text-gray-100">{task.title}</p>
+																<p className="text-xs text-gray-600 dark:text-gray-400">{task.description}</p>
+															</div>
+															<span
+																className={`px-2 py-1 rounded-full text-xs ${task.priority === 'High'
+																	? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+																	: task.priority === 'Medium'
+																		? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+																		: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+																	}`}
+															>
+																{task.priority}
+															</span>
+														</div>
+														<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+															Due: {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'N/A'}
+														</p>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
+
+							<div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+								<div className="flex justify-end space-x-3">
+									<Button
+										onClick={() => {
+											setSelectedPlan(null);
+											setReviewComment('');
+										}}
+										variant="outline"
+									>
+										Cancel
+									</Button>
+									<Button
+										onClick={() => handlePlanReview(selectedPlan.id, 'Rejected')}
+										variant="destructive"
+									>
+										Reject
+									</Button>
+									<Button
+										onClick={() => handlePlanReview(selectedPlan.id, 'Approved')}
+										className="bg-green-600 hover:bg-green-700"
+									>
+										Approve
+									</Button>
+								</div>
+							</div>
+						</div>
+					</div>
+				)
+			}
+		</div>
+	);
+};
+
+export default SalesManagerDashboard;

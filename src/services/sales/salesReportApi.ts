@@ -91,13 +91,6 @@ class SalesReportApiService {
 			? `${API_ENDPOINTS.SALES_REPORT.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES_REPORT.BASE;
 
-		console.log(
-			'Making API request to:',
-			`${API_BASE_URL}${endpoint}`
-		);
-		console.log('Query params:', queryString);
-		console.log('Filters:', filters);
-
 		return this.makeRequest<
 			PaginatedApiResponse<PaginatedSalesReportsResponseDto>
 		>(endpoint, {

@@ -18,11 +18,149 @@ import type {
 	CreateSalesReportDto,
 	ApiResponse,
 	PaginatedApiResponse,
+	PaginatedApiResponseWithMeta,
 	ExportOptions,
 	ExportResult,
 } from '@/types/sales.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
+
+// Weekly Plan Types
+interface WeeklyPlan {
+	id: number;
+	planTitle: string;
+	weekStartDate: string;
+	weekEndDate: string;
+	status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+	employeeId: string;
+	employeeName: string;
+	createdAt: string;
+	updatedAt: string;
+	reviewedAt?: string;
+	reviewedBy?: string;
+	reviewerName?: string;
+	reviewNotes?: string;
+	tasks: WeeklyPlanItem[];
+}
+
+interface WeeklyPlanItem {
+	id: number;
+	weeklyPlanId: number;
+	title: string;
+	description: string;
+	priority: 'High' | 'Medium' | 'Low';
+	status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled';
+	dueDate: string;
+	completedAt?: string;
+	notes?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+interface CreateWeeklyPlanDto {
+	planTitle: string;
+	weekStartDate: string;
+	weekEndDate: string;
+	tasks: CreateWeeklyPlanItemDto[];
+}
+
+interface CreateWeeklyPlanItemDto {
+	title: string;
+	description: string;
+	priority: 'High' | 'Medium' | 'Low';
+	dueDate: string;
+	notes?: string;
+}
+
+interface UpdateWeeklyPlanDto {
+	planTitle?: string;
+	weekStartDate?: string;
+	weekEndDate?: string;
+	status?: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+}
+
+interface ReviewWeeklyPlanDto {
+	status: 'Approved' | 'Rejected';
+	reviewNotes?: string;
+}
+
+// Request Workflow Types
+interface RequestWorkflow {
+	id: string;
+	requestType:
+		| 'ClientVisit'
+		| 'ProductDemo'
+		| 'SupportRequest'
+		| 'QuoteRequest'
+		| 'Other';
+	title: string;
+	description: string;
+	clientId: string;
+	clientName: string;
+	requestedBy: string;
+	requestedByName: string;
+	assignedTo?: string;
+	assignedToName?: string;
+	status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled';
+	priority: 'High' | 'Medium' | 'Low';
+	createdAt: string;
+	updatedAt: string;
+	dueDate?: string;
+	completedAt?: string;
+	notes?: string;
+	comments: RequestComment[];
+}
+
+interface RequestComment {
+	id: string;
+	requestId: string;
+	comment: string;
+	commentedBy: string;
+	commentedByName: string;
+	createdAt: string;
+}
+
+interface CreateRequestWorkflowDto {
+	requestType:
+		| 'ClientVisit'
+		| 'ProductDemo'
+		| 'SupportRequest'
+		| 'QuoteRequest'
+		| 'Other';
+	title: string;
+	description: string;
+	clientId: string;
+	priority: 'High' | 'Medium' | 'Low';
+	dueDate?: string;
+	notes?: string;
+}
+
+// Delivery & Payment Terms Types
+interface DeliveryTerms {
+	id: string;
+	clientId: string;
+	clientName: string;
+	terms: string;
+	validFrom: string;
+	validTo?: string;
+	createdBy: string;
+	createdByName: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+interface PaymentTerms {
+	id: string;
+	clientId: string;
+	clientName: string;
+	terms: string;
+	validFrom: string;
+	validTo?: string;
+	createdBy: string;
+	createdByName: string;
+	createdAt: string;
+	updatedAt: string;
+}
 
 const API_BASE_URL =
 	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
@@ -108,7 +246,7 @@ class SalesApiService {
 			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
 			: API_ENDPOINTS.SALES.CLIENT.SEARCH;
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		return this.makeRequest<
 			PaginatedApiResponse<ClientSearchResult>
@@ -123,7 +261,7 @@ class SalesApiService {
 	async createClient(
 		data: CreateClientDto
 	): Promise<ApiResponse<Client>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<Client>>(
 			API_ENDPOINTS.SALES.CLIENT.BASE,
 			{
@@ -137,7 +275,7 @@ class SalesApiService {
 	 * Get client by ID
 	 */
 	async getClient(clientId: string): Promise<ApiResponse<Client>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<Client>>(
 			API_ENDPOINTS.SALES.CLIENT.BY_ID(clientId),
 			{
@@ -153,7 +291,7 @@ class SalesApiService {
 		clientId: string,
 		data: UpdateClientDto
 	): Promise<ApiResponse<Client>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<Client>>(
 			API_ENDPOINTS.SALES.CLIENT.BY_ID(clientId),
 			{
@@ -167,7 +305,7 @@ class SalesApiService {
 	 * Delete client
 	 */
 	async deleteClient(clientId: string): Promise<ApiResponse<void>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<void>>(
 			API_ENDPOINTS.SALES.CLIENT.BY_ID(clientId),
 			{
@@ -178,10 +316,32 @@ class SalesApiService {
 
 	/**
 	 * Get my clients (for current user)
+	 * NOTE: This method is for Salesman app, not used in this dashboard
+	 * SalesManager/SuperAdmin use searchClients instead
 	 */
 	async getMyClients(
 		filters: Omit<ClientSearchFilters, 'assignedSalesmanId'> = {}
 	): Promise<PaginatedApiResponse<ClientSearchResult>> {
+		// For Sales Support, return empty result if no filters to avoid 400 error
+		const hasAnyFilter = Object.keys(filters).length > 0;
+
+		if (!hasAnyFilter) {
+			return {
+				success: true,
+				message: 'No clients found',
+				data: {
+					clients: [],
+					totalCount: 0,
+					page: 1,
+					pageSize: 20,
+					totalPages: 0,
+					hasNextPage: false,
+					hasPreviousPage: false,
+				},
+				timestamp: new Date().toISOString(),
+			};
+		}
+
 		const queryParams = new URLSearchParams();
 
 		if (filters.query) queryParams.append('query', filters.query);
@@ -212,11 +372,13 @@ class SalesApiService {
 			);
 
 		const queryString = queryParams.toString();
+		// NOTE: MY_CLIENTS endpoint is for Salesman app, not used in this dashboard
+		// SalesManager/SuperAdmin should use searchClients instead
 		const endpoint = queryString
-			? `${API_ENDPOINTS.SALES.CLIENT.MY_CLIENTS}?${queryString}`
-			: API_ENDPOINTS.SALES.CLIENT.MY_CLIENTS;
+			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
+			: API_ENDPOINTS.SALES.CLIENT.SEARCH;
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		return this.makeRequest<
 			PaginatedApiResponse<ClientSearchResult>
@@ -231,7 +393,7 @@ class SalesApiService {
 	async findOrCreateClient(
 		data: CreateClientDto
 	): Promise<ApiResponse<Client>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<Client>>(
 			API_ENDPOINTS.SALES.CLIENT.FIND_OR_CREATE,
 			{
@@ -245,7 +407,7 @@ class SalesApiService {
 	 * Get clients needing follow-up
 	 */
 	async getClientsNeedingFollowUp(): Promise<ApiResponse<Client[]>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<Client[]>>(
 			API_ENDPOINTS.SALES.CLIENT.FOLLOW_UP_NEEDED,
 			{
@@ -258,7 +420,7 @@ class SalesApiService {
 	 * Get client statistics
 	 */
 	async getClientStatistics(): Promise<ApiResponse<SalesAnalytics>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<SalesAnalytics>>(
 			API_ENDPOINTS.SALES.CLIENT.STATISTICS,
 			{
@@ -275,7 +437,7 @@ class SalesApiService {
 	async createClientVisit(
 		data: CreateClientVisitDto
 	): Promise<ApiResponse<ClientVisit>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientVisit>>(
 			API_ENDPOINTS.SALES.CLIENT_VISIT.BASE,
 			{
@@ -324,7 +486,7 @@ class SalesApiService {
 			  )}?${queryString}`
 			: API_ENDPOINTS.SALES.CLIENT_VISIT.BY_CLIENT(clientId);
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		return this.makeRequest<PaginatedApiResponse<ClientVisit[]>>(
 			endpoint,
@@ -341,7 +503,7 @@ class SalesApiService {
 		visitId: string,
 		data: UpdateClientVisitDto
 	): Promise<ApiResponse<ClientVisit>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientVisit>>(
 			API_ENDPOINTS.SALES.CLIENT_VISIT.BY_ID(visitId),
 			{
@@ -355,7 +517,7 @@ class SalesApiService {
 	 * Delete client visit
 	 */
 	async deleteClientVisit(visitId: string): Promise<ApiResponse<void>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<void>>(
 			API_ENDPOINTS.SALES.CLIENT_VISIT.BY_ID(visitId),
 			{
@@ -368,7 +530,7 @@ class SalesApiService {
 	 * Get overdue visits
 	 */
 	async getOverdueVisits(): Promise<ApiResponse<ClientVisit[]>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientVisit[]>>(
 			API_ENDPOINTS.SALES.CLIENT_VISIT.OVERDUE,
 			{
@@ -383,7 +545,7 @@ class SalesApiService {
 	async getUpcomingVisits(
 		days: number = 7
 	): Promise<ApiResponse<ClientVisit[]>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientVisit[]>>(
 			`${API_ENDPOINTS.SALES.CLIENT_VISIT.UPCOMING}?days=${days}`,
 			{
@@ -400,7 +562,7 @@ class SalesApiService {
 	async createClientInteraction(
 		data: CreateClientInteractionDto
 	): Promise<ApiResponse<ClientInteraction>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientInteraction>>(
 			API_ENDPOINTS.SALES.CLIENT_INTERACTION.BASE,
 			{
@@ -451,7 +613,7 @@ class SalesApiService {
 					clientId
 			  );
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		return this.makeRequest<
 			PaginatedApiResponse<ClientInteraction[]>
@@ -467,7 +629,7 @@ class SalesApiService {
 		interactionId: string,
 		data: Partial<CreateClientInteractionDto>
 	): Promise<ApiResponse<ClientInteraction>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ClientInteraction>>(
 			API_ENDPOINTS.SALES.CLIENT_INTERACTION.BY_ID(
 				interactionId
@@ -485,7 +647,7 @@ class SalesApiService {
 	async deleteClientInteraction(
 		interactionId: string
 	): Promise<ApiResponse<void>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<void>>(
 			API_ENDPOINTS.SALES.CLIENT_INTERACTION.BY_ID(
 				interactionId
@@ -502,7 +664,7 @@ class SalesApiService {
 	 * Get sales dashboard data
 	 */
 	async getSalesDashboard(): Promise<ApiResponse<SalesDashboardData>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<SalesDashboardData>>(
 			API_ENDPOINTS.SALES.SALES_ANALYTICS.DASHBOARD,
 			{
@@ -517,7 +679,7 @@ class SalesApiService {
 	async getSalesAnalytics(
 		period: string = 'monthly'
 	): Promise<ApiResponse<SalesAnalytics>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<SalesAnalytics>>(
 			`${API_ENDPOINTS.SALES.SALES_ANALYTICS.BASE}?period=${period}`,
 			{
@@ -541,7 +703,7 @@ class SalesApiService {
 			API_ENDPOINTS.SALES.SALES_ANALYTICS.PERFORMANCE
 		}?${queryParams.toString()}`;
 
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 
 		return this.makeRequest<ApiResponse<SalesPerformanceMetrics[]>>(
 			endpoint,
@@ -557,9 +719,439 @@ class SalesApiService {
 	async getSalesTrends(
 		period: string = 'monthly'
 	): Promise<ApiResponse<any>> {
-        // Removed verbose console logs for production
+		// Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<any>>(
 			`${API_ENDPOINTS.SALES.SALES_ANALYTICS.TRENDS}?period=${period}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	// ==================== WEEKLY PLANNING ====================
+
+	/**
+	 * Create weekly plan
+	 */
+	async createWeeklyPlan(
+		data: CreateWeeklyPlanDto
+	): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			API_ENDPOINTS.WEEKLY_PLAN.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Get weekly plans with pagination
+	 */
+	async getWeeklyPlans(
+		page: number = 1,
+		pageSize: number = 20
+	): Promise<PaginatedApiResponseWithMeta<WeeklyPlan[]>> {
+		return this.makeRequest<
+			PaginatedApiResponseWithMeta<WeeklyPlan[]>
+		>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.BASE}?page=${page}&pageSize=${pageSize}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get weekly plan by ID
+	 */
+	async getWeeklyPlan(planId: number): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			API_ENDPOINTS.WEEKLY_PLAN.BY_ID(planId),
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Update weekly plan
+	 */
+	async updateWeeklyPlan(
+		planId: number,
+		data: UpdateWeeklyPlanDto
+	): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			API_ENDPOINTS.WEEKLY_PLAN.BY_ID(planId),
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Submit weekly plan for review
+	 */
+	async submitWeeklyPlan(
+		planId: number
+	): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.BY_ID(planId)}/submit`,
+			{
+				method: 'POST',
+			}
+		);
+	}
+
+	/**
+	 * Review weekly plan
+	 */
+	async reviewWeeklyPlan(
+		planId: number,
+		reviewData: ReviewWeeklyPlanDto
+	): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			API_ENDPOINTS.WEEKLY_PLAN.REVIEW(planId),
+			{
+				method: 'POST',
+				body: JSON.stringify(reviewData),
+			}
+		);
+	}
+
+	/**
+	 * Get current weekly plan
+	 */
+	async getCurrentWeeklyPlan(): Promise<ApiResponse<WeeklyPlan>> {
+		return this.makeRequest<ApiResponse<WeeklyPlan>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.BASE}/current`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	// ==================== PLAN ITEMS ====================
+
+	/**
+	 * Create plan item
+	 */
+	async createPlanItem(
+		itemData: CreateWeeklyPlanItemDto & { weeklyPlanId: number }
+	): Promise<ApiResponse<WeeklyPlanItem>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem>>(
+			API_ENDPOINTS.WEEKLY_PLAN.TASKS(itemData.weeklyPlanId),
+			{
+				method: 'POST',
+				body: JSON.stringify(itemData),
+			}
+		);
+	}
+
+	/**
+	 * Get plan items
+	 */
+	async getPlanItems(
+		planId: number
+	): Promise<ApiResponse<WeeklyPlanItem[]>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem[]>>(
+			API_ENDPOINTS.WEEKLY_PLAN.TASKS(planId),
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Update plan item
+	 */
+	async updatePlanItem(
+		itemId: number,
+		weeklyPlanId: number,
+		itemData: Partial<CreateWeeklyPlanItemDto>
+	): Promise<ApiResponse<WeeklyPlanItem>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem>>(
+			API_ENDPOINTS.WEEKLY_PLAN.TASK_BY_ID(
+				weeklyPlanId,
+				itemId
+			),
+			{
+				method: 'PUT',
+				body: JSON.stringify(itemData),
+			}
+		);
+	}
+
+	/**
+	 * Complete plan item
+	 */
+	async completePlanItem(
+		itemId: number,
+		weeklyPlanId: number,
+		completionData: { notes?: string }
+	): Promise<ApiResponse<WeeklyPlanItem>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.TASK_BY_ID(
+				weeklyPlanId,
+				itemId
+			)}/complete`,
+			{
+				method: 'POST',
+				body: JSON.stringify(completionData),
+			}
+		);
+	}
+
+	/**
+	 * Cancel plan item
+	 */
+	async cancelPlanItem(
+		itemId: number,
+		weeklyPlanId: number,
+		reason: string
+	): Promise<ApiResponse<WeeklyPlanItem>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.TASK_BY_ID(
+				weeklyPlanId,
+				itemId
+			)}/cancel`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ reason }),
+			}
+		);
+	}
+
+	/**
+	 * Postpone plan item
+	 */
+	async postponePlanItem(
+		itemId: number,
+		weeklyPlanId: number,
+		newDate: string,
+		reason: string
+	): Promise<ApiResponse<WeeklyPlanItem>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.TASK_BY_ID(
+				weeklyPlanId,
+				itemId
+			)}/postpone`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ newDate, reason }),
+			}
+		);
+	}
+
+	/**
+	 * Get overdue items
+	 */
+	async getOverdueItems(): Promise<ApiResponse<WeeklyPlanItem[]>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem[]>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.BASE}/overdue`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get upcoming items
+	 */
+	async getUpcomingItems(
+		days: number = 7
+	): Promise<ApiResponse<WeeklyPlanItem[]>> {
+		return this.makeRequest<ApiResponse<WeeklyPlanItem[]>>(
+			`${API_ENDPOINTS.WEEKLY_PLAN.BASE}/upcoming?days=${days}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	// ==================== REQUEST WORKFLOW ====================
+
+	/**
+	 * Create request workflow
+	 */
+	async createRequestWorkflow(
+		data: CreateRequestWorkflowDto
+	): Promise<ApiResponse<RequestWorkflow>> {
+		return this.makeRequest<ApiResponse<RequestWorkflow>>(
+			'/api/RequestWorkflows',
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Get my requests
+	 */
+	async getMyRequests(
+		filters: {
+			page?: number;
+			pageSize?: number;
+			status?: string;
+			requestType?: string;
+		} = {}
+	): Promise<PaginatedApiResponseWithMeta<RequestWorkflow[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.page)
+			queryParams.append('page', filters.page.toString());
+		if (filters.pageSize)
+			queryParams.append(
+				'pageSize',
+				filters.pageSize.toString()
+			);
+		if (filters.status)
+			queryParams.append('status', filters.status);
+		if (filters.requestType)
+			queryParams.append('requestType', filters.requestType);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `/api/RequestWorkflows/sent?${queryString}`
+			: '/api/RequestWorkflows/sent';
+
+		return this.makeRequest<
+			PaginatedApiResponseWithMeta<RequestWorkflow[]>
+		>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get assigned requests
+	 */
+	async getAssignedRequests(
+		filters: {
+			page?: number;
+			pageSize?: number;
+			status?: string;
+			requestType?: string;
+		} = {}
+	): Promise<PaginatedApiResponseWithMeta<RequestWorkflow[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.page)
+			queryParams.append('page', filters.page.toString());
+		if (filters.pageSize)
+			queryParams.append(
+				'pageSize',
+				filters.pageSize.toString()
+			);
+		if (filters.status)
+			queryParams.append('status', filters.status);
+		if (filters.requestType)
+			queryParams.append('requestType', filters.requestType);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `/api/RequestWorkflows/assigned?${queryString}`
+			: '/api/RequestWorkflows/assigned';
+
+		return this.makeRequest<
+			PaginatedApiResponseWithMeta<RequestWorkflow[]>
+		>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Update request status
+	 */
+	async updateRequestStatus(
+		requestId: string,
+		status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled',
+		comment: string = ''
+	): Promise<ApiResponse<RequestWorkflow>> {
+		return this.makeRequest<ApiResponse<RequestWorkflow>>(
+			`/api/RequestWorkflows/${requestId}/status`,
+			{
+				method: 'PUT',
+				body: JSON.stringify({ status, comment }),
+			}
+		);
+	}
+
+	/**
+	 * Assign request
+	 */
+	async assignRequest(
+		requestId: string,
+		assignToUserId: string
+	): Promise<ApiResponse<RequestWorkflow>> {
+		return this.makeRequest<ApiResponse<RequestWorkflow>>(
+			`/api/RequestWorkflows/${requestId}/assign`,
+			{
+				method: 'PUT',
+				body: JSON.stringify({ assignToUserId }),
+			}
+		);
+	}
+
+	// ==================== DELIVERY & PAYMENT TERMS ====================
+
+	/**
+	 * Create delivery terms
+	 */
+	async createDeliveryTerms(termsData: {
+		clientId: string;
+		terms: string;
+		validFrom: string;
+		validTo?: string;
+	}): Promise<ApiResponse<DeliveryTerms>> {
+		return this.makeRequest<ApiResponse<DeliveryTerms>>(
+			'/api/DeliveryTerms',
+			{
+				method: 'POST',
+				body: JSON.stringify(termsData),
+			}
+		);
+	}
+
+	/**
+	 * Create payment terms
+	 */
+	async createPaymentTerms(termsData: {
+		clientId: string;
+		terms: string;
+		validFrom: string;
+		validTo?: string;
+	}): Promise<ApiResponse<PaymentTerms>> {
+		return this.makeRequest<ApiResponse<PaymentTerms>>(
+			'/api/PaymentTerms',
+			{
+				method: 'POST',
+				body: JSON.stringify(termsData),
+			}
+		);
+	}
+
+	/**
+	 * Get delivery terms
+	 */
+	async getDeliveryTerms(
+		termsId: string
+	): Promise<ApiResponse<DeliveryTerms>> {
+		return this.makeRequest<ApiResponse<DeliveryTerms>>(
+			`/api/DeliveryTerms/${termsId}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get payment terms
+	 */
+	async getPaymentTerms(
+		termsId: string
+	): Promise<ApiResponse<PaymentTerms>> {
+		return this.makeRequest<ApiResponse<PaymentTerms>>(
+			`/api/PaymentTerms/${termsId}`,
 			{
 				method: 'GET',
 			}
@@ -569,12 +1161,94 @@ class SalesApiService {
 	// ==================== SALES REPORTS ====================
 
 	/**
+	 * Get sales manager dashboard
+	 */
+	async getSalesManagerDashboard(): Promise<
+		ApiResponse<SalesDashboardData>
+	> {
+		// Use the correct endpoint according to backend API
+		return this.makeRequest<ApiResponse<SalesDashboardData>>(
+			API_ENDPOINTS.DASHBOARD.STATS,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get sales reports
+	 */
+	async getSalesReports(
+		filters: {
+			page?: number;
+			pageSize?: number;
+			startDate?: string;
+			endDate?: string;
+			salesmanId?: string;
+		} = {}
+	): Promise<PaginatedApiResponseWithMeta<SalesReport[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.page)
+			queryParams.append('page', filters.page.toString());
+		if (filters.pageSize)
+			queryParams.append(
+				'pageSize',
+				filters.pageSize.toString()
+			);
+		if (filters.startDate)
+			queryParams.append('startDate', filters.startDate);
+		if (filters.endDate)
+			queryParams.append('endDate', filters.endDate);
+		if (filters.salesmanId)
+			queryParams.append('salesmanId', filters.salesmanId);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `/api/SalesReport?${queryString}`
+			: '/api/SalesReport';
+
+		return this.makeRequest<
+			PaginatedApiResponseWithMeta<SalesReport[]>
+		>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get salesman performance
+	 */
+	async getSalesmanPerformance(
+		salesmanId: string,
+		period: string = 'monthly'
+	): Promise<ApiResponse<SalesPerformanceMetrics>> {
+		return this.makeRequest<ApiResponse<SalesPerformanceMetrics>>(
+			`/api/SalesReport/salesman/${salesmanId}/performance?period=${period}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
+	 * Get top performers
+	 */
+	async getTopPerformers(
+		limit: number = 10
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`/api/SalesReport/top-performers?limit=${limit}`,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	/**
 	 * Generate sales report
 	 */
 	async generateSalesReport(
 		data: CreateSalesReportDto
 	): Promise<ApiResponse<SalesReport>> {
-        // Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<SalesReport>>(
 			API_ENDPOINTS.SALES.SALES_REPORT.GENERATE,
 			{
@@ -590,7 +1264,6 @@ class SalesApiService {
 	async getSalesReport(
 		reportId: string
 	): Promise<ApiResponse<SalesReport>> {
-        // Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<SalesReport>>(
 			API_ENDPOINTS.SALES.SALES_REPORT.BY_ID(reportId),
 			{
@@ -605,7 +1278,6 @@ class SalesApiService {
 	async exportSalesData(
 		options: ExportOptions
 	): Promise<ApiResponse<ExportResult>> {
-        // Removed verbose console logs for production
 		return this.makeRequest<ApiResponse<ExportResult>>(
 			API_ENDPOINTS.SALES.SALES_ANALYTICS.EXPORT,
 			{
@@ -622,7 +1294,6 @@ class SalesApiService {
 		reportId: string,
 		format: 'pdf' | 'excel' | 'csv' = 'pdf'
 	): Promise<Blob> {
-        // Removed verbose console logs for production
 		const token = getAuthToken();
 		if (!token) {
 			throw new Error(
@@ -650,7 +1321,553 @@ class SalesApiService {
 
 		return response.blob();
 	}
+
+	// ==================== ADDITIONAL METHODS ====================
+
+	async getMyAssignedOffers() {
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BASE}/assigned`,
+			{ method: 'GET' }
+		);
+	}
+
+	// ==================== DEALS ====================
+
+	async createDeal(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getDeals(
+		filters = {}
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value) queryParams.append(key, value.toString());
+		});
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.DEALS.BASE}?${queryString}`
+			: API_ENDPOINTS.SALES.DEALS.BASE;
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			endpoint,
+			{ method: 'GET' }
+		);
+	}
+
+	async getDeal(dealId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.BY_ID(dealId),
+			{ method: 'GET' }
+		);
+	}
+
+	async updateDeal(dealId: string, data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.BY_ID(dealId),
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async approveDeal(
+		dealId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/approve`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async completeDeal(
+		dealId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/complete`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async failDeal(dealId: string, data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/fail`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getPendingApprovals(): Promise<ApiResponse<any[]>> {
+		// Use the correct endpoint according to backend API
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.DEALS.PENDING_MANAGER,
+			{ method: 'GET' }
+		);
+	}
+
+	// ==================== OFFERS ====================
+
+	async createOffer(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getOffers(
+		filters = {}
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value) queryParams.append(key, value.toString());
+		});
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFERS.BASE}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFERS.BASE;
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			endpoint,
+			{ method: 'GET' }
+		);
+	}
+
+	async getOffer(offerId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId),
+			{ method: 'GET' }
+		);
+	}
+
+	async updateOffer(
+		offerId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId),
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async sendOfferToSalesman(offerId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.SEND_TO_SALESMAN(offerId),
+			{
+				method: 'POST',
+			}
+		);
+	}
+
+	async recordClientResponse(
+		offerId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/response`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getOffersByClient(clientId: string): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BASE}/client/${clientId}`,
+			{ method: 'GET' }
+		);
+	}
+
+	/**
+	 * Get my offers (for current sales support user)
+	 * Returns offers created by the current user
+	 */
+	async getMyOffers(
+		filters: {
+			status?: string;
+			clientId?: string;
+			startDate?: string;
+			endDate?: string;
+		} = {}
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value) queryParams.append(key, value.toString());
+		});
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFERS.MY_OFFERS}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFERS.MY_OFFERS;
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			endpoint,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
+	async getClientProfile(clientId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.CLIENT.BY_ID(clientId)}/profile`,
+			{ method: 'GET' }
+		);
+	}
+
+	// ==================== OFFER REQUESTS ====================
+
+	async createOfferRequest(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getOfferRequests(
+		filters = {}
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value) queryParams.append(key, value.toString());
+		});
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE;
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			endpoint,
+			{ method: 'GET' }
+		);
+	}
+
+	async getOfferRequest(requestId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(requestId),
+			{ method: 'GET' }
+		);
+	}
+
+	async updateOfferRequest(
+		requestId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(requestId),
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async assignOfferRequest(
+		requestId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(
+				requestId
+			)}/assign`,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getTaskProgress(
+		filters = {}
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		const queryParams = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value) queryParams.append(key, value.toString());
+		});
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.TASK_PROGRESS.BASE}?${queryString}`
+			: API_ENDPOINTS.SALES.TASK_PROGRESS.BASE;
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			endpoint,
+			{ method: 'GET' }
+		);
+	}
+
+	async createTaskProgress(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.TASK_PROGRESS.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getTaskProgressById(
+		taskProgressId: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.TASK_PROGRESS.BASE}/${taskProgressId}`,
+			{ method: 'GET' }
+		);
+	}
+
+	async updateTaskProgress(
+		taskProgressId: string,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.TASK_PROGRESS.BASE}/${taskProgressId}`,
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getClientTaskProgress(
+		clientId: string
+	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
+			`${API_ENDPOINTS.SALES.TASK_PROGRESS.BASE}/client/${clientId}`,
+			{ method: 'GET' }
+		);
+	}
+
+	// ==================== ENHANCED OFFER FEATURES ====================
+
+	/**
+	 * Get offer equipment
+	 */
+	async getOfferEquipment(offerId: string): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId),
+			{ method: 'GET' }
+		);
+	}
+
+	/**
+	 * Add equipment to offer
+	 */
+	async addOfferEquipment(
+		offerId: string,
+		equipmentData: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId),
+			{
+				method: 'POST',
+				body: JSON.stringify(equipmentData),
+			}
+		);
+	}
+
+	/**
+	 * Update offer equipment
+	 */
+	async updateOfferEquipment(
+		offerId: string,
+		equipmentId: number,
+		equipmentData: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_BY_ID(
+				offerId,
+				equipmentId
+			),
+			{
+				method: 'PUT',
+				body: JSON.stringify(equipmentData),
+			}
+		);
+	}
+
+	/**
+	 * Delete offer equipment
+	 */
+	async deleteOfferEquipment(
+		offerId: string,
+		equipmentId: number
+	): Promise<ApiResponse<void>> {
+		return this.makeRequest<ApiResponse<void>>(
+			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_BY_ID(
+				offerId,
+				equipmentId
+			),
+			{ method: 'DELETE' }
+		);
+	}
+
+	/**
+	 * Upload equipment image
+	 */
+	async uploadEquipmentImage(
+		offerId: string,
+		equipmentId: number,
+		file: File
+	): Promise<ApiResponse<any>> {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		const token = getAuthToken();
+		if (!token) {
+			throw new Error(
+				'No authentication token found. Please log in again.'
+			);
+		}
+
+		const response = await fetch(
+			`${API_BASE_URL}${API_ENDPOINTS.SALES.OFFERS.UPLOAD_IMAGE(
+				offerId,
+				equipmentId
+			)}`,
+			{
+				method: 'POST',
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+				body: formData,
+			}
+		);
+
+		if (!response.ok) {
+			const errorData = await response
+				.json()
+				.catch(() => ({}));
+			throw new Error(
+				errorData.message ||
+					`Upload failed with status ${response.status}`
+			);
+		}
+
+		return response.json();
+	}
+
+	/**
+	 * Get offer terms
+	 */
+	async getOfferTerms(offerId: string): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.TERMS(offerId),
+			{ method: 'GET' }
+		);
+	}
+
+	/**
+	 * Add or update offer terms
+	 */
+	async updateOfferTerms(
+		offerId: string,
+		termsData: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.TERMS(offerId),
+			{
+				method: 'POST',
+				body: JSON.stringify(termsData),
+			}
+		);
+	}
+
+	/**
+	 * Get installment plan
+	 */
+	async getInstallmentPlan(offerId: string): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId),
+			{ method: 'GET' }
+		);
+	}
+
+	/**
+	 * Create installment plan
+	 * Data structure: { numberOfInstallments, startDate, paymentFrequency }
+	 */
+	async createInstallmentPlan(
+		offerId: string,
+		installmentData: {
+			numberOfInstallments: number;
+			startDate: string;
+			paymentFrequency: 'Monthly' | 'Weekly' | 'Quarterly';
+		}
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId),
+			{
+				method: 'POST',
+				body: JSON.stringify(installmentData),
+			}
+		);
+	}
+
+	/**
+	 * Export offer as PDF
+	 */
+	async exportOfferPdf(offerId: string): Promise<Blob> {
+		const token = getAuthToken();
+		if (!token) {
+			throw new Error(
+				'No authentication token found. Please log in again.'
+			);
+		}
+
+		const response = await fetch(
+			`${API_BASE_URL}${API_ENDPOINTS.SALES.OFFERS.EXPORT_PDF(
+				offerId
+			)}`,
+			{
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			}
+		);
+
+		if (!response.ok) {
+			throw new Error(
+				`PDF export failed with status ${response.status}`
+			);
+		}
+
+		return response.blob();
+	}
+
+	/**
+	 * Record task progress with offer request
+	 */
+	async recordTaskProgressWithOfferRequest(
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.TASK_PROGRESS.WITH_OFFER_REQUEST,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
 }
 
 export const salesApi = new SalesApiService();
-

@@ -1,690 +1,525 @@
-// Client Details Component - Comprehensive client information and management
+// Client Details Component - Updated with new business logic
 
-import React, { useState, useEffect } from 'react';
-import {
-    User,
-    MapPin,
-    Phone,
-    Mail,
-    Globe,
-    Calendar,
-    Edit,
-    Trash2,
-    Plus,
-    Building,
-    Star,
-    TrendingUp,
-    Clock,
-    CheckCircle,
-    AlertCircle
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useSalesStore } from '@/stores/salesStore';
-import type { Client, CreateClientVisitDto, CreateClientInteractionDto } from '@/types/sales.types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
+import {
+    PhoneIcon,
+    EnvelopeIcon,
+    MapPinIcon,
+    BuildingOfficeIcon,
+    PlusIcon,
+    ChartBarIcon
+} from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DealForm from './DealForm';
+import TaskProgressForm from './TaskProgressForm';
+import OfferRequestForm from './OfferRequestForm';
 
 interface ClientDetailsProps {
     clientId: string;
-    onEdit?: (client: Client) => void;
-    onDelete?: (clientId: string) => void;
     className?: string;
 }
 
-export default function ClientDetails({
-    clientId,
-    onEdit,
-    onDelete,
-    className = ''
-}: ClientDetailsProps) {
-    const [activeTab, setActiveTab] = useState('overview');
-    const [showVisitModal, setShowVisitModal] = useState(false);
-    const [showInteractionModal, setShowInteractionModal] = useState(false);
-    const [visitForm, setVisitForm] = useState<CreateClientVisitDto>({
-        clientId,
-        visitDate: new Date().toISOString().slice(0, 16),
-        visitType: 'Initial',
-        location: '',
-        purpose: '',
-        notes: '',
-        results: '',
-    });
-    const [interactionForm, setInteractionForm] = useState<CreateClientInteractionDto>({
-        clientId,
-        interactionType: 'Call',
-        subject: '',
-        description: '',
-        interactionDate: new Date().toISOString().slice(0, 16),
-    });
-
+const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' }) => {
     const {
-        selectedClient,
-        clientVisits,
-        clientInteractions,
-        clientsLoading,
-        visitsLoading,
-        interactionsLoading,
         getClient,
         getClientVisits,
-        getClientInteractions,
-        createClientVisit,
-        createClientInteraction,
-        deleteClient,
+        getClientTaskProgress,
+        getDeals,
+        getOfferRequests,
+        selectedClient,
+        clientVisits,
+        taskProgress,
+        deals,
+        offerRequests,
+        clientsLoading,
+        visitsLoading,
+        taskProgressLoading,
+        dealsLoading,
+        offerRequestsLoading,
+        clientsError
     } = useSalesStore();
+
+    const [activeTab, setActiveTab] = useState('overview');
+    const [showDealForm, setShowDealForm] = useState(false);
+    const [showTaskProgressForm, setShowTaskProgressForm] = useState(false);
+    const [showOfferRequestForm, setShowOfferRequestForm] = useState(false);
 
     useEffect(() => {
         if (clientId) {
             getClient(clientId);
             getClientVisits(clientId);
-            getClientInteractions(clientId);
+            getClientTaskProgress(clientId);
+            getDeals({ clientId });
+            getOfferRequests({ clientId });
         }
-    }, [clientId, getClient, getClientVisits, getClientInteractions]);
-
-    const handleEditClient = () => {
-        if (selectedClient) {
-            onEdit?.(selectedClient);
-        }
-    };
-
-    const handleDeleteClient = () => {
-        if (selectedClient && window.confirm('Are you sure you want to delete this client?')) {
-            deleteClient(selectedClient.id);
-            onDelete?.(selectedClient.id);
-        }
-    };
-
-    const handleVisitSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await createClientVisit(visitForm);
-            setShowVisitModal(false);
-            setVisitForm({
-                clientId,
-                visitDate: new Date().toISOString().slice(0, 16),
-                visitType: 'Initial',
-                location: '',
-                purpose: '',
-                notes: '',
-                results: '',
-            });
-        } catch (error) {
-            console.error('Failed to create visit:', error);
-        }
-    };
-
-    const handleInteractionSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await createClientInteraction(interactionForm);
-            setShowInteractionModal(false);
-            setInteractionForm({
-                clientId,
-                interactionType: 'Call',
-                subject: '',
-                description: '',
-                interactionDate: new Date().toISOString().slice(0, 16),
-            });
-        } catch (error) {
-            console.error('Failed to create interaction:', error);
-        }
-    };
-
-    const getClientTypeColor = (type: string) => {
-        const colors = {
-            Doctor: 'bg-blue-100 text-blue-800',
-            Hospital: 'bg-green-100 text-green-800',
-            Clinic: 'bg-purple-100 text-purple-800',
-            Pharmacy: 'bg-orange-100 text-orange-800',
-            Other: 'bg-gray-100 text-gray-800',
-        };
-        return colors[type as keyof typeof colors] || colors.Other;
-    };
+    }, [clientId, getClient, getClientVisits, getClientTaskProgress, getDeals, getOfferRequests]);
 
     const getStatusColor = (status: string) => {
-        const colors = {
-            Active: 'bg-green-100 text-green-800',
-            Inactive: 'bg-gray-100 text-gray-800',
-            Prospect: 'bg-yellow-100 text-yellow-800',
-            Lost: 'bg-red-100 text-red-800',
-        };
-        return colors[status as keyof typeof colors] || colors.Inactive;
+        switch (status) {
+            case 'Potential':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'Active':
+                return 'bg-green-100 text-green-800';
+            case 'Inactive':
+                return 'bg-gray-100 text-gray-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
-    const getVisitTypeColor = (type: string) => {
-        const colors = {
-            Initial: 'bg-blue-100 text-blue-800',
-            'Follow-up': 'bg-green-100 text-green-800',
-            Maintenance: 'bg-purple-100 text-purple-800',
-            Support: 'bg-orange-100 text-orange-800',
-            Presentation: 'bg-pink-100 text-pink-800',
-            Negotiation: 'bg-yellow-100 text-yellow-800',
-            Closing: 'bg-red-100 text-red-800',
-        };
-        return colors[type as keyof typeof colors] || colors.Initial;
+    const getPriorityColor = (priority: string) => {
+        switch (priority) {
+            case 'High':
+                return 'bg-red-100 text-red-800';
+            case 'Medium':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'Low':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
-    const getInteractionTypeColor = (type: string) => {
-        const colors = {
-            Call: 'bg-blue-100 text-blue-800',
-            Email: 'bg-green-100 text-green-800',
-            Meeting: 'bg-purple-100 text-purple-800',
-            'Video Call': 'bg-orange-100 text-orange-800',
-            WhatsApp: 'bg-green-100 text-green-800',
-            Other: 'bg-gray-100 text-gray-800',
-        };
-        return colors[type as keyof typeof colors] || colors.Other;
+    const getDealStatusColor = (status: string) => {
+        switch (status) {
+            case 'PendingManagerApproval':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'PendingSuperAdminApproval':
+                return 'bg-blue-100 text-blue-800';
+            case 'Approved':
+                return 'bg-green-100 text-green-800';
+            case 'Success':
+                return 'bg-green-100 text-green-800';
+            case 'Failed':
+                return 'bg-red-100 text-red-800';
+            case 'Rejected':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const getOfferStatusColor = (status: string) => {
+        switch (status) {
+            case 'Requested':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'InProgress':
+                return 'bg-blue-100 text-blue-800';
+            case 'Ready':
+                return 'bg-green-100 text-green-800';
+            case 'Sent':
+                return 'bg-purple-100 text-purple-800';
+            case 'Cancelled':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
     if (clientsLoading) {
         return (
-            <Card className={className}>
-                <CardContent className="p-6">
-                    <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className={`text-center py-8 ${className}`}>
+                <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-2"></div>
+                    Loading client details...
+                </div>
+            </div>
         );
     }
 
-    if (!selectedClient) {
+    if (clientsError || !selectedClient) {
         return (
-            <Card className={className}>
-                <CardContent className="p-6 text-center">
-                    <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Client not found</p>
-                </CardContent>
-            </Card>
+            <div className={`text-center py-8 ${className}`}>
+                <p className="text-red-600">Error loading client details: {clientsError}</p>
+            </div>
         );
     }
+
+    const client = selectedClient;
 
     return (
         <div className={`space-y-6 ${className}`}>
             {/* Client Header */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-4">
-                            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center">
-                                <User className="h-8 w-8 text-white" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                            <div className="p-3 bg-blue-100 rounded-lg">
+                                <BuildingOfficeIcon className="h-8 w-8 text-blue-600" />
                             </div>
-                            <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                    <h1 className="text-2xl font-bold">{selectedClient.name}</h1>
-                                    <Badge className={getClientTypeColor(selectedClient.type)}>
-                                        {selectedClient.type}
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
+                                <div className="flex items-center space-x-4 mt-2">
+                                    <Badge className={getStatusColor(client.status)}>
+                                        {client.status}
                                     </Badge>
-                                    <Badge className={getStatusColor(selectedClient.status)}>
-                                        {selectedClient.status}
+                                    <Badge className={getPriorityColor(client.priority)}>
+                                        {client.priority} Priority
                                     </Badge>
-                                </div>
-                                {selectedClient.specialization && (
-                                    <p className="text-muted-foreground mb-2">{selectedClient.specialization}</p>
-                                )}
-                                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                                    {selectedClient.location && (
-                                        <div className="flex items-center space-x-1">
-                                            <MapPin className="h-4 w-4" />
-                                            <span>{selectedClient.location}</span>
-                                        </div>
-                                    )}
-                                    {selectedClient.phone && (
-                                        <div className="flex items-center space-x-1">
-                                            <Phone className="h-4 w-4" />
-                                            <span>{selectedClient.phone}</span>
-                                        </div>
-                                    )}
-                                    {selectedClient.email && (
-                                        <div className="flex items-center space-x-1">
-                                            <Mail className="h-4 w-4" />
-                                            <span>{selectedClient.email}</span>
-                                        </div>
-                                    )}
+                                    <span className="text-sm text-gray-500">{client.type}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" onClick={handleEditClient}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={handleDeleteClient}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                            </Button>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500">Assigned to</p>
+                            <p className="font-medium">{client.assignedSalesmanName}</p>
                         </div>
                     </div>
                 </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <PhoneIcon className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-500">Phone</span>
+                            </div>
+                            <p className="font-medium">{client.phone}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <EnvelopeIcon className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-500">Email</span>
+                            </div>
+                            <p className="font-medium">{client.email}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <MapPinIcon className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-gray-500">Location</span>
+                            </div>
+                            <p className="font-medium">{client.location}</p>
+                        </div>
+                    </div>
+                </CardContent>
             </Card>
 
-            {/* Client Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
+            {/* Client Statistics */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                        <ChartBarIcon className="h-5 w-5" />
+                        <span>Client Statistics</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-blue-600">{client.totalVisits}</p>
+                            <p className="text-sm text-gray-500">Total Visits</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-green-600">{client.totalOffers}</p>
+                            <p className="text-sm text-gray-500">Total Offers</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-purple-600">{client.successfulDeals}</p>
+                            <p className="text-sm text-gray-500">Successful Deals</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-orange-600">EGP {client.totalRevenue?.toLocaleString() || 0}</p>
+                            <p className="text-sm text-gray-500">Total Revenue</p>
+                </div>
+            </div>
+                </CardContent>
+            </Card>
+
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="visits">Visits ({clientVisits.length})</TabsTrigger>
-                    <TabsTrigger value="interactions">Interactions ({clientInteractions.length})</TabsTrigger>
-                    <TabsTrigger value="analytics">Analytics</TabsTrigger>
+                    <TabsTrigger value="visits">Visits</TabsTrigger>
+                    <TabsTrigger value="deals">Deals</TabsTrigger>
+                    <TabsTrigger value="offers">Offers</TabsTrigger>
+                    <TabsTrigger value="progress">Progress</TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {/* Contact Information */}
+                <TabsContent value="overview" className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center space-x-2">
-                                    <Phone className="h-5 w-5" />
-                                    <span>Contact Information</span>
-                                </CardTitle>
+                                <CardTitle>Client Information</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {selectedClient.phone && (
-                                    <div className="flex items-center space-x-3">
-                                        <Phone className="h-4 w-4 text-muted-foreground" />
-                                        <span>{selectedClient.phone}</span>
-                                    </div>
-                                )}
-                                {selectedClient.email && (
-                                    <div className="flex items-center space-x-3">
-                                        <Mail className="h-4 w-4 text-muted-foreground" />
-                                        <span>{selectedClient.email}</span>
-                                    </div>
-                                )}
-                                {selectedClient.website && (
-                                    <div className="flex items-center space-x-3">
-                                        <Globe className="h-4 w-4 text-muted-foreground" />
-                                        <a href={selectedClient.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                            {selectedClient.website}
-                                        </a>
-                                    </div>
-                                )}
-                                {selectedClient.address && (
-                                    <div className="flex items-start space-x-3">
-                                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                        <span>{selectedClient.address}</span>
-                                    </div>
-                                )}
+                    <div>
+                                    <label className="text-sm font-medium text-gray-500">Specialization</label>
+                                    <p className="text-sm">{client.specialization || 'Not specified'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500">Address</label>
+                                    <p className="text-sm">{client.address || 'Not specified'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500">Contact Person</label>
+                                    <p className="text-sm">{client.contactPerson || 'Not specified'}</p>
+                            </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500">Annual Revenue</label>
+                                    <p className="text-sm">{client.annualRevenue ? `EGP ${client.annualRevenue.toLocaleString()}` : 'Not specified'}</p>
+                                </div>
                             </CardContent>
                         </Card>
 
-                        {/* Business Information */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center space-x-2">
-                                    <Building className="h-5 w-5" />
-                                    <span>Business Information</span>
-                                </CardTitle>
+                                <CardTitle>Performance Metrics</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {selectedClient.contactPerson && (
-                                    <div>
-                                        <Label className="text-sm font-medium">Contact Person</Label>
-                                        <p className="text-sm text-muted-foreground">{selectedClient.contactPerson}</p>
-                                        {selectedClient.contactPersonTitle && (
-                                            <p className="text-xs text-muted-foreground">{selectedClient.contactPersonTitle}</p>
-                                        )}
-                                    </div>
-                                )}
-                                {selectedClient.employeeCount && (
-                                    <div>
-                                        <Label className="text-sm font-medium">Employee Count</Label>
-                                        <p className="text-sm text-muted-foreground">{selectedClient.employeeCount}</p>
-                                    </div>
-                                )}
-                                {selectedClient.annualRevenue && (
-                                    <div>
-                                        <Label className="text-sm font-medium">Annual Revenue</Label>
-                                        <p className="text-sm text-muted-foreground">${selectedClient.annualRevenue.toLocaleString()}</p>
-                                    </div>
-                                )}
-                                {selectedClient.establishedYear && (
-                                    <div>
-                                        <Label className="text-sm font-medium">Established</Label>
-                                        <p className="text-sm text-muted-foreground">{selectedClient.establishedYear}</p>
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500">Average Satisfaction</label>
+                                    <p className="text-sm">{client.averageSatisfaction ? `${client.averageSatisfaction.toFixed(1)}/5` : 'No ratings yet'}</p>
+                    </div>
+                    <div>
+                                    <label className="text-sm font-medium text-gray-500">Conversion Rate</label>
+                                    <p className="text-sm">{client.conversionRate ? `${(client.conversionRate * 100).toFixed(1)}%` : 'Not calculated'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-500">Last Interaction</label>
+                                    <p className="text-sm">{client.lastInteractionDate ? format(new Date(client.lastInteractionDate), 'PPP') : 'No interactions'}</p>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
-
-                    {/* Notes */}
-                    {selectedClient.notes && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Notes</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedClient.notes}</p>
-                            </CardContent>
-                        </Card>
-                    )}
                 </TabsContent>
 
                 {/* Visits Tab */}
-                <TabsContent value="visits" className="space-y-6">
-                    <div className="flex items-center justify-between">
+                <TabsContent value="visits" className="space-y-4">
+                    <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold">Client Visits</h3>
-                        <Dialog open={showVisitModal} onOpenChange={setShowVisitModal}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Add Visit
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                    <DialogTitle>Add Client Visit</DialogTitle>
-                                </DialogHeader>
-                                <form onSubmit={handleVisitSubmit} className="space-y-4">
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div>
-                                            <Label htmlFor="visitDate">Visit Date</Label>
-                                            <Input
-                                                id="visitDate"
-                                                type="datetime-local"
-                                                value={visitForm.visitDate}
-                                                onChange={(e) => setVisitForm({ ...visitForm, visitDate: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="visitType">Visit Type</Label>
-                                            <Select
-                                                value={visitForm.visitType}
-                                                onValueChange={(value) => setVisitForm({ ...visitForm, visitType: value as any })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Initial">Initial</SelectItem>
-                                                    <SelectItem value="Follow-up">Follow-up</SelectItem>
-                                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                                    <SelectItem value="Support">Support</SelectItem>
-                                                    <SelectItem value="Presentation">Presentation</SelectItem>
-                                                    <SelectItem value="Negotiation">Negotiation</SelectItem>
-                                                    <SelectItem value="Closing">Closing</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="location">Location</Label>
-                                        <Input
-                                            id="location"
-                                            value={visitForm.location}
-                                            onChange={(e) => setVisitForm({ ...visitForm, location: e.target.value })}
-                                            placeholder="Visit location"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="purpose">Purpose</Label>
-                                        <Input
-                                            id="purpose"
-                                            value={visitForm.purpose}
-                                            onChange={(e) => setVisitForm({ ...visitForm, purpose: e.target.value })}
-                                            placeholder="Visit purpose"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="notes">Notes</Label>
-                                        <Textarea
-                                            id="notes"
-                                            value={visitForm.notes}
-                                            onChange={(e) => setVisitForm({ ...visitForm, notes: e.target.value })}
-                                            placeholder="Visit notes"
-                                            rows={3}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="results">Results</Label>
-                                        <Textarea
-                                            id="results"
-                                            value={visitForm.results}
-                                            onChange={(e) => setVisitForm({ ...visitForm, results: e.target.value })}
-                                            placeholder="Visit results"
-                                            rows={3}
-                                        />
-                                    </div>
-                                    <div className="flex justify-end space-x-2">
-                                        <Button type="button" variant="outline" onClick={() => setShowVisitModal(false)}>
-                                            Cancel
-                                        </Button>
-                                        <Button type="submit" disabled={visitsLoading}>
-                                            {visitsLoading ? 'Adding...' : 'Add Visit'}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                        <Button onClick={() => setShowTaskProgressForm(true)}>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Add Progress
+                        </Button>
                     </div>
 
                     {visitsLoading ? (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        </div>
-                    ) : clientVisits.length > 0 ? (
+                        <div className="text-center py-4">Loading visits...</div>
+                    ) : clientVisits.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No visits recorded yet</div>
+                    ) : (
                         <div className="space-y-4">
                             {clientVisits.map((visit) => (
                                 <Card key={visit.id}>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-2 mb-2">
-                                                    <Badge className={getVisitTypeColor(visit.visitType)}>
-                                                        {visit.visitType}
+                                    <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-medium">{visit.visitType} - {visit.purpose}</h4>
+                                                <p className="text-sm text-gray-500">{visit.location}</p>
+                                                <p className="text-sm text-gray-600 mt-2">{visit.notes}</p>
+                                                {visit.visitResult && (
+                                                    <Badge className="mt-2">
+                                                        Result: {visit.visitResult}
                                                     </Badge>
-                                                    <Badge variant={visit.status === 'Completed' ? 'default' : 'secondary'}>
-                                                        {visit.status}
-                                                    </Badge>
-                                                </div>
-                                                <h4 className="font-medium">{visit.purpose}</h4>
-                                                <p className="text-sm text-muted-foreground mb-2">{visit.location}</p>
-                                                <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                                                    <div className="flex items-center space-x-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span>{format(new Date(visit.visitDate), 'MMM dd, yyyy HH:mm')}</span>
-                                                    </div>
-                                                    {visit.duration && (
-                                                        <div className="flex items-center space-x-1">
-                                                            <Clock className="h-3 w-3" />
-                                                            <span>{visit.duration} min</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {visit.notes && (
-                                                    <p className="text-sm text-muted-foreground mt-2">{visit.notes}</p>
                                                 )}
-                                                {visit.results && (
-                                                    <p className="text-sm text-muted-foreground mt-2">{visit.results}</p>
-                                                )}
+                                            </div>
+                                            <div className="text-right text-sm text-gray-500">
+                                                <p>{format(new Date(visit.visitDate), 'PPP')}</p>
+                                                <p>{visit.createdByName}</p>
                                             </div>
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
-                    ) : (
-                        <Card>
-                            <CardContent className="p-8 text-center">
-                                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-muted-foreground">No visits recorded yet</p>
-                            </CardContent>
-                        </Card>
                     )}
                 </TabsContent>
 
-                {/* Interactions Tab */}
-                <TabsContent value="interactions" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Client Interactions</h3>
-                        <Dialog open={showInteractionModal} onOpenChange={setShowInteractionModal}>
-                            <DialogTrigger asChild>
-                                <Button>
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Add Interaction
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                    <DialogTitle>Add Client Interaction</DialogTitle>
-                                </DialogHeader>
-                                <form onSubmit={handleInteractionSubmit} className="space-y-4">
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div>
-                                            <Label htmlFor="interactionType">Interaction Type</Label>
-                                            <Select
-                                                value={interactionForm.interactionType}
-                                                onValueChange={(value) => setInteractionForm({ ...interactionForm, interactionType: value as any })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Call">Call</SelectItem>
-                                                    <SelectItem value="Email">Email</SelectItem>
-                                                    <SelectItem value="Meeting">Meeting</SelectItem>
-                                                    <SelectItem value="Video Call">Video Call</SelectItem>
-                                                    <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                                                    <SelectItem value="Other">Other</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="interactionDate">Date</Label>
-                                            <Input
-                                                id="interactionDate"
-                                                type="datetime-local"
-                                                value={interactionForm.interactionDate}
-                                                onChange={(e) => setInteractionForm({ ...interactionForm, interactionDate: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="subject">Subject</Label>
-                                        <Input
-                                            id="subject"
-                                            value={interactionForm.subject}
-                                            onChange={(e) => setInteractionForm({ ...interactionForm, subject: e.target.value })}
-                                            placeholder="Interaction subject"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="description">Description</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={interactionForm.description}
-                                            onChange={(e) => setInteractionForm({ ...interactionForm, description: e.target.value })}
-                                            placeholder="Interaction description"
-                                            rows={4}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="flex justify-end space-x-2">
-                                        <Button type="button" variant="outline" onClick={() => setShowInteractionModal(false)}>
-                                            Cancel
-                                        </Button>
-                                        <Button type="submit" disabled={interactionsLoading}>
-                                            {interactionsLoading ? 'Adding...' : 'Add Interaction'}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                {/* Deals Tab */}
+                <TabsContent value="deals" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Deals</h3>
+                        <Button onClick={() => setShowDealForm(true)}>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Create Deal
+                        </Button>
                     </div>
 
-                    {interactionsLoading ? (
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        </div>
-                    ) : clientInteractions.length > 0 ? (
+                    {dealsLoading ? (
+                        <div className="text-center py-4">Loading deals...</div>
+                    ) : deals.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No deals created yet</div>
+                    ) : (
                         <div className="space-y-4">
-                            {clientInteractions.map((interaction) => (
-                                <Card key={interaction.id}>
-                                    <CardContent className="p-4">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-2 mb-2">
-                                                    <Badge className={getInteractionTypeColor(interaction.interactionType)}>
-                                                        {interaction.interactionType}
-                                                    </Badge>
-                                                    <Badge variant={interaction.status === 'Completed' ? 'default' : 'secondary'}>
-                                                        {interaction.status}
-                                                    </Badge>
-                                                </div>
-                                                <h4 className="font-medium">{interaction.subject}</h4>
-                                                <p className="text-sm text-muted-foreground mb-2">{interaction.description}</p>
-                                                <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                                                    <div className="flex items-center space-x-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span>{format(new Date(interaction.interactionDate), 'MMM dd, yyyy HH:mm')}</span>
-                                                    </div>
-                                                    {interaction.duration && (
-                                                        <div className="flex items-center space-x-1">
-                                                            <Clock className="h-3 w-3" />
-                                                            <span>{interaction.duration} min</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                            {deals.map((deal) => (
+                                <Card key={deal.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                                    <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-medium">EGP {deal.dealValue.toLocaleString()}</h4>
+                                                <p className="text-sm text-gray-600 mt-1">{deal.dealDescription}</p>
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    Expected close: {format(new Date(deal.expectedCloseDate), 'PPP')}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <Badge className={getDealStatusColor(deal.status)}>
+                                                    {deal.status.replace(/([A-Z])/g, ' $1').trim()}
+                                                </Badge>
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    {format(new Date(deal.createdAt), 'PPP')}
+                                                </p>
                                             </div>
                                         </div>
                                     </CardContent>
                                 </Card>
                             ))}
                         </div>
-                    ) : (
-                        <Card>
-                            <CardContent className="p-8 text-center">
-                                <Phone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-muted-foreground">No interactions recorded yet</p>
-                            </CardContent>
-                        </Card>
                     )}
                 </TabsContent>
 
-                {/* Analytics Tab */}
-                <TabsContent value="analytics" className="space-y-6">
-                    <div className="grid gap-6 md:grid-cols-3">
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <Star className="h-5 w-5 text-primary" />
-                                    <span className="text-sm font-medium">Total Visits</span>
-                                </div>
-                                <p className="text-2xl font-bold">{selectedClient.totalVisits}</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <TrendingUp className="h-5 w-5 text-primary" />
-                                    <span className="text-sm font-medium">Conversion Rate</span>
-                                </div>
-                                <p className="text-2xl font-bold">{selectedClient.conversionRate || 0}%</p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <CheckCircle className="h-5 w-5 text-primary" />
-                                    <span className="text-sm font-medium">Potential Value</span>
-                                </div>
-                                <p className="text-2xl font-bold">${selectedClient.potentialValue?.toLocaleString() || 0}</p>
-                            </CardContent>
-                        </Card>
+                {/* Offers Tab */}
+                <TabsContent value="offers" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Offer Requests</h3>
+                        <Button onClick={() => setShowOfferRequestForm(true)}>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Create Request
+                        </Button>
                     </div>
+
+                    {offerRequestsLoading ? (
+                        <div className="text-center py-4">Loading offers...</div>
+                    ) : offerRequests.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No offer requests yet</div>
+                    ) : (
+                        <div className="space-y-4">
+                            {offerRequests.map((offer) => (
+                                <Card key={offer.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                                    <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-medium">{offer.requestedProducts}</h4>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Requested by: {offer.requestedByName}
+                                                </p>
+                                                {offer.assignedToName && (
+                                                    <p className="text-sm text-gray-500">
+                                                        Assigned to: {offer.assignedToName}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="text-right">
+                                                <Badge className={getOfferStatusColor(offer.status)}>
+                                                    {offer.status}
+                                                </Badge>
+                                                <Badge className={getPriorityColor(offer.priority)}>
+                                                    {offer.priority}
+                                                </Badge>
+                                                <p className="text-sm text-gray-500 mt-2">
+                                                    {format(new Date(offer.createdAt), 'PPP')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+
+                {/* Progress Tab */}
+                <TabsContent value="progress" className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Task Progress</h3>
+                        <Button onClick={() => setShowTaskProgressForm(true)}>
+                            <PlusIcon className="h-4 w-4 mr-2" />
+                            Add Progress
+                        </Button>
+                    </div>
+
+                    {taskProgressLoading ? (
+                        <div className="text-center py-4">Loading progress...</div>
+                    ) : taskProgress.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">No progress recorded yet</div>
+                    ) : (
+                        <div className="space-y-4">
+                            {taskProgress.map((progress) => (
+                                <Card key={progress.id}>
+                                    <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="font-medium">{progress.progressType} - {progress.description}</h4>
+                                                {progress.visitResult && (
+                                                    <Badge className="mt-2">
+                                                        Result: {progress.visitResult}
+                                                    </Badge>
+                                                )}
+                                                {progress.nextStep && (
+                                                    <Badge className="mt-2 ml-2">
+                                                        Next: {progress.nextStep}
+                                                    </Badge>
+                                                )}
+                                                {progress.satisfactionRating && (
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        Satisfaction: {progress.satisfactionRating}/5
+                                            </p>
+                                        )}
+                                    </div>
+                                            <div className="text-right text-sm text-gray-500">
+                                                <p>{format(new Date(progress.progressDate), 'PPP')}</p>
+                                                <p>{progress.createdByName}</p>
+                                            </div>
+                                </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </TabsContent>
             </Tabs>
+
+            {/* Modals */}
+            {showDealForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <DealForm
+                            clientId={clientId}
+                            onSuccess={() => {
+                                setShowDealForm(false);
+                                getDeals({ clientId });
+                            }}
+                            onCancel={() => setShowDealForm(false)}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {showTaskProgressForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <TaskProgressForm
+                            clientId={clientId}
+                            onSuccess={() => {
+                                setShowTaskProgressForm(false);
+                                getClientTaskProgress(clientId);
+                            }}
+                            onCancel={() => setShowTaskProgressForm(false)}
+                        />
+                        </div>
+                    </div>
+                )}
+
+            {showOfferRequestForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <OfferRequestForm
+                            clientId={clientId}
+                            onSuccess={() => {
+                                setShowOfferRequestForm(false);
+                                getOfferRequests({ clientId });
+                            }}
+                            onCancel={() => setShowOfferRequestForm(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
-}
+};
 
+export default ClientDetails;

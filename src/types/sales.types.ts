@@ -5,85 +5,78 @@
 export interface Client {
 	id: string;
 	name: string;
-	type: 'Doctor' | 'Hospital' | 'Clinic' | 'Pharmacy' | 'Other';
+	annualRevenue?: number;
+	type: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
 	specialization?: string;
 	location: string;
-	phone?: string;
-	email?: string;
-	status: 'Active' | 'Inactive' | 'Prospect' | 'Lost';
+	phone: string;
+	email: string;
+	status: 'Potential' | 'Active' | 'Inactive';
+	priority: 'Low' | 'Medium' | 'High';
 	createdAt: string;
 	updatedAt: string;
-	lastVisitDate?: string;
-	nextVisitDate?: string;
+	lastContactDate?: string;
+	nextContactDate?: string;
 	notes?: string;
-	assignedSalesmanId?: string;
-	assignedSalesmanName?: string;
-	// Additional client details
+	assignedSalesmanId: string;
+	assignedSalesmanName: string;
+	// Backend-required fields
 	address?: string;
 	city?: string;
 	governorate?: string;
-	website?: string;
 	contactPerson?: string;
-	contactPersonTitle?: string;
-	// Business information
-	annualRevenue?: number;
-	employeeCount?: number;
-	establishedYear?: number;
-	// Medical specific fields
-	licenseNumber?: string;
-	medicalSpecialties?: string[];
-	bedCount?: number;
-	// Sales tracking
+	contactPersonPhone?: string;
+	contactPersonEmail?: string;
+	classification?: 'A' | 'B' | 'C' | 'D';
+	potentialValue?: number;
+	satisfactionRating?: number;
+	// Sales tracking - Updated to match new business logic
 	totalVisits: number;
+	totalOffers: number;
+	successfulDeals: number;
+	failedDeals: number;
+	totalRevenue: number;
+	averageSatisfaction: number;
 	lastInteractionDate?: string;
 	conversionRate?: number;
-	potentialValue?: number;
 }
 
 export interface CreateClientDto {
 	name: string;
-	type: 'Doctor' | 'Hospital' | 'Clinic' | 'Pharmacy' | 'Other';
+	type: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
 	specialization?: string;
 	location: string;
-	phone?: string;
-	email?: string;
+	phone: string;
+	email: string;
+	priority: 'Low' | 'Medium' | 'High';
 	notes?: string;
 	address?: string;
 	city?: string;
 	governorate?: string;
-	website?: string;
 	contactPerson?: string;
-	contactPersonTitle?: string;
-	annualRevenue?: number;
-	employeeCount?: number;
-	establishedYear?: number;
-	licenseNumber?: string;
-	medicalSpecialties?: string[];
-	bedCount?: number;
+	contactPersonPhone?: string;
+	contactPersonEmail?: string;
+	classification?: 'A' | 'B' | 'C' | 'D';
 	potentialValue?: number;
 }
 
 export interface UpdateClientDto {
 	name?: string;
-	type?: 'Doctor' | 'Hospital' | 'Clinic' | 'Pharmacy' | 'Other';
+	type?: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
 	specialization?: string;
 	location?: string;
 	phone?: string;
 	email?: string;
-	status?: 'Active' | 'Inactive' | 'Prospect' | 'Lost';
+	status?: 'Potential' | 'Active' | 'Inactive';
+	priority?: 'Low' | 'Medium' | 'High';
 	notes?: string;
 	address?: string;
 	city?: string;
 	governorate?: string;
-	website?: string;
 	contactPerson?: string;
-	contactPersonTitle?: string;
-	annualRevenue?: number;
-	employeeCount?: number;
-	establishedYear?: number;
-	licenseNumber?: string;
-	medicalSpecialties?: string[];
-	bedCount?: number;
+	contactPersonPhone?: string;
+	contactPersonEmail?: string;
+	classification?: 'A' | 'B' | 'C' | 'D';
 	potentialValue?: number;
 }
 
@@ -112,6 +105,190 @@ export interface ClientSearchResult {
 	hasPreviousPage: boolean;
 }
 
+// ==================== DEAL MANAGEMENT ====================
+
+export interface Deal {
+	id: string;
+	offerId: string;
+	clientId: string;
+	clientName: string;
+	dealValue: number;
+	dealDescription: string;
+	expectedCloseDate: string;
+	status:
+		| 'PendingManagerApproval'
+		| 'PendingSuperAdminApproval'
+		| 'Approved'
+		| 'Success'
+		| 'Failed'
+		| 'Rejected';
+	createdAt: string;
+	updatedAt: string;
+	createdBy: string;
+	createdByName: string;
+	// Approval information
+	managerApprovedAt?: string;
+	managerApprovedBy?: string;
+	managerApprovedByName?: string;
+	managerApprovalNotes?: string;
+	managerRejectionReason?: 'Money' | 'CashFlow' | 'OtherNeeds';
+	superAdminApprovedAt?: string;
+	superAdminApprovedBy?: string;
+	superAdminApprovedByName?: string;
+	superAdminApprovalNotes?: string;
+	superAdminRejectionReason?: 'Money' | 'CashFlow' | 'OtherNeeds';
+	// Completion information
+	completedAt?: string;
+	completedBy?: string;
+	completedByName?: string;
+	completionNotes?: string;
+	failureReason?: string;
+}
+
+export interface CreateDealDto {
+	offerId: string;
+	clientId: string;
+	dealValue: number;
+	dealDescription: string;
+	expectedCloseDate: string;
+}
+
+export interface UpdateDealDto {
+	dealValue?: number;
+	dealDescription?: string;
+	expectedCloseDate?: string;
+}
+
+export interface DealApprovalDto {
+	approved: boolean;
+	rejectionReason?: 'Money' | 'CashFlow' | 'OtherNeeds';
+	comments?: string;
+}
+
+export interface DealCompletionDto {
+	completionNotes: string;
+}
+
+export interface DealFailureDto {
+	failureReason: string;
+	failureNotes: string;
+}
+
+// ==================== OFFER REQUEST MANAGEMENT ====================
+
+export interface OfferRequest {
+	id: string;
+	clientId: string;
+	clientName: string;
+	requestedProducts: string;
+	priority: 'Low' | 'Medium' | 'High';
+	status: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
+	createdAt: string;
+	updatedAt: string;
+	requestedBy: string;
+	requestedByName: string;
+	assignedTo?: string;
+	assignedToName?: string;
+	assignedAt?: string;
+	assignedBy?: string;
+	assignedByName?: string;
+	// Offer details
+	offerDescription?: string;
+	offerValue?: number;
+	offerValidUntil?: string;
+	// Completion information
+	completedAt?: string;
+	completedBy?: string;
+	completedByName?: string;
+	completionNotes?: string;
+	// Related task progress
+	taskProgressId?: string;
+}
+
+export interface CreateOfferRequestDto {
+	clientId: string;
+	requestedProducts: string;
+	priority: 'Low' | 'Medium' | 'High';
+	taskProgressId?: string;
+}
+
+export interface UpdateOfferRequestDto {
+	requestedProducts?: string;
+	priority?: 'Low' | 'Medium' | 'High';
+	status?: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
+	offerDescription?: string;
+	offerValue?: number;
+	offerValidUntil?: string;
+	completionNotes?: string;
+}
+
+export interface AssignOfferRequestDto {
+	assignedTo: string;
+}
+
+// ==================== TASK PROGRESS MANAGEMENT ====================
+
+export interface TaskProgress {
+	id: string;
+	clientId: string;
+	clientName: string;
+	taskId: string;
+	employeeId: string;
+	employeeName: string;
+	progressType: 'Visit' | 'Call' | 'Email' | 'Meeting';
+	description: string;
+	progressDate: string;
+	visitResult?: 'Interested' | 'NotInterested';
+	notInterestedComment?: string;
+	nextStep?: 'NeedsOffer' | 'NeedsDeal';
+	followUpDate?: string;
+	followUpNotes?: string;
+	satisfactionRating?: number; // 1-5 scale
+	feedback?: string;
+	attachments?: string; // JSON array of file paths
+	createdAt: string;
+	updatedAt: string;
+	createdBy: string;
+	createdByName: string;
+	// Related entities
+	offerRequestId?: string;
+	offerId?: string;
+	dealId?: string;
+}
+
+export interface CreateTaskProgressDto {
+	clientId: string;
+	taskId: string;
+	progressType: 'Visit' | 'Call' | 'Email' | 'Meeting';
+	description: string;
+	progressDate: string;
+	visitResult?: 'Interested' | 'NotInterested';
+	notInterestedComment?: string;
+	nextStep?: 'NeedsOffer' | 'NeedsDeal';
+	followUpDate?: string;
+	followUpNotes?: string;
+	satisfactionRating?: number;
+	feedback?: string;
+	attachments?: string;
+	createOfferRequest?: boolean;
+	requestedProducts?: string;
+	priority?: 'Low' | 'Medium' | 'High';
+}
+
+export interface UpdateTaskProgressDto {
+	progressType?: 'Visit' | 'Call' | 'Email' | 'Meeting';
+	description?: string;
+	progressDate?: string;
+	visitResult?: 'Interested' | 'NotInterested';
+	notInterestedComment?: string;
+	nextStep?: 'NeedsOffer' | 'NeedsDeal';
+	followUpDate?: string;
+	followUpNotes?: string;
+	satisfactionRating?: number;
+	feedback?: string;
+	attachments?: string;
+}
+
 // ==================== CLIENT VISITS ====================
 
 export interface ClientVisit {
@@ -119,14 +296,7 @@ export interface ClientVisit {
 	clientId: string;
 	clientName: string;
 	visitDate: string;
-	visitType:
-		| 'Initial'
-		| 'Follow-up'
-		| 'Maintenance'
-		| 'Support'
-		| 'Presentation'
-		| 'Negotiation'
-		| 'Closing';
+	visitType: 'Visit' | 'Call' | 'Email' | 'Meeting';
 	location: string;
 	purpose: string;
 	notes: string;
@@ -137,17 +307,10 @@ export interface ClientVisit {
 	updatedAt: string;
 	createdBy: string;
 	createdByName: string;
-	// Visit outcomes
-	outcome?:
-		| 'Successful'
-		| 'Unsuccessful'
-		| 'Follow-up Required'
-		| 'No Decision';
-	productsDiscussed?: string[];
-	quotesProvided?: boolean;
-	quotesValue?: number;
-	competitorsMentioned?: string[];
-	decisionMakers?: string[];
+	// Visit outcomes - Updated to match new business logic
+	visitResult?: 'Interested' | 'NotInterested' | 'FollowUp' | 'NoAnswer';
+	nextStep?: 'NeedsOffer' | 'NeedsDeal' | 'FollowUp' | 'Close';
+	satisfactionRating?: number; // 1-5 scale
 	// Follow-up information
 	followUpRequired?: boolean;
 	followUpDate?: string;
@@ -156,68 +319,45 @@ export interface ClientVisit {
 	duration?: number; // in minutes
 	travelDistance?: number; // in km
 	travelCost?: number;
+	// Related offer request
+	offerRequestId?: string;
 }
 
 export interface CreateClientVisitDto {
 	clientId: string;
 	visitDate: string;
-	visitType:
-		| 'Initial'
-		| 'Follow-up'
-		| 'Maintenance'
-		| 'Support'
-		| 'Presentation'
-		| 'Negotiation'
-		| 'Closing';
+	visitType: 'Visit' | 'Call' | 'Email' | 'Meeting';
 	location: string;
 	purpose: string;
 	notes: string;
 	results?: string;
 	nextVisitDate?: string;
-	outcome?:
-		| 'Successful'
-		| 'Unsuccessful'
-		| 'Follow-up Required'
-		| 'No Decision';
-	productsDiscussed?: string[];
-	quotesProvided?: boolean;
-	quotesValue?: number;
-	competitorsMentioned?: string[];
-	decisionMakers?: string[];
+	visitResult?: 'Interested' | 'NotInterested' | 'FollowUp' | 'NoAnswer';
+	nextStep?: 'NeedsOffer' | 'NeedsDeal' | 'FollowUp' | 'Close';
+	satisfactionRating?: number;
 	followUpRequired?: boolean;
 	followUpDate?: string;
 	followUpNotes?: string;
 	duration?: number;
 	travelDistance?: number;
 	travelCost?: number;
+	createOfferRequest?: boolean;
+	requestedProducts?: string;
+	priority?: 'Low' | 'Medium' | 'High';
 }
 
 export interface UpdateClientVisitDto {
 	visitDate?: string;
-	visitType?:
-		| 'Initial'
-		| 'Follow-up'
-		| 'Maintenance'
-		| 'Support'
-		| 'Presentation'
-		| 'Negotiation'
-		| 'Closing';
+	visitType?: 'Visit' | 'Call' | 'Email' | 'Meeting';
 	location?: string;
 	purpose?: string;
 	notes?: string;
 	results?: string;
 	nextVisitDate?: string;
 	status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'Postponed';
-	outcome?:
-		| 'Successful'
-		| 'Unsuccessful'
-		| 'Follow-up Required'
-		| 'No Decision';
-	productsDiscussed?: string[];
-	quotesProvided?: boolean;
-	quotesValue?: number;
-	competitorsMentioned?: string[];
-	decisionMakers?: string[];
+	visitResult?: 'Interested' | 'NotInterested' | 'FollowUp' | 'NoAnswer';
+	nextStep?: 'NeedsOffer' | 'NeedsDeal' | 'FollowUp' | 'Close';
+	satisfactionRating?: number;
 	followUpRequired?: boolean;
 	followUpDate?: string;
 	followUpNotes?: string;
@@ -289,43 +429,64 @@ export interface SalesAnalytics {
 	period: string;
 	totalClients: number;
 	activeClients: number;
-	newClients: number;
-	lostClients: number;
+	potentialClients: number;
+	inactiveClients: number;
 	totalVisits: number;
 	completedVisits: number;
 	upcomingVisits: number;
 	overdueVisits: number;
+	totalOffers: number;
+	totalDeals: number;
+	successfulDeals: number;
+	failedDeals: number;
+	totalRevenue: number;
 	conversionRate: number;
 	averageVisitDuration: number;
+	averageSatisfaction: number;
 	totalTravelDistance: number;
 	totalTravelCost: number;
 	// Performance metrics
 	visitsPerClient: number;
 	clientsPerSalesman: number;
 	successRate: number;
+	offerConversionRate: number;
+	dealConversionRate: number;
 	// Revenue metrics
-	totalQuotesValue: number;
-	quotesConversionRate: number;
+	averageDealValue: number;
+	revenuePerClient: number;
 	// Time-based metrics
 	visitsThisWeek: number;
 	visitsThisMonth: number;
 	visitsThisQuarter: number;
 	// Client status breakdown
 	clientsByStatus: {
+		Potential: number;
 		Active: number;
 		Inactive: number;
-		Prospect: number;
-		Lost: number;
 	};
 	// Visit type breakdown
 	visitsByType: {
-		Initial: number;
-		'Follow-up': number;
-		Maintenance: number;
-		Support: number;
-		Presentation: number;
-		Negotiation: number;
-		Closing: number;
+		Visit: number;
+		Call: number;
+		Email: number;
+		Meeting: number;
+	};
+	// Deal status breakdown
+	dealsByStatus: {
+		PendingManagerApproval: number;
+		PendingSuperAdminApproval: number;
+		Approved: number;
+		Success: number;
+		Failed: number;
+		Rejected: number;
+	};
+	// Offer request status breakdown
+	offersByStatus: {
+		Requested: number;
+		InProgress: number;
+		Ready: number;
+		Sent: number;
+		Cancelled: number;
 	};
 	// Top performing salesmen
 	topSalesmen: Array<{
@@ -333,11 +494,15 @@ export interface SalesAnalytics {
 		salesmanName: string;
 		visitsCount: number;
 		clientsCount: number;
+		dealsCount: number;
 		successRate: number;
+		totalRevenue: number;
 	}>;
 	// Recent activity
 	recentVisits: ClientVisit[];
 	recentInteractions: ClientInteraction[];
+	recentDeals: Deal[];
+	recentOffers: OfferRequest[];
 }
 
 export interface SalesPerformanceMetrics {
@@ -346,21 +511,33 @@ export interface SalesPerformanceMetrics {
 	period: string;
 	// Client metrics
 	totalClients: number;
-	newClients: number;
+	potentialClients: number;
 	activeClients: number;
-	lostClients: number;
+	inactiveClients: number;
 	// Visit metrics
 	totalVisits: number;
 	completedVisits: number;
 	upcomingVisits: number;
 	overdueVisits: number;
+	// Offer metrics
+	totalOffers: number;
+	completedOffers: number;
+	// Deal metrics
+	totalDeals: number;
+	successfulDeals: number;
+	failedDeals: number;
+	pendingDeals: number;
 	// Performance metrics
 	conversionRate: number;
 	successRate: number;
+	offerConversionRate: number;
+	dealConversionRate: number;
 	averageVisitDuration: number;
+	averageSatisfaction: number;
 	// Revenue metrics
-	totalQuotesValue: number;
-	quotesConversionRate: number;
+	totalRevenue: number;
+	averageDealValue: number;
+	revenuePerClient: number;
 	// Efficiency metrics
 	visitsPerDay: number;
 	clientsPerWeek: number;
@@ -380,8 +557,12 @@ export interface SalesDashboardData {
 	overview: {
 		totalClients: number;
 		activeClients: number;
+		potentialClients: number;
 		newClientsThisMonth: number;
 		totalVisitsThisMonth: number;
+		totalOffersThisMonth: number;
+		totalDealsThisMonth: number;
+		revenueThisMonth: number;
 		conversionRate: number;
 		teamPerformance: number;
 	};
@@ -392,7 +573,11 @@ export interface SalesDashboardData {
 			| 'visit'
 			| 'interaction'
 			| 'client_created'
-			| 'client_updated';
+			| 'client_updated'
+			| 'deal_created'
+			| 'offer_requested'
+			| 'deal_approved'
+			| 'deal_completed';
 		description: string;
 		timestamp: string;
 		salesmanName: string;
@@ -410,12 +595,26 @@ export interface SalesDashboardData {
 	// Overdue items
 	overdueItems: Array<{
 		id: string;
-		type: 'visit' | 'follow_up';
+		type:
+			| 'visit'
+			| 'follow_up'
+			| 'deal_approval'
+			| 'offer_completion';
 		description: string;
 		dueDate: string;
 		clientName: string;
 		salesmanName: string;
 		priority: 'High' | 'Medium' | 'Low';
+	}>;
+	// Pending approvals
+	pendingApprovals: Array<{
+		id: string;
+		type: 'deal_manager_approval' | 'deal_superadmin_approval';
+		description: string;
+		clientName: string;
+		salesmanName: string;
+		dealValue: number;
+		createdAt: string;
 	}>;
 	// Team performance
 	teamPerformance: Array<{
@@ -423,7 +622,10 @@ export interface SalesDashboardData {
 		salesmanName: string;
 		clientsCount: number;
 		visitsCount: number;
+		dealsCount: number;
+		offersCount: number;
 		successRate: number;
+		revenue: number;
 		lastActivity: string;
 	}>;
 	// Charts data
@@ -435,8 +637,19 @@ export interface SalesDashboardData {
 	clientsTrend: Array<{
 		date: string;
 		total: number;
-		new: number;
+		potential: number;
 		active: number;
+	}>;
+	dealsTrend: Array<{
+		date: string;
+		created: number;
+		approved: number;
+		completed: number;
+	}>;
+	revenueTrend: Array<{
+		date: string;
+		revenue: number;
+		target: number;
 	}>;
 }
 
@@ -515,6 +728,23 @@ export interface PaginatedApiResponse<T> {
 	timestamp: string;
 }
 
+export interface PaginatedData<T> {
+	data: T;
+	page: number;
+	pageSize: number;
+	totalCount: number;
+	totalPages: number;
+	hasNextPage: boolean;
+	hasPreviousPage: boolean;
+}
+
+export interface PaginatedApiResponseWithMeta<T> {
+	success: boolean;
+	message: string;
+	data: PaginatedData<T>;
+	timestamp: string;
+}
+
 // ==================== FILTERS AND PAGINATION ====================
 
 export interface PaginationParams {
@@ -534,6 +764,218 @@ export interface SalesmanFilter {
 	salesmanName?: string;
 }
 
+// ==================== OFFER MANAGEMENT ====================
+
+export interface Offer {
+	id: string;
+	offerRequestId?: string;
+	clientId: string;
+	clientName: string;
+	createdBy: string;
+	createdByName: string;
+	assignedTo: string;
+	assignedToName: string;
+	products: string;
+	totalAmount: number;
+	paymentTerms?: string;
+	deliveryTerms?: string;
+	paymentType?: 'Cash' | 'Installments' | 'Other';
+	finalPrice?: number;
+	offerDuration?: string;
+	validUntil: string;
+	status:
+		| 'Draft'
+		| 'Sent'
+		| 'UnderReview'
+		| 'Accepted'
+		| 'Rejected'
+		| 'NeedsModification'
+		| 'Expired';
+	sentToClientAt?: string;
+	clientResponse?: string;
+	documents?: string; // JSON array of file paths
+	notes?: string;
+	createdAt: string;
+	updatedAt: string;
+	// Enhanced features
+	equipment?: OfferEquipment[];
+	terms?: OfferTerms;
+	installments?: InstallmentPlan[];
+}
+
+// ==================== ENHANCED OFFER FEATURES ====================
+
+export interface OfferEquipment {
+	id: number;
+	offerId: string;
+	name: string;
+	model?: string;
+	provider?: string;
+	country?: string;
+	imagePath?: string;
+	price: number;
+	description?: string;
+	inStock: boolean;
+}
+
+export interface OfferTerms {
+	id: number;
+	offerId: string;
+	warrantyPeriod?: string;
+	deliveryTime?: string;
+	maintenanceTerms?: string;
+	otherTerms?: string;
+}
+
+export interface InstallmentPlan {
+	id: number;
+	offerId: string;
+	installmentNumber: number;
+	amount: number;
+	dueDate: string;
+	status: 'Pending' | 'Paid' | 'Overdue';
+	notes?: string;
+	paymentFrequency?: 'Monthly' | 'Weekly' | 'Quarterly';
+}
+
+export interface CreateEquipmentDto {
+	name: string;
+	model?: string;
+	provider?: string;
+	country?: string;
+	price: number;
+	description?: string;
+	inStock: boolean;
+}
+
+export interface CreateTermsDto {
+	warrantyPeriod?: string;
+	deliveryTime?: string;
+	maintenanceTerms?: string;
+	otherTerms?: string;
+}
+
+export interface CreateInstallmentDto {
+	numberOfInstallments: number;
+	startDate: string;
+	paymentFrequency: 'Monthly' | 'Weekly' | 'Quarterly';
+}
+
+export interface InstallmentPlanItem {
+	id: number;
+	installmentNumber: number;
+	amount: number;
+	dueDate: string;
+	status: 'Pending' | 'Paid' | 'Overdue';
+	notes?: string;
+}
+
+// ==================== WEEKLY PLAN ENHANCEMENTS ====================
+
+export interface WeeklyPlanTask {
+	id: number;
+	weeklyPlanId: number;
+	title: string;
+	taskType: 'Visit' | 'FollowUp' | 'Call' | 'Email' | 'Meeting';
+	clientId?: number;
+	clientName?: string;
+	status: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	priority: 'High' | 'Medium' | 'Low';
+	plannedDate: string;
+	completedAt?: string;
+	notes?: string;
+}
+
+export interface CreateOfferDto {
+	offerRequestId: string;
+	clientId: string;
+	assignedTo: string;
+	products: string;
+	totalAmount: number;
+	paymentTerms?: string;
+	deliveryTerms?: string;
+	validUntil: string;
+	notes?: string;
+}
+
+export interface UpdateOfferDto {
+	products?: string;
+	totalAmount?: number;
+	paymentTerms?: string;
+	deliveryTerms?: string;
+	validUntil?: string;
+	notes?: string;
+}
+
+export interface SendOfferDto {
+	message?: string;
+}
+
+export interface ClientResponseDto {
+	response: string;
+	accepted: boolean;
+}
+
+// ==================== CLIENT PROFILE TYPES ====================
+
+export interface ClientProfileDTO {
+	clientInfo: ClientResponseDTO;
+	allVisits: TaskProgressSummaryDTO[];
+	allOffers: OfferSummaryDTO[];
+	allDeals: DealSummaryDTO[];
+	statistics: ClientStatisticsDTO;
+}
+
+export interface ClientResponseDTO {
+	id: string;
+	name: string;
+	type: string;
+	specialization?: string;
+	location: string;
+	phone: string;
+	email: string;
+	status: string;
+	priority: string;
+	classification?: string;
+	lastContactDate?: string;
+	nextContactDate?: string;
+	satisfactionRating?: number;
+	createdAt: string;
+}
+
+export interface ClientStatisticsDTO {
+	totalVisits: number;
+	totalOffers: number;
+	successfulDeals: number;
+	failedDeals: number;
+	totalRevenue?: number;
+	averageSatisfaction?: number;
+}
+
+export interface TaskProgressSummaryDTO {
+	id: string;
+	progressDate: string;
+	progressType: string;
+	visitResult?: string;
+	nextStep?: string;
+	satisfactionRating?: number;
+}
+
+export interface OfferSummaryDTO {
+	id: string;
+	createdAt: string;
+	totalAmount: number;
+	status: string;
+	validUntil: string;
+}
+
+export interface DealSummaryDTO {
+	id: string;
+	closedDate: string;
+	dealValue: number;
+	status: string;
+}
+
 // ==================== EXPORT TYPES ====================
 
 export interface ExportOptions {
@@ -550,3 +992,133 @@ export interface ExportResult {
 	expiresAt: string;
 }
 
+// ==================== REQUEST WORKFLOW ====================
+
+export interface RequestWorkflow {
+	id: string;
+	title: string;
+	description: string;
+	requestType:
+		| 'ClientVisit'
+		| 'ProductDemo'
+		| 'SupportRequest'
+		| 'QuoteRequest';
+	clientId: string;
+	clientName: string;
+	requestedBy: string;
+	requestedByName: string;
+	assignedTo?: string;
+	assignedToName?: string;
+	priority: 'High' | 'Medium' | 'Low';
+	status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled';
+	dueDate?: string;
+	notes?: string;
+	comments?: Array<{
+		id: string;
+		comment: string;
+		commentedBy: string;
+		commentedByName: string;
+		createdAt: string;
+	}>;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateRequestWorkflowDto {
+	title: string;
+	description: string;
+	requestType:
+		| 'ClientVisit'
+		| 'ProductDemo'
+		| 'SupportRequest'
+		| 'QuoteRequest';
+	clientId: string;
+	priority: 'High' | 'Medium' | 'Low';
+	dueDate?: string;
+	notes?: string;
+}
+
+// ==================== DELIVERY TERMS ====================
+
+export interface DeliveryTerms {
+	id: string;
+	clientId: string;
+	terms: string;
+	validFrom: string;
+	validTo?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+// ==================== PAYMENT TERMS ====================
+
+export interface PaymentTerms {
+	id: string;
+	clientId: string;
+	terms: string;
+	validFrom: string;
+	validTo?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+// ==================== WEEKLY PLAN ====================
+
+export interface WeeklyPlan {
+	id: number;
+	employeeId: string;
+	employeeName: string;
+	planTitle: string;
+	weekStartDate: string;
+	weekEndDate: string;
+	status: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+	submittedAt?: string;
+	approvedAt?: string;
+	rejectedAt?: string;
+	reviewNotes?: string;
+	reviewedBy?: string;
+	reviewedByName?: string;
+	createdAt: string;
+	updatedAt: string;
+	tasks?: WeeklyPlanItem[];
+}
+
+export interface WeeklyPlanItem {
+	id: number;
+	weeklyPlanId: number;
+	title: string;
+	description: string;
+	priority: 'High' | 'Medium' | 'Low';
+	status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled';
+	dueDate: string;
+	completedAt?: string;
+	notes?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateWeeklyPlanDto {
+	planTitle: string;
+	weekStartDate: string;
+	weekEndDate: string;
+	tasks: CreateWeeklyPlanItemDto[];
+}
+
+export interface CreateWeeklyPlanItemDto {
+	title: string;
+	description: string;
+	priority: 'High' | 'Medium' | 'Low';
+	dueDate: string;
+	notes?: string;
+}
+
+export interface UpdateWeeklyPlanDto {
+	planTitle?: string;
+	weekStartDate?: string;
+	weekEndDate?: string;
+}
+
+export interface ReviewWeeklyPlanDto {
+	status: 'Approved' | 'Rejected';
+	reviewNotes?: string;
+}
