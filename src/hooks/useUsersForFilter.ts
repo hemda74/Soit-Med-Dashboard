@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { fetchUsers } from '@/services/user/userApi';
 import type { UserOption } from '@/types/salesReport.types';
@@ -51,8 +51,21 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 				err instanceof Error
 					? err.message
 					: 'Failed to fetch users';
-			setError(errorMessage);
-			console.error('Error fetching users for filter:', err);
+			// If 403 Forbidden, the user doesn't have permission to access this endpoint
+			// This is expected for non-admin users - just log it and continue
+			if (errorMessage.includes('403')) {
+				console.warn(
+					'SalesManager does not have permission to access /api/User/all. This is expected behavior.'
+				);
+				setUsers([]); // Set empty array instead of showing error
+				setError(null); // Don't show error to user
+			} else {
+				setError(errorMessage);
+				console.error(
+					'Error fetching users for filter:',
+					err
+				);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -62,12 +75,13 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 		await fetchUsersList();
 	}, [fetchUsersList]);
 
-	// Fetch users on mount
-	useEffect(() => {
-		if (user?.token) {
-			fetchUsersList();
-		}
-	}, [user?.token]);
+	// Don't fetch users automatically on mount
+	// Components should call refetch() manually if they need the data
+	// useEffect(() => {
+	// 	if (user?.token) {
+	// 		fetchUsersList();
+	// 	}
+	// }, [user?.token]);
 
 	return {
 		users,

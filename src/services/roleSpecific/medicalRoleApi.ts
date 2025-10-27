@@ -19,9 +19,6 @@ export const createDoctor = async (
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating doctor:', userData);
-	console.log('Using endpoint:', API_ENDPOINTS.ROLE_SPECIFIC_USER.DOCTOR);
-
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
 
@@ -54,11 +51,6 @@ export const createDoctor = async (
 		formData.append('AltText', userData.altText);
 	}
 
-	console.log('FormData contents:');
-	for (const [key, value] of formData.entries()) {
-		console.log(`${key}:`, value);
-	}
-
 	return apiRequest<RoleSpecificUserResponse>(
 		API_ENDPOINTS.ROLE_SPECIFIC_USER.DOCTOR,
 		{
@@ -84,12 +76,6 @@ export const createTechnician = async (
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating technician:', userData);
-	console.log(
-		'Using endpoint:',
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.TECHNICIAN
-	);
-
 	// Create FormData for multipart/form-data request
 	const formData = new FormData();
 
@@ -120,11 +106,6 @@ export const createTechnician = async (
 	}
 	if (userData.altText) {
 		formData.append('AltText', userData.altText);
-	}
-
-	console.log('FormData contents:');
-	for (const [key, value] of formData.entries()) {
-		console.log(`${key}:`, value);
 	}
 
 	return apiRequest<RoleSpecificUserResponse>(
