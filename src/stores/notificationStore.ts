@@ -9,6 +9,7 @@ import type {
 export type { Notification, NotificationType };
 import notificationService from '@/services/notificationService';
 import signalRService from '@/services/signalRService';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface NotificationState {
 	notifications: Notification[];
@@ -325,10 +326,40 @@ export const useNotificationStore = create<NotificationState>()(
 
 				signalRService.addEventListener(
 					'connectionStatus',
-					(status: any) => {
+					async (status: any) => {
 						get().setConnectionStatus(
 							status
 						);
+
+						// When connected, join automatic groups
+						if (status.isConnected) {
+							const authState =
+								useAuthStore.getState();
+							const user =
+								authState.user;
+
+							if (user) {
+								// Join user-specific group (automatically added by backend, but we can explicitly join)
+								await signalRService.joinGroup(
+									`User_${user.id}`
+								);
+
+								// Join role-specific groups for each role
+								if (
+									user.roles &&
+									user
+										.roles
+										.length >
+										0
+								) {
+									for (const role of user.roles) {
+										await signalRService.joinGroup(
+											`Role_${role}`
+										);
+									}
+								}
+							}
+						}
 					}
 				);
 
