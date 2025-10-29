@@ -55,7 +55,6 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                     </div>
                     <div>
                         <form onSubmit={(e) => {
-                            console.log('Form submit event triggered');
                             handleSubmit(e);
                         }}>
                             <div className="space-y-6">
