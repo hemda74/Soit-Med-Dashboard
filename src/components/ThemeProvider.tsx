@@ -41,8 +41,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         // Apply language and direction
         root.dir = language === 'ar' ? 'rtl' : 'ltr';
         root.lang = language;
-
-        console.log('Theme applied:', theme, 'Language:', language);
     }, [theme, language]);
 
     return <>{children}</>;

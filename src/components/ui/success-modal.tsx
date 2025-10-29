@@ -26,8 +26,6 @@ export function SuccessModal({
     const [copied, setCopied] = useState(false);
     const { success, errorNotification: showError } = useNotificationStore();
 
-    console.log('SuccessModal render:', { isOpen, message, password, userId, userName });
-
     const handleCopyPassword = async () => {
         if (password) {
             try {

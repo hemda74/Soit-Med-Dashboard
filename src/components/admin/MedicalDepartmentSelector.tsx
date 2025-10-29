@@ -33,7 +33,6 @@ const MedicalDepartmentSelector: React.FC<MedicalDepartmentSelectorProps> = ({
             <select
                 value={selectedDepartment || ""}
                 onChange={(e) => {
-                    console.log('Medical department selected:', e.target.value);
                     onDepartmentChange(e.target.value);
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -45,16 +44,6 @@ const MedicalDepartmentSelector: React.FC<MedicalDepartmentSelectorProps> = ({
                     </option>
                 ))}
             </select>
-
-            {/* Debug display */}
-            <div className="text-sm text-gray-600 mt-1">
-                Current department: {selectedDepartment || 'None'}
-            </div>
-            {selectedDepartment && (
-                <div className="text-sm text-green-600 mt-1">
-                    Selected: {selectedDepartment}
-                </div>
-            )}
         </div>
     );
 };

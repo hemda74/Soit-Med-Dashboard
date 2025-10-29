@@ -256,9 +256,6 @@ const UsersList: React.FC = () => {
         try {
             // Use POST if no existing image, PUT if image exists
             const hasExistingImage = selectedUser.profileImage && selectedUser.profileImage.filePath;
-            console.log('Selected user profile image state:', selectedUser.profileImage);
-            console.log('Has existing image:', hasExistingImage);
-            console.log('Using method:', hasExistingImage ? 'PUT' : 'POST');
 
             const response = hasExistingImage
                 ? await updateProfileImage(file, selectedUser.fullName, user.token)
@@ -292,7 +289,6 @@ const UsersList: React.FC = () => {
     const handleImageDelete = async () => {
         if (!user?.token || !selectedUser) return;
 
-        console.log('Deleting profile image for user:', selectedUser.id);
         setIsDeletingImage(true);
         try {
             const response = await deleteProfileImage(user.token);

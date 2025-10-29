@@ -33,7 +33,6 @@ import {
 import { useNotificationStore } from '@/stores/notificationStore';
 import type { NotificationType } from '@/types/notification.types';
 import { cn } from '@/lib/utils';
-import NotificationTest from '@/components/notifications/NotificationTest';
 
 const NotificationsPage: React.FC = () => {
     const {
@@ -151,9 +150,6 @@ const NotificationsPage: React.FC = () => {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
-            {/* Test Panel */}
-            <NotificationTest />
-
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">

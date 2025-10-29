@@ -73,7 +73,6 @@ export const useStatisticsStore = create<StatisticsState>()(
 			set({ isLoading: true, error: null });
 
 			try {
-				console.log('Fetching user statistics...');
 				const data = await fetchUserStatistics(token);
 				set({
 					statistics: data,
@@ -83,10 +82,6 @@ export const useStatisticsStore = create<StatisticsState>()(
 					apiCallCount: get().apiCallCount + 1,
 					lastApiCallTime: Date.now(),
 				});
-				console.log(
-					'User statistics fetched successfully:',
-					data
-				);
 			} catch (error) {
 				console.error(
 					'Failed to fetch statistics:',
