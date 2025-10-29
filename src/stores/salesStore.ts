@@ -1368,41 +1368,24 @@ export const useSalesStore = create<SalesStore>()(
 							await salesApi.getOffers(
 								filters
 							);
-						set({
-							offers:
+						const offersData =
+							Array.isArray(
 								response.data
-									.data ||
-								[],
+							)
+								? response.data
+								: [];
+						set({
+							offers: offersData,
 							pagination: {
-								page:
-									response
-										.data
-										.page ||
-									1,
+								page: 1,
 								pageSize:
-									response
-										.data
-										.pageSize ||
+									offersData.length ||
 									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
+								totalCount: offersData.length,
+								totalPages: 1,
 								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
 									false,
 								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
 									false,
 							},
 							offersLoading: false,
@@ -1433,8 +1416,7 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							offers:
-								response.data
-									.data ||
+								response.data ||
 								[],
 							offersLoading: false,
 						});
@@ -1505,15 +1487,13 @@ export const useSalesStore = create<SalesStore>()(
 						set((state) => ({
 							offers: state.offers.map(
 								(offer) =>
-									offer.id ===
+									offer.id.toString() ===
 									offerId
 										? response.data
 										: offer
 							),
 							selectedOffer:
-								state
-									.selectedOffer
-									?.id ===
+								state.selectedOffer?.id.toString() ===
 								offerId
 									? response.data
 									: state.selectedOffer,
@@ -1549,15 +1529,13 @@ export const useSalesStore = create<SalesStore>()(
 						set((state) => ({
 							offers: state.offers.map(
 								(offer) =>
-									offer.id ===
+									offer.id.toString() ===
 									offerId
 										? response.data
 										: offer
 							),
 							selectedOffer:
-								state
-									.selectedOffer
-									?.id ===
+								state.selectedOffer?.id.toString() ===
 								offerId
 									? response.data
 									: state.selectedOffer,
@@ -1594,15 +1572,13 @@ export const useSalesStore = create<SalesStore>()(
 						set((state) => ({
 							offers: state.offers.map(
 								(offer) =>
-									offer.id ===
+									offer.id.toString() ===
 									offerId
 										? response.data
 										: offer
 							),
 							selectedOffer:
-								state
-									.selectedOffer
-									?.id ===
+								state.selectedOffer?.id.toString() ===
 								offerId
 									? response.data
 									: state.selectedOffer,
@@ -1745,39 +1721,25 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							offerRequests:
-								response.data
-									.data ||
-								[],
+								Array.isArray(
+									response.data
+								)
+									? response.data
+									: [],
 							pagination: {
-								page:
-									response
-										.data
-										.page ||
-									1,
-								pageSize:
-									response
-										.data
-										.pageSize ||
-									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
+								page: 1,
+								pageSize: 20,
+								totalCount: Array.isArray(
+									response.data
+								)
+									? response
+											.data
+											.length
+									: 0,
+								totalPages: 1,
 								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
 									false,
 								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
 									false,
 							},
 							offerRequestsLoading:
@@ -1849,15 +1811,13 @@ export const useSalesStore = create<SalesStore>()(
 									(
 										request
 									) =>
-										request.id ===
+										request.id.toString() ===
 										offerRequestId
 											? response.data
 											: request
 								),
 							selectedOfferRequest:
-								state
-									.selectedOfferRequest
-									?.id ===
+								state.selectedOfferRequest?.id.toString() ===
 								offerRequestId
 									? response.data
 									: state.selectedOfferRequest,
@@ -1902,15 +1862,13 @@ export const useSalesStore = create<SalesStore>()(
 									(
 										request
 									) =>
-										request.id ===
+										request.id.toString() ===
 										offerRequestId
 											? response.data
 											: request
 								),
 							selectedOfferRequest:
-								state
-									.selectedOfferRequest
-									?.id ===
+								state.selectedOfferRequest?.id.toString() ===
 								offerRequestId
 									? response.data
 									: state.selectedOfferRequest,
@@ -3437,39 +3395,25 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							assignedRequests:
-								response.data
-									.data ||
-								[],
+								Array.isArray(
+									response.data
+								)
+									? response.data
+									: [],
 							pagination: {
-								page:
-									response
-										.data
-										.page ||
-									1,
-								pageSize:
-									response
-										.data
-										.pageSize ||
-									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
+								page: 1,
+								pageSize: 20,
+								totalCount: Array.isArray(
+									response.data
+								)
+									? response
+											.data
+											.length
+									: 0,
+								totalPages: 1,
 								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
 									false,
 								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
 									false,
 							},
 							requestWorkflowsLoading:
@@ -3510,8 +3454,10 @@ export const useSalesStore = create<SalesStore>()(
 						const response =
 							await salesApi.updateRequestStatus(
 								requestId,
-								status,
-								comment
+								{
+									status,
+									notes: comment,
+								}
 							);
 						set((state) => ({
 							requestWorkflows:

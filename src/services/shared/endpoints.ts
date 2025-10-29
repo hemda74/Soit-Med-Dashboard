@@ -194,30 +194,40 @@ export const API_ENDPOINTS = {
 		// Offers (ENHANCED) - For SalesManager/SuperAdmin only
 		OFFERS: {
 			BASE: '/api/Offer',
-			BY_ID: (id: string) => `/api/Offer/${id}`,
+			BY_ID: (id: number | string) => `/api/Offer/${id}`,
 			MY_OFFERS: '/api/Offer/my-offers',
 			// Enhanced Offer Features
-			EQUIPMENT: (id: string) => `/api/Offer/${id}/equipment`,
-			EQUIPMENT_BY_ID: (id: string, equipmentId: number) =>
-				`/api/Offer/${id}/equipment/${equipmentId}`,
-			UPLOAD_IMAGE: (id: string, equipmentId: number) =>
+			EQUIPMENT: (id: number | string) =>
+				`/api/Offer/${id}/equipment`,
+			EQUIPMENT_BY_ID: (
+				id: number | string,
+				equipmentId: number
+			) => `/api/Offer/${id}/equipment/${equipmentId}`,
+			UPLOAD_IMAGE: (
+				id: number | string,
+				equipmentId: number
+			) =>
 				`/api/Offer/${id}/equipment/${equipmentId}/upload-image`,
-			TERMS: (id: string) => `/api/Offer/${id}/terms`,
-			INSTALLMENTS: (id: string) =>
+			TERMS: (id: number | string) =>
+				`/api/Offer/${id}/terms`,
+			INSTALLMENTS: (id: number | string) =>
 				`/api/Offer/${id}/installments`,
-			SEND_TO_SALESMAN: (id: string) =>
+			SEND_TO_SALESMAN: (id: number | string) =>
 				`/api/Offer/${id}/send-to-salesman`,
-			EXPORT_PDF: (id: string) =>
+			EXPORT_PDF: (id: number | string) =>
 				`/api/Offer/${id}/export-pdf`,
 		},
 		// Offer Requests (NEW)
 		OFFER_REQUESTS: {
-			BASE: '/api/offerrequest',
-			BY_ID: (id: string) => `/api/offerrequest/${id}`,
-			ASSIGN: (id: string) =>
-				`/api/offerrequest/${id}/assign`,
+			BASE: '/api/OfferRequest',
+			BY_ID: (id: number | string) =>
+				`/api/OfferRequest/${id}`,
+			ASSIGN: (id: number | string) =>
+				`/api/OfferRequest/${id}/assign`,
+			STATUS: (id: number | string) =>
+				`/api/OfferRequest/${id}/status`,
 			ASSIGNED: (supportId: string) =>
-				`/api/offerrequest/assigned/${supportId}`,
+				`/api/OfferRequest/assigned/${supportId}`,
 		},
 		// Task Progress (NEW)
 		TASK_PROGRESS: {

@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import Label from '@/components/ui/template/Label';
 import Button from '@/components/ui/template/Button';
-import { EyeIcon, EyeCloseIcon } from '@/components/icons/template';
 import Logo from '@/components/Logo';
 
 // Temporary simple input for debugging
@@ -113,9 +112,9 @@ export const LoginFormUI: React.FC<LoginFormUIProps> = ({
                                             className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                                         >
                                             {showPassword ? (
-                                                <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                                                <EyeOff className="text-gray-700 dark:text-gray-700 h-5 w-5" />
                                             ) : (
-                                                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                                                <Eye className="text-gray-700 dark:text-gray-700 h-5 w-5" />
                                             )}
                                         </span>
                                     </div>

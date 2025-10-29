@@ -3,7 +3,7 @@ import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import ClientSearch from './ClientSearch';
-import ClientDetails from './ClientDetails';
+import SalesSupportClientDetails from './SalesSupportClientDetails';
 import OfferRequestForm from './OfferRequestForm';
 import {
 	UserGroupIcon,
@@ -28,8 +28,9 @@ const SalesSupportDashboard: React.FC = () => {
 	const {
 		getAssignedRequests,
 		updateRequestStatus,
-		getMyClients,
 		getMyOffers,
+		searchClients,
+		getOffersByClient,
 		assignedRequests,
 		offers,
 		requestWorkflowsLoading,
@@ -38,7 +39,9 @@ const SalesSupportDashboard: React.FC = () => {
 		clients,
 		clientsError,
 		requestWorkflowsError,
-		offersError
+		offersError,
+		pagination,
+		offersByClient
 	} = useSalesStore();
 
 	const { user } = useAuthStore();
@@ -48,12 +51,26 @@ const SalesSupportDashboard: React.FC = () => {
 	const [showOfferForm, setShowOfferForm] = useState(false);
 	const [activeTab, setActiveTab] = useState('overview');
 	const [searchQuery, setSearchQuery] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
 
 	useEffect(() => {
 		getAssignedRequests();
-		getMyClients();
 		getMyOffers();
-	}, [getAssignedRequests, getMyClients, getMyOffers]);
+	}, [getAssignedRequests, getMyOffers]);
+
+	// Load all clients when clients tab is opened
+	useEffect(() => {
+		if (activeTab === 'clients') {
+			searchClients({ page: currentPage, pageSize: 20 });
+		}
+	}, [activeTab, currentPage, searchClients]);
+
+	// Load client offers when a client is selected
+	useEffect(() => {
+		if (selectedClient?.id) {
+			getOffersByClient(selectedClient.id);
+		}
+	}, [selectedClient, getOffersByClient]);
 
 	const handleStatusUpdate = async (requestId: string, status: string, comment: string = '') => {
 		try {
@@ -568,22 +585,48 @@ const SalesSupportDashboard: React.FC = () => {
 												{clientsError}
 											</div>
 										) : clients && clients.length > 0 ? (
-											<div className="space-y-2 max-h-96 overflow-y-auto">
-												{clients.slice(0, 10).map((client) => (
-													<div
-														key={client.id}
-														onClick={() => setSelectedClient(client)}
-														className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedClient?.id === client.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400' : 'border-gray-200 dark:border-gray-700'
-															}`}
-													>
-														<div className="font-medium text-gray-900 dark:text-gray-100">{client.name}</div>
-														<div className="text-sm text-gray-500 dark:text-gray-400">
-															{client.type} • {client.specialization || 'N/A'}
+											<>
+												<div className="space-y-2 max-h-96 overflow-y-auto">
+													{clients.slice(0, 10).map((client) => (
+														<div
+															key={client.id}
+															onClick={() => setSelectedClient(client)}
+															className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedClient?.id === client.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400' : 'border-gray-200 dark:border-gray-700'
+																}`}
+														>
+															<div className="font-medium text-gray-900 dark:text-gray-100">{client.name}</div>
+															<div className="text-sm text-gray-500 dark:text-gray-400">
+																{client.type} • {client.specialization || 'N/A'}
+															</div>
+															<div className="text-xs text-gray-400 dark:text-gray-500">{client.location}</div>
 														</div>
-														<div className="text-xs text-gray-400 dark:text-gray-500">{client.location}</div>
+													))}
+												</div>
+												{/* Pagination */}
+												{pagination && pagination.totalPages > 1 && (
+													<div className="mt-4 flex items-center justify-between border-t pt-4">
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+															disabled={!pagination.hasPreviousPage || clientsLoading}
+														>
+															Previous
+														</Button>
+														<span className="text-sm text-gray-600 dark:text-gray-400">
+															Page {pagination.page} of {pagination.totalPages}
+														</span>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => setCurrentPage(p => p + 1)}
+															disabled={!pagination.hasNextPage || clientsLoading}
+														>
+															Next
+														</Button>
 													</div>
-												))}
-											</div>
+												)}
+											</>
 										) : (
 											<div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
 												No clients found
@@ -593,10 +636,14 @@ const SalesSupportDashboard: React.FC = () => {
 								</CardContent>
 							</Card>
 
-							{/* Client Details */}
+							{/* Client Details - Simplified for Sales Support */}
 							<div className="lg:col-span-2">
 								{selectedClient ? (
-									<ClientDetails clientId={selectedClient.id} />
+									<SalesSupportClientDetails
+										client={selectedClient}
+										offers={offersByClient[selectedClient.id] || []}
+										offersLoading={offersLoading}
+									/>
 								) : (
 									<Card className="shadow-md">
 										<CardContent className="flex items-center justify-center h-96">

@@ -17,10 +17,10 @@ import LoadingScreen from '@/components/LoadingScreen'
 import ReportsScreen from '@/components/finance/ReportsScreen'
 import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
 import { SalesManagerDashboard, SalesmanDashboard, SalesSupportDashboard } from '@/components/sales'
+import SalesStatisticsPage from '@/components/sales/SalesStatisticsPage'
 import RoleGuard from '@/components/shared/RoleGuard'
 import SalesTargetsPage from '@/components/sales/SalesTargetsPage'
 import ManagerReportsReviewPage from '@/components/sales/ManagerReportsReviewPage'
-import ManagerWeeklyPlansReviewPage from '@/components/sales/ManagerWeeklyPlansReviewPage'
 import OfferCreationPage from '@/components/salesSupport/OfferCreationPage'
 import RequestsInboxPage from '@/components/salesSupport/RequestsInboxPage'
 import { WeeklyPlansScreen } from '@/components/weeklyPlan'
@@ -71,7 +71,7 @@ function App() {
                 <Route path="sales-manager" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesManagerDashboard /></RoleGuard>} />
                 <Route path="sales-manager/targets" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesTargetsPage /></RoleGuard>} />
                 <Route path="sales-manager/reports-review" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><ManagerReportsReviewPage /></RoleGuard>} />
-                <Route path="sales-manager/weekly-plans-review" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><ManagerWeeklyPlansReviewPage /></RoleGuard>} />
+                <Route path="sales-statistics" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesStatisticsPage /></RoleGuard>} />
 
                 <Route path="salesman" element={<RoleGuard requiredAnyRoles={["Salesman", "SuperAdmin"]}><SalesmanDashboard /></RoleGuard>} />
 

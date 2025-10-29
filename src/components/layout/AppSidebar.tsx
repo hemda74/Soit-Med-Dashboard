@@ -17,7 +17,6 @@ import {
   HeadphonesIcon
 } from "lucide-react";
 import Logo from "../Logo";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -94,15 +93,23 @@ const AppSidebar: React.FC = () => {
 
   // Sales Support menu - for Sales Support and Super Admin
   const salesSupportNavItems: NavItem[] = useMemo(() =>
-    hasAnyRole(['SalesSupport', 'SuperAdmin']) ? [{
-      icon: <HeadphonesIcon />,
-      name: t('salesSupport'),
-      subItems: [
-        { name: t('salesSupportDashboard'), path: "/sales-support", pro: false },
-        { name: t('offerCreation'), path: "/sales-support/offer", pro: false },
-        { name: t('requestsInbox'), path: "/sales-support/requests", pro: false },
-      ],
-    }] : [], [hasAnyRole, t]);
+    hasAnyRole(['SalesSupport', 'SuperAdmin']) ? [
+      {
+        icon: <HeadphonesIcon />,
+        name: t('salesSupportDashboard'),
+        path: "/sales-support",
+      },
+      {
+        icon: <HeadphonesIcon />,
+        name: t('offerCreation'),
+        path: "/sales-support/offer",
+      },
+      {
+        icon: <HeadphonesIcon />,
+        name: t('requestsInbox'),
+        path: "/sales-support/requests",
+      },
+    ] : [], [hasAnyRole, t]);
 
   const allNavItems: NavItem[] = useMemo(() => [
     ...navItems,
@@ -275,7 +282,7 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        <SidebarWidget />
+        <Logo asLink={false} />
       </div>
     </aside>
   );

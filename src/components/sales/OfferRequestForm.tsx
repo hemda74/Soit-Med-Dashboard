@@ -82,10 +82,10 @@ export default function OfferRequestForm({
     const createForm = useForm<OfferRequestFormValues>({
         resolver: zodResolver(offerRequestSchema),
         defaultValues: {
-            clientId: offerRequest?.clientId || clientId || '',
+            clientId: offerRequest?.clientId?.toString() || clientId || '',
             requestedProducts: offerRequest?.requestedProducts || '',
             priority: offerRequest?.priority || 'Medium',
-            taskProgressId: offerRequest?.taskProgressId || taskProgressId || '',
+            taskProgressId: offerRequest?.taskProgressId?.toString() || taskProgressId || '',
         },
     });
 
@@ -150,7 +150,7 @@ export default function OfferRequestForm({
                 completionNotes: data.completionNotes,
             };
 
-            await updateOfferRequest(offerRequest.id, updateData);
+            await updateOfferRequest(offerRequest.id.toString(), updateData);
             onSuccess?.();
         } catch (error) {
             console.error('Error updating offer request:', error);
@@ -168,7 +168,7 @@ export default function OfferRequestForm({
                 assignedTo: data.assignedTo,
             };
 
-            await assignOfferRequest(offerRequest.id, assignmentData);
+            await assignOfferRequest(offerRequest.id.toString(), assignmentData);
             onSuccess?.();
         } catch (error) {
             console.error('Error assigning offer request:', error);
@@ -288,8 +288,8 @@ export default function OfferRequestForm({
                             <Badge className={getStatusColor(offerRequest.status)}>
                                 {offerRequest.status}
                             </Badge>
-                            <Badge className={getPriorityColor(offerRequest.priority)}>
-                                {offerRequest.priority} Priority
+                            <Badge className={getPriorityColor(offerRequest.priority || 'Medium')}>
+                                {offerRequest.priority || 'Medium'} Priority
                             </Badge>
                         </>
                     )}
@@ -317,7 +317,7 @@ export default function OfferRequestForm({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-medium text-muted-foreground">Created</label>
-                                    <p className="text-sm">{format(new Date(offerRequest.createdAt), 'PPP')}</p>
+                                    <p className="text-sm">{offerRequest.createdAt ? format(new Date(offerRequest.createdAt), 'PPP') : 'N/A'}</p>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-muted-foreground">Assigned To</label>
