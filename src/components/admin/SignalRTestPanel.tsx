@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNotificationStore } from '@/stores/notificationStore';
-import signalRService from '@/services/signalRService';
 import SendTestNotification from './SendTestNotification';
 
 const SignalRTestPanel: React.FC = () => {
@@ -13,7 +12,7 @@ const SignalRTestPanel: React.FC = () => {
     const { user } = useAuthStore();
     const { notifications: storeNotifications } = useNotificationStore();
 
-    const { connectionStatus, isConnected, error, joinGroup, leaveGroup } = useSignalR({
+    const { isConnected, error, joinGroup, leaveGroup } = useSignalR({
         onConnected: () => {
             console.log('SignalR Connected!');
             setNotifications(prev => [...prev, {

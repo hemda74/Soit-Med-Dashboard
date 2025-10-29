@@ -576,7 +576,7 @@ export default function SalesmanDashboard() {
                                                 {offer.requestedProducts}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                Priority: {offer.priority} • Created: {new Date(offer.createdAt).toLocaleDateString()}
+                                                Priority: {offer.priority || 'N/A'} • Created: {offer.createdAt ? new Date(offer.createdAt).toLocaleDateString() : 'N/A'}
                                             </p>
                                         </div>
                                         <div className="flex items-center space-x-2">

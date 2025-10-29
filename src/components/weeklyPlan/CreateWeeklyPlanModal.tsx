@@ -34,7 +34,7 @@ const taskSchema = z.object({
     plannedTime: z.string().optional(),
     purpose: z.string().optional(),
     priority: z.enum(['High', 'Medium', 'Low']),
-    status: z.enum(['Planned', 'InProgress', 'Completed', 'Cancelled']).default('Planned'),
+    status: z.enum(['Planned', 'InProgress', 'Completed', 'Cancelled']),
 });
 
 const createPlanSchema = z.object({

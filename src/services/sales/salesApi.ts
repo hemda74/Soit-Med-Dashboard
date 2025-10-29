@@ -246,13 +246,36 @@ class SalesApiService {
 			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
 			: API_ENDPOINTS.SALES.CLIENT.SEARCH;
 
-		// Removed verbose console logs for production
+		// API returns array directly, normalize to paginated response
+		const response = await this.makeRequest<ApiResponse<any[]>>(
+			endpoint,
+			{
+				method: 'GET',
+			}
+		);
 
-		return this.makeRequest<
-			PaginatedApiResponse<ClientSearchResult>
-		>(endpoint, {
-			method: 'GET',
-		});
+		// Normalize response to expected paginated structure
+		const clientsArray = response.data || [];
+		const page = filters.page || 1;
+		const pageSize = filters.pageSize || 20;
+
+		return {
+			success: response.success,
+			message: response.message,
+			data: {
+				clients: clientsArray,
+				totalCount: clientsArray.length,
+				page: page,
+				pageSize: pageSize,
+				totalPages: Math.ceil(
+					clientsArray.length / pageSize
+				),
+				hasNextPage:
+					page * pageSize < clientsArray.length,
+				hasPreviousPage: page > 1,
+			},
+			timestamp: response.timestamp,
+		};
 	}
 
 	/**
@@ -1024,7 +1047,8 @@ class SalesApiService {
 	}
 
 	/**
-	 * Get assigned requests
+	 * Get assigned requests (for Sales Support)
+	 * GET /api/RequestWorkflows/assigned
 	 */
 	async getAssignedRequests(
 		filters: {
@@ -1033,7 +1057,7 @@ class SalesApiService {
 			status?: string;
 			requestType?: string;
 		} = {}
-	): Promise<PaginatedApiResponseWithMeta<RequestWorkflow[]>> {
+	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
 		if (filters.page)
 			queryParams.append('page', filters.page.toString());
@@ -1052,9 +1076,7 @@ class SalesApiService {
 			? `/api/RequestWorkflows/assigned?${queryString}`
 			: '/api/RequestWorkflows/assigned';
 
-		return this.makeRequest<
-			PaginatedApiResponseWithMeta<RequestWorkflow[]>
-		>(endpoint, {
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
 			method: 'GET',
 		});
 	}
@@ -1064,14 +1086,20 @@ class SalesApiService {
 	 */
 	async updateRequestStatus(
 		requestId: string,
-		status: 'Pending' | 'InProgress' | 'Completed' | 'Cancelled',
-		comment: string = ''
+		data: {
+			status:
+				| 'Pending'
+				| 'InProgress'
+				| 'Completed'
+				| 'Cancelled';
+			notes?: string;
+		}
 	): Promise<ApiResponse<RequestWorkflow>> {
 		return this.makeRequest<ApiResponse<RequestWorkflow>>(
 			`/api/RequestWorkflows/${requestId}/status`,
 			{
 				method: 'PUT',
-				body: JSON.stringify({ status, comment }),
+				body: JSON.stringify(data),
 			}
 		);
 	}
@@ -1434,8 +1462,15 @@ class SalesApiService {
 	}
 
 	async getOffers(
-		filters = {}
-	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		filters: {
+			status?: string;
+			clientId?: number | string;
+			startDate?: string;
+			endDate?: string;
+			page?: number;
+			pageSize?: number;
+		} = {}
+	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
 		Object.entries(filters).forEach(([key, value]) => {
 			if (value) queryParams.append(key, value.toString());
@@ -1444,10 +1479,9 @@ class SalesApiService {
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.OFFERS.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFERS.BASE;
-		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			endpoint,
-			{ method: 'GET' }
-		);
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	async getOffer(offerId: string): Promise<ApiResponse<any>> {
@@ -1510,7 +1544,7 @@ class SalesApiService {
 			startDate?: string;
 			endDate?: string;
 		} = {}
-	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
 		Object.entries(filters).forEach(([key, value]) => {
 			if (value) queryParams.append(key, value.toString());
@@ -1519,12 +1553,9 @@ class SalesApiService {
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.OFFERS.MY_OFFERS}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFERS.MY_OFFERS;
-		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			endpoint,
-			{
-				method: 'GET',
-			}
-		);
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	async getClientProfile(clientId: string): Promise<ApiResponse<any>> {
@@ -1547,8 +1578,18 @@ class SalesApiService {
 	}
 
 	async getOfferRequests(
-		filters = {}
-	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		filters: {
+			status?:
+				| 'Requested'
+				| 'InProgress'
+				| 'Ready'
+				| 'Sent'
+				| 'Cancelled';
+			requestedBy?: string;
+			page?: number;
+			pageSize?: number;
+		} = {}
+	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
 		Object.entries(filters).forEach(([key, value]) => {
 			if (value) queryParams.append(key, value.toString());
@@ -1557,13 +1598,14 @@ class SalesApiService {
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE;
-		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			endpoint,
-			{ method: 'GET' }
-		);
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
-	async getOfferRequest(requestId: string): Promise<ApiResponse<any>> {
+	async getOfferRequest(
+		requestId: string | number
+	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(requestId),
 			{ method: 'GET' }
@@ -1571,8 +1613,17 @@ class SalesApiService {
 	}
 
 	async updateOfferRequest(
-		requestId: string,
-		data: any
+		requestId: string | number,
+		data: Partial<{
+			requestedProducts: string;
+			specialNotes: string;
+			status:
+				| 'Requested'
+				| 'InProgress'
+				| 'Ready'
+				| 'Sent'
+				| 'Cancelled';
+		}>
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(requestId),
@@ -1584,15 +1635,40 @@ class SalesApiService {
 	}
 
 	async assignOfferRequest(
-		requestId: string,
-		data: any
+		requestId: string | number,
+		data: { assignedTo: string }
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_ID(
-				requestId
-			)}/assign`,
+			API_ENDPOINTS.SALES.OFFER_REQUESTS.ASSIGN(requestId),
 			{
-				method: 'POST',
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Update offer request status
+	 * @param requestId - Request ID
+	 * @param data - Status update data
+	 * @returns Updated offer request
+	 */
+	async updateOfferRequestStatus(
+		requestId: string | number,
+		data: {
+			status:
+				| 'Requested'
+				| 'InProgress'
+				| 'Ready'
+				| 'Sent'
+				| 'Cancelled';
+			notes?: string;
+		}
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFER_REQUESTS.STATUS(requestId),
+			{
+				method: 'PUT',
 				body: JSON.stringify(data),
 			}
 		);
@@ -1866,6 +1942,122 @@ class SalesApiService {
 				method: 'POST',
 				body: JSON.stringify(data),
 			}
+		);
+	}
+
+	// ==================== SALESMAN STATISTICS ====================
+
+	async getAllSalesmanStatistics(
+		year: number,
+		quarter?: number
+	): Promise<ApiResponse<any[]>> {
+		const params = new URLSearchParams({ year: year.toString() });
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		return this.makeRequest<ApiResponse<any[]>>(
+			`/api/SalesmanStatistics/all?${params.toString()}`
+		);
+	}
+
+	async getSalesmanStatistics(
+		salesmanId: string,
+		year: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams({ year: year.toString() });
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/${salesmanId}?${params.toString()}`
+		);
+	}
+
+	async getSalesmanProgress(
+		salesmanId: string,
+		year: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams({ year: year.toString() });
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/${salesmanId}/progress?${params.toString()}`
+		);
+	}
+
+	async createSalesmanTarget(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			'/api/SalesmanStatistics/targets',
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async updateSalesmanTarget(
+		targetId: number,
+		data: any
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/targets/${targetId}`,
+			{
+				method: 'PUT',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async deleteSalesmanTarget(
+		targetId: number
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/targets/${targetId}`,
+			{
+				method: 'DELETE',
+			}
+		);
+	}
+
+	async getSalesmanTargets(
+		salesmanId: string,
+		year: number
+	): Promise<ApiResponse<any[]>> {
+		const params = new URLSearchParams({ year: year.toString() });
+		return this.makeRequest<ApiResponse<any[]>>(
+			`/api/SalesmanStatistics/targets/salesman/${salesmanId}?${params.toString()}`
+		);
+	}
+
+	async getTeamTarget(
+		year: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams({ year: year.toString() });
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/targets/team?${params.toString()}`
+		);
+	}
+
+	async getDealsBySalesman(
+		salesmanId: string
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`/api/Deal/by-salesman/${salesmanId}`
+		);
+	}
+
+	async getOffersBySalesman(
+		salesmanId: string
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`/api/Offer/by-salesman/${salesmanId}`
 		);
 	}
 }

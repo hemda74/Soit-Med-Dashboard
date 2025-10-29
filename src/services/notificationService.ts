@@ -107,7 +107,9 @@ class NotificationService {
 		}
 	}
 
-	private handleRoleBasedNotification(
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleRoleBasedNotification(
 		notification: NotificationData
 	): void {
 		if (this.shouldShowNotification(notification)) {
@@ -115,7 +117,9 @@ class NotificationService {
 		}
 	}
 
-	private handleNewUserRegistration(user: any): void {
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleNewUserRegistration(user: any): void {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
@@ -146,7 +150,9 @@ class NotificationService {
 		);
 	}
 
-	private handleUserRoleChange(user: any): void {
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleUserRoleChange(user: any): void {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
@@ -177,7 +183,9 @@ class NotificationService {
 		);
 	}
 
-	private handleWeeklyPlanUpdate(plan: any): void {
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleWeeklyPlanUpdate(plan: any): void {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
@@ -206,7 +214,9 @@ class NotificationService {
 		toast.success('Weekly plan has been updated');
 	}
 
-	private handleSalesReportUpdate(report: any): void {
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleSalesReportUpdate(report: any): void {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
@@ -235,7 +245,9 @@ class NotificationService {
 		toast.success('New sales report available');
 	}
 
-	private handleSystemMaintenance(maintenance: any): void {
+	// Intentionally unused - for future use
+	// @ts-ignore TS6133
+	private _handleSystemMaintenance(maintenance: any): void {
 		const notification: NotificationData = {
 			id: `maintenance-${Date.now()}`,
 			type: 'warning',

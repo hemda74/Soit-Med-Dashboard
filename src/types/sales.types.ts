@@ -177,32 +177,25 @@ export interface DealFailureDto {
 // ==================== OFFER REQUEST MANAGEMENT ====================
 
 export interface OfferRequest {
-	id: string;
-	clientId: string;
-	clientName: string;
-	requestedProducts: string;
-	priority: 'Low' | 'Medium' | 'High';
-	status: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
-	createdAt: string;
-	updatedAt: string;
+	id: number;
 	requestedBy: string;
 	requestedByName: string;
+	clientId: number;
+	clientName: string;
+	requestedProducts: string;
+	specialNotes?: string;
+	requestDate: string;
+	status: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
 	assignedTo?: string;
 	assignedToName?: string;
-	assignedAt?: string;
-	assignedBy?: string;
-	assignedByName?: string;
-	// Offer details
+	createdOfferId?: number | null;
+	priority?: 'Low' | 'Medium' | 'High';
+	createdAt?: string;
+	taskProgressId?: string;
 	offerDescription?: string;
 	offerValue?: number;
 	offerValidUntil?: string;
-	// Completion information
-	completedAt?: string;
-	completedBy?: string;
-	completedByName?: string;
 	completionNotes?: string;
-	// Related task progress
-	taskProgressId?: string;
 }
 
 export interface CreateOfferRequestDto {
@@ -745,6 +738,76 @@ export interface PaginatedApiResponseWithMeta<T> {
 	timestamp: string;
 }
 
+// ==================== SALESMAN STATISTICS ====================
+
+export interface SalesmanStatisticsDTO {
+	salesmanId: string;
+	salesmanName: string;
+	year: number;
+	quarter?: number;
+
+	// Visit Statistics
+	totalVisits: number;
+	successfulVisits: number; // VisitResult = "Interested"
+	failedVisits: number; // VisitResult = "NotInterested"
+	successRate: number; // percentage
+
+	// Offer Statistics
+	totalOffers: number;
+	acceptedOffers: number;
+	rejectedOffers: number;
+	offerAcceptanceRate: number; // percentage
+
+	// Deal Statistics
+	totalDeals: number;
+	totalDealValue: number;
+}
+
+export interface SalesmanTargetDTO {
+	id: number;
+	salesmanId: string | null;
+	salesmanName: string;
+	year: number;
+	quarter?: number;
+
+	targetVisits: number;
+	targetSuccessfulVisits: number;
+	targetOffers: number;
+	targetDeals: number;
+	targetOfferAcceptanceRate?: number; // 0-100
+
+	isTeamTarget: boolean;
+	notes?: string;
+	createdAt: string; // ISO 8601
+	createdByManagerName: string;
+}
+
+export interface SalesmanProgressDTO {
+	currentStatistics: SalesmanStatisticsDTO;
+	individualTarget?: SalesmanTargetDTO;
+	teamTarget?: SalesmanTargetDTO;
+
+	// Progress Percentages (0-100, can exceed 100%)
+	visitsProgress: number;
+	successfulVisitsProgress: number;
+	offersProgress: number;
+	dealsProgress: number;
+	offerAcceptanceRateProgress?: number;
+}
+
+export interface CreateSalesmanTargetDTO {
+	salesmanId?: string; // null or omit for team target
+	year: number;
+	quarter?: number; // 1-4, omit for yearly
+	targetVisits: number;
+	targetSuccessfulVisits: number;
+	targetOffers: number;
+	targetDeals: number;
+	targetOfferAcceptanceRate?: number; // 0-100
+	isTeamTarget: boolean;
+	notes?: string;
+}
+
 // ==================== FILTERS AND PAGINATION ====================
 
 export interface PaginationParams {
@@ -767,9 +830,9 @@ export interface SalesmanFilter {
 // ==================== OFFER MANAGEMENT ====================
 
 export interface Offer {
-	id: string;
-	offerRequestId?: string;
-	clientId: string;
+	id: number;
+	offerRequestId: number;
+	clientId: number;
 	clientName: string;
 	createdBy: string;
 	createdByName: string;
@@ -779,40 +842,33 @@ export interface Offer {
 	totalAmount: number;
 	paymentTerms?: string;
 	deliveryTerms?: string;
-	paymentType?: 'Cash' | 'Installments' | 'Other';
-	finalPrice?: number;
-	offerDuration?: string;
 	validUntil: string;
 	status:
 		| 'Draft'
 		| 'Sent'
-		| 'UnderReview'
 		| 'Accepted'
 		| 'Rejected'
-		| 'NeedsModification'
+		| 'UnderReview'
 		| 'Expired';
-	sentToClientAt?: string;
-	clientResponse?: string;
-	documents?: string; // JSON array of file paths
-	notes?: string;
+	sentToClientAt?: string | null;
+	clientResponse?: string | null;
 	createdAt: string;
-	updatedAt: string;
-	// Enhanced features
-	equipment?: OfferEquipment[];
-	terms?: OfferTerms;
-	installments?: InstallmentPlan[];
+	paymentType?: 'Cash' | 'Installments' | 'Other';
+	finalPrice?: number;
+	offerDuration?: string;
+	notes?: string;
 }
 
 // ==================== ENHANCED OFFER FEATURES ====================
 
 export interface OfferEquipment {
 	id: number;
-	offerId: string;
+	offerId: number;
 	name: string;
 	model?: string;
 	provider?: string;
 	country?: string;
-	imagePath?: string;
+	imagePath?: string | null;
 	price: number;
 	description?: string;
 	inStock: boolean;
@@ -820,7 +876,7 @@ export interface OfferEquipment {
 
 export interface OfferTerms {
 	id: number;
-	offerId: string;
+	offerId: number;
 	warrantyPeriod?: string;
 	deliveryTime?: string;
 	maintenanceTerms?: string;
@@ -829,13 +885,12 @@ export interface OfferTerms {
 
 export interface InstallmentPlan {
 	id: number;
-	offerId: string;
+	offerId: number;
 	installmentNumber: number;
 	amount: number;
 	dueDate: string;
 	status: 'Pending' | 'Paid' | 'Overdue';
-	notes?: string;
-	paymentFrequency?: 'Monthly' | 'Weekly' | 'Quarterly';
+	notes?: string | null;
 }
 
 export interface CreateEquipmentDto {
@@ -887,8 +942,8 @@ export interface WeeklyPlanTask {
 }
 
 export interface CreateOfferDto {
-	offerRequestId: string;
-	clientId: string;
+	offerRequestId: number;
+	clientId: number;
 	assignedTo: string;
 	products: string;
 	totalAmount: number;
@@ -896,6 +951,9 @@ export interface CreateOfferDto {
 	deliveryTerms?: string;
 	validUntil: string;
 	notes?: string;
+	paymentType?: 'Cash' | 'Installments' | 'Other';
+	finalPrice?: number;
+	offerDuration?: string;
 }
 
 export interface UpdateOfferDto {

@@ -223,8 +223,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                         <div className="text-center">
                             <p className="text-2xl font-bold text-orange-600">EGP {client.totalRevenue?.toLocaleString() || 0}</p>
                             <p className="text-sm text-gray-500">Total Revenue</p>
-                </div>
-            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -246,7 +246,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 <CardTitle>Client Information</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                    <div>
+                                <div>
                                     <label className="text-sm font-medium text-gray-500">Specialization</label>
                                     <p className="text-sm">{client.specialization || 'Not specified'}</p>
                                 </div>
@@ -257,7 +257,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 <div>
                                     <label className="text-sm font-medium text-gray-500">Contact Person</label>
                                     <p className="text-sm">{client.contactPerson || 'Not specified'}</p>
-                            </div>
+                                </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-500">Annual Revenue</label>
                                     <p className="text-sm">{client.annualRevenue ? `EGP ${client.annualRevenue.toLocaleString()}` : 'Not specified'}</p>
@@ -273,8 +273,8 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 <div>
                                     <label className="text-sm font-medium text-gray-500">Average Satisfaction</label>
                                     <p className="text-sm">{client.averageSatisfaction ? `${client.averageSatisfaction.toFixed(1)}/5` : 'No ratings yet'}</p>
-                    </div>
-                    <div>
+                                </div>
+                                <div>
                                     <label className="text-sm font-medium text-gray-500">Conversion Rate</label>
                                     <p className="text-sm">{client.conversionRate ? `${(client.conversionRate * 100).toFixed(1)}%` : 'Not calculated'}</p>
                                 </div>
@@ -407,11 +407,11 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                 <Badge className={getOfferStatusColor(offer.status)}>
                                                     {offer.status}
                                                 </Badge>
-                                                <Badge className={getPriorityColor(offer.priority)}>
-                                                    {offer.priority}
+                                                <Badge className={getPriorityColor(offer.priority || 'Medium')}>
+                                                    {offer.priority || 'Medium'}
                                                 </Badge>
                                                 <p className="text-sm text-gray-500 mt-2">
-                                                    {format(new Date(offer.createdAt), 'PPP')}
+                                                    {offer.createdAt ? format(new Date(offer.createdAt), 'PPP') : 'N/A'}
                                                 </p>
                                             </div>
                                         </div>
@@ -457,14 +457,14 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                 {progress.satisfactionRating && (
                                                     <p className="text-sm text-gray-500 mt-2">
                                                         Satisfaction: {progress.satisfactionRating}/5
-                                            </p>
-                                        )}
-                                    </div>
+                                                    </p>
+                                                )}
+                                            </div>
                                             <div className="text-right text-sm text-gray-500">
                                                 <p>{format(new Date(progress.progressDate), 'PPP')}</p>
                                                 <p>{progress.createdByName}</p>
                                             </div>
-                                </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             ))}
@@ -500,9 +500,9 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             }}
                             onCancel={() => setShowTaskProgressForm(false)}
                         />
-                        </div>
                     </div>
-                )}
+                </div>
+            )}
 
             {showOfferRequestForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
