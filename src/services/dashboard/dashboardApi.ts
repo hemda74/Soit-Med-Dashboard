@@ -14,7 +14,8 @@ export const fetchUserStatistics = async (
 	try {
 		setLoading?.(true);
 
-		const response = await apiRequest<UserStatistics>(
+		// API returns PascalCase, so we use 'any' to normalize it
+		const response = await apiRequest<any>(
 			API_ENDPOINTS.USER.STATISTICS,
 			{
 				method: 'GET',
@@ -22,7 +23,44 @@ export const fetchUserStatistics = async (
 			token
 		);
 
-		return response;
+		// Normalize the response to match UserStatistics interface
+		// Handle both PascalCase (from API) and camelCase formats
+		const normalizedResponse: UserStatistics = {
+			totalUsers:
+				response.totalUsers ?? response.TotalUsers ?? 0,
+			activeUsers:
+				response.activeUsers ??
+				response.ActiveUsers ??
+				0,
+			inactiveUsers:
+				response.inactiveUsers ??
+				response.InactiveUsers ??
+				0,
+			usersByRole:
+				response.usersByRole ??
+				response.UsersByRole ??
+				0,
+			generatedAt:
+				response.generatedAt ??
+				response.GeneratedAt ??
+				new Date().toISOString(),
+			usersByRoleBreakdown:
+				response.usersByRoleBreakdown ??
+				response.UsersByRoleBreakdown ??
+				{},
+			usersByDepartment:
+				response.usersByDepartment ??
+				response.UsersByDepartment ??
+				{},
+		};
+
+		// Log for debugging (remove in production)
+		console.log('📊 Statistics received:', {
+			raw: response,
+			normalized: normalizedResponse,
+		});
+
+		return normalizedResponse;
 	} catch (error) {
 		console.error('Failed to fetch user statistics:', error);
 		throw error;

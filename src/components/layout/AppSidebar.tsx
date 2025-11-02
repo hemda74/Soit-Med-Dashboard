@@ -78,6 +78,7 @@ const AppSidebar: React.FC = () => {
         { name: t('salesTargets'), path: "/sales-manager/targets", pro: false },
         { name: t('reportsReview'), path: "/sales-manager/reports-review", pro: false },
         { name: t('weeklyPlansReview'), path: "/sales-manager/weekly-plans-review", pro: false },
+        { name: 'Products Catalog', path: "/sales-support/products", pro: false },
       ],
     }] : [], [hasAnyRole, t]);
 
@@ -108,6 +109,11 @@ const AppSidebar: React.FC = () => {
         icon: <HeadphonesIcon />,
         name: t('requestsInbox'),
         path: "/sales-support/requests",
+      },
+      {
+        icon: <HeadphonesIcon />,
+        name: 'Products Catalog',
+        path: "/sales-support/products",
       },
     ] : [], [hasAnyRole, t]);
 

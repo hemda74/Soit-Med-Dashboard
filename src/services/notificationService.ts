@@ -2,6 +2,8 @@ import toast from 'react-hot-toast';
 import signalRService from './signalRService';
 import type { NotificationData } from '@/types/signalR.types';
 import { useAuthStore } from '@/stores/authStore';
+import { API_ENDPOINTS } from './shared/endpoints';
+import { getAuthToken } from '@/utils/authUtils';
 
 export interface NotificationFilter {
 	roles?: string[];
@@ -15,6 +17,8 @@ class NotificationService {
 	private unreadCount: number = 0;
 	private listeners: Map<string, Function[]> = new Map();
 	private isInitialized: boolean = false;
+	private pollingInterval: NodeJS.Timeout | null = null;
+	private isPolling: boolean = false;
 
 	// Initialize notification service
 	async initialize(): Promise<void> {
@@ -30,7 +34,299 @@ class NotificationService {
 			this.handleNotification.bind(this)
 		);
 
+		// Listen for reconnection to reload notifications
+		signalRService.addEventListener('reconnected', () => {
+			console.log(
+				'🔄 SignalR reconnected, reloading notifications...'
+			);
+			this.loadNotifications();
+		});
+
+		// Listen for connection failures to start polling
+		signalRService.addEventListener(
+			'connectionError',
+			(error: any) => {
+				if (error?.type === 'connection') {
+					console.warn(
+						'⚠️ SignalR connection failed, starting polling fallback'
+					);
+					this.startPolling();
+				}
+			}
+		);
+
 		this.isInitialized = true;
+	}
+
+	// Load notifications from API
+	async loadNotifications(): Promise<void> {
+		try {
+			const token = getAuthToken();
+			if (!token) {
+				console.warn(
+					'No auth token available for loading notifications'
+				);
+				return;
+			}
+
+			const baseUrl =
+				import.meta.env.VITE_API_BASE_URL ||
+				'http://localhost:5117';
+			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.BASE}?page=1&pageSize=50&unreadOnly=false`;
+
+			const response = await fetch(endpoint, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			// Check if response is actually JSON before parsing
+			const contentType =
+				response.headers.get('content-type');
+			if (
+				!contentType ||
+				!contentType.includes('application/json')
+			) {
+				const text = await response.text();
+				console.error(
+					'Non-JSON response from notifications:',
+					text.substring(0, 200)
+				);
+				throw new Error(
+					`Server returned non-JSON response: ${response.status} ${response.statusText}`
+				);
+			}
+
+			if (!response.ok) {
+				try {
+					const error = await response.json();
+					throw new Error(
+						error.message ||
+							error.error ||
+							`HTTP ${response.status}: ${response.statusText}`
+					);
+				} catch (parseError) {
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`
+					);
+				}
+			}
+
+			const result = await response.json();
+
+			if (result.success && result.data) {
+				// Convert API notifications to NotificationData format (matching guide structure)
+				// Guide structure: { id, title, message, type, priority, isRead, createdAt, requestWorkflowId?, activityLogId? }
+				const notifications: NotificationData[] =
+					Array.isArray(result.data)
+						? result.data.map((n: any) => ({
+								id: String(
+									n.id
+								),
+								type:
+									n.type ||
+									'info',
+								title:
+									n.title ||
+									'New Notification',
+								message:
+									n.message ||
+									'',
+								link:
+									n.link ||
+									null,
+								data: {
+									requestWorkflowId:
+										n.requestWorkflowId,
+									activityLogId:
+										n.activityLogId,
+									priority: n.priority,
+									...n,
+								},
+								timestamp: n.createdAt
+									? new Date(
+											n.createdAt
+									  ).getTime()
+									: Date.now(),
+								isRead:
+									n.isRead ||
+									false,
+								roles: n.roles,
+								departments:
+									n.departments,
+								userIds: n.userIds,
+						  }))
+						: [];
+
+				// Clear existing and add loaded notifications (add new ones at the beginning, as per guide)
+				this.notifications = notifications;
+				this.unreadCount = notifications.filter(
+					(n) => !n.isRead
+				).length;
+
+				// Notify listeners
+				this.notifyListeners(
+					'notificationsLoaded',
+					notifications
+				);
+				this.notifyListeners(
+					'unreadCountChanged',
+					this.unreadCount
+				);
+
+				console.log(
+					`✅ Loaded ${notifications.length} notifications from API`
+				);
+			}
+		} catch (error) {
+			console.error('❌ Error loading notifications:', error);
+		}
+	}
+
+	// Load unread count from API
+	async loadUnreadCount(): Promise<void> {
+		try {
+			const token = getAuthToken();
+			if (!token) return;
+
+			const baseUrl =
+				import.meta.env.VITE_API_BASE_URL ||
+				'http://localhost:5117';
+			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.UNREAD_COUNT}`;
+
+			const response = await fetch(endpoint, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			// Check if response is JSON
+			const contentType =
+				response.headers.get('content-type');
+			if (
+				response.ok &&
+				contentType &&
+				contentType.includes('application/json')
+			) {
+				const result = await response.json();
+				// Guide shows response format: { success: true, data: 5 } (number directly)
+				if (result.success) {
+					const count =
+						typeof result.data === 'number'
+							? result.data
+							: result.data
+									?.UnreadCount ||
+							  0;
+					this.unreadCount = count;
+					this.notifyListeners(
+						'unreadCountChanged',
+						this.unreadCount
+					);
+				}
+			} else if (!response.ok) {
+				console.error(
+					'Failed to load unread count:',
+					response.status,
+					response.statusText
+				);
+			}
+		} catch (error) {
+			console.error('Error loading unread count:', error);
+		}
+	}
+
+	// Start polling as fallback when SignalR fails
+	startPolling(interval: number = 10000): void {
+		if (this.isPolling || this.pollingInterval) {
+			return; // Already polling
+		}
+
+		this.isPolling = true;
+		console.log(
+			`🔄 Starting notification polling (every ${interval}ms) as fallback`
+		);
+
+		// Load immediately
+		this.loadNotifications();
+		this.loadUnreadCount();
+
+		// Then poll at interval (as per guide: every 10 seconds)
+		this.pollingInterval = setInterval(() => {
+			this.loadNotifications();
+			this.loadUnreadCount();
+		}, interval);
+	}
+
+	// Stop polling
+	stopPolling(): void {
+		if (this.pollingInterval) {
+			clearInterval(this.pollingInterval);
+			this.pollingInterval = null;
+			this.isPolling = false;
+			console.log('⏹️ Stopped notification polling');
+		}
+	}
+
+	// Mark notification as read via API
+	async markAsReadAPI(notificationId: string): Promise<void> {
+		try {
+			const token = getAuthToken();
+			if (!token) return;
+
+			const baseUrl =
+				import.meta.env.VITE_API_BASE_URL ||
+				'http://localhost:5117';
+			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.MARK_READ(
+				Number(notificationId)
+			)}`;
+
+			const response = await fetch(endpoint, {
+				method: 'PUT',
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (response.ok) {
+				// Update local state
+				this.markAsRead(notificationId);
+			}
+		} catch (error) {
+			console.error(
+				'Error marking notification as read:',
+				error
+			);
+		}
+	}
+
+	// Mark all notifications as read via API
+	async markAllAsReadAPI(): Promise<void> {
+		try {
+			const token = getAuthToken();
+			if (!token) return;
+
+			const baseUrl =
+				import.meta.env.VITE_API_BASE_URL ||
+				'http://localhost:5117';
+			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.MARK_ALL_READ}`;
+
+			const response = await fetch(endpoint, {
+				method: 'PUT',
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (response.ok) {
+				// Update local state
+				this.markAllAsRead();
+			}
+		} catch (error) {
+			console.error(
+				'Error marking all notifications as read:',
+				error
+			);
+		}
 	}
 
 	private getCurrentUser(): any {
@@ -51,7 +347,9 @@ class NotificationService {
 
 		// Check if notification is for specific roles
 		if (notification.roles && notification.roles.length > 0) {
-			const userRoles = currentUser.roles || [];
+			const userRoles = Array.isArray(currentUser.roles)
+				? currentUser.roles
+				: [];
 			return notification.roles.some((role) =>
 				userRoles.includes(role)
 			);
@@ -73,37 +371,74 @@ class NotificationService {
 	}
 
 	private handleNotification(data: any): void {
-		// Backend sends notification data with all fields
+		// Backend sends notification data matching guide structure:
+		// { id, title, message, type, priority, isRead, createdAt, requestWorkflowId?, activityLogId? }
+		console.log('📬 New notification received:', data);
+
 		const notification: NotificationData = {
-			id:
+			id: String(
 				data.id ||
-				`notification-${Date.now()}-${Math.random()
-					.toString(36)
-					.substr(2, 9)}`,
+					`notification-${Date.now()}-${Math.random()
+						.toString(36)
+						.substr(2, 9)}`
+			),
 			type: data.type || 'info',
 			title: data.title || 'New Notification',
 			message: data.message || String(data),
-			link: data.link,
-			data: data.data || data,
-			timestamp: data.timestamp || Date.now(),
+			link: data.link || null,
+			data: {
+				requestWorkflowId: data.requestWorkflowId,
+				activityLogId: data.activityLogId,
+				priority: data.priority,
+				...data.data,
+				...data, // Include all original data
+			},
+			timestamp: data.createdAt
+				? new Date(data.createdAt).getTime()
+				: data.timestamp || Date.now(),
 			isRead: data.isRead || false,
 			roles: data.roles,
 			departments: data.departments,
 			userIds: data.userIds,
 		};
 
-		// Backend handles filtering via groups
+		// Backend handles filtering via groups, so we trust the notification is for us
+		// Add to notifications list (at the beginning, as per guide)
 		this.addNotification(notification);
 
+		// Update unread count (increment by 1, as per guide)
+		this.unreadCount = this.unreadCount + 1;
+		this.notifyListeners('unreadCountChanged', this.unreadCount);
+
+		// Show browser notification if permission granted (as per guide)
+		if (
+			'Notification' in window &&
+			Notification.permission === 'granted'
+		) {
+			new Notification(notification.title, {
+				body: notification.message,
+				icon: '/notification-icon.png',
+			});
+		}
+
 		// Show toast based on notification type
+		const toastMessage = notification.message || notification.title;
 		if (notification.type === 'success') {
-			toast.success(notification.message);
+			toast.success(toastMessage);
 		} else if (notification.type === 'error') {
-			toast.error(notification.message);
+			toast.error(toastMessage);
 		} else if (notification.type === 'warning') {
-			toast(notification.message, { icon: '⚠️' });
+			toast(toastMessage, { icon: '⚠️' });
 		} else {
-			toast(notification.message, { icon: 'ℹ️' });
+			toast(toastMessage, { icon: 'ℹ️' });
+		}
+
+		// Stop polling if SignalR is working (as per guide)
+		if (this.isPolling) {
+			console.log(
+				'✅ SignalR working, stopping polling fallback'
+			);
+			this.stopPolling();
 		}
 	}
 
@@ -124,8 +459,11 @@ class NotificationService {
 		if (!currentUser) return;
 
 		// Only show to admins and super admins
-		const userRoles = currentUser.roles || [];
+		const userRoles = Array.isArray(currentUser.roles)
+			? currentUser.roles
+			: [];
 		if (
+			userRoles.length === 0 ||
 			!userRoles.some((role: any) =>
 				['Admin', 'SuperAdmin'].includes(role)
 			)
@@ -157,10 +495,14 @@ class NotificationService {
 		if (!currentUser) return;
 
 		// Show to the user whose role changed and admins
-		const userRoles = currentUser.roles || [];
-		const isAdmin = userRoles.some((role: any) =>
-			['Admin', 'SuperAdmin'].includes(role)
-		);
+		const userRoles = Array.isArray(currentUser.roles)
+			? currentUser.roles
+			: [];
+		const isAdmin =
+			userRoles.length > 0 &&
+			userRoles.some((role: any) =>
+				['Admin', 'SuperAdmin'].includes(role)
+			);
 		const isAffectedUser = currentUser.id === user.id;
 
 		if (!isAdmin && !isAffectedUser) return;
@@ -190,12 +532,18 @@ class NotificationService {
 		if (!currentUser) return;
 
 		// Show to sales team and managers
-		const userRoles = currentUser.roles || [];
-		const isSalesTeam = userRoles.some((role: any) =>
-			['Salesman', 'SalesManager', 'SuperAdmin'].includes(
-				role
-			)
-		);
+		const userRoles = Array.isArray(currentUser.roles)
+			? currentUser.roles
+			: [];
+		const isSalesTeam =
+			userRoles.length > 0 &&
+			userRoles.some((role: any) =>
+				[
+					'Salesman',
+					'SalesManager',
+					'SuperAdmin',
+				].includes(role)
+			);
 
 		if (!isSalesTeam) return;
 
@@ -221,12 +569,18 @@ class NotificationService {
 		if (!currentUser) return;
 
 		// Show to sales team and managers
-		const userRoles = currentUser.roles || [];
-		const isSalesTeam = userRoles.some((role: any) =>
-			['Salesman', 'SalesManager', 'SuperAdmin'].includes(
-				role
-			)
-		);
+		const userRoles = Array.isArray(currentUser.roles)
+			? currentUser.roles
+			: [];
+		const isSalesTeam =
+			userRoles.length > 0 &&
+			userRoles.some((role: any) =>
+				[
+					'Salesman',
+					'SalesManager',
+					'SuperAdmin',
+				].includes(role)
+			);
 
 		if (!isSalesTeam) return;
 
@@ -356,9 +710,16 @@ class NotificationService {
 				notification.roles &&
 				notification.roles.length > 0
 			) {
-				const userRoles = currentUser.roles || [];
-				return notification.roles.some((role) =>
-					userRoles.includes(role)
+				const userRoles = Array.isArray(
+					currentUser.roles
+				)
+					? currentUser.roles
+					: [];
+				return (
+					userRoles.length > 0 &&
+					notification.roles.some((role) =>
+						userRoles.includes(role)
+					)
 				);
 			}
 

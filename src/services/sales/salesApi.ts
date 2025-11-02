@@ -80,8 +80,8 @@ interface UpdateWeeklyPlanDto {
 }
 
 interface ReviewWeeklyPlanDto {
-	status: 'Approved' | 'Rejected';
-	reviewNotes?: string;
+	rating?: number; // 1-5, optional
+	comment?: string; // Optional
 }
 
 // Request Workflow Types
@@ -772,17 +772,48 @@ class SalesApiService {
 	 * Get weekly plans with pagination
 	 */
 	async getWeeklyPlans(
-		page: number = 1,
-		pageSize: number = 20
+		filters: {
+			page?: number;
+			pageSize?: number;
+			employeeId?: string;
+			weekStartDate?: string;
+			weekEndDate?: string;
+			isViewed?: boolean;
+		} = {}
 	): Promise<PaginatedApiResponseWithMeta<WeeklyPlan[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.page)
+			queryParams.append('page', filters.page.toString());
+		if (filters.pageSize)
+			queryParams.append(
+				'pageSize',
+				filters.pageSize.toString()
+			);
+		if (filters.employeeId)
+			queryParams.append('employeeId', filters.employeeId);
+		if (filters.weekStartDate)
+			queryParams.append(
+				'weekStartDate',
+				filters.weekStartDate
+			);
+		if (filters.weekEndDate)
+			queryParams.append('weekEndDate', filters.weekEndDate);
+		if (filters.isViewed !== undefined)
+			queryParams.append(
+				'isViewed',
+				filters.isViewed.toString()
+			);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.WEEKLY_PLAN.BASE}?${queryString}`
+			: API_ENDPOINTS.WEEKLY_PLAN.BASE;
+
 		return this.makeRequest<
 			PaginatedApiResponseWithMeta<WeeklyPlan[]>
-		>(
-			`${API_ENDPOINTS.WEEKLY_PLAN.BASE}?page=${page}&pageSize=${pageSize}`,
-			{
-				method: 'GET',
-			}
-		);
+		>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	/**
@@ -838,7 +869,22 @@ class SalesApiService {
 			API_ENDPOINTS.WEEKLY_PLAN.REVIEW(planId),
 			{
 				method: 'POST',
-				body: JSON.stringify(reviewData),
+				body: JSON.stringify({
+					rating: reviewData.rating,
+					comment: reviewData.comment,
+				}),
+			}
+		);
+	}
+
+	/**
+	 * Get all salesmen for dropdown/filter selection
+	 */
+	async getAllSalesmen(): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.WEEKLY_PLAN.SALESMEN,
+			{
+				method: 'GET',
 			}
 		);
 	}
@@ -1047,41 +1093,6 @@ class SalesApiService {
 	}
 
 	/**
-	 * Get assigned requests (for Sales Support)
-	 * GET /api/RequestWorkflows/assigned
-	 */
-	async getAssignedRequests(
-		filters: {
-			page?: number;
-			pageSize?: number;
-			status?: string;
-			requestType?: string;
-		} = {}
-	): Promise<ApiResponse<any[]>> {
-		const queryParams = new URLSearchParams();
-		if (filters.page)
-			queryParams.append('page', filters.page.toString());
-		if (filters.pageSize)
-			queryParams.append(
-				'pageSize',
-				filters.pageSize.toString()
-			);
-		if (filters.status)
-			queryParams.append('status', filters.status);
-		if (filters.requestType)
-			queryParams.append('requestType', filters.requestType);
-
-		const queryString = queryParams.toString();
-		const endpoint = queryString
-			? `/api/RequestWorkflows/assigned?${queryString}`
-			: '/api/RequestWorkflows/assigned';
-
-		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
-			method: 'GET',
-		});
-	}
-
-	/**
 	 * Update request status
 	 */
 	async updateRequestStatus(
@@ -1190,13 +1201,29 @@ class SalesApiService {
 
 	/**
 	 * Get sales manager dashboard
+	 * Uses /api/SalesmanStatistics/all to get team statistics for dashboard
 	 */
-	async getSalesManagerDashboard(): Promise<
-		ApiResponse<SalesDashboardData>
-	> {
-		// Use the correct endpoint according to backend API
-		return this.makeRequest<ApiResponse<SalesDashboardData>>(
-			API_ENDPOINTS.DASHBOARD.STATS,
+	async getSalesManagerDashboard(
+		year?: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams();
+		if (year) {
+			params.append('year', year.toString());
+		} else {
+			// Default to current year if not provided
+			params.append(
+				'year',
+				new Date().getFullYear().toString()
+			);
+		}
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+
+		// Use SalesmanStatistics/all endpoint as per backend API docs
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/all?${params.toString()}`,
 			{
 				method: 'GET',
 			}
@@ -1407,10 +1434,14 @@ class SalesApiService {
 
 	async approveDeal(
 		dealId: string,
-		data: any
+		data: {
+			approved: boolean;
+			notes?: string;
+			superAdminRequired?: boolean;
+		}
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/approve`,
+			API_ENDPOINTS.SALES.DEALS.MANAGER_APPROVAL(dealId),
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -1420,10 +1451,10 @@ class SalesApiService {
 
 	async completeDeal(
 		dealId: string,
-		data: any
+		data: { completionNotes: string }
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/complete`,
+			API_ENDPOINTS.SALES.DEALS.COMPLETE(dealId),
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -1431,9 +1462,12 @@ class SalesApiService {
 		);
 	}
 
-	async failDeal(dealId: string, data: any): Promise<ApiResponse<any>> {
+	async failDeal(
+		dealId: string,
+		data: { failureNotes: string }
+	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.DEALS.BY_ID(dealId)}/fail`,
+			API_ENDPOINTS.SALES.DEALS.FAIL(dealId),
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -1534,25 +1568,28 @@ class SalesApiService {
 	}
 
 	/**
-	 * Get my offers (for current sales support user)
-	 * Returns offers created by the current user
+	 * Get my offers (offers I created)
 	 */
 	async getMyOffers(
 		filters: {
 			status?: string;
-			clientId?: string;
 			startDate?: string;
 			endDate?: string;
 		} = {}
 	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
-		Object.entries(filters).forEach(([key, value]) => {
-			if (value) queryParams.append(key, value.toString());
-		});
+		if (filters.status)
+			queryParams.append('status', filters.status);
+		if (filters.startDate)
+			queryParams.append('startDate', filters.startDate);
+		if (filters.endDate)
+			queryParams.append('endDate', filters.endDate);
+
 		const queryString = queryParams.toString();
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.OFFERS.MY_OFFERS}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFERS.MY_OFFERS;
+
 		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
 			method: 'GET',
 		});
@@ -1560,7 +1597,7 @@ class SalesApiService {
 
 	async getClientProfile(clientId: string): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.CLIENT.BY_ID(clientId)}/profile`,
+			API_ENDPOINTS.SALES.CLIENT.PROFILE(clientId),
 			{ method: 'GET' }
 		);
 	}
@@ -1580,10 +1617,10 @@ class SalesApiService {
 	async getOfferRequests(
 		filters: {
 			status?:
-				| 'Requested'
+				| 'Pending'
+				| 'Assigned'
 				| 'InProgress'
-				| 'Ready'
-				| 'Sent'
+				| 'Completed'
 				| 'Cancelled';
 			requestedBy?: string;
 			page?: number;
@@ -1618,10 +1655,10 @@ class SalesApiService {
 			requestedProducts: string;
 			specialNotes: string;
 			status:
-				| 'Requested'
+				| 'Pending'
+				| 'Assigned'
 				| 'InProgress'
-				| 'Ready'
-				| 'Sent'
+				| 'Completed'
 				| 'Cancelled';
 		}>
 	): Promise<ApiResponse<any>> {
@@ -1657,10 +1694,10 @@ class SalesApiService {
 		requestId: string | number,
 		data: {
 			status:
-				| 'Requested'
+				| 'Pending'
+				| 'Assigned'
 				| 'InProgress'
-				| 'Ready'
-				| 'Sent'
+				| 'Completed'
 				| 'Cancelled';
 			notes?: string;
 		}
@@ -1670,6 +1707,55 @@ class SalesApiService {
 			{
 				method: 'PUT',
 				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Get requests assigned to a specific support member
+	 * @param supportId - SalesSupport user ID
+	 * @param filters - Optional filters
+	 * @returns List of assigned offer requests
+	 */
+	async getAssignedOfferRequests(
+		supportId: string,
+		filters: {
+			status?:
+				| 'Pending'
+				| 'Assigned'
+				| 'InProgress'
+				| 'Completed'
+				| 'Cancelled';
+		} = {}
+	): Promise<ApiResponse<any[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.status)
+			queryParams.append('status', filters.status);
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFER_REQUESTS.ASSIGNED(
+					supportId
+			  )}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFER_REQUESTS.ASSIGNED(
+					supportId
+			  );
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get offer request details formatted for creating an offer
+	 * @param requestId - Offer request ID
+	 * @returns Offer request details
+	 */
+	async getOfferRequestDetails(
+		requestId: string | number
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.REQUEST_DETAILS(requestId),
+			{
+				method: 'GET',
 			}
 		);
 	}
@@ -1727,7 +1813,49 @@ class SalesApiService {
 		clientId: string
 	): Promise<PaginatedApiResponseWithMeta<any[]>> {
 		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			`${API_ENDPOINTS.SALES.TASK_PROGRESS.BASE}/client/${clientId}`,
+			API_ENDPOINTS.SALES.TASK_PROGRESS.BY_CLIENT(clientId),
+			{ method: 'GET' }
+		);
+	}
+
+	/**
+	 * Get task progress by employee
+	 */
+	async getTaskProgressByEmployee(
+		employeeId: string,
+		filters: {
+			startDate?: string;
+			endDate?: string;
+		} = {}
+	): Promise<ApiResponse<any[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.startDate)
+			queryParams.append('startDate', filters.startDate);
+		if (filters.endDate)
+			queryParams.append('endDate', filters.endDate);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.TASK_PROGRESS.BY_EMPLOYEE(
+					employeeId
+			  )}?${queryString}`
+			: API_ENDPOINTS.SALES.TASK_PROGRESS.BY_EMPLOYEE(
+					employeeId
+			  );
+
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get task progress by task ID
+	 */
+	async getTaskProgressByTask(
+		taskId: number
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.TASK_PROGRESS.BY_TASK(taskId),
 			{ method: 'GET' }
 		);
 	}
@@ -1735,46 +1863,84 @@ class SalesApiService {
 	// ==================== ENHANCED OFFER FEATURES ====================
 
 	/**
+	 * List salesmen for assignment
+	 * GET /api/Offer/salesmen?q=term
+	 */
+	async getOfferSalesmen(q?: string): Promise<ApiResponse<Array<{
+		id: string;
+		firstName: string;
+		lastName: string;
+		email: string;
+		phoneNumber: string;
+		userName: string;
+		isActive: boolean;
+	}>>> {
+		const endpoint = q && q.trim()
+			? `${API_ENDPOINTS.SALES.OFFERS.SALESMEN}?q=${encodeURIComponent(q.trim())}`
+			: API_ENDPOINTS.SALES.OFFERS.SALESMEN
+		return this.makeRequest<ApiResponse<Array<any>>>(endpoint, { method: 'GET' })
+	}
+
+	/**
 	 * Get offer equipment
 	 */
-	async getOfferEquipment(offerId: string): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId),
-			{ method: 'GET' }
-		);
+	async getOfferEquipment(offerId: string | number): Promise<
+		ApiResponse<
+			Array<{
+				id: number;
+				offerId: number;
+				name: string;
+				model?: string;
+				manufacturer?: string;
+				quantity: number;
+				unitPrice: number;
+				totalPrice: number;
+				specifications?: string;
+				warrantyPeriod?: string;
+				imagePath?: string | null;
+			}>
+		>
+	> {
+		return this.makeRequest<
+			ApiResponse<
+				Array<{
+					id: number;
+					offerId: number;
+					name: string;
+					model?: string;
+					manufacturer?: string;
+					quantity: number;
+					unitPrice: number;
+					totalPrice: number;
+					specifications?: string;
+					warrantyPeriod?: string;
+					imagePath?: string | null;
+				}>
+			>
+		>(API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId), {
+			method: 'GET',
+		});
 	}
 
 	/**
 	 * Add equipment to offer
 	 */
 	async addOfferEquipment(
-		offerId: string,
-		equipmentData: any
+		offerId: string | number,
+		equipmentData: {
+			name: string;
+			model?: string;
+			manufacturer?: string;
+			quantity: number;
+			unitPrice: number;
+			specifications?: string;
+			warrantyPeriod?: string;
+		}
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId),
 			{
 				method: 'POST',
-				body: JSON.stringify(equipmentData),
-			}
-		);
-	}
-
-	/**
-	 * Update offer equipment
-	 */
-	async updateOfferEquipment(
-		offerId: string,
-		equipmentId: number,
-		equipmentData: any
-	): Promise<ApiResponse<any>> {
-		return this.makeRequest<ApiResponse<any>>(
-			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_BY_ID(
-				offerId,
-				equipmentId
-			),
-			{
-				method: 'PUT',
 				body: JSON.stringify(equipmentData),
 			}
 		);
@@ -1800,10 +1966,16 @@ class SalesApiService {
 	 * Upload equipment image
 	 */
 	async uploadEquipmentImage(
-		offerId: string,
+		offerId: string | number,
 		equipmentId: number,
 		file: File
-	): Promise<ApiResponse<any>> {
+	): Promise<
+		ApiResponse<{
+			imagePath: string;
+			equipmentId: number;
+			uploadedAt: string;
+		}>
+	> {
 		const formData = new FormData();
 		formData.append('file', file);
 
@@ -1844,7 +2016,9 @@ class SalesApiService {
 	/**
 	 * Get offer terms
 	 */
-	async getOfferTerms(offerId: string): Promise<ApiResponse<any>> {
+	async getOfferTerms(
+		offerId: string | number
+	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.TERMS(offerId),
 			{ method: 'GET' }
@@ -1855,8 +2029,17 @@ class SalesApiService {
 	 * Add or update offer terms
 	 */
 	async updateOfferTerms(
-		offerId: string,
-		termsData: any
+		offerId: string | number,
+		termsData: {
+			warrantyPeriod?: string;
+			deliveryTime?: string;
+			installationIncluded?: boolean;
+			trainingIncluded?: boolean;
+			maintenanceTerms?: string;
+			paymentTerms?: string;
+			deliveryTerms?: string;
+			returnPolicy?: string;
+		}
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.TERMS(offerId),
@@ -1870,38 +2053,92 @@ class SalesApiService {
 	/**
 	 * Get installment plan
 	 */
-	async getInstallmentPlan(offerId: string): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId),
-			{ method: 'GET' }
-		);
+	async getInstallmentPlan(offerId: string | number): Promise<
+		ApiResponse<{
+			id: number;
+			offerId: number;
+			numberOfInstallments: number;
+			totalAmount: number;
+			installments: Array<{
+				installmentNumber: number;
+				amount: number;
+				dueDate: string;
+				status: 'Pending' | 'Paid' | 'Overdue';
+			}>;
+			createdAt: string;
+		}>
+	> {
+		return this.makeRequest<
+			ApiResponse<{
+				id: number;
+				offerId: number;
+				numberOfInstallments: number;
+				totalAmount: number;
+				installments: Array<{
+					installmentNumber: number;
+					amount: number;
+					dueDate: string;
+					status: 'Pending' | 'Paid' | 'Overdue';
+				}>;
+				createdAt: string;
+			}>
+		>(API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId), {
+			method: 'GET',
+		});
 	}
 
 	/**
 	 * Create installment plan
-	 * Data structure: { numberOfInstallments, startDate, paymentFrequency }
+	 * Data structure: { numberOfInstallments, firstPaymentAmount, firstPaymentDate, paymentFrequency, totalAmount }
 	 */
 	async createInstallmentPlan(
-		offerId: string,
+		offerId: string | number,
 		installmentData: {
 			numberOfInstallments: number;
-			startDate: string;
-			paymentFrequency: 'Monthly' | 'Weekly' | 'Quarterly';
+			firstPaymentAmount: number;
+			firstPaymentDate: string;
+			paymentFrequency: 'Monthly' | 'Quarterly' | 'Yearly';
+			totalAmount: number;
 		}
-	): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId),
-			{
-				method: 'POST',
-				body: JSON.stringify(installmentData),
-			}
-		);
+	): Promise<
+		ApiResponse<{
+			id: number;
+			offerId: number;
+			numberOfInstallments: number;
+			totalAmount: number;
+			installments: Array<{
+				installmentNumber: number;
+				amount: number;
+				dueDate: string;
+				status: 'Pending' | 'Paid' | 'Overdue';
+			}>;
+			createdAt: string;
+		}>
+	> {
+		return this.makeRequest<
+			ApiResponse<{
+				id: number;
+				offerId: number;
+				numberOfInstallments: number;
+				totalAmount: number;
+				installments: Array<{
+					installmentNumber: number;
+					amount: number;
+					dueDate: string;
+					status: 'Pending' | 'Paid' | 'Overdue';
+				}>;
+				createdAt: string;
+			}>
+		>(API_ENDPOINTS.SALES.OFFERS.INSTALLMENTS(offerId), {
+			method: 'POST',
+			body: JSON.stringify(installmentData),
+		});
 	}
 
 	/**
 	 * Export offer as PDF
 	 */
-	async exportOfferPdf(offerId: string): Promise<Blob> {
+	async exportOfferPdf(offerId: string | number): Promise<Blob> {
 		const token = getAuthToken();
 		if (!token) {
 			throw new Error(
@@ -2045,20 +2282,61 @@ class SalesApiService {
 		);
 	}
 
-	async getDealsBySalesman(
-		salesmanId: string
-	): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			`/api/Deal/by-salesman/${salesmanId}`
-		);
-	}
-
 	async getOffersBySalesman(
 		salesmanId: string
 	): Promise<ApiResponse<any[]>> {
 		return this.makeRequest<ApiResponse<any[]>>(
-			`/api/Offer/by-salesman/${salesmanId}`
+			API_ENDPOINTS.SALES.OFFERS.BY_SALESMAN(salesmanId),
+			{ method: 'GET' }
 		);
+	}
+
+	/**
+	 * Get offer requests by salesman
+	 */
+	async getOfferRequestsBySalesman(
+		salesmanId: string,
+		filters: { status?: string } = {}
+	): Promise<ApiResponse<any[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.status)
+			queryParams.append('status', filters.status);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_SALESMAN(
+					salesmanId
+			  )}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFER_REQUESTS.BY_SALESMAN(
+					salesmanId
+			  );
+
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get deals by salesman
+	 */
+	async getDealsBySalesman(
+		salesmanId: string,
+		filters: { status?: string } = {}
+	): Promise<ApiResponse<any[]>> {
+		const queryParams = new URLSearchParams();
+		if (filters.status)
+			queryParams.append('status', filters.status);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.DEALS.BY_SALESMAN(
+					salesmanId
+			  )}?${queryString}`
+			: API_ENDPOINTS.SALES.DEALS.BY_SALESMAN(salesmanId);
+
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 }
 

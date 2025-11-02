@@ -181,21 +181,30 @@ export const API_ENDPOINTS = {
 		},
 		// Deals (NEW)
 		DEALS: {
-			BASE: '/api/deal',
-			BY_ID: (id: string) => `/api/deal/${id}`,
+			BASE: '/api/Deal',
+			BY_ID: (id: string) => `/api/Deal/${id}`,
 			MANAGER_APPROVAL: (id: string) =>
-				`/api/deal/${id}/manager-approval`,
+				`/api/Deal/${id}/manager-approval`,
 			SUPERADMIN_APPROVAL: (id: string) =>
-				`/api/deal/${id}/superadmin-approval`,
-			PENDING_MANAGER: '/api/deal/pending-manager-approvals',
+				`/api/Deal/${id}/superadmin-approval`,
+			PENDING_MANAGER: '/api/Deal/pending-manager-approvals',
 			PENDING_SUPERADMIN:
-				'/api/deal/pending-superadmin-approvals',
+				'/api/Deal/pending-superadmin-approvals',
+			BY_SALESMAN: (salesmanId: string) =>
+				`/api/Deal/by-salesman/${salesmanId}`,
+			COMPLETE: (id: string) => `/api/Deal/${id}/complete`,
+			FAIL: (id: string) => `/api/Deal/${id}/fail`,
 		},
 		// Offers (ENHANCED) - For SalesManager/SuperAdmin only
 		OFFERS: {
 			BASE: '/api/Offer',
 			BY_ID: (id: number | string) => `/api/Offer/${id}`,
 			MY_OFFERS: '/api/Offer/my-offers',
+			SALESMEN: '/api/Offer/salesmen',
+			BY_SALESMAN: (salesmanId: string) =>
+				`/api/Offer/by-salesman/${salesmanId}`,
+			REQUEST_DETAILS: (requestId: number | string) =>
+				`/api/Offer/request/${requestId}/details`,
 			// Enhanced Offer Features
 			EQUIPMENT: (id: number | string) =>
 				`/api/Offer/${id}/equipment`,
@@ -228,17 +237,41 @@ export const API_ENDPOINTS = {
 				`/api/OfferRequest/${id}/status`,
 			ASSIGNED: (supportId: string) =>
 				`/api/OfferRequest/assigned/${supportId}`,
+			BY_SALESMAN: (salesmanId: string) =>
+				`/api/OfferRequest/salesman/${salesmanId}`,
 		},
 		// Task Progress (NEW)
 		TASK_PROGRESS: {
-			BASE: '/api/taskprogress',
-			BY_ID: (id: string) => `/api/taskprogress/${id}`,
+			BASE: '/api/TaskProgress',
+			BY_ID: (id: string) => `/api/TaskProgress/${id}`,
 			BY_TASK: (taskId: number) =>
-				`/api/taskprogress/task/${taskId}`,
+				`/api/TaskProgress/task/${taskId}`,
 			BY_CLIENT: (clientId: string) =>
-				`/api/taskprogress/by-client/${clientId}`,
+				`/api/TaskProgress/by-client/${clientId}`,
+			BY_EMPLOYEE: (employeeId: string) =>
+				`/api/TaskProgress/employee/${employeeId}`,
 			WITH_OFFER_REQUEST:
-				'/api/taskprogress/with-offer-request',
+				'/api/TaskProgress/with-offer-request',
+		},
+		// Products Catalog
+		PRODUCTS: {
+			BASE: '/api/Product',
+			BY_ID: (id: number) => `/api/Product/${id}`,
+			BY_CATEGORY: (category: string) =>
+				`/api/Product/category/${encodeURIComponent(
+					category
+				)}`,
+			SEARCH: '/api/Product/search',
+			UPLOAD_IMAGE: (id: number) =>
+				`/api/Product/${id}/upload-image`,
+		},
+		// Notifications
+		NOTIFICATION: {
+			BASE: '/api/Notification',
+			UNREAD_COUNT: '/api/Notification/unread-count',
+			MARK_READ: (id: number) =>
+				`/api/Notification/${id}/read`,
+			MARK_ALL_READ: '/api/Notification/mark-all-read', // Guide shows /read-all, but backend uses /mark-all-read
 		},
 		// Weekly Plan Tasks (removed - use WEEKLY_PLAN.TASKS instead)
 		// WEEKLY_PLAN_TASKS has been removed in favor of WEEKLY_PLAN.TASKS

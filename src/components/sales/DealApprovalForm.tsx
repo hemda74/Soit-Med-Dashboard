@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -18,8 +19,8 @@ import type { Deal, DealApprovalDto } from '@/types/sales.types';
 
 // Validation schema for deal approval
 const approvalSchema = z.object({
-    comments: z.string().min(10, 'Comments must be at least 10 characters').max(500, 'Comments must be less than 500 characters'),
-    rejectionReason: z.enum(['Money', 'CashFlow', 'OtherNeeds']).optional(),
+    notes: z.string().optional(),
+    superAdminRequired: z.boolean().optional(),
 });
 
 type ApprovalFormValues = z.infer<typeof approvalSchema>;
@@ -39,7 +40,8 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
     const form = useForm<ApprovalFormValues>({
         resolver: zodResolver(approvalSchema),
         defaultValues: {
-            comments: '',
+            notes: '',
+            superAdminRequired: false,
         },
     });
 
@@ -50,8 +52,8 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
         try {
             const approvalData: DealApprovalDto = {
                 approved: action === 'approve',
-                comments: data.comments,
-                rejectionReason: data.rejectionReason,
+                notes: data.notes,
+                superAdminRequired: action === 'approve' ? data.superAdminRequired : undefined,
             };
 
             await approveDeal(deal.id, approvalData);
@@ -169,13 +171,13 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                             control={form.control}
-                            name="comments"
+                            name="notes"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Comments *</FormLabel>
+                                    <FormLabel>Notes (Optional)</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Provide your comments and any conditions..."
+                                            placeholder="Add any notes or comments..."
                                             className="min-h-[120px]"
                                             {...field}
                                         />
@@ -184,6 +186,29 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                                 </FormItem>
                             )}
                         />
+
+                        {action === 'approve' && (
+                            <FormField
+                                control={form.control}
+                                name="superAdminRequired"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>Require SuperAdmin approval</FormLabel>
+                                            <p className="text-sm text-muted-foreground">
+                                                Check this if the deal requires additional SuperAdmin approval
+                                            </p>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                        )}
 
                         {/* Action Buttons */}
                         <div className="flex justify-end space-x-2">

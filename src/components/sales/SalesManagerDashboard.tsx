@@ -41,13 +41,10 @@ const SalesManagerDashboard: React.FC = () => {
 		reviewWeeklyPlan,
 		getDeals,
 		getPendingApprovals,
-		// approveDeal,
-		// failDeal,
 		salesDashboard,
 		salesReports,
 		weeklyPlans,
 		deals,
-		// pendingApprovals,
 		analyticsLoading,
 		reportsLoading,
 		weeklyPlansLoading,
@@ -72,11 +69,11 @@ const SalesManagerDashboard: React.FC = () => {
 		getPendingApprovals();
 	}, [getSalesManagerDashboard, getSalesReports, getWeeklyPlans, getDeals, getPendingApprovals]);
 
-	const handlePlanReview = async (planId: number, status: 'Approved' | 'Rejected') => {
+	const handlePlanReview = async (planId: number, rating?: number) => {
 		try {
 			await reviewWeeklyPlan(planId, {
-				status,
-				reviewNotes: reviewComment,
+				rating,
+				comment: reviewComment,
 			});
 			setSelectedPlan(null);
 			setReviewComment('');
@@ -768,17 +765,24 @@ const SalesManagerDashboard: React.FC = () => {
 									>
 										Cancel
 									</Button>
+									<div className="flex gap-2">
+										{[1, 2, 3, 4, 5].map((rating) => (
+											<Button
+												key={rating}
+												type="button"
+												onClick={() => handlePlanReview(selectedPlan.id, rating)}
+												className="bg-green-600 hover:bg-green-700"
+											>
+												{rating} Star{rating > 1 ? 's' : ''}
+											</Button>
+										))}
+									</div>
 									<Button
-										onClick={() => handlePlanReview(selectedPlan.id, 'Rejected')}
-										variant="destructive"
+										type="button"
+										onClick={() => handlePlanReview(selectedPlan.id)}
+										className="bg-gray-600 hover:bg-gray-700"
 									>
-										Reject
-									</Button>
-									<Button
-										onClick={() => handlePlanReview(selectedPlan.id, 'Approved')}
-										className="bg-green-600 hover:bg-green-700"
-									>
-										Approve
+										Review without rating
 									</Button>
 								</div>
 							</div>

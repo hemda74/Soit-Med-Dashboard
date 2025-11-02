@@ -109,14 +109,29 @@ export const useAuthStore = create<AuthState>()(
 							token: response.token,
 						};
 
+						// Ensure roles is always an array
+						if (
+							!user.roles ||
+							!Array.isArray(
+								user.roles
+							)
+						) {
+							user.roles = [];
+						}
+
 						// Check if user has authorization to access the application
 						const hasRestrictedRole =
-							user.roles.some(
-								(role) =>
-									RESTRICTED_ROLES.includes(
-										role
-									)
-							);
+							user.roles &&
+							user.roles.length > 0
+								? user.roles.some(
+										(
+											role
+										) =>
+											RESTRICTED_ROLES.includes(
+												role
+											)
+								  )
+								: false;
 
 						if (hasRestrictedRole) {
 							setLoading(false);
@@ -161,11 +176,21 @@ export const useAuthStore = create<AuthState>()(
 								setLoading
 							);
 
+						// Ensure roles is always an array
+						const normalizedUserData = {
+							...userData,
+							token: user.token,
+							roles:
+								userData.roles &&
+								Array.isArray(
+									userData.roles
+								)
+									? userData.roles
+									: [],
+						};
+
 						set({
-							user: {
-								...userData,
-								token: user.token,
-							},
+							user: normalizedUserData,
 						});
 					} catch (error: any) {
 						console.error(
@@ -286,7 +311,12 @@ export const useAuthStore = create<AuthState>()(
 
 				hasAnyRole: (roles: string[]) => {
 					const { user } = get();
-					if (!user) return false;
+					if (
+						!user ||
+						!user.roles ||
+						!Array.isArray(user.roles)
+					)
+						return false;
 					return roles.some((role) =>
 						user.roles.includes(role)
 					);
@@ -296,7 +326,12 @@ export const useAuthStore = create<AuthState>()(
 					// This would typically check against a permissions system
 					// For now, we'll use role-based permissions
 					const { user } = get();
-					if (!user) return false;
+					if (
+						!user ||
+						!user.roles ||
+						!Array.isArray(user.roles)
+					)
+						return false;
 
 					// SuperAdmin has all permissions
 					if (user.roles.includes('SuperAdmin'))
@@ -308,15 +343,25 @@ export const useAuthStore = create<AuthState>()(
 
 				isAuthorizedToAccess: () => {
 					const { user } = get();
-					if (!user) return false;
+					if (
+						!user ||
+						!user.roles ||
+						!Array.isArray(user.roles)
+					)
+						return false;
 
 					// Check if user has any restricted roles
 					const hasRestrictedRole =
-						user.roles.some((role) =>
-							RESTRICTED_ROLES.includes(
-								role
-							)
-						);
+						user.roles.length > 0
+							? user.roles.some(
+									(
+										role
+									) =>
+										RESTRICTED_ROLES.includes(
+											role
+										)
+							  )
+							: false;
 
 					return !hasRestrictedRole;
 				},

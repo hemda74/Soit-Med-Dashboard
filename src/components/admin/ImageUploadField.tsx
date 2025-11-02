@@ -8,19 +8,17 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface ImageUploadFieldProps {
     imagePreview: string | null;
     imageError: string;
-    imageAltText: string;
+    imageAltText?: string;
     onImageSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveImage: () => void;
-    onAltTextChange: (value: string) => void;
+    onAltTextChange?: (value: string) => void;
 }
 
 const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     imagePreview,
     imageError,
-    imageAltText,
     onImageSelect,
-    onRemoveImage,
-    onAltTextChange
+    onRemoveImage
 }) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,19 +93,6 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                     </div>
                 )}
             </div>
-
-            {/* Image Alt Text */}
-            {imagePreview && (
-                <div className="space-y-2">
-                    <Label htmlFor="imageAltText">{t('imageAltText')}</Label>
-                    <Input
-                        id="imageAltText"
-                        value={imageAltText}
-                        onChange={(e) => onAltTextChange(e.target.value)}
-                        placeholder={t('enterImageAltText')}
-                    />
-                </div>
-            )}
 
             {/* Image Error Display */}
             {imageError && (

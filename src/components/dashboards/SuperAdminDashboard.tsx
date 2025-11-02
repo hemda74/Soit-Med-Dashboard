@@ -51,7 +51,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 <div>
                                     <p className="text-muted-foreground font-semibold text-sm">{t('totalUsers')}</p>
                                     <p className="text-3xl font-bold text-foreground">
-                                        {statistics?.totalUsers.toLocaleString() || '0'}
+                                        {(statistics?.totalUsers ?? 0).toLocaleString()}
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
@@ -65,7 +65,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 <div>
                                     <p className="text-muted-foreground font-semibold text-sm">{t('activeUsers')}</p>
                                     <p className="text-3xl font-bold text-foreground">
-                                        {statistics?.activeUsers.toLocaleString() || '0'}
+                                        {(statistics?.activeUsers ?? 0).toLocaleString()}
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
@@ -79,7 +79,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 <div>
                                     <p className="text-muted-foreground font-semibold text-sm">{t('inactiveUsers')}</p>
                                     <p className="text-3xl font-bold text-foreground">
-                                        {statistics?.inactiveUsers.toLocaleString() || '0'}
+                                        {(statistics?.inactiveUsers ?? 0).toLocaleString()}
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
@@ -93,7 +93,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 <div>
                                     <p className="text-muted-foreground font-semibold text-sm">{t('successRate')}</p>
                                     <p className="text-3xl font-bold text-foreground">
-                                        {statistics ?
+                                        {statistics?.activeUsers && statistics?.totalUsers && statistics.totalUsers > 0 ?
                                             `${((statistics.activeUsers / statistics.totalUsers) * 100).toFixed(1)}%` :
                                             '0%'
                                         }

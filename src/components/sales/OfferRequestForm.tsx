@@ -35,7 +35,7 @@ const offerRequestSchema = z.object({
 const updateOfferRequestSchema = z.object({
     requestedProducts: z.string().min(10, 'Requested products must be at least 10 characters').max(500, 'Requested products must be less than 500 characters'),
     priority: z.enum(['Low', 'Medium', 'High']).optional(),
-    status: z.enum(['Requested', 'InProgress', 'Ready', 'Sent', 'Cancelled']).optional(),
+    status: z.enum(['Pending', 'Assigned', 'InProgress', 'Completed', 'Cancelled']).optional(),
     offerDescription: z.string().optional(),
     offerValue: z.number().optional(),
     offerValidUntil: z.date().optional(),
@@ -94,7 +94,7 @@ export default function OfferRequestForm({
         defaultValues: {
             requestedProducts: offerRequest?.requestedProducts || '',
             priority: offerRequest?.priority || 'Medium',
-            status: offerRequest?.status || 'Requested',
+            status: offerRequest?.status || 'Pending',
             offerDescription: offerRequest?.offerDescription || '',
             offerValue: offerRequest?.offerValue || 0,
             offerValidUntil: offerRequest?.offerValidUntil ? new Date(offerRequest.offerValidUntil) : undefined,
@@ -189,14 +189,14 @@ export default function OfferRequestForm({
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Requested':
+            case 'Pending':
                 return 'bg-yellow-100 text-yellow-800';
+            case 'Assigned':
+                return 'bg-purple-100 text-purple-800';
             case 'InProgress':
                 return 'bg-blue-100 text-blue-800';
-            case 'Ready':
+            case 'Completed':
                 return 'bg-green-100 text-green-800';
-            case 'Sent':
-                return 'bg-purple-100 text-purple-800';
             case 'Cancelled':
                 return 'bg-red-100 text-red-800';
             default:
@@ -471,10 +471,10 @@ export default function OfferRequestForm({
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Requested">Requested</SelectItem>
+                                                <SelectItem value="Pending">Pending</SelectItem>
+                                                <SelectItem value="Assigned">Assigned</SelectItem>
                                                 <SelectItem value="InProgress">In Progress</SelectItem>
-                                                <SelectItem value="Ready">Ready</SelectItem>
-                                                <SelectItem value="Sent">Sent</SelectItem>
+                                                <SelectItem value="Completed">Completed</SelectItem>
                                                 <SelectItem value="Cancelled">Cancelled</SelectItem>
                                             </SelectContent>
                                         </Select>

@@ -95,8 +95,8 @@ interface UpdateWeeklyPlanDto {
 }
 
 interface ReviewWeeklyPlanDto {
-	status: 'Approved' | 'Rejected';
-	reviewNotes?: string;
+	rating?: number; // 1-5, optional
+	comment?: string; // Optional
 }
 
 // Request Workflow Types
@@ -395,7 +395,14 @@ export interface SalesActions {
 
 	// Weekly Plans actions
 	createWeeklyPlan: (data: CreateWeeklyPlanDto) => Promise<void>;
-	getWeeklyPlans: (page?: number, pageSize?: number) => Promise<void>;
+	getWeeklyPlans: (filters?: {
+		page?: number;
+		pageSize?: number;
+		employeeId?: string;
+		weekStartDate?: string;
+		weekEndDate?: string;
+		isViewed?: boolean;
+	}) => Promise<void>;
 	getWeeklyPlan: (planId: number) => Promise<void>;
 	updateWeeklyPlan: (
 		planId: number,
@@ -2682,8 +2689,14 @@ export const useSalesStore = create<SalesStore>()(
 				},
 
 				getWeeklyPlans: async (
-					page = 1,
-					pageSize = 20
+					filters: {
+						page?: number;
+						pageSize?: number;
+						employeeId?: string;
+						weekStartDate?: string;
+						weekEndDate?: string;
+						isViewed?: boolean;
+					} = {}
 				) => {
 					set({
 						weeklyPlansLoading: true,
@@ -2692,44 +2705,82 @@ export const useSalesStore = create<SalesStore>()(
 					try {
 						const response =
 							await salesApi.getWeeklyPlans(
-								page,
-								pageSize
+								filters
 							);
-						set({
-							weeklyPlans:
-								response.data
-									.data ||
-								[],
-							pagination: {
+						// Backend returns: { success, data: { plans: [], pagination: {} } }
+						// Or standard format: { success, data: { data: [], page, pageSize, ... } }
+						const responseData =
+							response.data as any;
+						let plansData: any[] = [];
+						let paginationData: any = {};
+
+						// Check for new backend format (plans + pagination)
+						if (
+							responseData?.plans &&
+							responseData?.pagination
+						) {
+							plansData =
+								responseData.plans;
+							paginationData =
+								responseData.pagination;
+						}
+						// Check for standard paginated format
+						else if (
+							Array.isArray(
+								responseData?.data
+							)
+						) {
+							plansData =
+								responseData.data;
+							paginationData =
+								responseData;
+						}
+						// Check if responseData is an array
+						else if (
+							Array.isArray(
+								responseData
+							)
+						) {
+							plansData =
+								responseData;
+							paginationData = {
 								page:
-									response
-										.data
-										.page ||
+									filters.page ||
 									1,
 								pageSize:
-									response
-										.data
-										.pageSize ||
+									filters.pageSize ||
 									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
+								totalCount: responseData.length,
+								totalPages: 1,
 								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
 									false,
 								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
+									false,
+							};
+						}
+
+						set({
+							weeklyPlans: plansData,
+							pagination: {
+								page:
+									paginationData?.page ||
+									filters.page ||
+									1,
+								pageSize:
+									paginationData?.pageSize ||
+									filters.pageSize ||
+									20,
+								totalCount:
+									paginationData?.totalCount ||
+									0,
+								totalPages:
+									paginationData?.totalPages ||
+									0,
+								hasNextPage:
+									paginationData?.hasNextPage ||
+									false,
+								hasPreviousPage:
+									paginationData?.hasPreviousPage ||
 									false,
 							},
 							weeklyPlansLoading:
@@ -3383,14 +3434,37 @@ export const useSalesStore = create<SalesStore>()(
 					}
 				},
 
-				getAssignedRequests: async (filters = {}) => {
+				getAssignedRequests: async (
+					filters = {},
+					supportId?: string
+				) => {
 					set({
 						requestWorkflowsLoading: true,
 						requestWorkflowsError: null,
 					});
 					try {
+						// Get user ID from auth store if not provided
+						if (!supportId) {
+							const authState =
+								await import(
+									'@/stores/authStore'
+								).then((m) =>
+									m.useAuthStore.getState()
+								);
+							supportId =
+								authState.user
+									?.id;
+						}
+
+						if (!supportId) {
+							throw new Error(
+								'User ID is required to fetch assigned requests'
+							);
+						}
+
 						const response =
-							await salesApi.getAssignedRequests(
+							await salesApi.getAssignedOfferRequests(
+								supportId,
 								filters
 							);
 						set({
@@ -3452,10 +3526,15 @@ export const useSalesStore = create<SalesStore>()(
 					});
 					try {
 						const response =
-							await salesApi.updateRequestStatus(
+							await salesApi.updateOfferRequestStatus(
 								requestId,
 								{
-									status,
+									status: status as
+										| 'Pending'
+										| 'Assigned'
+										| 'InProgress'
+										| 'Completed'
+										| 'Cancelled',
 									notes: comment,
 								}
 							);
@@ -3794,17 +3873,51 @@ export const useSalesStore = create<SalesStore>()(
 					}
 				},
 
-				getSalesManagerDashboard: async () => {
+				getSalesManagerDashboard: async (
+					year?: number,
+					quarter?: number
+				) => {
 					set({
 						analyticsLoading: true,
 						analyticsError: null,
 					});
 					try {
 						const response =
-							await salesApi.getSalesManagerDashboard();
+							await salesApi.getSalesManagerDashboard(
+								year,
+								quarter
+							);
+						// Response structure: { success, data: { year, quarter, teamStatistics: {...}, salesmen: [...] } }
+						const dashboardData = {
+							...response.data
+								?.teamStatistics,
+							salesmen:
+								response.data
+									?.salesmen ||
+								[],
+							teamPerformance:
+								response.data
+									?.salesmen ||
+								[],
+							overview: {
+								totalClients: 0, // Calculate from clients if needed
+								teamPerformance:
+									response
+										.data
+										?.teamStatistics
+										?.averageSuccessRate ||
+									0,
+								revenueThisMonth:
+									response
+										.data
+										?.teamStatistics
+										?.totalRevenue ||
+									0,
+							},
+						};
 						set({
 							salesDashboard:
-								response.data,
+								dashboardData,
 							analyticsLoading: false,
 						});
 					} catch (error: any) {
@@ -3814,10 +3927,16 @@ export const useSalesStore = create<SalesStore>()(
 								'Failed to fetch sales manager dashboard',
 							analyticsLoading: false,
 						});
-						toast.error(
-							error.message ||
-								'Failed to fetch sales manager dashboard'
-						);
+						// Don't show error toast for 404s, just log
+						if (
+							error.response
+								?.status !== 404
+						) {
+							toast.error(
+								error.message ||
+									'Failed to fetch sales manager dashboard'
+							);
+						}
 					}
 				},
 
