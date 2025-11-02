@@ -176,6 +176,8 @@ export const useNotificationStore = create<NotificationState>()(
 				);
 				if (notification && !notification.isRead) {
 					notification.isRead = true;
+					// Also mark as read via API
+					notificationService.markAsReadAPI(id);
 					return {
 						unreadCount:
 							state.unreadCount - 1,
@@ -193,6 +195,8 @@ export const useNotificationStore = create<NotificationState>()(
 				})),
 				unreadCount: 0,
 			}));
+			// Also mark all as read via API
+			notificationService.markAllAsReadAPI();
 		},
 
 		setUnreadCount: (count: number) => {
@@ -331,35 +335,89 @@ export const useNotificationStore = create<NotificationState>()(
 							status
 						);
 
-						// When connected, join automatic groups
+						// When connected, join automatic groups and load initial notifications
+						// Use a small delay to ensure connection is fully ready
 						if (status.isConnected) {
-							const authState =
-								useAuthStore.getState();
-							const user =
-								authState.user;
+							// Wait a bit to ensure connection is fully established
+							setTimeout(async () => {
+								const authState =
+									useAuthStore.getState();
+								const user =
+									authState.user;
 
-							if (user) {
-								// Join user-specific group (automatically added by backend, but we can explicitly join)
-								await signalRService.joinGroup(
-									`User_${user.id}`
-								);
-
-								// Join role-specific groups for each role
-								if (
-									user.roles &&
-									user
-										.roles
-										.length >
-										0
-								) {
-									for (const role of user.roles) {
+								if (user) {
+									try {
+										// Join user-specific group (automatically added by backend, but we can explicitly join)
 										await signalRService.joinGroup(
-											`Role_${role}`
+											`User_${user.id}`
 										);
+
+										// Join role-specific groups for each role
+										if (
+											user.roles &&
+											user
+												.roles
+												.length >
+												0
+										) {
+											for (const role of user.roles) {
+												await signalRService.joinGroup(
+													`Role_${role}`
+												);
+											}
+										}
+
+										// Load initial notifications from API (as per guide)
+										await notificationService.loadNotifications();
+										await notificationService.loadUnreadCount();
+									} catch (error) {
+										console.error(
+											'Error joining groups or loading notifications:',
+											error
+										);
+										// Start polling as fallback
+										notificationService.startPolling();
 									}
 								}
-							}
+							}, 500); // 500ms delay to ensure connection is ready
 						}
+					}
+				);
+
+				// Listen for notifications loaded from API
+				notificationService.addEventListener(
+					'notificationsLoaded',
+					(notifications: any[]) => {
+						// Update store with loaded notifications
+						set((state) => ({
+							notifications:
+								notifications.map(
+									(
+										n: any
+									) => ({
+										type:
+											n.type ||
+											'info',
+										title:
+											n.title ||
+											'New Notification',
+										message:
+											n.message ||
+											'',
+										isRead:
+											n.isRead ||
+											false,
+										persistent: true, // API notifications are persistent
+										duration: 0,
+										id: String(
+											n.id
+										),
+										timestamp:
+											n.timestamp ||
+											Date.now(),
+									})
+								),
+						}));
 					}
 				);
 

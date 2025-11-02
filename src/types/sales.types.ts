@@ -161,8 +161,8 @@ export interface UpdateDealDto {
 
 export interface DealApprovalDto {
 	approved: boolean;
-	rejectionReason?: 'Money' | 'CashFlow' | 'OtherNeeds';
-	comments?: string;
+	notes?: string;
+	superAdminRequired?: boolean;
 }
 
 export interface DealCompletionDto {
@@ -185,12 +185,18 @@ export interface OfferRequest {
 	requestedProducts: string;
 	specialNotes?: string;
 	requestDate: string;
-	status: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
+	status:
+		| 'Pending'
+		| 'Assigned'
+		| 'InProgress'
+		| 'Completed'
+		| 'Cancelled';
 	assignedTo?: string;
 	assignedToName?: string;
 	createdOfferId?: number | null;
 	priority?: 'Low' | 'Medium' | 'High';
 	createdAt?: string;
+	assignedAt?: string;
 	taskProgressId?: string;
 	offerDescription?: string;
 	offerValue?: number;
@@ -208,7 +214,12 @@ export interface CreateOfferRequestDto {
 export interface UpdateOfferRequestDto {
 	requestedProducts?: string;
 	priority?: 'Low' | 'Medium' | 'High';
-	status?: 'Requested' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
+	status?:
+		| 'Pending'
+		| 'Assigned'
+		| 'InProgress'
+		| 'Completed'
+		| 'Cancelled';
 	offerDescription?: string;
 	offerValue?: number;
 	offerValidUntil?: string;
@@ -866,12 +877,13 @@ export interface OfferEquipment {
 	offerId: number;
 	name: string;
 	model?: string;
-	provider?: string;
-	country?: string;
+	manufacturer?: string;
+	quantity: number;
+	unitPrice: number;
+	totalPrice: number;
+	specifications?: string;
+	warrantyPeriod?: string;
 	imagePath?: string | null;
-	price: number;
-	description?: string;
-	inStock: boolean;
 }
 
 export interface OfferTerms {
@@ -879,13 +891,25 @@ export interface OfferTerms {
 	offerId: number;
 	warrantyPeriod?: string;
 	deliveryTime?: string;
+	installationIncluded?: boolean;
+	trainingIncluded?: boolean;
 	maintenanceTerms?: string;
-	otherTerms?: string;
+	paymentTerms?: string;
+	deliveryTerms?: string;
+	returnPolicy?: string;
 }
 
 export interface InstallmentPlan {
 	id: number;
 	offerId: number;
+	numberOfInstallments: number;
+	totalAmount: number;
+	installments: InstallmentPlanItem[];
+	createdAt?: string;
+}
+
+export interface InstallmentPlanItem {
+	id: number;
 	installmentNumber: number;
 	amount: number;
 	dueDate: string;
@@ -896,33 +920,30 @@ export interface InstallmentPlan {
 export interface CreateEquipmentDto {
 	name: string;
 	model?: string;
-	provider?: string;
-	country?: string;
-	price: number;
-	description?: string;
-	inStock: boolean;
+	manufacturer?: string;
+	quantity: number;
+	unitPrice: number;
+	specifications?: string;
+	warrantyPeriod?: string;
 }
 
 export interface CreateTermsDto {
 	warrantyPeriod?: string;
 	deliveryTime?: string;
+	installationIncluded?: boolean;
+	trainingIncluded?: boolean;
 	maintenanceTerms?: string;
-	otherTerms?: string;
+	paymentTerms?: string;
+	deliveryTerms?: string;
+	returnPolicy?: string;
 }
 
 export interface CreateInstallmentDto {
 	numberOfInstallments: number;
-	startDate: string;
-	paymentFrequency: 'Monthly' | 'Weekly' | 'Quarterly';
-}
-
-export interface InstallmentPlanItem {
-	id: number;
-	installmentNumber: number;
-	amount: number;
-	dueDate: string;
-	status: 'Pending' | 'Paid' | 'Overdue';
-	notes?: string;
+	firstPaymentAmount: number;
+	firstPaymentDate: string;
+	paymentFrequency: 'Monthly' | 'Quarterly' | 'Yearly';
+	totalAmount: number;
 }
 
 // ==================== WEEKLY PLAN ENHANCEMENTS ====================
@@ -1179,4 +1200,56 @@ export interface UpdateWeeklyPlanDto {
 export interface ReviewWeeklyPlanDto {
 	status: 'Approved' | 'Rejected';
 	reviewNotes?: string;
+}
+
+// ==================== PRODUCTS CATALOG ====================
+
+export interface Product {
+	id: number;
+	name: string;
+	model?: string;
+	provider?: string;
+	country?: string;
+	category?: string;
+	basePrice: number;
+	description?: string;
+	imagePath?: string | null;
+	year?: number;
+	inStock: boolean;
+	isActive: boolean;
+	createdBy?: string;
+	createdByName?: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateProductDto {
+	name: string;
+	model?: string;
+	provider?: string;
+	country?: string;
+	category?: string;
+	basePrice: number;
+	description?: string;
+	year?: number;
+	inStock?: boolean;
+}
+
+export interface UpdateProductDto {
+	name?: string;
+	model?: string;
+	provider?: string;
+	country?: string;
+	category?: string;
+	basePrice?: number;
+	description?: string;
+	year?: number;
+	inStock?: boolean;
+	isActive?: boolean;
+}
+
+export interface ProductSearchParams {
+	category?: string;
+	inStock?: boolean;
+	searchTerm?: string;
 }

@@ -51,7 +51,7 @@ export const getCurrentUser = async (
 	try {
 		setLoading?.(true);
 
-		const response = await apiRequest<AuthUser>(
+		const response = await apiRequest<any>(
 			API_ENDPOINTS.AUTH.CURRENT_USER,
 			{
 				method: 'GET',
@@ -59,7 +59,61 @@ export const getCurrentUser = async (
 			token
 		);
 
-		return response;
+		// Normalize the response to match AuthUser interface
+		// Handle case where API returns Roles (capital R) instead of roles
+		const normalizedResponse: AuthUser = {
+			...response,
+			roles: response.roles || response.Roles || [], // Support both Roles and roles
+			id: response.id || response.Id || '',
+			userName: response.userName || response.UserName || '',
+			email: response.email || response.Email || '',
+			firstName:
+				response.firstName || response.FirstName || '',
+			lastName: response.lastName || response.LastName || '',
+			fullName: response.fullName || response.FullName || '',
+			isActive:
+				response.isActive ?? response.IsActive ?? true,
+			createdAt:
+				response.createdAt || response.CreatedAt || '',
+			lastLoginAt:
+				response.lastLoginAt ??
+				response.LastLoginAt ??
+				null,
+			departmentId:
+				response.departmentId ||
+				response.DepartmentId ||
+				0,
+			departmentName:
+				response.departmentName ||
+				response.DepartmentName ||
+				'',
+			departmentDescription:
+				response.departmentDescription ||
+				response.DepartmentDescription ||
+				'',
+			emailConfirmed:
+				response.emailConfirmed ??
+				response.EmailConfirmed ??
+				false,
+			phoneNumberConfirmed:
+				response.phoneNumberConfirmed ??
+				response.PhoneNumberConfirmed ??
+				false,
+			phoneNumber:
+				response.phoneNumber ??
+				response.PhoneNumber ??
+				null,
+			profileImage:
+				response.profileImage ||
+				response.ProfileImage ||
+				null,
+			userImages:
+				response.userImages ||
+				response.UserImages ||
+				[],
+		};
+
+		return normalizedResponse;
 	} catch (error) {
 		console.error('Failed to fetch current user:', error);
 		throw error;

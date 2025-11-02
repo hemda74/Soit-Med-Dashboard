@@ -15,10 +15,21 @@ class SignalRService {
 	private reconnectTimer: NodeJS.Timeout | null = null;
 	private isReconnecting: boolean = false;
 	private listeners: Map<string, Function[]> = new Map();
+	private joinedGroups: Set<string> = new Set();
 
 	async connect(): Promise<void> {
 		try {
+			// Prevent multiple connections
 			if (this.isReconnecting) return;
+			if (
+				this.isConnected &&
+				this.connection?.state === 'Connected'
+			) {
+				console.log(
+					'SignalR already connected, skipping'
+				);
+				return;
+			}
 
 			const token = this.getAuthToken();
 			if (!token) {
@@ -34,12 +45,38 @@ class SignalRService {
 				'http://localhost:5117';
 			const hubUrl = `${baseUrl}/notificationHub`;
 
+			// Build connection with token in both accessTokenFactory and headers (as per guide)
 			this.connection = new HubConnectionBuilder()
 				.withUrl(hubUrl, {
-					accessTokenFactory: () => token,
+					accessTokenFactory: () => token || '',
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
 					withCredentials: false,
 				})
-				.withAutomaticReconnect([0, 2000, 10000, 30000])
+				.withAutomaticReconnect({
+					nextRetryDelayInMilliseconds: (
+						retryContext
+					) => {
+						// Exponential backoff: 0s, 2s, 10s, 30s, then 30s intervals (as per guide)
+						if (
+							retryContext.previousRetryCount ===
+							0
+						)
+							return 0;
+						if (
+							retryContext.previousRetryCount ===
+							1
+						)
+							return 2000;
+						if (
+							retryContext.previousRetryCount ===
+							2
+						)
+							return 10000;
+						return 30000;
+					},
+				})
 				.configureLogging(LogLevel.Information)
 				.build();
 
@@ -94,10 +131,26 @@ class SignalRService {
 	private setupEventHandlers(): void {
 		if (!this.connection) return;
 
-		// Handle new notifications - Updated to match backend signature (single data parameter)
+		// Handle personal notifications - Updated to match backend signature (single data parameter)
 		this.connection.on('ReceiveNotification', (data: any) => {
-			console.log('Received Notification:', data);
+			console.log('📬 Received Notification:', data);
 			this.handleNotification(data);
+		});
+
+		// Handle role-based broadcasts (NewRequest event)
+		this.connection.on('NewRequest', (request: any) => {
+			console.log('🔔 New Request Broadcast:', request);
+			// Convert request to notification format
+			const notificationData = {
+				title: 'New Request',
+				message: request.equipmentDetails
+					? `New ${request.requestType} request for ${request.clientName}: ${request.equipmentDetails}`
+					: `New ${request.requestType} request for ${request.clientName}`,
+				type: 'info',
+				data: request,
+				timestamp: request.createdAt || Date.now(),
+			};
+			this.handleNotification(notificationData);
 		});
 
 		// Connection events
@@ -111,29 +164,37 @@ class SignalRService {
 			});
 		});
 
-		this.connection.onreconnected(() => {
-			console.log('SignalR Reconnected!');
+		this.connection.onreconnected((connectionId) => {
+			console.log(
+				'✅ SignalR reconnected. Connection ID:',
+				connectionId
+			);
 			this.isConnected = true;
 			this.isReconnecting = false;
 			this.reconnectAttempts = 0;
+			// Clear joined groups on reconnect - will rejoin them via connectionStatus handler
+			this.joinedGroups.clear();
 			this.notifyListeners('connectionStatus', {
 				isConnected: true,
 				isReconnecting: false,
 				reconnectAttempts: 0,
 			});
+			// Notify listeners that we should reload notifications (as per guide)
+			this.notifyListeners('reconnected', { connectionId });
 		});
 
 		this.connection.onclose((error) => {
-			console.log('SignalR Closed!', error);
+			console.warn('⚠️ SignalR connection closed:', error);
 			this.isConnected = false;
 			this.isReconnecting = false;
+			this.joinedGroups.clear(); // Clear joined groups on close
 			this.notifyListeners('connectionStatus', {
 				isConnected: false,
 				isReconnecting: false,
 				reconnectAttempts: this.reconnectAttempts,
 			});
 
-			// Attempt to reconnect
+			// Attempt to reconnect (automatic reconnect is handled by SignalR)
 			if (
 				this.reconnectAttempts <
 				this.maxReconnectAttempts
@@ -214,25 +275,52 @@ class SignalRService {
 
 	// Join a specific group
 	async joinGroup(groupName: string): Promise<void> {
+		// Prevent duplicate joins
+		if (this.joinedGroups.has(groupName)) {
+			console.log(`Already in group: ${groupName}, skipping`);
+			return;
+		}
+
 		if (this.connection && this.isConnected) {
+			// Check if connection is actually in Connected state
+			if (this.connection.state !== 'Connected') {
+				console.warn(
+					`Cannot join group ${groupName}: Connection is in state ${this.connection.state}`
+				);
+				return;
+			}
+
 			try {
 				await this.connection.invoke(
 					'JoinGroup',
 					groupName
 				);
-				console.log(`Joined group: ${groupName}`);
+				this.joinedGroups.add(groupName);
+				console.log(`✅ Joined group: ${groupName}`);
 			} catch (error) {
 				console.error(
 					`Error joining group ${groupName}:`,
 					error
 				);
 			}
+		} else {
+			console.warn(
+				`Cannot join group ${groupName}: Connection not available or not connected`
+			);
 		}
 	}
 
 	// Leave a group
 	async leaveGroup(groupName: string): Promise<void> {
 		if (this.connection && this.isConnected) {
+			// Check if connection is actually in Connected state
+			if (this.connection.state !== 'Connected') {
+				console.warn(
+					`Cannot leave group ${groupName}: Connection is in state ${this.connection.state}`
+				);
+				return;
+			}
+
 			try {
 				await this.connection.invoke(
 					'LeaveGroup',
@@ -245,6 +333,10 @@ class SignalRService {
 					error
 				);
 			}
+		} else {
+			console.warn(
+				`Cannot leave group ${groupName}: Connection not available or not connected`
+			);
 		}
 	}
 
@@ -320,6 +412,7 @@ class SignalRService {
 			await this.connection.stop();
 			this.isConnected = false;
 			this.isReconnecting = false;
+			this.joinedGroups.clear(); // Clear joined groups on disconnect
 		}
 	}
 

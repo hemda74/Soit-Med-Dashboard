@@ -89,6 +89,8 @@ const SalesSupportDashboard: React.FC = () => {
 				return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
 			case 'Pending':
 				return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
+			case 'Assigned':
+				return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
 			case 'Cancelled':
 				return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700';
 			default:
@@ -410,7 +412,7 @@ const SalesSupportDashboard: React.FC = () => {
 															{offer.products || 'N/A'}
 														</p>
 														<div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-500">
-															<span>Created: {format(new Date(offer.createdAt || offer.validUntil), 'MMM dd, yyyy')}</span>
+															<span>Created: {offer.createdAt ? format(new Date(offer.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
 															{offer.validUntil && (
 																<span>Valid Until: {format(new Date(offer.validUntil), 'MMM dd, yyyy')}</span>
 															)}
@@ -496,7 +498,7 @@ const SalesSupportDashboard: React.FC = () => {
 															<div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-500">
 																<span>Client: {request.clientName}</span>
 																<span>Requested by: {request.requestedByName}</span>
-																<span>{format(new Date(request.createdAt), 'MMM dd, yyyy')}</span>
+																<span>{request.createdAt ? format(new Date(request.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
 															</div>
 														</div>
 													</div>
@@ -512,7 +514,7 @@ const SalesSupportDashboard: React.FC = () => {
 
 												{request.dueDate && (
 													<div className="mb-3 text-xs text-gray-500 dark:text-gray-500">
-														Due: {format(new Date(request.dueDate), 'MMM dd, yyyy')}
+														Due: {request.dueDate ? format(new Date(request.dueDate), 'MMM dd, yyyy') : 'N/A'}
 													</div>
 												)}
 
@@ -730,10 +732,10 @@ const SalesSupportDashboard: React.FC = () => {
 								</div>
 
 								<div className="text-xs text-gray-500 dark:text-gray-500 pt-4 border-t dark:border-gray-700">
-									Created: {format(new Date((selectedOffer.createdAt || selectedOffer.validUntil || new Date()) as any), 'MMM dd, yyyy HH:mm')}
+									Created: {selectedOffer.createdAt ? format(new Date(selectedOffer.createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
 									{selectedOffer.validUntil && (
 										<span className="ml-4">
-											Valid Until: {format(new Date(selectedOffer.validUntil as any), 'MMM dd, yyyy HH:mm')}
+											Valid Until: {format(new Date(selectedOffer.validUntil), 'MMM dd, yyyy HH:mm')}
 										</span>
 									)}
 								</div>
@@ -817,7 +819,7 @@ const SalesSupportDashboard: React.FC = () => {
 												<div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
 													<p className="text-sm text-gray-900 dark:text-gray-100">{comment.comment}</p>
 													<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-														{comment.commentedByName} • {format(new Date(comment.createdAt), 'MMM dd, yyyy HH:mm')}
+														{comment.commentedByName} • {comment.createdAt ? format(new Date(comment.createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
 													</p>
 												</div>
 											))}

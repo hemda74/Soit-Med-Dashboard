@@ -194,7 +194,7 @@ export default function SalesmanDashboard() {
                         </div>
                         <p className="text-2xl font-bold">{offerRequests.length}</p>
                         <p className="text-xs text-muted-foreground">
-                            {offerRequests.filter(o => o.status === 'Sent').length} sent
+                            {offerRequests.filter(o => o.status === 'Completed').length} completed
                         </p>
                     </CardContent>
                 </Card>
@@ -537,7 +537,7 @@ export default function SalesmanDashboard() {
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                     <span className="text-sm font-medium">Sent</span>
                                 </div>
-                                <p className="text-2xl font-bold">{offerRequests.filter(o => o.status === 'Sent').length}</p>
+                                <p className="text-2xl font-bold">{offerRequests.filter(o => o.status === 'Completed').length}</p>
                             </CardContent>
                         </Card>
                         <Card>

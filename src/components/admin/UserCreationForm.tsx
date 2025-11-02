@@ -90,7 +90,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
     onConfirmPasswordToggle,
     onImageSelect,
     onRemoveImage,
-    onImageAltTextChange,
     onHospitalSelect,
     onGovernorateToggle,
     onRemoveGovernorate,
@@ -198,15 +197,15 @@ This is an automated message from Soit-Med Admin Panel`;
 
     return (
         <>
-            <Card className="shadow-2xl border-0 bg-gradient-to-br from-background via-background to-muted/10 overflow-hidden">
-                <CardHeader className="pb-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b border-primary/10">
-                    <div className="flex items-center justify-between">
+            <Card className="shadow-2xl border-2 border-border/50 bg-gradient-to-br from-background via-background to-muted/10 overflow-hidden">
+                <CardHeader className="pb-8 pt-8 bg-gradient-to-r from-primary/10 via-primary/15 to-primary/10 border-b-2 border-primary/10">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
-                                <UserPlus className="h-7 w-7" />
+                            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
+                                <UserPlus className="h-8 w-8" />
                             </div>
                             <div>
-                                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
+                                <CardTitle className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
                                     {t('createRoleUser').replace('{role}', roleConfig.name)}
                                 </CardTitle>
                                 <p className="text-muted-foreground text-base mt-2 font-medium">
@@ -214,30 +213,31 @@ This is an automated message from Soit-Med Admin Panel`;
                                 </p>
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            <span>Required fields marked with *</span>
+                        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-sm font-medium text-muted-foreground">Required fields marked with *</span>
                         </div>
                     </div>
 
-                    {/* Form Progress Indicator */}
-                    <div className="mt-6 space-y-3">
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <span>Form Progress</span>
-                            <span className="font-semibold">
+                    {/* Enhanced Form Progress Indicator */}
+                    <div className="mt-8 space-y-4 bg-muted/30 rounded-xl p-5 border border-border/50">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-foreground">Form Progress</span>
+                            <span className="text-sm font-bold text-primary">
                                 {(() => {
                                     const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
                                     const completedFields = totalFields.filter(field => {
                                         const value = formData[field as keyof FormData];
                                         return typeof value === 'string' && value.trim();
                                     });
-                                    return `${completedFields.length}/${totalFields.length}`;
-                                })()} Complete
+                                    const percentage = Math.round((completedFields.length / totalFields.length) * 100);
+                                    return `${percentage}%`;
+                                })()}
                             </span>
                         </div>
-                        <div className="w-full bg-muted/30 rounded-full h-2">
+                        <div className="w-full bg-muted/50 rounded-full h-3 overflow-hidden shadow-inner">
                             <div
-                                className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500 ease-out"
+                                className="bg-gradient-to-r from-primary via-primary/90 to-primary h-3 rounded-full transition-all duration-700 ease-out shadow-sm"
                                 style={{
                                     width: `${(() => {
                                         const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
@@ -250,23 +250,33 @@ This is an automated message from Soit-Med Admin Panel`;
                                 }}
                             ></div>
                         </div>
+                        <p className="text-xs text-muted-foreground">
+                            {(() => {
+                                const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
+                                const completedFields = totalFields.filter(field => {
+                                    const value = formData[field as keyof FormData];
+                                    return typeof value === 'string' && value.trim();
+                                });
+                                return `${completedFields.length} of ${totalFields.length} required fields completed`;
+                            })()}
+                        </p>
                     </div>
                 </CardHeader>
-                <CardContent className="pt-8">
-                    <form onSubmit={onSubmit} className="space-y-8">
+                <CardContent className="pt-8 px-6 lg:px-8">
+                    <form onSubmit={onSubmit} className="space-y-10">
                         {errors.length > 0 && (
-                            <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 animate-in slide-in-from-top-2 duration-300 shadow-lg">
+                            <div className="bg-destructive/10 border-2 border-destructive/30 rounded-2xl p-6 lg:p-8 animate-in slide-in-from-top-2 duration-300 shadow-lg">
                                 <div className="flex items-start gap-4">
-                                    <div className="p-2 rounded-lg bg-destructive/20">
+                                    <div className="p-3 rounded-xl bg-destructive/20 shadow-sm flex-shrink-0">
                                         <AlertCircle className="h-6 w-6 text-destructive" />
                                     </div>
-                                    <div className="space-y-3">
-                                        <h3 className="text-lg font-semibold text-destructive">{t('pleaseFixFollowingErrors')}</h3>
-                                        <ul className="text-sm text-destructive/90 space-y-2">
+                                    <div className="space-y-3 flex-1">
+                                        <h3 className="text-lg font-bold text-destructive">{t('pleaseFixFollowingErrors')}</h3>
+                                        <ul className="text-sm text-destructive/90 space-y-2.5">
                                             {errors.map((error, index) => (
                                                 <li key={index} className="flex items-start gap-3">
-                                                    <span className="w-2 h-2 rounded-full bg-destructive mt-2 flex-shrink-0"></span>
-                                                    <span className="font-medium">{error}</span>
+                                                    <span className="w-2 h-2 rounded-full bg-destructive mt-2.5 flex-shrink-0"></span>
+                                                    <span className="font-medium leading-relaxed">{error}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -277,14 +287,17 @@ This is an automated message from Soit-Med Admin Panel`;
 
                         {/* Personal Information Section */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                                    <UserPlus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20 p-4 rounded-xl -mx-4 px-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+                                    <UserPlus className="h-5 w-5 text-white" />
                                 </div>
-                                <h2 className="text-xl font-semibold text-foreground">Personal Information</h2>
+                                <div>
+                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Personal Information</h2>
+                                    <p className="text-sm text-muted-foreground mt-1">Basic personal details for the user account</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <Label htmlFor="firstName" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                         {t('firstName')} <span className="text-destructive text-lg">*</span>
@@ -294,7 +307,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         value={formData.firstName}
                                         onChange={(e) => onInputChange('firstName', e.target.value)}
                                         placeholder={t('enterFirstName')}
-                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
                                         required
                                     />
                                 </div>
@@ -308,14 +321,14 @@ This is an automated message from Soit-Med Admin Panel`;
                                         value={formData.lastName}
                                         onChange={(e) => onInputChange('lastName', e.target.value)}
                                         placeholder={t('enterLastName')}
-                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
                                         required
                                     />
                                 </div>
                             </div>
 
                             {/* Phone Number Field */}
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <Label htmlFor="phoneNumber" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                         {t('phoneNumber')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
@@ -325,7 +338,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         value={formData.phoneNumber || ''}
                                         onChange={(e) => onInputChange('phoneNumber', e.target.value)}
                                         placeholder={t('enterPhoneNumber')}
-                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
                                         type="tel"
                                     />
                                 </div>
@@ -336,14 +349,17 @@ This is an automated message from Soit-Med Admin Panel`;
                         {/* Sales Support Specific Fields */}
                         {selectedRole === 'sales-support' && (
                             <div className="space-y-6">
-                                <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-                                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20">
-                                        <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20 p-4 rounded-xl -mx-4 px-4">
+                                    <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-md">
+                                        <Briefcase className="h-5 w-5 text-white" />
                                     </div>
-                                    <h2 className="text-xl font-semibold text-foreground">Sales Support Information</h2>
+                                    <div>
+                                        <h2 className="text-xl lg:text-2xl font-bold text-foreground">Sales Support Information</h2>
+                                        <p className="text-sm text-muted-foreground mt-1">Additional details for sales support staff</p>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Personal Email */}
                                     <div className="space-y-3">
                                         <Label htmlFor="personalMail" className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -420,14 +436,17 @@ This is an automated message from Soit-Med Admin Panel`;
 
                         {/* Account Credentials Section */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-                                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20">
-                                    <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20 p-4 rounded-xl -mx-4 px-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-md">
+                                    <Shield className="h-5 w-5 text-white" />
                                 </div>
-                                <h2 className="text-xl font-semibold text-foreground">Account Credentials</h2>
+                                <div>
+                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Account Credentials</h2>
+                                    <p className="text-sm text-muted-foreground mt-1">Login credentials and security settings</p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                     <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                         {t('email')} <span className="text-destructive text-lg">*</span>
@@ -438,7 +457,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         value={formData.email}
                                         onChange={(e) => onInputChange('email', e.target.value)}
                                         placeholder={t('enterEmailAddress')}
-                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
                                         required
                                     />
                                 </div>
@@ -496,24 +515,25 @@ This is an automated message from Soit-Med Admin Panel`;
 
                         {/* Profile Section */}
                         <div className="space-y-6">
-                            <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-                                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                                    <Camera className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20 p-4 rounded-xl -mx-4 px-4">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-md">
+                                    <Camera className="h-5 w-5 text-white" />
                                 </div>
-                                <h2 className="text-xl font-semibold text-foreground">Profile Information</h2>
+                                <div>
+                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Profile Information</h2>
+                                    <p className="text-sm text-muted-foreground mt-1">Profile image and additional user details</p>
+                                </div>
                             </div>
 
                             <ImageUploadField
                                 imagePreview={imagePreview}
                                 imageError={imageError}
-                                imageAltText={formData.imageAltText || ''}
                                 onImageSelect={onImageSelect}
                                 onRemoveImage={onRemoveImage}
-                                onAltTextChange={onImageAltTextChange}
                             />
 
                             {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <div className="space-y-3">
                                         <Label htmlFor="specialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                             {t('specialty')} <span className="text-destructive text-lg">*</span>
@@ -535,11 +555,14 @@ This is an automated message from Soit-Med Admin Panel`;
                         {/* Role-Specific Information Section */}
                         {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'technician' || selectedRole === 'sales-manager' || selectedRole === 'maintenance-manager' || selectedRole === 'maintenance-support') && (
                             <div className="space-y-6">
-                                <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-                                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/20">
-                                        <Briefcase className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                                <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20 p-4 rounded-xl -mx-4 px-4">
+                                    <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-md">
+                                        <Briefcase className="h-5 w-5 text-white" />
                                     </div>
-                                    <h2 className="text-xl font-semibold text-foreground">Role-Specific Information</h2>
+                                    <div>
+                                        <h2 className="text-xl lg:text-2xl font-bold text-foreground">Role-Specific Information</h2>
+                                        <p className="text-sm text-muted-foreground mt-1">Additional information specific to the selected role</p>
+                                    </div>
                                 </div>
 
                                 {roleConfig.requiresHospital && (
@@ -578,7 +601,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                             </div>
                                             Sales Manager Details
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="salesTerritory" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('salesTerritory')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
@@ -645,7 +668,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                             </div>
                                             Maintenance Manager Details
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="maintenanceSpecialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('maintenanceSpecialty')} <span className="text-destructive text-lg">*</span>
@@ -685,7 +708,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                             </div>
                                             Maintenance Support Details
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             <div className="space-y-3">
                                                 <Label htmlFor="jobTitle" className="text-sm font-semibold text-foreground flex items-center gap-2">
                                                     {t('jobTitle')} <span className="text-destructive text-lg">*</span>
@@ -720,7 +743,7 @@ This is an automated message from Soit-Med Admin Panel`;
                             </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row gap-6 pt-8 border-t border-border/50 bg-gradient-to-r from-muted/20 to-muted/10 -mx-6 px-6 py-6 rounded-b-2xl">
+                        <div className="flex flex-col sm:flex-row gap-4 pt-8 mt-8 border-t-2 border-border/50 bg-gradient-to-r from-muted/30 via-muted/20 to-muted/30 -mx-6 px-6 py-8 rounded-b-2xl">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -739,12 +762,12 @@ This is an automated message from Soit-Med Admin Panel`;
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                        {t('creatingUserLoading')}
+                                        <span>{t('creatingUserLoading')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <UserPlus className="h-5 w-5 mr-2" />
-                                        {t('createRoleUser').replace('{role}', roleConfig.name)}
+                                        <span>{t('createRoleUser').replace('{role}', roleConfig.name)}</span>
                                     </>
                                 )}
                             </Button>

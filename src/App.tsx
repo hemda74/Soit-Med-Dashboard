@@ -23,6 +23,7 @@ import SalesTargetsPage from '@/components/sales/SalesTargetsPage'
 import ManagerReportsReviewPage from '@/components/sales/ManagerReportsReviewPage'
 import OfferCreationPage from '@/components/salesSupport/OfferCreationPage'
 import RequestsInboxPage from '@/components/salesSupport/RequestsInboxPage'
+import ProductsCatalogPage from '@/components/salesSupport/ProductsCatalogPage'
 import { WeeklyPlansScreen } from '@/components/weeklyPlan'
 import NotificationsPage from '@/pages/NotificationsPage'
 import { useNotificationStore } from '@/stores/notificationStore'
@@ -78,6 +79,7 @@ function App() {
                 <Route path="sales-support" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SuperAdmin"]}><SalesSupportDashboard /></RoleGuard>} />
                 <Route path="sales-support/offer" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SuperAdmin"]}><OfferCreationPage /></RoleGuard>} />
                 <Route path="sales-support/requests" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SuperAdmin"]}><RequestsInboxPage /></RoleGuard>} />
+                <Route path="sales-support/products" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SalesManager", "SuperAdmin"]}><ProductsCatalogPage /></RoleGuard>} />
                 <Route path="weekly-plans" element={<WeeklyPlansScreen />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
