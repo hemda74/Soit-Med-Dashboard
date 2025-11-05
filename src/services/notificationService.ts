@@ -375,28 +375,57 @@ class NotificationService {
 		// { id, title, message, type, priority, isRead, createdAt, requestWorkflowId?, activityLogId? }
 		console.log('📬 New notification received:', data);
 
+		// Ensure message is a string
+		let messageText = '';
+		if (typeof data.Message === 'string') {
+			messageText = data.Message;
+		} else if (typeof data.message === 'string') {
+			messageText = data.message;
+		} else if (data.Message && typeof data.Message === 'object') {
+			messageText = JSON.stringify(data.Message);
+		} else if (data.message && typeof data.message === 'object') {
+			messageText = JSON.stringify(data.message);
+		} else {
+			messageText =
+				data.Title || data.title || 'New Notification';
+		}
+
 		const notification: NotificationData = {
 			id: String(
-				data.id ||
+				data.Id ||
+					data.id ||
 					`notification-${Date.now()}-${Math.random()
 						.toString(36)
 						.substr(2, 9)}`
 			),
-			type: data.type || 'info',
-			title: data.title || 'New Notification',
-			message: data.message || String(data),
+			type: (data.Type || data.type || 'info').toLowerCase(),
+			title: data.Title || data.title || 'New Notification',
+			message: messageText,
 			link: data.link || null,
 			data: {
-				requestWorkflowId: data.requestWorkflowId,
-				activityLogId: data.activityLogId,
-				priority: data.priority,
+				offerRequestId: data.offerRequestId,
+				requestWorkflowId:
+					data.RequestWorkflowId ||
+					data.requestWorkflowId,
+				activityLogId:
+					data.ActivityLogId ||
+					data.activityLogId,
+				clientId: data.clientId,
+				clientName: data.clientName,
+				salesmanId: data.salesmanId,
+				salesmanName: data.salesmanName,
+				priority: data.Priority || data.priority,
 				...data.data,
 				...data, // Include all original data
 			},
-			timestamp: data.createdAt
-				? new Date(data.createdAt).getTime()
-				: data.timestamp || Date.now(),
-			isRead: data.isRead || false,
+			timestamp:
+				data.CreatedAt || data.createdAt
+					? new Date(
+							data.CreatedAt ||
+								data.createdAt
+					  ).getTime()
+					: data.timestamp || Date.now(),
+			isRead: data.IsRead || data.isRead || false,
 			roles: data.roles,
 			departments: data.departments,
 			userIds: data.userIds,
@@ -404,11 +433,8 @@ class NotificationService {
 
 		// Backend handles filtering via groups, so we trust the notification is for us
 		// Add to notifications list (at the beginning, as per guide)
+		// addNotification already handles unread count increment
 		this.addNotification(notification);
-
-		// Update unread count (increment by 1, as per guide)
-		this.unreadCount = this.unreadCount + 1;
-		this.notifyListeners('unreadCountChanged', this.unreadCount);
 
 		// Show browser notification if permission granted (as per guide)
 		if (
@@ -617,6 +643,19 @@ class NotificationService {
 	}
 
 	private addNotification(notification: NotificationData): void {
+		// Check for duplicate notification by ID (prevent duplicates)
+		const existingNotification = this.notifications.find(
+			(n) => n.id === notification.id
+		);
+
+		if (existingNotification) {
+			console.log(
+				'⚠️ Duplicate notification blocked:',
+				notification.id
+			);
+			return; // Skip duplicate
+		}
+
 		this.notifications.unshift(notification);
 		if (!notification.isRead) {
 			this.unreadCount++;
