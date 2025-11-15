@@ -8,6 +8,7 @@ export interface FormData {
 	firstName: string;
 	lastName: string;
 	phoneNumber?: string;
+	dateOfBirth?: string;
 	specialty?: string;
 	hospitalId?: string;
 	departmentId?: string;
@@ -39,6 +40,7 @@ export const useUserCreationForm = () => {
 		firstName: '',
 		lastName: '',
 		phoneNumber: '',
+		dateOfBirth: '',
 		specialty: '',
 		hospitalId: '',
 		departmentId: '',
@@ -253,6 +255,7 @@ export const useUserCreationForm = () => {
 			firstName: '',
 			lastName: '',
 			phoneNumber: '',
+			dateOfBirth: '',
 			specialty: '',
 			hospitalId: '',
 			departmentId: '',

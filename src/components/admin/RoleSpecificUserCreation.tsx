@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat, HeadphonesIcon } from 'lucide-react';
+import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat, HeadphonesIcon, Package, Warehouse } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -21,6 +21,8 @@ import {
     createMaintenanceManager,
     createMaintenanceSupport,
     createSalesSupport,
+    createSparePartsCoordinator,
+    createInventoryManager,
     getHospitals,
     getGovernorates,
     validateForm,
@@ -64,6 +66,8 @@ const RoleSpecificUserCreation: React.FC = () => {
         'maintenance-manager': HardHat,
         'maintenance-support': Cog,
         'sales-support': HeadphonesIcon,
+        'spare-parts-coordinator': Package,
+        'inventory-manager': Warehouse,
     };
 
     // Role configuration with translations
@@ -178,6 +182,24 @@ const RoleSpecificUserCreation: React.FC = () => {
             requiresDepartment: false,
             autoDepartmentId: 4,
             role: 'SalesSupport'
+        },
+        'spare-parts-coordinator': {
+            name: t('sparePartsCoordinator'),
+            description: t('sparePartsCoordinatorDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'SparePartsCoordinator'
+        },
+        'inventory-manager': {
+            name: t('inventoryManager'),
+            description: t('inventoryManagerDescription'),
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty'],
+            requiresHospital: false,
+            requiresDepartment: false,
+            autoDepartmentId: 4,
+            role: 'InventoryManager'
         },
     };
 
@@ -300,6 +322,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 phoneNumber: formData.phoneNumber,
+                ...(formData.dateOfBirth && { dateOfBirth: formData.dateOfBirth }),
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
@@ -316,6 +339,8 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(selectedRole === 'sales-support' && formData.supportSpecialization && { supportSpecialization: formData.supportSpecialization }),
                 ...(selectedRole === 'sales-support' && formData.supportLevel && { supportLevel: formData.supportLevel }),
                 ...(selectedRole === 'sales-support' && formData.notes && { notes: formData.notes }),
+                ...(selectedRole === 'spare-parts-coordinator' && formData.specialty && { specialty: formData.specialty }),
+                ...(selectedRole === 'inventory-manager' && formData.specialty && { specialty: formData.specialty }),
                 ...(formData.profileImage && { profileImage: formData.profileImage }),
                 ...(autoImageAltText && { imageAltText: autoImageAltText }),
             };
@@ -359,6 +384,12 @@ const RoleSpecificUserCreation: React.FC = () => {
                     break;
                 case 'sales-support':
                     await createSalesSupport(userData as any, user.token);
+                    break;
+                case 'spare-parts-coordinator':
+                    await createSparePartsCoordinator(userData as any, user.token);
+                    break;
+                case 'inventory-manager':
+                    await createInventoryManager(userData as any, user.token);
                     break;
                 default:
                     throw new Error('Invalid role selected');

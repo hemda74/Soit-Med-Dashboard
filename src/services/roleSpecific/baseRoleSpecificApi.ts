@@ -160,6 +160,18 @@ export const createUserByRole = async (
 			);
 			return createSalesSupport(userData, token);
 		}
+		case 'spare-parts-coordinator': {
+			const { createSparePartsCoordinator } = await import(
+				'./maintenanceRoleApi'
+			);
+			return createSparePartsCoordinator(userData, token);
+		}
+		case 'inventory-manager': {
+			const { createInventoryManager } = await import(
+				'./maintenanceRoleApi'
+			);
+			return createInventoryManager(userData, token);
+		}
 		default:
 			throw new Error(`Unsupported role: ${role}`);
 	}

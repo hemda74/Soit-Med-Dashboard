@@ -197,86 +197,32 @@ This is an automated message from Soit-Med Admin Panel`;
 
     return (
         <>
-            <Card className="shadow-2xl border-2 border-border/50 bg-gradient-to-br from-background via-background to-muted/10 overflow-hidden">
-                <CardHeader className="pb-8 pt-8 bg-gradient-to-r from-primary/10 via-primary/15 to-primary/10 border-b-2 border-primary/10">
-                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
-                                <UserPlus className="h-8 w-8" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent">
-                                    {t('createRoleUser').replace('{role}', roleConfig.name)}
-                                </CardTitle>
-                                <p className="text-muted-foreground text-base mt-2 font-medium">
-                                    Complete the form below to create a new {roleConfig.name.toLowerCase()} account
-                                </p>
-                            </div>
+            <Card className="border shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-2xl font-semibold">
+                                {t('createRoleUser').replace('{role}', roleConfig.name)}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Complete the form below to create a new {roleConfig.name.toLowerCase()} account
+                            </p>
                         </div>
-                        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-xl border border-primary/10">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-sm font-medium text-muted-foreground">Required fields marked with *</span>
-                        </div>
-                    </div>
-
-                    {/* Enhanced Form Progress Indicator */}
-                    <div className="mt-8 space-y-4 bg-muted/30 rounded-xl p-5 border border-border/50">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-foreground">Form Progress</span>
-                            <span className="text-sm font-bold text-primary">
-                                {(() => {
-                                    const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
-                                    const completedFields = totalFields.filter(field => {
-                                        const value = formData[field as keyof FormData];
-                                        return typeof value === 'string' && value.trim();
-                                    });
-                                    const percentage = Math.round((completedFields.length / totalFields.length) * 100);
-                                    return `${percentage}%`;
-                                })()}
-                            </span>
-                        </div>
-                        <div className="w-full bg-muted/50 rounded-full h-3 overflow-hidden shadow-inner">
-                            <div
-                                className="bg-gradient-to-r from-primary via-primary/90 to-primary h-3 rounded-full transition-all duration-700 ease-out shadow-sm"
-                                style={{
-                                    width: `${(() => {
-                                        const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
-                                        const completedFields = totalFields.filter(field => {
-                                            const value = formData[field as keyof FormData];
-                                            return typeof value === 'string' && value.trim();
-                                        });
-                                        return (completedFields.length / totalFields.length) * 100;
-                                    })()}%`
-                                }}
-                            ></div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            {(() => {
-                                const totalFields = ['firstName', 'lastName', 'email', 'password', 'confirmPassword'];
-                                const completedFields = totalFields.filter(field => {
-                                    const value = formData[field as keyof FormData];
-                                    return typeof value === 'string' && value.trim();
-                                });
-                                return `${completedFields.length} of ${totalFields.length} required fields completed`;
-                            })()}
-                        </p>
                     </div>
                 </CardHeader>
-                <CardContent className="pt-8 px-6 lg:px-8">
-                    <form onSubmit={onSubmit} className="space-y-10">
+                <CardContent className="pt-6">
+                    <form onSubmit={onSubmit} className="space-y-8">
                         {errors.length > 0 && (
-                            <div className="bg-destructive/10 border-2 border-destructive/30 rounded-2xl p-6 lg:p-8 animate-in slide-in-from-top-2 duration-300 shadow-lg">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-3 rounded-xl bg-destructive/20 shadow-sm flex-shrink-0">
-                                        <AlertCircle className="h-6 w-6 text-destructive" />
-                                    </div>
-                                    <div className="space-y-3 flex-1">
-                                        <h3 className="text-lg font-bold text-destructive">{t('pleaseFixFollowingErrors')}</h3>
-                                        <ul className="text-sm text-destructive/90 space-y-2.5">
+                            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <h3 className="text-sm font-semibold text-destructive mb-2">{t('pleaseFixFollowingErrors')}</h3>
+                                        <ul className="text-sm text-destructive/90 space-y-1.5">
                                             {errors.map((error, index) => (
-                                                <li key={index} className="flex items-start gap-3">
-                                                    <span className="w-2 h-2 rounded-full bg-destructive mt-2.5 flex-shrink-0"></span>
-                                                    <span className="font-medium leading-relaxed">{error}</span>
+                                                <li key={index} className="flex items-start gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-1.5 flex-shrink-0"></span>
+                                                    <span>{error}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -286,63 +232,68 @@ This is an automated message from Soit-Med Admin Panel`;
                         )}
 
                         {/* Personal Information Section */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20 p-4 rounded-xl -mx-4 px-4">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
-                                    <UserPlus className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Personal Information</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">Basic personal details for the user account</p>
-                                </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 pb-3 border-b">
+                                <h2 className="text-lg font-semibold">Personal Information</h2>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="space-y-3">
-                                    <Label htmlFor="firstName" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('firstName')} <span className="text-destructive text-lg">*</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="firstName" className="text-sm font-medium">
+                                        {t('firstName')} <span className="text-destructive">*</span>
                                     </Label>
                                     <Input
                                         id="firstName"
                                         value={formData.firstName}
                                         onChange={(e) => onInputChange('firstName', e.target.value)}
                                         placeholder={t('enterFirstName')}
-                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
+                                        className="h-10"
                                         required
                                     />
                                 </div>
 
-                                <div className="space-y-3">
-                                    <Label htmlFor="lastName" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('lastName')} <span className="text-destructive text-lg">*</span>
+                                <div className="space-y-2">
+                                    <Label htmlFor="lastName" className="text-sm font-medium">
+                                        {t('lastName')} <span className="text-destructive">*</span>
                                     </Label>
                                     <Input
                                         id="lastName"
                                         value={formData.lastName}
                                         onChange={(e) => onInputChange('lastName', e.target.value)}
                                         placeholder={t('enterLastName')}
-                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
+                                        className="h-10"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            {/* Phone Number Field */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="space-y-3">
-                                    <Label htmlFor="phoneNumber" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('phoneNumber')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="phoneNumber" className="text-sm font-medium">
+                                        {t('phoneNumber')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
                                     </Label>
                                     <Input
                                         id="phoneNumber"
                                         value={formData.phoneNumber || ''}
                                         onChange={(e) => onInputChange('phoneNumber', e.target.value)}
                                         placeholder={t('enterPhoneNumber')}
-                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
+                                        className="h-10"
                                         type="tel"
                                     />
                                 </div>
-                                <div></div> {/* Empty div to maintain grid structure */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="dateOfBirth" className="text-sm font-medium">
+                                        {t('dateOfBirth')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
+                                    </Label>
+                                    <Input
+                                        id="dateOfBirth"
+                                        type="date"
+                                        value={formData.dateOfBirth || ''}
+                                        onChange={(e) => onInputChange('dateOfBirth', e.target.value)}
+                                        className="h-10"
+                                        max={new Date().toISOString().split('T')[0]}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -435,21 +386,15 @@ This is an automated message from Soit-Med Admin Panel`;
                         )}
 
                         {/* Account Credentials Section */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20 p-4 rounded-xl -mx-4 px-4">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-md">
-                                    <Shield className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Account Credentials</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">Login credentials and security settings</p>
-                                </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 pb-3 border-b">
+                                <h2 className="text-lg font-semibold">Account Credentials</h2>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="space-y-3">
-                                    <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                        {t('email')} <span className="text-destructive text-lg">*</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-sm font-medium">
+                                        {t('email')} <span className="text-destructive">*</span>
                                     </Label>
                                     <Input
                                         id="email"
@@ -457,12 +402,12 @@ This is an automated message from Soit-Med Admin Panel`;
                                         value={formData.email}
                                         onChange={(e) => onInputChange('email', e.target.value)}
                                         placeholder={t('enterEmailAddress')}
-                                        className="h-12 transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary/50 rounded-xl shadow-sm"
+                                        className="h-10"
                                         required
                                     />
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <PasswordField
                                         id="password"
                                         value={formData.password}
@@ -473,11 +418,11 @@ This is an automated message from Soit-Med Admin Panel`;
                                         errors={passwordErrors}
                                         label={t('password')}
                                         required
-                                        className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                        className="h-10"
                                     />
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <PasswordField
                                         id="confirmPassword"
                                         value={formData.confirmPassword}
@@ -488,41 +433,34 @@ This is an automated message from Soit-Med Admin Panel`;
                                         errors={[]}
                                         label={t('confirmPassword')}
                                         required
-                                        className={`h-12 transition-all duration-300 hover:border-primary/50 rounded-xl ${formData.confirmPassword && formData.password !== formData.confirmPassword
+                                        className={`h-10 ${formData.confirmPassword && formData.password !== formData.confirmPassword
                                             ? 'border-destructive focus:border-destructive'
                                             : formData.confirmPassword && formData.password === formData.confirmPassword
                                                 ? 'border-green-500 focus:border-green-500'
-                                                : 'focus:border-primary'
+                                                : ''
                                             }`}
                                     />
 
                                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                                        <div className="flex items-center gap-2 text-sm text-destructive animate-in slide-in-from-top-1 duration-200 bg-destructive/5 p-2 rounded-lg">
-                                            <AlertCircle className="h-4 w-4" />
-                                            <span className="font-medium">{t('passwordsDoNotMatch')}</span>
-                                        </div>
+                                        <p className="text-sm text-destructive flex items-center gap-1.5">
+                                            <AlertCircle className="h-3.5 w-3.5" />
+                                            {t('passwordsDoNotMatch')}
+                                        </p>
                                     )}
                                     {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                                        <div className="flex items-center gap-2 text-sm text-green-600 animate-in slide-in-from-top-1 duration-200 bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
-                                            <CheckCircle className="h-4 w-4" />
-                                            <span className="font-medium">{t('passwordsMatch')}</span>
-                                        </div>
+                                        <p className="text-sm text-green-600 flex items-center gap-1.5">
+                                            <CheckCircle className="h-3.5 w-3.5" />
+                                            {t('passwordsMatch')}
+                                        </p>
                                     )}
                                 </div>
-                                <div></div> {/* Empty div to maintain grid structure */}
                             </div>
                         </div>
 
                         {/* Profile Section */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20 p-4 rounded-xl -mx-4 px-4">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-md">
-                                    <Camera className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl lg:text-2xl font-bold text-foreground">Profile Information</h2>
-                                    <p className="text-sm text-muted-foreground mt-1">Profile image and additional user details</p>
-                                </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 pb-3 border-b">
+                                <h2 className="text-lg font-semibold">Profile Information</h2>
                             </div>
 
                             <ImageUploadField
@@ -533,36 +471,29 @@ This is an automated message from Soit-Med Admin Panel`;
                             />
 
                             {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <Label htmlFor="specialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                            {t('specialty')} <span className="text-destructive text-lg">*</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="specialty" className="text-sm font-medium">
+                                            {t('specialty')} <span className="text-destructive">*</span>
                                         </Label>
                                         <Input
                                             id="specialty"
                                             value={formData.specialty}
                                             onChange={(e) => onInputChange('specialty', e.target.value)}
                                             placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
-                                            className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                            className="h-10"
                                             required
                                         />
                                     </div>
-                                    <div></div> {/* Empty div to maintain grid structure */}
                                 </div>
                             )}
                         </div>
 
                         {/* Role-Specific Information Section */}
-                        {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'technician' || selectedRole === 'sales-manager' || selectedRole === 'maintenance-manager' || selectedRole === 'maintenance-support') && (
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20 p-4 rounded-xl -mx-4 px-4">
-                                    <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-md">
-                                        <Briefcase className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl lg:text-2xl font-bold text-foreground">Role-Specific Information</h2>
-                                        <p className="text-sm text-muted-foreground mt-1">Additional information specific to the selected role</p>
-                                    </div>
+                        {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'technician' || selectedRole === 'sales-manager' || selectedRole === 'maintenance-manager' || selectedRole === 'maintenance-support' || selectedRole === 'spare-parts-coordinator' || selectedRole === 'inventory-manager') && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 pb-3 border-b">
+                                    <h2 className="text-lg font-semibold">Role-Specific Information</h2>
                                 </div>
 
                                 {roleConfig.requiresHospital && (
@@ -601,36 +532,36 @@ This is an automated message from Soit-Med Admin Panel`;
                                             </div>
                                             Sales Manager Details
                                         </h3>
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <Label htmlFor="salesTerritory" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('salesTerritory')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="salesTerritory" className="text-sm font-medium">
+                                                    {t('salesTerritory')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
                                                 </Label>
                                                 <Input
                                                     id="salesTerritory"
                                                     value={formData.salesTerritory || ''}
                                                     onChange={(e) => onInputChange('salesTerritory', e.target.value)}
                                                     placeholder={t('enterSalesTerritory')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                 />
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label htmlFor="salesTeam" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('salesTeam')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="salesTeam" className="text-sm font-medium">
+                                                    {t('salesTeam')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
                                                 </Label>
                                                 <Input
                                                     id="salesTeam"
                                                     value={formData.salesTeam || ''}
                                                     onChange={(e) => onInputChange('salesTeam', e.target.value)}
                                                     placeholder={t('enterSalesTeam')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                 />
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label htmlFor="salesTarget" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('salesTarget')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="salesTarget" className="text-sm font-medium">
+                                                    {t('salesTarget')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
                                                 </Label>
                                                 <Input
                                                     id="salesTarget"
@@ -639,13 +570,13 @@ This is an automated message from Soit-Med Admin Panel`;
                                                     value={formData.salesTarget || ''}
                                                     onChange={(e) => onInputChange('salesTarget', e.target.value)}
                                                     placeholder={t('enterSalesTarget')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                 />
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label htmlFor="managerNotes" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('managerNotes')} <span className="text-muted-foreground text-xs bg-muted px-2 py-1 rounded-full">Optional</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="managerNotes" className="text-sm font-medium">
+                                                    {t('managerNotes')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
                                                 </Label>
                                                 <Textarea
                                                     id="managerNotes"
@@ -653,7 +584,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                                     onChange={(e) => onInputChange('managerNotes', e.target.value)}
                                                     placeholder={t('enterManagerNotes')}
                                                     rows={3}
-                                                    className={`transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl resize-none ${hasFieldError('managerNotes') ? 'border-destructive focus:border-destructive' : 'border-input'}`}
+                                                    className={`resize-none ${hasFieldError('managerNotes') ? 'border-destructive focus:border-destructive' : ''}`}
                                                 />
                                             </div>
                                         </div>
@@ -661,38 +592,33 @@ This is an automated message from Soit-Med Admin Panel`;
                                 )}
 
                                 {selectedRole === 'maintenance-manager' && (
-                                    <div className="col-span-full space-y-6 p-8 bg-gradient-to-br from-muted/30 to-muted/50 rounded-2xl border border-muted/50 shadow-lg">
-                                        <h3 className="text-xl font-semibold text-foreground flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-primary/10">
-                                                <div className="w-3 h-3 rounded-full bg-primary"></div>
-                                            </div>
-                                            Maintenance Manager Details
-                                        </h3>
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <Label htmlFor="maintenanceSpecialty" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('maintenanceSpecialty')} <span className="text-destructive text-lg">*</span>
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                        <h3 className="text-base font-semibold">Maintenance Manager Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="maintenanceSpecialty" className="text-sm font-medium">
+                                                    {t('maintenanceSpecialty')} <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="maintenanceSpecialty"
                                                     value={formData.maintenanceSpecialty || ''}
                                                     onChange={(e) => onInputChange('maintenanceSpecialty', e.target.value)}
                                                     placeholder={t('enterMaintenanceSpecialty')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                     required
                                                 />
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label htmlFor="certification" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('certification')} <span className="text-destructive text-lg">*</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="certification" className="text-sm font-medium">
+                                                    {t('certification')} <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="certification"
                                                     value={formData.certification || ''}
                                                     onChange={(e) => onInputChange('certification', e.target.value)}
                                                     placeholder={t('enterCertification')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                     required
                                                 />
                                             </div>
@@ -701,31 +627,26 @@ This is an automated message from Soit-Med Admin Panel`;
                                 )}
 
                                 {selectedRole === 'maintenance-support' && (
-                                    <div className="col-span-full space-y-6 p-8 bg-gradient-to-br from-muted/30 to-muted/50 rounded-2xl border border-muted/50 shadow-lg">
-                                        <h3 className="text-xl font-semibold text-foreground flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-primary/10">
-                                                <div className="w-3 h-3 rounded-full bg-primary"></div>
-                                            </div>
-                                            Maintenance Support Details
-                                        </h3>
-                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <Label htmlFor="jobTitle" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('jobTitle')} <span className="text-destructive text-lg">*</span>
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                        <h3 className="text-base font-semibold">Maintenance Support Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="jobTitle" className="text-sm font-medium">
+                                                    {t('jobTitle')} <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="jobTitle"
                                                     value={formData.jobTitle || ''}
                                                     onChange={(e) => onInputChange('jobTitle', e.target.value)}
                                                     placeholder={t('enterJobTitle')}
-                                                    className="h-12 transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl"
+                                                    className="h-10"
                                                     required
                                                 />
                                             </div>
 
-                                            <div className="space-y-3">
-                                                <Label htmlFor="technicalSkills" className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                                    {t('technicalSkills')} <span className="text-destructive text-lg">*</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="technicalSkills" className="text-sm font-medium">
+                                                    {t('technicalSkills')} <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Textarea
                                                     id="technicalSkills"
@@ -733,7 +654,49 @@ This is an automated message from Soit-Med Admin Panel`;
                                                     onChange={(e) => onInputChange('technicalSkills', e.target.value)}
                                                     placeholder={t('enterTechnicalSkills')}
                                                     rows={3}
-                                                    className={`transition-all duration-300 focus:border-primary hover:border-primary/50 rounded-xl resize-none ${hasFieldError('technicalSkills') ? 'border-destructive focus:border-destructive' : 'border-input'}`}
+                                                    className={`resize-none ${hasFieldError('technicalSkills') ? 'border-destructive focus:border-destructive' : ''}`}
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedRole === 'spare-parts-coordinator' && (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                        <h3 className="text-base font-semibold">Spare Parts Coordinator Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="specialty" className="text-sm font-medium">
+                                                    {t('specialty')} <span className="text-destructive">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="specialty"
+                                                    value={formData.specialty || ''}
+                                                    onChange={(e) => onInputChange('specialty', e.target.value)}
+                                                    placeholder={t('enterSparePartsSpecialty') || 'Enter spare parts specialty'}
+                                                    className="h-10"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedRole === 'inventory-manager' && (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                        <h3 className="text-base font-semibold">Inventory Manager Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="specialty" className="text-sm font-medium">
+                                                    {t('specialty')} <span className="text-destructive">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="specialty"
+                                                    value={formData.specialty || ''}
+                                                    onChange={(e) => onInputChange('specialty', e.target.value)}
+                                                    placeholder={t('enterInventorySpecialty') || 'Enter inventory specialty'}
+                                                    className="h-10"
                                                     required
                                                 />
                                             </div>
@@ -743,30 +706,30 @@ This is an automated message from Soit-Med Admin Panel`;
                             </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row gap-4 pt-8 mt-8 border-t-2 border-border/50 bg-gradient-to-r from-muted/30 via-muted/20 to-muted/30 -mx-6 px-6 py-8 rounded-b-2xl">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={onBack}
                                 disabled={isLoading}
-                                className="h-14 px-8 font-semibold transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xl disabled:opacity-50 border-2 rounded-xl"
+                                className="h-10"
                             >
-                                <ArrowLeft className="h-5 w-5 mr-2" />
+                                <ArrowLeft className="h-4 w-4 mr-2" />
                                 {t('back')}
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="h-14 px-8 font-semibold bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/90 hover:via-primary hover:to-primary text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 flex-1 rounded-xl"
+                                className="h-10 flex-1"
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                         <span>{t('creatingUserLoading')}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <UserPlus className="h-5 w-5 mr-2" />
+                                        <UserPlus className="h-4 w-4 mr-2" />
                                         <span>{t('createRoleUser').replace('{role}', roleConfig.name)}</span>
                                     </>
                                 )}
