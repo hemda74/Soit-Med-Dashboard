@@ -18,6 +18,8 @@ import {
 	Cog,
 	HardHat,
 	HeadphonesIcon,
+	Package,
+	Warehouse,
 } from 'lucide-react';
 import type { RoleSpecificUserRole } from '@/types/roleSpecificUser.types';
 
@@ -1481,6 +1483,210 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 			},
 		],
 		apiEndpoint: '/RoleSpecificUser/sales-support',
+	},
+
+	'spare-parts-coordinator': {
+		name: 'sparePartsCoordinator',
+		description: 'sparePartsCoordinatorDescription',
+		icon: Package,
+		requirements: {
+			requiresHospital: false,
+			requiresDepartment: false,
+			requiresGovernorates: false,
+			requiresMedicalDepartment: false,
+			autoDepartmentId: 4,
+			role: 'SparePartsCoordinator',
+		},
+		fields: [
+			// Personal Information
+			{
+				key: 'firstName',
+				label: 'firstName',
+				placeholder: 'enterFirstName',
+				type: 'text',
+				validation: { required: true, minLength: 2 },
+				section: 'personal',
+				order: 1,
+			},
+			{
+				key: 'lastName',
+				label: 'lastName',
+				placeholder: 'enterLastName',
+				type: 'text',
+				validation: { required: true, minLength: 2 },
+				section: 'personal',
+				order: 2,
+			},
+			{
+				key: 'phoneNumber',
+				label: 'phoneNumber',
+				placeholder: 'enterPhoneNumber',
+				type: 'tel',
+				section: 'personal',
+				order: 3,
+			},
+
+			// Account Credentials
+			{
+				key: 'email',
+				label: 'email',
+				placeholder: 'enterEmailAddress',
+				type: 'email',
+				validation: { required: true },
+				section: 'credentials',
+				order: 1,
+			},
+			{
+				key: 'password',
+				label: 'password',
+				placeholder: 'enterPasswordField',
+				type: 'password',
+				validation: { required: true, minLength: 8 },
+				section: 'credentials',
+				order: 2,
+			},
+			{
+				key: 'confirmPassword',
+				label: 'confirmPassword',
+				placeholder: 'confirmPasswordPlaceholder',
+				type: 'password',
+				validation: { required: true },
+				section: 'credentials',
+				order: 3,
+			},
+
+			// Profile Information
+			{
+				key: 'profileImage',
+				label: 'profileImage',
+				placeholder: 'selectProfileImage',
+				type: 'file',
+				section: 'profile',
+				order: 1,
+			},
+			{
+				key: 'imageAltText',
+				label: 'imageAltText',
+				placeholder: 'enterImageAltText',
+				type: 'text',
+				section: 'profile',
+				order: 2,
+			},
+
+			// Role-Specific Information
+			{
+				key: 'specialty',
+				label: 'specialty',
+				placeholder: 'enterSparePartsSpecialty',
+				type: 'text',
+				validation: { required: true },
+				section: 'role-specific',
+				order: 1,
+			},
+		],
+		apiEndpoint: '/RoleSpecificUser/spare-parts-coordinator',
+	},
+
+	'inventory-manager': {
+		name: 'inventoryManager',
+		description: 'inventoryManagerDescription',
+		icon: Warehouse,
+		requirements: {
+			requiresHospital: false,
+			requiresDepartment: false,
+			requiresGovernorates: false,
+			requiresMedicalDepartment: false,
+			autoDepartmentId: 4,
+			role: 'InventoryManager',
+		},
+		fields: [
+			// Personal Information
+			{
+				key: 'firstName',
+				label: 'firstName',
+				placeholder: 'enterFirstName',
+				type: 'text',
+				validation: { required: true, minLength: 2 },
+				section: 'personal',
+				order: 1,
+			},
+			{
+				key: 'lastName',
+				label: 'lastName',
+				placeholder: 'enterLastName',
+				type: 'text',
+				validation: { required: true, minLength: 2 },
+				section: 'personal',
+				order: 2,
+			},
+			{
+				key: 'phoneNumber',
+				label: 'phoneNumber',
+				placeholder: 'enterPhoneNumber',
+				type: 'tel',
+				section: 'personal',
+				order: 3,
+			},
+
+			// Account Credentials
+			{
+				key: 'email',
+				label: 'email',
+				placeholder: 'enterEmailAddress',
+				type: 'email',
+				validation: { required: true },
+				section: 'credentials',
+				order: 1,
+			},
+			{
+				key: 'password',
+				label: 'password',
+				placeholder: 'enterPasswordField',
+				type: 'password',
+				validation: { required: true, minLength: 8 },
+				section: 'credentials',
+				order: 2,
+			},
+			{
+				key: 'confirmPassword',
+				label: 'confirmPassword',
+				placeholder: 'confirmPasswordPlaceholder',
+				type: 'password',
+				validation: { required: true },
+				section: 'credentials',
+				order: 3,
+			},
+
+			// Profile Information
+			{
+				key: 'profileImage',
+				label: 'profileImage',
+				placeholder: 'selectProfileImage',
+				type: 'file',
+				section: 'profile',
+				order: 1,
+			},
+			{
+				key: 'imageAltText',
+				label: 'imageAltText',
+				placeholder: 'enterImageAltText',
+				type: 'text',
+				section: 'profile',
+				order: 2,
+			},
+
+			// Role-Specific Information
+			{
+				key: 'specialty',
+				label: 'specialty',
+				placeholder: 'enterInventorySpecialty',
+				type: 'text',
+				validation: { required: true },
+				section: 'role-specific',
+				order: 1,
+			},
+		],
+		apiEndpoint: '/RoleSpecificUser/inventory-manager',
 	},
 };
 

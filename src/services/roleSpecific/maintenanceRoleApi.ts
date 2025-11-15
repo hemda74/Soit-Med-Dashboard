@@ -150,3 +150,123 @@ export const createMaintenanceSupport = async (
 		token
 	);
 };
+
+export const createSparePartsCoordinator = async (
+	userData: {
+		email: string;
+		password: string;
+		firstName?: string;
+		lastName?: string;
+		phoneNumber?: string;
+		dateOfBirth?: string;
+		departmentId?: number;
+		specialty?: string;
+		profileImage?: File;
+		altText?: string;
+	},
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	console.log('Creating spare parts coordinator:', userData);
+
+	const formData = new FormData();
+
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+	if (userData.specialty) {
+		formData.append('Specialty', userData.specialty);
+	}
+
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
+	}
+	if (userData.dateOfBirth) {
+		formData.append('DateOfBirth', userData.dateOfBirth);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.SPARE_PARTS_COORDINATOR,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+};
+
+export const createInventoryManager = async (
+	userData: {
+		email: string;
+		password: string;
+		firstName?: string;
+		lastName?: string;
+		phoneNumber?: string;
+		dateOfBirth?: string;
+		departmentId?: number;
+		specialty?: string;
+		profileImage?: File;
+		altText?: string;
+	},
+	token: string
+): Promise<RoleSpecificUserResponse> => {
+	console.log('Creating inventory manager:', userData);
+
+	const formData = new FormData();
+
+	formData.append('Email', userData.email);
+	formData.append('Password', userData.password);
+	if (userData.specialty) {
+		formData.append('Specialty', userData.specialty);
+	}
+
+	if (userData.firstName) {
+		formData.append('FirstName', userData.firstName);
+	}
+	if (userData.lastName) {
+		formData.append('LastName', userData.lastName);
+	}
+	if (userData.phoneNumber) {
+		formData.append('PhoneNumber', userData.phoneNumber);
+	}
+	if (userData.dateOfBirth) {
+		formData.append('DateOfBirth', userData.dateOfBirth);
+	}
+	if (userData.departmentId) {
+		formData.append(
+			'DepartmentId',
+			userData.departmentId.toString()
+		);
+	}
+	if (userData.profileImage) {
+		formData.append('profileImage', userData.profileImage);
+	}
+	if (userData.altText) {
+		formData.append('AltText', userData.altText);
+	}
+
+	return apiRequest<RoleSpecificUserResponse>(
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.INVENTORY_MANAGER,
+		{
+			method: 'POST',
+			body: formData,
+		},
+		token
+	);
+};

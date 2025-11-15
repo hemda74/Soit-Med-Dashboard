@@ -118,8 +118,12 @@ export const UserUpdateForm: React.FC<UserUpdateFormProps> = ({
                                     <SelectItem value="SalesManager">SalesManager</SelectItem>
                                     <SelectItem value="FinanceManager">FinanceManager</SelectItem>
                                     <SelectItem value="FinanceEmployee">FinanceEmployee</SelectItem>
-                                    <SelectItem value="LegalManager">LegalManager</SelectItem>
-                                    <SelectItem value="LegalEmployee">LegalEmployee</SelectItem>
+                                <SelectItem value="LegalManager">LegalManager</SelectItem>
+                                <SelectItem value="LegalEmployee">LegalEmployee</SelectItem>
+                                <SelectItem value="MaintenanceManager">MaintenanceManager</SelectItem>
+                                <SelectItem value="MaintenanceSupport">MaintenanceSupport</SelectItem>
+                                <SelectItem value="SparePartsCoordinator">SparePartsCoordinator</SelectItem>
+                                <SelectItem value="InventoryManager">InventoryManager</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

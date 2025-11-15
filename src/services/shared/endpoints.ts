@@ -66,6 +66,8 @@ export const API_ENDPOINTS = {
 		SALES_MANAGER: '/RoleSpecificUser/sales-manager',
 		MAINTENANCE_MANAGER: '/RoleSpecificUser/maintenance-manager',
 		MAINTENANCE_SUPPORT: '/RoleSpecificUser/maintenance-support',
+		SPARE_PARTS_COORDINATOR: '/RoleSpecificUser/spare-parts-coordinator',
+		INVENTORY_MANAGER: '/RoleSpecificUser/inventory-manager',
 	},
 
 	// Sales Reports (Legacy - kept for backward compatibility)
@@ -198,6 +200,7 @@ export const API_ENDPOINTS = {
 		// Offers (ENHANCED) - For SalesManager/SuperAdmin only
 		OFFERS: {
 			BASE: '/api/Offer',
+			ALL: '/api/Offer/all', // SuperAdmin only - with filters and pagination
 			BY_ID: (id: number | string) => `/api/Offer/${id}`,
 			MY_OFFERS: '/api/Offer/my-offers',
 			SALESMEN: '/api/Offer/salesmen',
@@ -212,6 +215,10 @@ export const API_ENDPOINTS = {
 				id: number | string,
 				equipmentId: number
 			) => `/api/Offer/${id}/equipment/${equipmentId}`,
+			EQUIPMENT_IMAGE: (
+				id: number | string,
+				equipmentId: number
+			) => `/api/Offer/${id}/equipment/${equipmentId}/image`,
 			UPLOAD_IMAGE: (
 				id: number | string,
 				equipmentId: number
@@ -223,8 +230,6 @@ export const API_ENDPOINTS = {
 				`/api/Offer/${id}/installments`,
 			SEND_TO_SALESMAN: (id: number | string) =>
 				`/api/Offer/${id}/send-to-salesman`,
-			EXPORT_PDF: (id: number | string) =>
-				`/api/Offer/${id}/export-pdf`,
 		},
 		// Offer Requests (NEW)
 		OFFER_REQUESTS: {
@@ -275,5 +280,83 @@ export const API_ENDPOINTS = {
 		},
 		// Weekly Plan Tasks (removed - use WEEKLY_PLAN.TASKS instead)
 		// WEEKLY_PLAN_TASKS has been removed in favor of WEEKLY_PLAN.TASKS
+	},
+
+	// Maintenance Module
+	MAINTENANCE: {
+		// Maintenance Requests
+		REQUEST: {
+			BASE: '/api/MaintenanceRequest',
+			BY_ID: (id: number) => `/api/MaintenanceRequest/${id}`,
+			CUSTOMER_MY_REQUESTS:
+				'/api/MaintenanceRequest/customer/my-requests',
+			ENGINEER_MY_ASSIGNED:
+				'/api/MaintenanceRequest/engineer/my-assigned',
+			PENDING: '/api/MaintenanceRequest/pending',
+			ASSIGN: (id: number) =>
+				`/api/MaintenanceRequest/${id}/assign`,
+		},
+		// Maintenance Visits
+		VISIT: {
+			BASE: '/api/MaintenanceVisit',
+			BY_REQUEST: (requestId: number) =>
+				`/api/MaintenanceVisit/request/${requestId}`,
+			BY_ENGINEER: (engineerId: string) =>
+				`/api/MaintenanceVisit/engineer/${engineerId}`,
+		},
+		// Maintenance Attachments
+		ATTACHMENT: {
+			UPLOAD: '/api/MaintenanceAttachment/upload',
+			BY_ID: (id: number) =>
+				`/api/MaintenanceAttachment/${id}`,
+			BY_REQUEST: (requestId: number) =>
+				`/api/MaintenanceAttachment/request/${requestId}`,
+			DELETE: (id: number) =>
+				`/api/MaintenanceAttachment/${id}`,
+		},
+		// Spare Part Requests
+		SPARE_PART: {
+			BASE: '/api/SparePartRequest',
+			BY_ID: (id: number) => `/api/SparePartRequest/${id}`,
+			CHECK_AVAILABILITY: (id: number) =>
+				`/api/SparePartRequest/${id}/check-availability`,
+			SET_PRICE: (id: number) =>
+				`/api/SparePartRequest/${id}/set-price`,
+			CUSTOMER_APPROVAL: (id: number) =>
+				`/api/SparePartRequest/${id}/customer-approval`,
+		},
+	},
+
+	// Payment Module
+	PAYMENT: {
+		BASE: '/api/Payment',
+		BY_ID: (id: number) => `/api/Payment/${id}`,
+		CUSTOMER_MY_PAYMENTS: '/api/Payment/customer/my-payments',
+		STRIPE: (id: number) => `/api/Payment/${id}/stripe`,
+		PAYPAL: (id: number) => `/api/Payment/${id}/paypal`,
+		CASH: (id: number) => `/api/Payment/${id}/cash`,
+		BANK_TRANSFER: (id: number) =>
+			`/api/Payment/${id}/bank-transfer`,
+		REFUND: (id: number) => `/api/Payment/${id}/refund`,
+	},
+
+	// Accounting Module
+	ACCOUNTING: {
+		PAYMENTS_PENDING: '/api/Accounting/payments/pending',
+		PAYMENTS: '/api/Accounting/payments',
+		PAYMENT_BY_ID: (id: number) => `/api/Accounting/payments/${id}`,
+		CONFIRM_PAYMENT: (id: number) =>
+			`/api/Accounting/payments/${id}/confirm`,
+		REJECT_PAYMENT: (id: number) =>
+			`/api/Accounting/payments/${id}/reject`,
+		REPORTS_DAILY: '/api/Accounting/reports/daily',
+		REPORTS_MONTHLY: '/api/Accounting/reports/monthly',
+		REPORTS_YEARLY: '/api/Accounting/reports/yearly',
+		STATISTICS_PAYMENT_METHODS:
+			'/api/Accounting/statistics/payment-methods',
+		STATISTICS_OUTSTANDING:
+			'/api/Accounting/statistics/outstanding',
+		MAINTENANCE_PAYMENTS: '/api/Accounting/maintenance/payments',
+		SPARE_PARTS_PAYMENTS: '/api/Accounting/spare-parts/payments',
 	},
 } as const;
