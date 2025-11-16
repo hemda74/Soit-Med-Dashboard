@@ -25,16 +25,16 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 import type { CreateWeeklyPlanDto } from '@/types/weeklyPlan.types';
 
 const taskSchema = z.object({
-    taskType: z.enum(['Visit', 'FollowUp', 'Call', 'Email', 'Meeting']),
+    title: z.string().min(1, 'Title is required'),
     clientId: z.number().optional(),
     clientName: z.string().optional(),
     clientStatus: z.string().optional(),
     clientClassification: z.string().optional(),
+    clientPhone: z.string().optional(),
+    clientAddress: z.string().optional(),
+    clientLocation: z.string().optional(),
     plannedDate: z.string().min(1, 'Planned date is required'),
-    plannedTime: z.string().optional(),
-    purpose: z.string().optional(),
-    priority: z.enum(['High', 'Medium', 'Low']),
-    status: z.enum(['Planned', 'InProgress', 'Completed', 'Cancelled']),
+    notes: z.string().optional(),
 });
 
 const createPlanSchema = z.object({

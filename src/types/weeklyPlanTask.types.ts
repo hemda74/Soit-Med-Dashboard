@@ -5,25 +5,17 @@
 export interface WeeklyPlanTask {
 	id: number;
 	weeklyPlanId: number;
-	taskType: 'Visit' | 'FollowUp';
+	title: string;
 	clientId?: number; // NULL for new clients
 	clientStatus?: 'Old' | 'New';
-	// For NEW clients - basic info
 	clientName?: string;
-	placeName?: string;
-	placeType?: 'Hospital' | 'Clinic' | 'Lab' | 'Pharmacy';
 	clientPhone?: string;
 	clientAddress?: string;
 	clientLocation?: string;
-	// Client Classification
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
-	// Task Planning
 	plannedDate: string;
-	plannedTime?: string;
-	purpose?: string;
-	notes?: string;
-	priority: 'High' | 'Medium' | 'Low';
-	status: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	notes?: string; // Description
+	isActive?: boolean;
 	createdAt: string;
 	updatedAt: string;
 	// Navigation Properties (populated by API)
@@ -39,32 +31,27 @@ export interface WeeklyPlanTask {
 }
 
 export interface CreateWeeklyPlanTaskDto {
-	taskType: 'Visit' | 'FollowUp';
+	title: string;
 	clientId?: number; // NULL for new client
 	clientStatus?: 'Old' | 'New';
-	// For new clients
 	clientName?: string;
-	placeName?: string;
-	placeType?: 'Hospital' | 'Clinic' | 'Lab' | 'Pharmacy';
 	clientPhone?: string;
 	clientAddress?: string;
 	clientLocation?: string;
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
 	plannedDate: string;
-	plannedTime?: string;
-	purpose?: string;
-	notes?: string;
-	priority: 'High' | 'Medium' | 'Low';
+	notes?: string; // Description
 }
 
 export interface UpdateWeeklyPlanTaskDto {
-	taskType?: 'Visit' | 'FollowUp';
+	title?: string;
+	clientName?: string;
+	clientPhone?: string;
+	clientAddress?: string;
+	clientLocation?: string;
+	clientClassification?: string;
 	plannedDate?: string;
-	plannedTime?: string;
-	purpose?: string;
-	notes?: string;
-	priority?: 'High' | 'Medium' | 'Low';
-	status?: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	notes?: string; // Description
 }
 
 export interface TaskProgressSummary {
@@ -73,7 +60,6 @@ export interface TaskProgressSummary {
 	progressType: string;
 	visitResult?: string;
 	nextStep?: string;
-	satisfactionRating?: number;
 }
 
 // ==================== CONSTANTS ====================
@@ -153,9 +139,6 @@ export interface PaginatedApiResponseWithMeta<T> {
 export interface WeeklyPlanTaskFilters {
 	weeklyPlanId?: number;
 	clientId?: number;
-	taskType?: 'Visit' | 'FollowUp';
-	status?: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
-	priority?: 'High' | 'Medium' | 'Low';
 	plannedDateFrom?: string;
 	plannedDateTo?: string;
 	page?: number;
@@ -165,24 +148,14 @@ export interface WeeklyPlanTaskFilters {
 // ==================== FORM TYPES ====================
 
 export interface WeeklyPlanTaskFormData {
-	taskType: 'Visit' | 'FollowUp';
+	title: string;
 	clientId?: number;
 	clientStatus: 'Old' | 'New';
-	// For new clients
 	clientName?: string;
-	placeName?: string;
-	placeType?: 'Hospital' | 'Clinic' | 'Lab' | 'Pharmacy';
 	clientPhone?: string;
 	clientAddress?: string;
 	clientLocation?: string;
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
 	plannedDate: string;
-	plannedTime?: string;
-	purpose?: string;
-	notes?: string;
-	priority: 'High' | 'Medium' | 'Low';
+	notes?: string; // Description
 }
-
-
-
-

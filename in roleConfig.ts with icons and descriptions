@@ -1,0 +1,24 @@
+warning: in the working copy of 'src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/admin/RoleSpecificUserCreation.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/admin/UserCreationForm.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/admin/UserUpdateForm.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/layout/AppSidebar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/config/roleConfig.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/hooks/useUserCreationForm.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/translations.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/services/roleSpecific/baseRoleSpecificApi.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/services/roleSpecific/maintenanceRoleApi.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/services/shared/endpoints.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/types/roleSpecificUser.types.ts', LF will be replaced by CRLF the next time Git touches it
+src/App.tsx
+src/components/admin/RoleSpecificUserCreation.tsx
+src/components/admin/UserCreationForm.tsx
+src/components/admin/UserUpdateForm.tsx
+src/components/layout/AppSidebar.tsx
+src/config/roleConfig.ts
+src/hooks/useUserCreationForm.ts
+src/lib/translations.ts
+src/services/roleSpecific/baseRoleSpecificApi.ts
+src/services/roleSpecific/maintenanceRoleApi.ts
+src/services/shared/endpoints.ts
+src/types/roleSpecificUser.types.ts

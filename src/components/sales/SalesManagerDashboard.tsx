@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DealApprovalForm from './DealApprovalForm';
 import type { Deal } from '@/types/sales.types';
+import { usePerformance } from '@/hooks/usePerformance';
 
 // Helper function to safely format dates
 const safeFormatDate = (date: any, fallback: string = 'N/A'): string => {
@@ -34,6 +35,7 @@ const safeFormatDate = (date: any, fallback: string = 'N/A'): string => {
 };
 
 const SalesManagerDashboard: React.FC = () => {
+	usePerformance('SalesManagerDashboard');
 	const {
 		getSalesManagerDashboard,
 		getSalesReports,

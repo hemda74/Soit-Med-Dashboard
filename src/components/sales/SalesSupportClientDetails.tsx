@@ -49,21 +49,14 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
                                 {client.name}
                             </h3>
                             <div className="mt-1 flex items-center gap-2">
-                                <Badge variant="outline">{client.type}</Badge>
-                                {client.specialization && (
-                                    <Badge variant="outline">{client.specialization}</Badge>
+                                {client.classification && (
+                                    <Badge variant="outline">Classification: {client.classification}</Badge>
+                                )}
+                                {client.organizationName && (
+                                    <Badge variant="outline">{client.organizationName}</Badge>
                                 )}
                             </div>
                         </div>
-                        {client.status && (
-                            <Badge className={`
-								${client.status === 'Active' ? 'bg-green-100 text-green-800' : ''}
-								${client.status === 'Potential' ? 'bg-yellow-100 text-yellow-800' : ''}
-								${client.status === 'Inactive' ? 'bg-gray-100 text-gray-800' : ''}
-							`}>
-                                {client.status}
-                            </Badge>
-                        )}
                     </div>
 
                     {/* Contact Details */}
@@ -81,75 +74,33 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
                             </div>
                         )}
 
-                        {/* Email */}
-                        {client.email && (
-                            <div className="flex items-center gap-3">
-                                <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.email}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Location */}
-                        {client.location && (
-                            <div className="flex items-center gap-3">
-                                <MapPinIcon className="h-5 w-5 text-gray-400" />
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Location</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.location}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Contact Person */}
-                        {client.contactPerson && (
+                        {/* Organization Name */}
+                        {client.organizationName && (
                             <div className="flex items-center gap-3">
                                 <BuildingOfficeIcon className="h-5 w-5 text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Contact Person</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Organization</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.contactPerson}
+                                        {client.organizationName}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Classification */}
+                        {client.classification && (
+                            <div className="flex items-center gap-3">
+                                <MapPinIcon className="h-5 w-5 text-gray-400" />
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Classification</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {client.classification}
                                     </p>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* Additional Contact Info */}
-                    {(client.contactPersonPhone || client.contactPersonEmail || client.address) && (
-                        <div className="pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {client.contactPersonPhone && (
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Contact Phone</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.contactPersonPhone}
-                                    </p>
-                                </div>
-                            )}
-                            {client.contactPersonEmail && (
-                                <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Contact Email</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.contactPersonEmail}
-                                    </p>
-                                </div>
-                            )}
-                            {client.address && (
-                                <div className="md:col-span-2">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Address</p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {client.address}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </CardContent>
             </Card>
 

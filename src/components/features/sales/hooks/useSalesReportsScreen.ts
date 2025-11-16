@@ -100,7 +100,6 @@ export const useSalesReportsScreen = () => {
 	const handleViewComments = useCallback(
 		(report: SalesReportResponseDto) => {
 			// TODO: Implement comments functionality
-			console.log('View comments for report:', report.id);
 		},
 		[]
 	);

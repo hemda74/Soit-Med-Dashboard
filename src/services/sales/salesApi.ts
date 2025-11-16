@@ -24,6 +24,7 @@ import type {
 } from '@/types/sales.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
+import { performanceMonitor } from '@/utils/performance';
 
 // Weekly Plan Types
 interface WeeklyPlan {
@@ -170,33 +171,38 @@ class SalesApiService {
 		endpoint: string,
 		options: RequestInit = {}
 	): Promise<T> {
-		const token = getAuthToken();
-		if (!token) {
-			throw new Error(
-				'No authentication token found. Please log in again.'
-			);
-		}
+		return performanceMonitor.measureApiCall(endpoint, async () => {
+			const token = getAuthToken();
+			if (!token) {
+				throw new Error(
+					'No authentication token found. Please log in again.'
+				);
+			}
 
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-			...options,
-			headers: {
-				Authorization: `Bearer ${token}`,
-				'Content-Type': 'application/json',
-				...options.headers,
-			},
-		});
+			const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+				...options,
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+					...options.headers,
+				},
+			});
 
 		if (!response.ok) {
 			const errorData = await response
 				.json()
 				.catch(() => ({}));
-			throw new Error(
+			const error: any = new Error(
 				errorData.message ||
 					`API request failed with status ${response.status}`
 			);
+			error.status = response.status;
+			error.response = errorData;
+			throw error;
 		}
 
-		return response.json();
+			return response.json();
+		});
 	}
 
 	// ==================== CLIENT MANAGEMENT ====================
@@ -209,17 +215,10 @@ class SalesApiService {
 	): Promise<PaginatedApiResponse<ClientSearchResult>> {
 		const queryParams = new URLSearchParams();
 
-		if (filters.query) queryParams.append('query', filters.query);
-		if (filters.type) queryParams.append('type', filters.type);
-		if (filters.specialization)
-			queryParams.append(
-				'specialization',
-				filters.specialization
-			);
-		if (filters.location)
-			queryParams.append('location', filters.location);
-		if (filters.status)
-			queryParams.append('status', filters.status);
+		if (filters.query)
+			queryParams.append('searchTerm', filters.query);
+		if (filters.classification)
+			queryParams.append('classification', filters.classification);
 		if (filters.assignedSalesmanId)
 			queryParams.append(
 				'assignedSalesmanId',
@@ -1449,6 +1448,23 @@ class SalesApiService {
 		);
 	}
 
+	async superAdminApproval(
+		dealId: string,
+		data: {
+			approved: boolean;
+			notes?: string;
+			superAdminRequired?: boolean;
+		}
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.SUPERADMIN_APPROVAL(dealId),
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
 	async completeDeal(
 		dealId: string,
 		data: { completionNotes: string }
@@ -1483,11 +1499,31 @@ class SalesApiService {
 		);
 	}
 
+	async getPendingSuperAdminApprovals(): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.DEALS.PENDING_SUPERADMIN,
+			{ method: 'GET' }
+		);
+	}
+
 	// ==================== OFFERS ====================
 
 	async createOffer(data: any): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.BASE,
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	/**
+	 * Create offer with items (preserves product images)
+	 */
+	async createOfferWithItems(data: any): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BASE}/with-items`,
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -1514,6 +1550,53 @@ class SalesApiService {
 			? `${API_ENDPOINTS.SALES.OFFERS.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFERS.BASE;
 		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get all offers with filters and pagination (SuperAdmin only)
+	 */
+	async getAllOffersWithFilters(
+		filters: {
+			status?: string;
+			salesmanId?: string;
+			page?: number;
+			pageSize?: number;
+			startDate?: string;
+			endDate?: string;
+		} = {}
+	): Promise<ApiResponse<{
+		offers: any[];
+		totalCount: number;
+		page: number;
+		pageSize: number;
+		totalPages: number;
+		hasPreviousPage: boolean;
+		hasNextPage: boolean;
+	}>> {
+		const queryParams = new URLSearchParams();
+		if (filters.status) queryParams.append('status', filters.status);
+		if (filters.salesmanId) queryParams.append('salesmanId', filters.salesmanId);
+		if (filters.page) queryParams.append('page', filters.page.toString());
+		if (filters.pageSize) queryParams.append('pageSize', filters.pageSize.toString());
+		if (filters.startDate) queryParams.append('startDate', filters.startDate);
+		if (filters.endDate) queryParams.append('endDate', filters.endDate);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFERS.ALL}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFERS.ALL;
+
+		return this.makeRequest<ApiResponse<{
+			offers: any[];
+			totalCount: number;
+			page: number;
+			pageSize: number;
+			totalPages: number;
+			hasPreviousPage: boolean;
+			hasNextPage: boolean;
+		}>>(endpoint, {
 			method: 'GET',
 		});
 	}
@@ -1552,10 +1635,67 @@ class SalesApiService {
 		data: any
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/response`,
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/client-response`,
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async completeOffer(
+		offerId: string,
+		completionNotes?: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/complete`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ completionNotes }),
+			}
+		);
+	}
+
+	async markAsNeedsModification(
+		offerId: string,
+		reason?: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/needs-modification`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ reason }),
+			}
+		);
+	}
+
+	async markAsUnderReview(
+		offerId: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/under-review`,
+			{
+				method: 'POST',
+			}
+		);
+	}
+
+	async updateExpiredOffers(): Promise<ApiResponse<{ expiredCount: number }>> {
+		return this.makeRequest<ApiResponse<{ expiredCount: number }>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BASE}/update-expired`,
+			{
+				method: 'POST',
+			}
+		);
+	}
+
+	async getRecentActivity(
+		limit: number = 20
+	): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BASE}/recent-activity?limit=${limit}`,
+			{
+				method: 'GET',
 			}
 		);
 	}
@@ -1616,12 +1756,7 @@ class SalesApiService {
 
 	async getOfferRequests(
 		filters: {
-			status?:
-				| 'Pending'
-				| 'Assigned'
-				| 'InProgress'
-				| 'Completed'
-				| 'Cancelled';
+			status?: string; // Single status or comma-separated statuses like 'Requested,Assigned,InProgress,Ready'
 			requestedBy?: string;
 			page?: number;
 			pageSize?: number;
@@ -1655,10 +1790,11 @@ class SalesApiService {
 			requestedProducts: string;
 			specialNotes: string;
 			status:
-				| 'Pending'
+				| 'Requested'
 				| 'Assigned'
 				| 'InProgress'
-				| 'Completed'
+				| 'Ready'
+				| 'Sent'
 				| 'Cancelled';
 		}>
 	): Promise<ApiResponse<any>> {
@@ -1694,10 +1830,11 @@ class SalesApiService {
 		requestId: string | number,
 		data: {
 			status:
-				| 'Pending'
+				| 'Requested'
 				| 'Assigned'
 				| 'InProgress'
-				| 'Completed'
+				| 'Ready'
+				| 'Sent'
 				| 'Cancelled';
 			notes?: string;
 		}
@@ -1721,10 +1858,11 @@ class SalesApiService {
 		supportId: string,
 		filters: {
 			status?:
-				| 'Pending'
+				| 'Requested'
 				| 'Assigned'
 				| 'InProgress'
-				| 'Completed'
+				| 'Ready'
+				| 'Sent'
 				| 'Cancelled';
 		} = {}
 	): Promise<ApiResponse<any[]>> {
@@ -1866,19 +2004,29 @@ class SalesApiService {
 	 * List salesmen for assignment
 	 * GET /api/Offer/salesmen?q=term
 	 */
-	async getOfferSalesmen(q?: string): Promise<ApiResponse<Array<{
-		id: string;
-		firstName: string;
-		lastName: string;
-		email: string;
-		phoneNumber: string;
-		userName: string;
-		isActive: boolean;
-	}>>> {
-		const endpoint = q && q.trim()
-			? `${API_ENDPOINTS.SALES.OFFERS.SALESMEN}?q=${encodeURIComponent(q.trim())}`
-			: API_ENDPOINTS.SALES.OFFERS.SALESMEN
-		return this.makeRequest<ApiResponse<Array<any>>>(endpoint, { method: 'GET' })
+	async getOfferSalesmen(q?: string): Promise<
+		ApiResponse<
+			Array<{
+				id: string;
+				firstName: string;
+				lastName: string;
+				email: string;
+				phoneNumber: string;
+				userName: string;
+				isActive: boolean;
+			}>
+		>
+	> {
+		const endpoint =
+			q && q.trim()
+				? `${
+						API_ENDPOINTS.SALES.OFFERS
+							.SALESMEN
+				  }?q=${encodeURIComponent(q.trim())}`
+				: API_ENDPOINTS.SALES.OFFERS.SALESMEN;
+		return this.makeRequest<ApiResponse<Array<any>>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	/**
@@ -1891,13 +2039,20 @@ class SalesApiService {
 				offerId: number;
 				name: string;
 				model?: string;
+				provider?: string; // Backend uses "Provider"
+				country?: string;
+				year?: number;
+				price: number; // Backend uses "Price" (decimal)
+				description?: string;
+				inStock: boolean; // Backend uses "InStock"
+				imagePath?: string | null;
+				// Legacy fields for backward compatibility
 				manufacturer?: string;
-				quantity: number;
-				unitPrice: number;
-				totalPrice: number;
+				quantity?: number;
+				unitPrice?: number;
+				totalPrice?: number;
 				specifications?: string;
 				warrantyPeriod?: string;
-				imagePath?: string | null;
 			}>
 		>
 	> {
@@ -1908,16 +2063,36 @@ class SalesApiService {
 					offerId: number;
 					name: string;
 					model?: string;
+					provider?: string;
+					country?: string;
+					year?: number;
+					price: number;
+					description?: string;
+					inStock: boolean;
+					imagePath?: string | null;
 					manufacturer?: string;
-					quantity: number;
-					unitPrice: number;
-					totalPrice: number;
+					quantity?: number;
+					unitPrice?: number;
+					totalPrice?: number;
 					specifications?: string;
 					warrantyPeriod?: string;
-					imagePath?: string | null;
 				}>
 			>
 		>(API_ENDPOINTS.SALES.OFFERS.EQUIPMENT(offerId), {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get equipment image path
+	 */
+	async getEquipmentImage(
+		offerId: string | number,
+		equipmentId: number
+	): Promise<ApiResponse<{ imagePath: string; equipmentId: number; offerId: number }>> {
+		return this.makeRequest<
+			ApiResponse<{ imagePath: string; equipmentId: number; offerId: number }>
+		>(API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_IMAGE(offerId, equipmentId), {
 			method: 'GET',
 		});
 	}
@@ -2133,38 +2308,6 @@ class SalesApiService {
 			method: 'POST',
 			body: JSON.stringify(installmentData),
 		});
-	}
-
-	/**
-	 * Export offer as PDF
-	 */
-	async exportOfferPdf(offerId: string | number): Promise<Blob> {
-		const token = getAuthToken();
-		if (!token) {
-			throw new Error(
-				'No authentication token found. Please log in again.'
-			);
-		}
-
-		const response = await fetch(
-			`${API_BASE_URL}${API_ENDPOINTS.SALES.OFFERS.EXPORT_PDF(
-				offerId
-			)}`,
-			{
-				method: 'GET',
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
-
-		if (!response.ok) {
-			throw new Error(
-				`PDF export failed with status ${response.status}`
-			);
-		}
-
-		return response.blob();
 	}
 
 	/**

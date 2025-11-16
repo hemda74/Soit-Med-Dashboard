@@ -1,8 +1,6 @@
 import React, { useRef } from 'react';
 import { Upload, Image as ImageIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface ImageUploadFieldProps {
@@ -25,7 +23,6 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 
     return (
         <div className="space-y-2">
-            <Label>{t('profileImage')}</Label>
 
             {/* Image Upload Area */}
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">

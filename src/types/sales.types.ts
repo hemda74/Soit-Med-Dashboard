@@ -5,31 +5,14 @@
 export interface Client {
 	id: string;
 	name: string;
-	annualRevenue?: number;
-	type: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
-	specialization?: string;
-	location: string;
-	phone: string;
-	email: string;
-	status: 'Potential' | 'Active' | 'Inactive';
-	priority: 'Low' | 'Medium' | 'High';
+	phone?: string;
+	organizationName?: string;
+	classification?: 'A' | 'B' | 'C' | 'D';
+	createdBy: string;
+	assignedTo?: string;
+	assignedSalesmanName?: string; // For display purposes
 	createdAt: string;
 	updatedAt: string;
-	lastContactDate?: string;
-	nextContactDate?: string;
-	notes?: string;
-	assignedSalesmanId: string;
-	assignedSalesmanName: string;
-	// Backend-required fields
-	address?: string;
-	city?: string;
-	governorate?: string;
-	contactPerson?: string;
-	contactPersonPhone?: string;
-	contactPersonEmail?: string;
-	classification?: 'A' | 'B' | 'C' | 'D';
-	potentialValue?: number;
-	satisfactionRating?: number;
 	// Sales tracking - Updated to match new business logic
 	totalVisits: number;
 	totalOffers: number;
@@ -43,49 +26,23 @@ export interface Client {
 
 export interface CreateClientDto {
 	name: string;
-	type: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
-	specialization?: string;
-	location: string;
-	phone: string;
-	email: string;
-	priority: 'Low' | 'Medium' | 'High';
-	notes?: string;
-	address?: string;
-	city?: string;
-	governorate?: string;
-	contactPerson?: string;
-	contactPersonPhone?: string;
-	contactPersonEmail?: string;
+	phone?: string;
+	organizationName?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
-	potentialValue?: number;
+	assignedTo?: string;
 }
 
 export interface UpdateClientDto {
 	name?: string;
-	type?: 'Hospital' | 'Clinic' | 'Pharmacy' | 'Lab';
-	specialization?: string;
-	location?: string;
 	phone?: string;
-	email?: string;
-	status?: 'Potential' | 'Active' | 'Inactive';
-	priority?: 'Low' | 'Medium' | 'High';
-	notes?: string;
-	address?: string;
-	city?: string;
-	governorate?: string;
-	contactPerson?: string;
-	contactPersonPhone?: string;
-	contactPersonEmail?: string;
+	organizationName?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
-	potentialValue?: number;
+	assignedTo?: string;
 }
 
 export interface ClientSearchFilters {
 	query?: string;
-	type?: string;
-	specialization?: string;
-	location?: string;
-	status?: string;
+	classification?: 'A' | 'B' | 'C' | 'D';
 	assignedSalesmanId?: string;
 	createdFrom?: string;
 	createdTo?: string;
@@ -186,10 +143,11 @@ export interface OfferRequest {
 	specialNotes?: string;
 	requestDate: string;
 	status:
-		| 'Pending'
+		| 'Requested'
 		| 'Assigned'
 		| 'InProgress'
-		| 'Completed'
+		| 'Ready'
+		| 'Sent'
 		| 'Cancelled';
 	assignedTo?: string;
 	assignedToName?: string;
@@ -215,10 +173,11 @@ export interface UpdateOfferRequestDto {
 	requestedProducts?: string;
 	priority?: 'Low' | 'Medium' | 'High';
 	status?:
-		| 'Pending'
+		| 'Requested'
 		| 'Assigned'
 		| 'InProgress'
-		| 'Completed'
+		| 'Ready'
+		| 'Sent'
 		| 'Cancelled';
 	offerDescription?: string;
 	offerValue?: number;
@@ -774,29 +733,42 @@ export interface SalesmanStatisticsDTO {
 	totalDealValue: number;
 }
 
+export enum TargetType {
+	Money = 1,
+	Activity = 2,
+}
+
 export interface SalesmanTargetDTO {
 	id: number;
 	salesmanId: string | null;
 	salesmanName: string;
 	year: number;
 	quarter?: number;
+	targetType: TargetType;
 
+	// Activity targets (visits/offers/deals)
 	targetVisits: number;
 	targetSuccessfulVisits: number;
 	targetOffers: number;
 	targetDeals: number;
 	targetOfferAcceptanceRate?: number; // 0-100
 
+	// Money target
+	targetRevenue?: number;
+
 	isTeamTarget: boolean;
 	notes?: string;
 	createdAt: string; // ISO 8601
-	createdByManagerName: string;
+	createdByManagerName?: string;
+	createdBySalesmanName?: string; // For self-set targets
 }
 
 export interface SalesmanProgressDTO {
 	currentStatistics: SalesmanStatisticsDTO;
-	individualTarget?: SalesmanTargetDTO;
-	teamTarget?: SalesmanTargetDTO;
+	individualMoneyTarget?: SalesmanTargetDTO;
+	individualActivityTarget?: SalesmanTargetDTO;
+	teamMoneyTarget?: SalesmanTargetDTO;
+	teamActivityTarget?: SalesmanTargetDTO;
 
 	// Progress Percentages (0-100, can exceed 100%)
 	visitsProgress: number;
@@ -804,19 +776,28 @@ export interface SalesmanProgressDTO {
 	offersProgress: number;
 	dealsProgress: number;
 	offerAcceptanceRateProgress?: number;
+	revenueProgress?: number;
 }
 
 export interface CreateSalesmanTargetDTO {
 	salesmanId?: string; // null or omit for team target
 	year: number;
 	quarter?: number; // 1-4, omit for yearly
-	targetVisits: number;
-	targetSuccessfulVisits: number;
-	targetOffers: number;
-	targetDeals: number;
-	targetOfferAcceptanceRate?: number; // 0-100
+	targetType: TargetType; // Money (manager) or Activity (salesman)
+
+	// Activity targets (visits/offers/deals) - set by salesman
+	// Nullable for PATCH support - null/undefined means field not provided
+	targetVisits?: number | null;
+	targetSuccessfulVisits?: number | null;
+	targetOffers?: number | null;
+	targetDeals?: number | null;
+	targetOfferAcceptanceRate?: number | null; // 0-100
+
+	// Money target - set by manager
+	targetRevenue?: number | null;
+
 	isTeamTarget: boolean;
-	notes?: string;
+	notes?: string | null;
 }
 
 // ==================== FILTERS AND PAGINATION ====================
@@ -851,16 +832,19 @@ export interface Offer {
 	assignedToName: string;
 	products: string;
 	totalAmount: number;
-	paymentTerms?: string;
-	deliveryTerms?: string;
-	validUntil: string;
+	paymentTerms?: string[]; // Array of payment terms
+	deliveryTerms?: string[]; // Array of delivery terms
+	warrantyTerms?: string[]; // Array of warranty terms
+	validUntil?: string[]; // Array of date strings (ISO format: "YYYY-MM-DD")
 	status:
 		| 'Draft'
 		| 'Sent'
 		| 'Accepted'
 		| 'Rejected'
 		| 'UnderReview'
-		| 'Expired';
+		| 'NeedsModification'
+		| 'Expired'
+		| 'Completed';
 	sentToClientAt?: string | null;
 	clientResponse?: string | null;
 	createdAt: string;
@@ -877,13 +861,20 @@ export interface OfferEquipment {
 	offerId: number;
 	name: string;
 	model?: string;
+	provider?: string; // Backend uses "Provider" instead of "manufacturer"
+	country?: string;
+	year?: number;
+	price?: number; // Backend uses "Price" (single price, not unitPrice/totalPrice)
+	description?: string; // Backend uses "Description" instead of "specifications"
+	inStock?: boolean;
+	imagePath?: string | null;
+	// Legacy fields for backward compatibility
 	manufacturer?: string;
-	quantity: number;
-	unitPrice: number;
-	totalPrice: number;
+	quantity?: number;
+	unitPrice?: number;
+	totalPrice?: number;
 	specifications?: string;
 	warrantyPeriod?: string;
-	imagePath?: string | null;
 }
 
 export interface OfferTerms {
@@ -963,18 +954,20 @@ export interface WeeklyPlanTask {
 }
 
 export interface CreateOfferDto {
-	offerRequestId: number;
+	offerRequestId?: number;
 	clientId: number;
 	assignedTo: string;
 	products: string;
 	totalAmount: number;
-	paymentTerms?: string;
-	deliveryTerms?: string;
-	validUntil: string;
+	paymentTerms?: string[]; // Array of payment terms
+	deliveryTerms?: string[]; // Array of delivery terms
+	warrantyTerms?: string[]; // Array of warranty terms
+	validUntil?: string[]; // Array of date strings (ISO format: "YYYY-MM-DD")
 	notes?: string;
 	paymentType?: 'Cash' | 'Installments' | 'Other';
 	finalPrice?: number;
 	offerDuration?: string;
+	discountAmount?: number; // Added for completeness
 }
 
 export interface UpdateOfferDto {
@@ -1008,18 +1001,13 @@ export interface ClientProfileDTO {
 export interface ClientResponseDTO {
 	id: string;
 	name: string;
-	type: string;
-	specialization?: string;
-	location: string;
-	phone: string;
-	email: string;
-	status: string;
-	priority: string;
-	classification?: string;
-	lastContactDate?: string;
-	nextContactDate?: string;
-	satisfactionRating?: number;
+	phone?: string;
+	organizationName?: string;
+	classification?: string; // A, B, C, or D
+	createdBy: string;
+	assignedTo?: string;
 	createdAt: string;
+	updatedAt: string;
 }
 
 export interface ClientStatisticsDTO {

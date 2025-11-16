@@ -16,6 +16,7 @@ import type {
 	VerifyCodeResponse,
 	ResetPasswordRequest,
 	ResetPasswordResponse,
+	ProfileCompletionDTO,
 } from '@/types/auth.types';
 
 // Login user
@@ -91,17 +92,17 @@ export const getCurrentUser = async (
 				response.departmentDescription ||
 				response.DepartmentDescription ||
 				'',
-			emailConfirmed:
-				response.emailConfirmed ??
-				response.EmailConfirmed ??
-				false,
-			phoneNumberConfirmed:
-				response.phoneNumberConfirmed ??
-				response.PhoneNumberConfirmed ??
-				false,
 			phoneNumber:
 				response.phoneNumber ??
 				response.PhoneNumber ??
+				null,
+			personalMail:
+				response.personalMail ??
+				response.PersonalMail ??
+				null,
+			dateOfBirth:
+				response.dateOfBirth ??
+				response.DateOfBirth ??
 				null,
 			profileImage:
 				response.profileImage ||
@@ -299,6 +300,31 @@ export const resetPassword = async (
 		return response;
 	} catch (error) {
 		console.error('Failed to reset password:', error);
+		throw error;
+	} finally {
+		setLoading?.(false);
+	}
+};
+
+// Profile completion status
+export const getProfileCompletion = async (
+	token: string,
+	setLoading?: (loading: boolean) => void
+): Promise<ProfileCompletionDTO> => {
+	try {
+		setLoading?.(true);
+
+		const response = await apiRequest<ProfileCompletionDTO>(
+			'/User/profile-completion',
+			{
+				method: 'GET',
+			},
+			token
+		);
+
+		return response;
+	} catch (error) {
+		console.error('Failed to fetch profile completion:', error);
 		throw error;
 	} finally {
 		setLoading?.(false);

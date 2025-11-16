@@ -89,7 +89,6 @@ class SignalRService {
 			this.reconnectAttempts = 0;
 			this.isReconnecting = false;
 
-			console.log('SignalR Connected');
 			this.notifyListeners('connectionStatus', {
 				isConnected: true,
 				isReconnecting: false,
@@ -133,13 +132,11 @@ class SignalRService {
 
 		// Handle personal notifications - Updated to match backend signature (single data parameter)
 		this.connection.on('ReceiveNotification', (data: any) => {
-			console.log('📬 Received Notification:', data);
 			this.handleNotification(data);
 		});
 
 		// Handle role-based broadcasts (NewRequest event)
 		this.connection.on('NewRequest', (request: any) => {
-			console.log('🔔 New Request Broadcast:', request);
 			// Convert request to notification format
 			const notificationData = {
 				title: 'New Request',
@@ -155,7 +152,6 @@ class SignalRService {
 
 		// Connection events
 		this.connection.onreconnecting(() => {
-			console.log('SignalR Reconnecting...');
 			this.isReconnecting = true;
 			this.notifyListeners('connectionStatus', {
 				isConnected: false,
@@ -165,10 +161,6 @@ class SignalRService {
 		});
 
 		this.connection.onreconnected((connectionId) => {
-			console.log(
-				'✅ SignalR reconnected. Connection ID:',
-				connectionId
-			);
 			this.isConnected = true;
 			this.isReconnecting = false;
 			this.reconnectAttempts = 0;
@@ -205,8 +197,6 @@ class SignalRService {
 	}
 
 	private handleNotification(data: any): void {
-		console.log('Received Notification Data:', data);
-
 		// Handle different notification data structures
 		// Backend may send just the data object with all notification info
 		const notificationData =
@@ -277,7 +267,6 @@ class SignalRService {
 	async joinGroup(groupName: string): Promise<void> {
 		// Prevent duplicate joins
 		if (this.joinedGroups.has(groupName)) {
-			console.log(`Already in group: ${groupName}, skipping`);
 			return;
 		}
 
@@ -296,7 +285,6 @@ class SignalRService {
 					groupName
 				);
 				this.joinedGroups.add(groupName);
-				console.log(`✅ Joined group: ${groupName}`);
 			} catch (error) {
 				console.error(
 					`Error joining group ${groupName}:`,

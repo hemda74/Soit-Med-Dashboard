@@ -36,9 +36,6 @@ class NotificationService {
 
 		// Listen for reconnection to reload notifications
 		signalRService.addEventListener('reconnected', () => {
-			console.log(
-				'🔄 SignalR reconnected, reloading notifications...'
-			);
 			this.loadNotifications();
 		});
 
@@ -173,10 +170,6 @@ class NotificationService {
 					'unreadCountChanged',
 					this.unreadCount
 				);
-
-				console.log(
-					`✅ Loaded ${notifications.length} notifications from API`
-				);
 			}
 		} catch (error) {
 			console.error('❌ Error loading notifications:', error);
@@ -242,9 +235,6 @@ class NotificationService {
 		}
 
 		this.isPolling = true;
-		console.log(
-			`🔄 Starting notification polling (every ${interval}ms) as fallback`
-		);
 
 		// Load immediately
 		this.loadNotifications();
@@ -263,7 +253,6 @@ class NotificationService {
 			clearInterval(this.pollingInterval);
 			this.pollingInterval = null;
 			this.isPolling = false;
-			console.log('⏹️ Stopped notification polling');
 		}
 	}
 
@@ -461,9 +450,6 @@ class NotificationService {
 
 		// Stop polling if SignalR is working (as per guide)
 		if (this.isPolling) {
-			console.log(
-				'✅ SignalR working, stopping polling fallback'
-			);
 			this.stopPolling();
 		}
 	}
@@ -649,10 +635,6 @@ class NotificationService {
 		);
 
 		if (existingNotification) {
-			console.log(
-				'⚠️ Duplicate notification blocked:',
-				notification.id
-			);
 			return; // Skip duplicate
 		}
 

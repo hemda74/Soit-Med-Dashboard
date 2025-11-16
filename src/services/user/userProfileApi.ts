@@ -137,3 +137,51 @@ export const updateUser = async (
 		token
 	);
 };
+
+// Update current user profile (PATCH /api/User/me)
+export interface UpdateProfileRequest {
+	firstName?: string;
+	lastName?: string;
+	phoneNumber?: string;
+	personalMail?: string;
+	dateOfBirth?: string; // ISO 8601 date string
+}
+
+export interface UpdateProfileResponse {
+	success: boolean;
+	message: string;
+	data?: any;
+}
+
+export const updateCurrentUserProfile = async (
+	profileData: UpdateProfileRequest,
+	token: string
+): Promise<UpdateProfileResponse> => {
+	// Only send fields that are provided
+	const apiData: UpdateProfileRequest = {};
+	
+	if (profileData.firstName !== undefined) {
+		apiData.firstName = profileData.firstName;
+	}
+	if (profileData.lastName !== undefined) {
+		apiData.lastName = profileData.lastName;
+	}
+	if (profileData.phoneNumber !== undefined) {
+		apiData.phoneNumber = profileData.phoneNumber;
+	}
+	if (profileData.personalMail !== undefined) {
+		apiData.personalMail = profileData.personalMail;
+	}
+	if (profileData.dateOfBirth !== undefined) {
+		apiData.dateOfBirth = profileData.dateOfBirth;
+	}
+
+	return apiRequest<UpdateProfileResponse>(
+		API_ENDPOINTS.AUTH.CURRENT_USER,
+		{
+			method: 'PATCH',
+			body: JSON.stringify(apiData),
+		},
+		token
+	);
+};

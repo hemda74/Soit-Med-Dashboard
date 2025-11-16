@@ -155,13 +155,14 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
                                 <div className="flex items-center space-x-4 mt-2">
-                                    <Badge className={getStatusColor(client.status)}>
-                                        {client.status}
-                                    </Badge>
-                                    <Badge className={getPriorityColor(client.priority)}>
-                                        {client.priority} Priority
-                                    </Badge>
-                                    <span className="text-sm text-gray-500">{client.type}</span>
+                                    {client.classification && (
+                                        <Badge className="bg-blue-100 text-blue-800">
+                                            Classification: {client.classification}
+                                        </Badge>
+                                    )}
+                                    {client.organizationName && (
+                                        <span className="text-sm text-gray-500">{client.organizationName}</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -173,27 +174,33 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <PhoneIcon className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-500">Phone</span>
+                        {client.phone && (
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <PhoneIcon className="h-4 w-4 text-gray-400" />
+                                    <span className="text-sm text-gray-500">Phone</span>
+                                </div>
+                                <p className="font-medium">{client.phone}</p>
                             </div>
-                            <p className="font-medium">{client.phone}</p>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <EnvelopeIcon className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-500">Email</span>
+                        )}
+                        {client.organizationName && (
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
+                                    <span className="text-sm text-gray-500">Organization</span>
+                                </div>
+                                <p className="font-medium">{client.organizationName}</p>
                             </div>
-                            <p className="font-medium">{client.email}</p>
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <MapPinIcon className="h-4 w-4 text-gray-400" />
-                                <span className="text-sm text-gray-500">Location</span>
+                        )}
+                        {client.classification && (
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <ChartBarIcon className="h-4 w-4 text-gray-400" />
+                                    <span className="text-sm text-gray-500">Classification</span>
+                                </div>
+                                <p className="font-medium">{client.classification}</p>
                             </div>
-                            <p className="font-medium">{client.location}</p>
-                        </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -247,20 +254,20 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Specialization</label>
-                                    <p className="text-sm">{client.specialization || 'Not specified'}</p>
+                                    <label className="text-sm font-medium text-gray-500">Organization Name</label>
+                                    <p className="text-sm">{client.organizationName || 'Not specified'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Address</label>
-                                    <p className="text-sm">{client.address || 'Not specified'}</p>
+                                    <label className="text-sm font-medium text-gray-500">Phone</label>
+                                    <p className="text-sm">{client.phone || 'Not specified'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Contact Person</label>
-                                    <p className="text-sm">{client.contactPerson || 'Not specified'}</p>
+                                    <label className="text-sm font-medium text-gray-500">Classification</label>
+                                    <p className="text-sm">{client.classification || 'Not specified'}</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Annual Revenue</label>
-                                    <p className="text-sm">{client.annualRevenue ? `EGP ${client.annualRevenue.toLocaleString()}` : 'Not specified'}</p>
+                                    <label className="text-sm font-medium text-gray-500">Assigned To</label>
+                                    <p className="text-sm">{client.assignedSalesmanName || client.assignedTo || 'Not assigned'}</p>
                                 </div>
                             </CardContent>
                         </Card>

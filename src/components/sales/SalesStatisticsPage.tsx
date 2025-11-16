@@ -10,8 +10,10 @@ import type { SalesmanStatisticsDTO, SalesmanProgressDTO } from '@/types/sales.t
 import SalesmanCard from './statistics/SalesmanCard';
 import ProgressChart from './statistics/ProgressChart';
 import PerformanceChart from './statistics/PerformanceChart';
+import { usePerformance } from '@/hooks/usePerformance';
 
 const SalesStatisticsPage: React.FC = () => {
+    usePerformance('SalesStatisticsPage');
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedQuarter, setSelectedQuarter] = useState<number | undefined>(undefined);
     const [activeTab, setActiveTab] = useState<string>('overview');

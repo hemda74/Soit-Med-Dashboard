@@ -1,0 +1,1222 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import {
+	Eye,
+	ChevronLeft,
+	ChevronRight,
+	Filter,
+	Download,
+	RefreshCw,
+	Edit,
+	Clock,
+	AlertCircle,
+	CheckCircle,
+} from 'lucide-react';
+import { LoadingSpinner, EmptyState, ErrorDisplay, PageHeader, FilterCard } from '@/components/shared';
+import { useAuthStore } from '@/stores/authStore';
+import { salesApi } from '@/services/sales/salesApi';
+import { format } from 'date-fns';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { OfferEquipment } from '@/types/sales.types';
+import { getStaticFileUrl } from '@/utils/apiConfig';
+import { downloadOfferPDF } from '@/utils/pdfGenerator';
+import toast from 'react-hot-toast';
+import { usePerformance } from '@/hooks/usePerformance';
+
+interface Offer {
+	id: number;
+	clientName: string;
+	assignedToName: string;
+	createdByName: string;
+	totalAmount: number;
+	status: string;
+	createdAt: string;
+	validUntil?: string[];
+}
+
+interface PaginatedOffersResponse {
+	offers: Offer[];
+	totalCount: number;
+	page: number;
+	pageSize: number;
+	totalPages: number;
+	hasPreviousPage: boolean;
+	hasNextPage: boolean;
+}
+
+interface Salesman {
+	id: string;
+	firstName: string;
+	lastName: string;
+	userName: string;
+}
+
+const OffersManagementPage: React.FC = () => {
+	usePerformance('OffersManagementPage');
+	const { t } = useTranslation();
+	const { user } = useAuthStore();
+	const [offers, setOffers] = useState<Offer[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [pagination, setPagination] = useState({
+		page: 1,
+		pageSize: 10,
+		totalCount: 0,
+		totalPages: 0,
+		hasPreviousPage: false,
+		hasNextPage: false,
+	});
+
+	// Filters
+	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [salesmanFilter, setSalesmanFilter] = useState<string>('all');
+	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [loadingSalesmen, setLoadingSalesmen] = useState(false);
+
+	// Offer Details Modal
+	const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+	const [offerEquipment, setOfferEquipment] = useState<OfferEquipment[]>([]);
+	const [loadingEquipment, setLoadingEquipment] = useState(false);
+	const [equipmentImageUrls, setEquipmentImageUrls] = useState<Record<number, string>>({});
+
+	// Needs Modification Modal
+	const [showNeedsModificationModal, setShowNeedsModificationModal] = useState(false);
+	const [needsModificationReason, setNeedsModificationReason] = useState('');
+	const [processingAction, setProcessingAction] = useState<string | null>(null);
+
+	// Check if user is SuperAdmin
+	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+
+	const loadSalesmen = useCallback(async () => {
+		if (!user?.token) return;
+
+		try {
+			setLoadingSalesmen(true);
+			const response = await salesApi.getAllSalesmen();
+			if (response.success && response.data) {
+				setSalesmen(response.data);
+			}
+		} catch (err) {
+			console.error('Failed to load salesmen:', err);
+		} finally {
+			setLoadingSalesmen(false);
+		}
+	}, [user?.token]);
+
+	const loadOffers = useCallback(async () => {
+		if (!user?.token || !isSuperAdmin) {
+			setError('Access denied');
+			setLoading(false);
+			return;
+		}
+
+		try {
+			setLoading(true);
+			setError(null);
+
+			const filters: any = {
+				page: pagination.page,
+				pageSize: pagination.pageSize,
+			};
+
+			if (statusFilter !== 'all') {
+				filters.status = statusFilter;
+			}
+
+			if (salesmanFilter !== 'all') {
+				filters.salesmanId = salesmanFilter;
+			}
+
+			const response = await salesApi.getAllOffersWithFilters(filters);
+
+			if (response.success && response.data) {
+				// Backend returns { offers: [], totalCount, page, pageSize, ... }
+				const data = response.data as any;
+				setOffers(data.offers || data.Offers || []);
+				setPagination({
+					page: data.page || data.Page || 1,
+					pageSize: data.pageSize || data.PageSize || 10,
+					totalCount: data.totalCount || data.TotalCount || 0,
+					totalPages: data.totalPages || data.TotalPages || 0,
+					hasPreviousPage: data.hasPreviousPage || data.HasPreviousPage || false,
+					hasNextPage: data.hasNextPage || data.HasNextPage || false,
+				});
+			} else {
+				setError(response.message || 'Failed to load offers');
+			}
+		} catch (err) {
+			console.error('Error loading offers:', err);
+			setError(err instanceof Error ? err.message : 'Failed to load offers');
+		} finally {
+			setLoading(false);
+		}
+	}, [user?.token, isSuperAdmin, pagination.page, pagination.pageSize, statusFilter, salesmanFilter]);
+
+	useEffect(() => {
+		if (isSuperAdmin) {
+			loadSalesmen();
+		}
+	}, [isSuperAdmin, loadSalesmen]);
+
+	useEffect(() => {
+		if (isSuperAdmin) {
+			loadOffers();
+		}
+	}, [isSuperAdmin, pagination.page, pagination.pageSize, statusFilter, salesmanFilter, loadOffers]);
+
+	const handleFilterChange = (newStatus: string, newSalesman: string) => {
+		setStatusFilter(newStatus);
+		setSalesmanFilter(newSalesman);
+		setPagination(prev => ({ ...prev, page: 1 }));
+	};
+
+	const handlePageChange = (newPage: number) => {
+		setPagination(prev => ({ ...prev, page: newPage }));
+	};
+
+	const getStatusColor = (status: string) => {
+		switch (status?.toLowerCase()) {
+			case 'draft':
+				return 'bg-gray-500';
+			case 'sent':
+				return 'bg-blue-500';
+			case 'accepted':
+				return 'bg-green-500';
+			case 'rejected':
+				return 'bg-red-500';
+			case 'underreview':
+				return 'bg-yellow-500';
+			case 'needsmodification':
+				return 'bg-purple-500';
+			case 'expired':
+				return 'bg-gray-400';
+			default:
+				return 'bg-gray-500';
+		}
+	};
+
+	const getStatusLabel = (status: string) => {
+		const statusMap: Record<string, string> = {
+			'Draft': t('draft'),
+			'Sent': t('sent'),
+			'Accepted': t('accepted'),
+			'Rejected': t('rejected'),
+			'UnderReview': t('underReview'),
+			'NeedsModification': t('needsModification'),
+			'Expired': t('expired'),
+		};
+		return statusMap[status] || status || 'Unknown';
+	};
+
+	const getOfferStatusColor = (status: string) => {
+		switch (status?.toLowerCase()) {
+			case 'draft':
+				return 'bg-gray-500';
+			case 'sent':
+				return 'bg-blue-500';
+			case 'accepted':
+				return 'bg-green-500';
+			case 'rejected':
+				return 'bg-red-500';
+			case 'underreview':
+				return 'bg-yellow-500';
+			case 'needsmodification':
+				return 'bg-purple-500';
+			case 'expired':
+				return 'bg-gray-400';
+			default:
+				return 'bg-gray-500';
+		}
+	};
+
+	// Load offer details when selected
+	const handleViewOffer = async (offer: Offer) => {
+		try {
+			setSelectedOffer(offer);
+			// Load full offer details
+			const response = await salesApi.getOffer(offer.id.toString());
+			if (response.success && response.data) {
+				setSelectedOffer(response.data);
+			}
+		} catch (error) {
+			console.error('Error loading offer details:', error);
+			toast.error('Failed to load offer details');
+		}
+	};
+
+	// Load offer equipment when an offer is selected
+	useEffect(() => {
+		const loadOfferEquipment = async () => {
+			if (selectedOffer?.id) {
+				setLoadingEquipment(true);
+				try {
+					const response = await salesApi.getOfferEquipment(selectedOffer.id);
+					if (response.data && Array.isArray(response.data)) {
+						setOfferEquipment(response.data);
+					} else {
+						setOfferEquipment([]);
+					}
+				} catch (error) {
+					console.error('Error loading offer equipment:', error);
+					setOfferEquipment([]);
+				} finally {
+					setLoadingEquipment(false);
+				}
+			} else {
+				setOfferEquipment([]);
+			}
+		};
+
+		loadOfferEquipment();
+	}, [selectedOffer]);
+
+	// Load equipment images
+	useEffect(() => {
+		const loadEquipmentImages = async () => {
+			if (offerEquipment.length > 0 && selectedOffer?.id) {
+				const imageUrls: Record<number, string> = {};
+
+				// Try to load images for each equipment
+				for (const equipment of offerEquipment) {
+					let imagePath = equipment.imagePath || (equipment as any).ImagePath || (equipment as any).imagePath;
+
+					// If no image path in equipment data, try to fetch it from API
+					if (!imagePath || imagePath.trim() === '' || imagePath.includes('equipment-placeholder.png')) {
+						try {
+							const imageResponse = await salesApi.getEquipmentImage(selectedOffer.id, equipment.id);
+							if (imageResponse.success && imageResponse.data?.imagePath) {
+								imagePath = imageResponse.data.imagePath;
+							}
+						} catch (error) {
+							// Silently handle image fetch errors
+						}
+					}
+
+					if (imagePath && imagePath.trim() !== '' && !imagePath.includes('equipment-placeholder.png')) {
+						const imageUrl = getStaticFileUrl(imagePath);
+						imageUrls[equipment.id] = imageUrl;
+					}
+				}
+				setEquipmentImageUrls(imageUrls);
+			} else {
+				setEquipmentImageUrls({});
+			}
+		};
+
+		loadEquipmentImages();
+	}, [offerEquipment, selectedOffer?.id]);
+
+	const handleSendToSalesman = async () => {
+		if (!selectedOffer) return;
+		if (selectedOffer.status !== 'Draft') {
+			toast.error(t('onlyDraftOffersCanBeSent') || 'Only draft offers can be sent to salesman');
+			return;
+		}
+
+		try {
+			setProcessingAction('send');
+			const response = await salesApi.sendOfferToSalesman(selectedOffer.id.toString());
+			if (response.success) {
+				toast.success(t('offerSentSuccessfully') || 'Offer sent to salesman successfully');
+				loadOffers();
+				setSelectedOffer(null);
+			} else {
+				toast.error(response.message || 'Failed to send offer');
+			}
+		} catch (error: any) {
+			console.error('Error sending offer:', error);
+			toast.error(error.message || 'Failed to send offer to salesman');
+		} finally {
+			setProcessingAction(null);
+		}
+	};
+
+	const handleMarkAsUnderReview = async () => {
+		if (!selectedOffer) return;
+		if (selectedOffer.status !== 'Sent') {
+			toast.error(t('onlySentOffersCanBeMarkedUnderReview') || 'Only sent offers can be marked as under review');
+			return;
+		}
+
+		try {
+			setProcessingAction('underReview');
+			const response = await salesApi.markAsUnderReview(selectedOffer.id.toString());
+			if (response.success) {
+				toast.success(t('offerMarkedAsUnderReview') || 'Offer marked as under review successfully');
+				loadOffers();
+				setSelectedOffer(null);
+			} else {
+				toast.error(response.message || 'Failed to mark offer as under review');
+			}
+		} catch (error: any) {
+			console.error('Error marking offer as under review:', error);
+			toast.error(error.message || 'Failed to mark offer as under review');
+		} finally {
+			setProcessingAction(null);
+		}
+	};
+
+	const handleOpenNeedsModificationModal = () => {
+		if (!selectedOffer) return;
+		if (selectedOffer.status !== 'Draft' && selectedOffer.status !== 'Sent') {
+			toast.error(t('onlyDraftOrSentOffersCanBeMarkedNeedsModification') || 'Only draft or sent offers can be marked as needing modification');
+			return;
+		}
+		setNeedsModificationReason('');
+		setShowNeedsModificationModal(true);
+	};
+
+	const handleMarkAsNeedsModification = async () => {
+		if (!selectedOffer) return;
+
+		try {
+			setProcessingAction('needsModification');
+			const response = await salesApi.markAsNeedsModification(
+				selectedOffer.id.toString(),
+				needsModificationReason.trim() || undefined
+			);
+			if (response.success) {
+				toast.success(t('offerMarkedAsNeedsModification') || 'Offer marked as needing modification successfully');
+				loadOffers();
+				setSelectedOffer(null);
+				setShowNeedsModificationModal(false);
+				setNeedsModificationReason('');
+			} else {
+				toast.error(response.message || 'Failed to mark offer as needing modification');
+			}
+		} catch (error: any) {
+			console.error('Error marking offer as needing modification:', error);
+			toast.error(error.message || 'Failed to mark offer as needing modification');
+		} finally {
+			setProcessingAction(null);
+		}
+	};
+
+	const handleExportPdf = async () => {
+		if (!selectedOffer) return;
+		try {
+			// Handle arrays - convert to string for PDF display
+			const formatArray = (arr: string[] | string | undefined): string => {
+				if (!arr) return '';
+				if (Array.isArray(arr)) {
+					return arr.filter(item => item && item.trim()).join('; ');
+				}
+				if (typeof arr === 'string') {
+					try {
+						const parsed = JSON.parse(arr);
+						if (Array.isArray(parsed)) {
+							return parsed.filter(item => item && item.trim()).join('; ');
+						}
+					} catch {
+						// Not JSON, return as is
+					}
+				}
+				return String(arr);
+			}
+
+			// Fetch equipment data for PDF
+			let equipmentData: any[] = [];
+			try {
+				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
+				if (equipmentResponse.success && equipmentResponse.data) {
+					// Normalize equipment data to match PDF generator interface
+					equipmentData = equipmentResponse.data.map((eq: any) => ({
+						id: eq.id,
+						name: eq.name || 'N/A',
+						model: eq.model,
+						provider: eq.provider || eq.Provider || eq.manufacturer,
+						country: eq.country || eq.Country,
+						year: eq.year ?? eq.Year,
+						price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
+						description: eq.description || eq.Description || eq.specifications,
+						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
+						imagePath: eq.imagePath || eq.ImagePath,
+					}));
+				}
+			} catch (e) {
+				console.warn('Equipment data not available for PDF:', e);
+			}
+
+			await downloadOfferPDF({
+				id: selectedOffer.id,
+				clientName: selectedOffer.clientName || 'Client',
+				clientType: undefined,
+				clientLocation: undefined,
+				products: selectedOffer.products || '',
+				totalAmount: selectedOffer.totalAmount ?? 0,
+				discountAmount: (selectedOffer as any).discountAmount ?? 0,
+				validUntil: formatArray((selectedOffer as any).validUntil),
+				paymentTerms: formatArray((selectedOffer as any).paymentTerms),
+				deliveryTerms: formatArray((selectedOffer as any).deliveryTerms),
+				warrantyTerms: formatArray((selectedOffer as any).warrantyTerms),
+				createdAt: (selectedOffer as any).createdAt || new Date().toISOString(),
+				status: selectedOffer.status,
+				assignedToName: selectedOffer.assignedToName || '',
+				equipment: equipmentData,
+			}, {
+				generateBothLanguages: true, // Generate both Arabic and English versions
+				showProductHeaders: true,
+			});
+			toast.success('PDF exported successfully! Both Arabic and English versions downloaded.');
+		} catch (error: any) {
+			console.error('Error exporting PDF:', error);
+			toast.error(error.message || 'Failed to export PDF');
+		}
+	};
+
+	if (!isSuperAdmin) {
+		return (
+			<div className="flex items-center justify-center min-h-[400px]">
+				<div className="text-center">
+					<h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+						{t('accessDenied')}
+					</h3>
+					<p className="text-gray-600 dark:text-gray-400">
+						{t('accessDeniedMessage')}
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-6">
+			<PageHeader
+				title={t('allOffersManagement')}
+				description={t('allOffersDescription')}
+				action={
+					<div className="flex gap-2">
+						{isSuperAdmin && (
+							<Button
+								onClick={async () => {
+									try {
+										const response = await salesApi.updateExpiredOffers();
+										if (response.success) {
+											toast.success(
+												`Updated ${response.data?.expiredCount || 0} offers to expired status`
+											);
+											loadOffers();
+										} else {
+											toast.error(response.message || 'Failed to update expired offers');
+										}
+									} catch (error: any) {
+										console.error('Error updating expired offers:', error);
+										toast.error(error.message || 'Failed to update expired offers');
+									}
+								}}
+								variant="outline"
+								className="flex items-center gap-2 border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900"
+							>
+								<AlertCircle className="h-4 w-4" />
+								{t('updateExpired') || 'Update Expired'}
+							</Button>
+						)}
+						<Button
+							onClick={loadOffers}
+							variant="outline"
+							className="flex items-center gap-2"
+						>
+							<RefreshCw className="h-4 w-4" />
+							{t('refresh')}
+						</Button>
+					</div>
+				}
+			/>
+
+			<FilterCard>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					<div className="space-y-2">
+						<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+							{t('status')}
+						</label>
+						<Select
+							value={statusFilter}
+							onValueChange={(value) => handleFilterChange(value, salesmanFilter)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder={t('allStatuses')} />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">{t('allStatuses')}</SelectItem>
+								<SelectItem value="Draft">{t('draft')}</SelectItem>
+								<SelectItem value="Sent">{t('sent')}</SelectItem>
+								<SelectItem value="Accepted">{t('accepted')}</SelectItem>
+								<SelectItem value="Rejected">{t('rejected')}</SelectItem>
+								<SelectItem value="UnderReview">{t('underReview')}</SelectItem>
+								<SelectItem value="NeedsModification">{t('needsModification')}</SelectItem>
+								<SelectItem value="Expired">{t('expired')}</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="space-y-2">
+						<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+							{t('salesman')}
+						</label>
+						<Select
+							value={salesmanFilter}
+							onValueChange={(value) => handleFilterChange(statusFilter, value)}
+							disabled={loadingSalesmen}
+						>
+							<SelectTrigger>
+								<SelectValue
+									placeholder={loadingSalesmen ? t('loading') : t('allSalesmen')}
+								/>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">{t('allSalesmen')}</SelectItem>
+								{salesmen.map((salesman) => (
+									<SelectItem key={salesman.id} value={salesman.id}>
+										{salesman.firstName} {salesman.lastName} ({salesman.userName})
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="space-y-2 flex items-end">
+						<Button
+							onClick={() => {
+								setStatusFilter('all');
+								setSalesmanFilter('all');
+								setPagination(prev => ({ ...prev, page: 1 }));
+							}}
+							variant="outline"
+							className="w-full"
+						>
+							{t('clearFilters')}
+						</Button>
+					</div>
+				</div>
+			</FilterCard>
+
+			{loading ? (
+				<LoadingSpinner />
+			) : error ? (
+				<ErrorDisplay message={error} onRetry={loadOffers} />
+			) : offers.length === 0 ? (
+				<EmptyState
+					title={t('noOffersFound')}
+					description={t('noOffersMatchFilters')}
+				/>
+			) : (
+				<>
+					<div className="grid gap-4">
+						{offers.map((offer) => (
+							<Card key={offer.id} className="hover:shadow-md transition-shadow">
+								<CardContent className="p-6">
+									<div className="flex items-start justify-between">
+										<div className="flex-1">
+											<div className="flex items-center gap-3 mb-2">
+												<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+													{t('offer')} #{offer.id}
+												</h3>
+												<Badge className={getStatusColor(offer.status)}>
+													{getStatusLabel(offer.status)}
+												</Badge>
+											</div>
+											<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+												<div>
+													<p className="text-sm text-gray-600 dark:text-gray-400">
+														{t('client')}
+													</p>
+													<p className="font-medium text-gray-900 dark:text-white">
+														{offer.clientName || 'N/A'}
+													</p>
+												</div>
+												<div>
+													<p className="text-sm text-gray-600 dark:text-gray-400">
+														{t('assignedTo')}
+													</p>
+													<p className="font-medium text-gray-900 dark:text-white">
+														{offer.assignedToName || 'N/A'}
+													</p>
+												</div>
+												<div>
+													<p className="text-sm text-gray-600 dark:text-gray-400">
+														{t('createdBy')}
+													</p>
+													<p className="font-medium text-gray-900 dark:text-white">
+														{offer.createdByName || 'N/A'}
+													</p>
+												</div>
+												<div>
+													<p className="text-sm text-gray-600 dark:text-gray-400">
+														{t('totalAmount')}
+													</p>
+													<p className="font-medium text-gray-900 dark:text-white">
+														{new Intl.NumberFormat('en-US', {
+															style: 'currency',
+															currency: 'EGP',
+														}).format(offer.totalAmount)}
+													</p>
+												</div>
+												<div>
+													<p className="text-sm text-gray-600 dark:text-gray-400">
+														{t('createdAt')}
+													</p>
+													<p className="font-medium text-gray-900 dark:text-white">
+														{format(new Date(offer.createdAt), 'PPp')}
+													</p>
+												</div>
+											</div>
+										</div>
+										<div className="ml-4 flex flex-col gap-2">
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => handleViewOffer(offer)}
+											>
+												<Eye className="h-4 w-4 mr-2" />
+												{t('view')}
+											</Button>
+											{/* Quick action buttons based on status */}
+											{offer.status === 'Draft' && (
+												<Button
+													variant="default"
+													size="sm"
+													onClick={async () => {
+														const response = await salesApi.getOffer(offer.id.toString());
+														if (response.success && response.data) {
+															setSelectedOffer(response.data);
+															setTimeout(() => {
+																handleSendToSalesman();
+															}, 100);
+														}
+													}}
+													className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+												>
+													<CheckCircle className="h-3 w-3 mr-1" />
+													{t('send') || 'Send'}
+												</Button>
+											)}
+											{(offer.status === 'Draft' || offer.status === 'Sent') && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={async () => {
+														const response = await salesApi.getOffer(offer.id.toString());
+														if (response.success && response.data) {
+															setSelectedOffer(response.data);
+															setTimeout(() => {
+																handleOpenNeedsModificationModal();
+															}, 100);
+														}
+													}}
+													className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900 text-xs"
+												>
+													<Edit className="h-3 w-3 mr-1" />
+													{t('needsModification') || 'Needs Mod'}
+												</Button>
+											)}
+											{offer.status === 'Sent' && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={async () => {
+														const response = await salesApi.getOffer(offer.id.toString());
+														if (response.success && response.data) {
+															setSelectedOffer(response.data);
+															setTimeout(() => {
+																handleMarkAsUnderReview();
+															}, 100);
+														}
+													}}
+													className="border-yellow-600 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900 text-xs"
+												>
+													<Clock className="h-3 w-3 mr-1" />
+													{t('underReview') || 'Review'}
+												</Button>
+											)}
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+						))}
+					</div>
+
+					{/* Pagination */}
+					{pagination.totalPages > 1 && (
+						<div className="flex items-center justify-between">
+							<div className="text-sm text-gray-600 dark:text-gray-400">
+								{t('showing')} {((pagination.page - 1) * pagination.pageSize) + 1} {t('to')}{' '}
+								{Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} {t('of')}{' '}
+								{pagination.totalCount} {t('offers')}
+							</div>
+							<div className="flex items-center gap-2">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => handlePageChange(pagination.page - 1)}
+									disabled={!pagination.hasPreviousPage}
+								>
+									<ChevronLeft className="h-4 w-4" />
+									{t('previous')}
+								</Button>
+								<span className="text-sm text-gray-600 dark:text-gray-400">
+									{t('page')} {pagination.page} {t('of')} {pagination.totalPages}
+								</span>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => handlePageChange(pagination.page + 1)}
+									disabled={!pagination.hasNextPage}
+								>
+									{t('next')}
+									<ChevronRight className="h-4 w-4" />
+								</Button>
+							</div>
+						</div>
+					)}
+				</>
+			)}
+
+			{/* Offer Details Modal */}
+			{selectedOffer && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+					<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl shadow-2xl my-8">
+						<div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
+							<div className="flex justify-between items-start">
+								<div>
+									<h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+										{t('offerDetails') || 'Offer Details'}
+									</h3>
+									<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+										{selectedOffer.clientName}
+									</p>
+								</div>
+								<Button
+									onClick={() => {
+										setSelectedOffer(null);
+										setOfferEquipment([]);
+									}}
+									variant="destructive"
+									size="sm"
+									className="h-8 w-8 p-0"
+								>
+									×
+								</Button>
+							</div>
+						</div>
+
+						<div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+							{/* Offer Info Section */}
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+										{t('status')}
+									</label>
+									<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
+										{getStatusLabel(selectedOffer.status)}
+									</Badge>
+								</div>
+								<div>
+									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+										{t('totalAmount')}
+									</label>
+									<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+										{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
+									</p>
+									{(selectedOffer as any).discountAmount && (selectedOffer as any).discountAmount > 0 && (
+										<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+											{t('discount') || 'Discount'}: EGP {(selectedOffer as any).discountAmount.toLocaleString()}
+										</p>
+									)}
+								</div>
+							</div>
+
+							<Separator />
+
+							{/* Products Section */}
+							<div>
+								<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+									{t('equipment')} {t('details')}
+								</label>
+
+								{loadingEquipment ? (
+									<div className="text-center py-4">
+										<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+										<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{t('loading')}</p>
+									</div>
+								) : offerEquipment && offerEquipment.length > 0 ? (
+									<div className="space-y-4">
+										{offerEquipment.map((equipment, index) => (
+											<div
+												key={equipment.id || index}
+												className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
+											>
+												{/* Header with Image, Name and Price */}
+												<div className="flex gap-4 mb-4 pb-3 border-b border-gray-200 dark:border-gray-600">
+													<div className="flex-shrink-0">
+														{(() => {
+															const imagePath = equipment.imagePath || (equipment as any).ImagePath;
+															let imageUrl: string | null = null;
+															if (imagePath) {
+																imageUrl = equipmentImageUrls[equipment.id] || getStaticFileUrl(imagePath);
+															}
+
+															if (imageUrl && !imagePath?.includes('equipment-placeholder.png')) {
+																return (
+																	<img
+																		src={imageUrl}
+																		alt={equipment.name || 'Equipment image'}
+																		className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+																		onError={(e) => {
+																			(e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"%3E%3Crect fill="%23e5e7eb" width="96" height="96"/%3E%3Ctext fill="%239ca3af" font-family="Arial" font-size="12" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+																		}}
+																		crossOrigin="anonymous"
+																	/>
+																);
+															} else {
+																return (
+																	<div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-500 flex items-center justify-center">
+																		<span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
+																	</div>
+																);
+															}
+														})()}
+													</div>
+													<div className="flex-1">
+														<h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1">
+															{equipment.name}
+														</h4>
+														{(equipment.model || (equipment as any).provider || (equipment as any).Provider) && (
+															<p className="text-sm text-gray-600 dark:text-gray-400">
+																{((equipment as any).provider || (equipment as any).Provider) && (
+																	<span className="font-medium">{(equipment as any).provider || (equipment as any).Provider}</span>
+																)}
+																{((equipment as any).provider || (equipment as any).Provider) && equipment.model && ' - '}
+																{equipment.model && <span>{equipment.model}</span>}
+															</p>
+														)}
+													</div>
+													<div className="text-right ml-4">
+														<p className="font-bold text-xl text-blue-600 dark:text-blue-400">
+															EGP {((equipment as any).price ?? (equipment as any).Price ?? (equipment as any).totalPrice ?? (equipment as any).TotalPrice ?? 0).toLocaleString()}
+														</p>
+													</div>
+												</div>
+
+												{/* Equipment Details Grid */}
+												<div className="grid grid-cols-2 gap-4 mb-3">
+													<div>
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+															{t('price')}
+														</label>
+														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+															EGP {((equipment as any).price ?? (equipment as any).Price ?? (equipment as any).totalPrice ?? (equipment as any).TotalPrice ?? 0).toLocaleString()}
+														</p>
+													</div>
+													{((equipment as any).quantity !== undefined || (equipment as any).Quantity !== undefined) && (
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('quantity') || 'Quantity'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{(equipment as any).quantity ?? (equipment as any).Quantity ?? 1}
+															</p>
+														</div>
+													)}
+													<div>
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+															{t('provider')}
+														</label>
+														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+															{(equipment as any).provider || (equipment as any).Provider || (equipment as any).manufacturer || (equipment as any).Manufacturer || 'N/A'}
+														</p>
+													</div>
+													<div>
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+															{t('model')}
+														</label>
+														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+															{equipment.model || (equipment as any).Model || 'N/A'}
+														</p>
+													</div>
+													<div>
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+															{t('country')}
+														</label>
+														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+															{(equipment as any).country || (equipment as any).Country || 'N/A'}
+														</p>
+													</div>
+													<div>
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+															{t('warrantyPeriod')}
+														</label>
+														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+															{(equipment as any).warrantyPeriod || (equipment as any).WarrantyPeriod || 'N/A'}
+														</p>
+													</div>
+												</div>
+
+												{/* Description */}
+												<div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+													<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+														{((equipment as any).specifications || (equipment as any).Specifications) ? (t('specifications') || 'Specifications') : (t('description') || 'Description')}
+													</label>
+													<p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+														{(equipment as any).specifications || (equipment as any).Specifications || (equipment as any).description || (equipment as any).Description || 'No description available'}
+													</p>
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+										<p className="text-base text-gray-900 dark:text-gray-100">
+											{(selectedOffer as any).products || 'No equipment details available'}
+										</p>
+									</div>
+								)}
+							</div>
+
+							{/* Additional Details */}
+							{((selectedOffer as any).paymentTerms || (selectedOffer as any).deliveryTerms || (selectedOffer as any).warrantyTerms || (selectedOffer as any).notes) && (
+								<>
+									<Separator />
+									<div className="space-y-3">
+										{(selectedOffer as any).paymentTerms && (
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+													{t('paymentTerms')}
+												</label>
+												{Array.isArray((selectedOffer as any).paymentTerms) ? (
+													<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).paymentTerms.map((term: string, idx: number) => (
+															<li key={idx}>{term}</li>
+														))}
+													</ul>
+												) : (
+													<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).paymentTerms}
+													</p>
+												)}
+											</div>
+										)}
+										{(selectedOffer as any).deliveryTerms && (
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+													{t('deliveryTerms')}
+												</label>
+												{Array.isArray((selectedOffer as any).deliveryTerms) ? (
+													<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).deliveryTerms.map((term: string, idx: number) => (
+															<li key={idx}>{term}</li>
+														))}
+													</ul>
+												) : (
+													<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).deliveryTerms}
+													</p>
+												)}
+											</div>
+										)}
+										{(selectedOffer as any).warrantyTerms && (
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+													{t('warrantyPeriod')}
+												</label>
+												{Array.isArray((selectedOffer as any).warrantyTerms) ? (
+													<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).warrantyTerms.map((term: string, idx: number) => (
+															<li key={idx}>{term}</li>
+														))}
+													</ul>
+												) : (
+													<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{(selectedOffer as any).warrantyTerms}
+													</p>
+												)}
+											</div>
+										)}
+										{(selectedOffer as any).notes && (
+											<div>
+												<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+													{t('notes')}
+												</label>
+												<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+													{(selectedOffer as any).notes}
+												</p>
+											</div>
+										)}
+									</div>
+								</>
+							)}
+
+							<Separator />
+
+							{/* Footer Info */}
+							<div className="text-sm text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700 space-y-1">
+								<div className="flex justify-between">
+									<span>
+										<strong>{t('createdAt')}:</strong> {(selectedOffer as any).createdAt ? format(new Date((selectedOffer as any).createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
+									</span>
+									{(selectedOffer as any).validUntil && (
+										<span>
+											<strong>{t('validUntil')}:</strong> {Array.isArray((selectedOffer as any).validUntil)
+												? (selectedOffer as any).validUntil.map((d: string) => format(new Date(d), 'MMM dd, yyyy')).join(', ')
+												: format(new Date((selectedOffer as any).validUntil), 'MMM dd, yyyy')
+											}
+										</span>
+									)}
+								</div>
+								{selectedOffer.assignedToName && (
+									<div>
+										<strong>{t('assignedTo')}:</strong> {selectedOffer.assignedToName}
+									</div>
+								)}
+								{(selectedOffer as any).createdByName && (
+									<div>
+										<strong>{t('createdBy')}:</strong> {(selectedOffer as any).createdByName}
+									</div>
+								)}
+							</div>
+
+							{/* Action Buttons */}
+							<Separator className="my-4" />
+							<div className="flex flex-wrap justify-end gap-3 pt-4">
+								{/* Status-based action buttons */}
+								{selectedOffer.status === 'Draft' && (
+									<>
+										<Button
+											variant="default"
+											onClick={handleSendToSalesman}
+											disabled={processingAction !== null}
+											className="bg-blue-600 hover:bg-blue-700 text-white"
+										>
+											<CheckCircle className="h-4 w-4 mr-2" />
+											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesman') || 'Send to Salesman'}
+										</Button>
+										<Button
+											variant="outline"
+											onClick={handleOpenNeedsModificationModal}
+											disabled={processingAction !== null}
+											className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+										>
+											<Edit className="h-4 w-4 mr-2" />
+											{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+										</Button>
+									</>
+								)}
+								{selectedOffer.status === 'Sent' && (
+									<>
+										<Button
+											variant="outline"
+											onClick={handleMarkAsUnderReview}
+											disabled={processingAction !== null}
+											className="border-yellow-600 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900"
+										>
+											<Clock className="h-4 w-4 mr-2" />
+											{processingAction === 'underReview' ? t('processing') || 'Processing...' : t('markAsUnderReview') || 'Mark as Under Review'}
+										</Button>
+										<Button
+											variant="outline"
+											onClick={handleOpenNeedsModificationModal}
+											disabled={processingAction !== null}
+											className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+										>
+											<Edit className="h-4 w-4 mr-2" />
+											{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+										</Button>
+									</>
+								)}
+								<Button
+									variant="outline"
+									onClick={handleExportPdf}
+									className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
+								>
+									<Download className="h-4 w-4 mr-2" />
+									{t('exportPdf')}
+								</Button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
+			{/* Needs Modification Modal */}
+			{showNeedsModificationModal && selectedOffer && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+					<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md shadow-2xl">
+						<div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+							<div className="flex justify-between items-center">
+								<h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+									{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+								</h3>
+								<Button
+									onClick={() => {
+										setShowNeedsModificationModal(false);
+										setNeedsModificationReason('');
+									}}
+									variant="ghost"
+									size="sm"
+									className="h-8 w-8 p-0"
+								>
+									×
+								</Button>
+							</div>
+						</div>
+						<div className="p-6 space-y-4">
+							<div>
+								<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+									{t('reason') || 'Reason'} ({t('optional') || 'Optional'})
+								</label>
+								<textarea
+									value={needsModificationReason}
+									onChange={(e) => setNeedsModificationReason(e.target.value)}
+									placeholder={t('enterReasonForModification') || 'Enter reason why this offer needs modification...'}
+									className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+									rows={4}
+									maxLength={1000}
+								/>
+								<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+									{needsModificationReason.length}/1000 {t('characters') || 'characters'}
+								</p>
+							</div>
+							<div className="flex justify-end gap-3 pt-4">
+								<Button
+									variant="outline"
+									onClick={() => {
+										setShowNeedsModificationModal(false);
+										setNeedsModificationReason('');
+									}}
+									disabled={processingAction !== null}
+								>
+									{t('cancel') || 'Cancel'}
+								</Button>
+								<Button
+									variant="default"
+									onClick={handleMarkAsNeedsModification}
+									disabled={processingAction !== null}
+									className="bg-purple-600 hover:bg-purple-700 text-white"
+								>
+									{processingAction === 'needsModification' ? (
+										<>
+											<RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+											{t('processing') || 'Processing...'}
+										</>
+									) : (
+										<>
+											<Edit className="h-4 w-4 mr-2" />
+											{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+										</>
+									)}
+								</Button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+		</div>
+	);
+};
+
+export default OffersManagementPage;
+

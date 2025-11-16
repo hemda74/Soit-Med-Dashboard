@@ -3,11 +3,13 @@ import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/stores/appStore';
-import { changePassword, uploadProfileImage, updateProfileImage, deleteProfileImage } from '@/services';
+import { changePassword, uploadProfileImage, updateProfileImage, deleteProfileImage, updateCurrentUserProfile } from '@/services';
 import { useNotificationStore } from '@/stores/notificationStore';
 import ProfileImageSection from './profile/ProfileImageSection';
 import UserInfoCard from './profile/UserInfoCard';
 import PasswordChangeForm from './profile/PasswordChangeForm';
+import ProfileEditForm from './profile/ProfileEditForm';
+import type { UpdateProfileRequest } from '@/services/user/userProfileApi';
 
 type PasswordFormData = {
     currentPassword: string;
@@ -21,6 +23,7 @@ export default function UserProfile() {
     const { t } = useTranslation();
     const { loading } = useAppStore();
     const [isEditingPassword, setIsEditingPassword] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [isDeletingImage, setIsDeletingImage] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -67,6 +70,50 @@ export default function UserProfile() {
         } catch (error: any) {
             const errorMessage = error.message || 'Failed to change password';
             showError('Password Change Failed', errorMessage);
+        }
+    };
+
+    const onSubmitProfile = async (data: any) => {
+        if (!user?.token) {
+            showError('No authentication token found');
+            return;
+        }
+
+        try {
+            // Convert date to ISO string at midnight UTC to avoid timezone shifts
+            let dateOfBirthISO: string | null = null;
+            if (data.dateOfBirth) {
+                const date = new Date(data.dateOfBirth);
+                // Extract date components first to preserve the selected date
+                // Then create UTC date to avoid timezone shifts
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const day = date.getDate();
+                // Create UTC date from components to ensure correct date regardless of timezone
+                const utcDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+                dateOfBirthISO = utcDate.toISOString();
+            }
+
+            const profileData: UpdateProfileRequest = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phoneNumber: data.phoneNumber || undefined,
+                personalMail: data.personalMail || undefined,
+                dateOfBirth: dateOfBirthISO || undefined,
+            };
+
+            const response = await updateCurrentUserProfile(profileData, user.token);
+
+            if (response.success) {
+                success('Profile Updated Successfully', response.message || 'Your profile has been updated');
+                await fetchUserData();
+                setIsEditingProfile(false);
+            } else {
+                showError('Profile Update Failed', response.message || 'Failed to update profile');
+            }
+        } catch (error: any) {
+            const errorMessage = error.message || 'Failed to update profile';
+            showError('Profile Update Failed', errorMessage);
         }
     };
 
@@ -169,9 +216,24 @@ export default function UserProfile() {
                             user={user}
                             t={t as (key: any) => string}
                             onEditPassword={() => setIsEditingPassword(!isEditingPassword)}
+                            onEditProfile={() => setIsEditingProfile(true)}
                         />
                     </div>
                 </div>
+
+                {/* Profile Edit Modal */}
+                <ProfileEditForm
+                    isOpen={isEditingProfile}
+                    onClose={() => setIsEditingProfile(false)}
+                    onSubmit={onSubmitProfile}
+                    user={{
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        phoneNumber: user.phoneNumber,
+                        personalMail: user.personalMail,
+                        dateOfBirth: user.dateOfBirth,
+                    }}
+                />
 
                 {/* Password Change Modal */}
                 <PasswordChangeForm

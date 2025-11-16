@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePerformance } from '@/hooks/usePerformance';
 
 const ManagerReportsReviewPage: React.FC = () => {
+    usePerformance('ManagerReportsReviewPage');
   return (
     <div className="container mx-auto p-6">
       <Card>

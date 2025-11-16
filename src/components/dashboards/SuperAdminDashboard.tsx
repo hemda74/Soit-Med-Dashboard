@@ -9,8 +9,10 @@ import {
     MonthlyActivityChart,
     SystemHealthChart
 } from '@/components/charts';
+import { usePerformance } from '@/hooks/usePerformance';
 
 const SuperAdminDashboard: React.FC = () => {
+    usePerformance('SuperAdminDashboard');
     const { t } = useTranslation();
     const { user } = useAuthStore();
     const statistics = useStatistics();

@@ -1,21 +1,32 @@
-import { User, Mail, Building, Shield, CheckCircle, XCircle, Key } from 'lucide-react';
+import { User, Mail, Building, Shield, CheckCircle, XCircle, Key, Calendar, Edit } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
 
 interface UserInfoCardProps {
     user: any;
     t: (key: any) => string;
     onEditPassword: () => void;
+    onEditProfile: () => void;
 }
 
-export default function UserInfoCard({ user, t, onEditPassword }: UserInfoCardProps) {
+export default function UserInfoCard({ user, t, onEditPassword, onEditProfile }: UserInfoCardProps) {
     return (
         <div className="space-y-6">
             {/* Personal Information Section */}
             <Card className="bg-card shadow-lg">
                 <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-6">Personal Information</h3>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-semibold text-foreground">Personal Information</h3>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={onEditProfile}
+                            className="bg-card border-border text-card-foreground hover:bg-primary"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                        </Button>
+                    </div>
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Full Name */}
                         <div className="space-y-2">
@@ -52,6 +63,24 @@ export default function UserInfoCard({ user, t, onEditPassword }: UserInfoCardPr
                                 <span className="text-foreground font-medium">{user.departmentName}</span>
                             </div>
                         </div>
+
+                        {/* Date of Birth */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground">{t('dateOfBirth')}</label>
+                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                                <Calendar className="h-5 w-5 text-primary" />
+                                <span className="text-foreground font-medium">
+                                    {user.dateOfBirth 
+                                        ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })
+                                        : t('notProvided')
+                                    }
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -59,7 +88,18 @@ export default function UserInfoCard({ user, t, onEditPassword }: UserInfoCardPr
             {/* Contact Information Section */}
             <Card className="bg-card shadow-lg">
                 <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-6">Contact Information</h3>
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-semibold text-foreground">Contact Information</h3>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={onEditProfile}
+                            className="bg-card border-border text-card-foreground hover:bg-primary"
+                        >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                        </Button>
+                    </div>
                     <div className="grid gap-6 md:grid-cols-2">
                         {/* Email */}
                         <div className="space-y-2">
@@ -94,6 +134,17 @@ export default function UserInfoCard({ user, t, onEditPassword }: UserInfoCardPr
                                         )
                                     )}
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Personal Mail */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground">{t('personalMail')}</label>
+                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                                <Mail className="h-5 w-5 text-primary" />
+                                <span className="text-foreground font-medium truncate">
+                                    {user.personalMail || t('notProvided')}
+                                </span>
                             </div>
                         </div>
                     </div>
