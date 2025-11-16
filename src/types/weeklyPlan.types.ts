@@ -40,17 +40,20 @@ export interface TaskDeal {
 export interface WeeklyPlanTask {
 	id: number;
 	weeklyPlanId: number;
-	taskType: 'Visit' | 'FollowUp' | 'Call' | 'Email' | 'Meeting';
+	title: string;
 	clientId?: number;
 	clientName?: string;
 	clientStatus?: string;
 	clientClassification?: string;
+	clientPhone?: string;
+	clientAddress?: string;
+	clientLocation?: string;
 	plannedDate?: string;
-	plannedTime?: string;
-	purpose?: string;
-	priority: 'High' | 'Medium' | 'Low';
-	status: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	notes?: string; // Description
 	progressCount?: number;
+	isActive?: boolean;
+	createdAt?: string;
+	updatedAt?: string;
 	// Nested data (populated by backend)
 	progresses?: TaskProgress[];
 	offerRequests?: TaskOfferRequest[];
@@ -59,29 +62,27 @@ export interface WeeklyPlanTask {
 }
 
 export interface CreateTaskDto {
-	taskType: 'Visit' | 'FollowUp' | 'Call' | 'Email' | 'Meeting';
+	title: string;
 	clientId?: number;
 	clientName?: string;
 	clientStatus?: string;
 	clientClassification?: string;
+	clientPhone?: string;
+	clientAddress?: string;
+	clientLocation?: string;
 	plannedDate: string; // Required
-	plannedTime?: string; // Optional, e.g., '10:00'
-	purpose?: string;
-	priority: 'High' | 'Medium' | 'Low';
-	status: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	notes?: string; // Description
 }
 
 export interface UpdateTaskDto {
-	taskType?: 'Visit' | 'FollowUp' | 'Call' | 'Email' | 'Meeting';
-	clientId?: number;
+	title?: string;
 	clientName?: string;
-	clientStatus?: string;
+	clientPhone?: string;
+	clientAddress?: string;
+	clientLocation?: string;
 	clientClassification?: string;
 	plannedDate?: string;
-	plannedTime?: string;
-	purpose?: string;
-	priority?: 'High' | 'Medium' | 'Low';
-	status?: 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+	notes?: string; // Description
 }
 
 // ==================== Daily Progress Types ====================

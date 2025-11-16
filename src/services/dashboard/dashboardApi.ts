@@ -54,12 +54,6 @@ export const fetchUserStatistics = async (
 				{},
 		};
 
-		// Log for debugging (remove in production)
-		console.log('📊 Statistics received:', {
-			raw: response,
-			normalized: normalizedResponse,
-		});
-
 		return normalizedResponse;
 	} catch (error) {
 		console.error('Failed to fetch user statistics:', error);

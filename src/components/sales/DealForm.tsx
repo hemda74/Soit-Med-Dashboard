@@ -121,7 +121,7 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                                         <SelectContent>
                                             {getAvailableClients().map((client) => (
                                                 <SelectItem key={client.id} value={client.id}>
-                                                    {client.name} ({client.type})
+                                                    {client.name} {client.classification ? `(${client.classification})` : ''} {client.organizationName ? `- ${client.organizationName}` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

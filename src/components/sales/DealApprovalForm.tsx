@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
+import { salesApi } from '@/services/sales/salesApi';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,10 +57,19 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                 superAdminRequired: action === 'approve' ? data.superAdminRequired : undefined,
             };
 
-            await approveDeal(deal.id, approvalData);
+            // Use correct endpoint based on user role and deal status
+            if (user?.roles.includes('SuperAdmin') && deal.status === 'PendingSuperAdminApproval') {
+                await salesApi.superAdminApproval(deal.id, approvalData);
+            } else if (user?.roles.includes('SalesManager') && deal.status === 'PendingManagerApproval') {
+                await approveDeal(deal.id, approvalData);
+            } else {
+                throw new Error('Invalid approval action');
+            }
+            
             onSuccess?.();
         } catch (error) {
             console.error('Error approving deal:', error);
+            throw error;
         } finally {
             setIsSubmitting(false);
         }
@@ -155,11 +165,19 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-medium text-muted-foreground">Expected Close Date</label>
-                            <p className="text-sm">{format(new Date(deal.expectedCloseDate), 'PPP')}</p>
+                            <p className="text-sm">
+                                {deal.expectedCloseDate && !isNaN(new Date(deal.expectedCloseDate).getTime())
+                                    ? format(new Date(deal.expectedCloseDate), 'PPP')
+                                    : 'Not specified'}
+                            </p>
                         </div>
                         <div>
                             <label className="text-sm font-medium text-muted-foreground">Created</label>
-                            <p className="text-sm">{format(new Date(deal.createdAt), 'PPP')}</p>
+                            <p className="text-sm">
+                                {deal.createdAt && !isNaN(new Date(deal.createdAt).getTime())
+                                    ? format(new Date(deal.createdAt), 'PPP')
+                                    : 'N/A'}
+                            </p>
                         </div>
                     </div>
                 </div>

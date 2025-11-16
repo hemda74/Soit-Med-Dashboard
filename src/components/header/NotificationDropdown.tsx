@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Clock, Wifi, WifiOff, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -16,6 +16,7 @@ import type { Notification, NotificationType } from '@/types/notification.types'
 
 const NotificationDropdown: React.FC = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const {
         unreadCount,
         connectionStatus,
@@ -26,6 +27,7 @@ const NotificationDropdown: React.FC = () => {
     } = useNotificationStore();
 
     const [isInitialized, setIsInitialized] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
 
     // Initialize notifications on component mount
     useEffect(() => {
@@ -71,9 +73,55 @@ const NotificationDropdown: React.FC = () => {
     };
 
     const handleNotificationClick = (notification: Notification) => {
+        // Close dropdown first
+        setDropdownOpen(false);
+
+        // Mark as read
         if (!notification.isRead) {
             markAsRead(notification.id);
         }
+
+        // Navigate based on notification data (same logic as NotificationsPage)
+        if (notification.data) {
+            // Handle offer notifications - navigate to offer details page
+            if (notification.data.offerId) {
+                const offerId = notification.data.offerId;
+                navigate(`/sales-support?offerId=${offerId}`);
+                return;
+            }
+
+            // Handle offer request notifications - navigate directly to the request
+            if (notification.data.offerRequestId || notification.data.requestWorkflowId) {
+                const requestId = notification.data.offerRequestId || notification.data.requestWorkflowId;
+                navigate(`/sales-support/requests?requestId=${requestId}`);
+                return;
+            }
+
+            // Handle client-related notifications
+            if (notification.data.clientId) {
+                navigate(`/sales-support?clientId=${notification.data.clientId}`);
+                return;
+            }
+
+            // Handle task progress notifications
+            if (notification.data.taskProgressId) {
+                navigate(`/dashboard?taskProgressId=${notification.data.taskProgressId}`);
+                return;
+            }
+        }
+
+        // If notification has a custom link, navigate to it
+        if (notification.link) {
+            navigate(notification.link);
+            return;
+        }
+
+        // Fallback: Navigate to notifications page
+        // Store notification ID in sessionStorage to potentially highlight it
+        if (notification.id) {
+            sessionStorage.setItem('highlightNotificationId', notification.id);
+        }
+        navigate('/notifications');
     };
 
     const getConnectionStatusIcon = () => {
@@ -97,7 +145,7 @@ const NotificationDropdown: React.FC = () => {
     };
 
     return (
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
                 <Button
                     variant="outline"

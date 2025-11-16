@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { AlertCircle, UserPlus, CheckCircle, ArrowLeft, Loader2, Shield, Camera, Briefcase, Copy, Check, Mail, Lock, Send, MessageSquare, ExternalLink } from 'lucide-react';
+import { AlertCircle, UserPlus, CheckCircle, ArrowLeft, Loader2, Briefcase, Copy, Check, Mail, Lock, Send, MessageSquare, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -236,6 +236,7 @@ This is an automated message from Soit-Med Admin Panel`;
                             <div className="flex items-center gap-3 pb-3 border-b">
                                 <h2 className="text-lg font-semibold">Personal Information</h2>
                             </div>
+                            <p className="text-sm text-muted-foreground -mt-2">Basic personal details for the user account</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -265,9 +266,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         required
                                     />
                                 </div>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="phoneNumber" className="text-sm font-medium">
                                         {t('phoneNumber')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
@@ -281,6 +280,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         type="tel"
                                     />
                                 </div>
+
                                 <div className="space-y-2">
                                     <Label htmlFor="dateOfBirth" className="text-sm font-medium">
                                         {t('dateOfBirth')} <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
@@ -390,6 +390,7 @@ This is an automated message from Soit-Med Admin Panel`;
                             <div className="flex items-center gap-3 pb-3 border-b">
                                 <h2 className="text-lg font-semibold">Account Credentials</h2>
                             </div>
+                            <p className="text-sm text-muted-foreground -mt-2">Login credentials and security settings</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -408,6 +409,9 @@ This is an automated message from Soit-Med Admin Panel`;
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label htmlFor="password" className="text-sm font-medium">
+                                        {t('password')} <span className="text-destructive">*</span>
+                                    </Label>
                                     <PasswordField
                                         id="password"
                                         value={formData.password}
@@ -416,13 +420,16 @@ This is an automated message from Soit-Med Admin Panel`;
                                         showPassword={showPassword}
                                         onToggleVisibility={onPasswordToggle}
                                         errors={passwordErrors}
-                                        label={t('password')}
+                                        label=""
                                         required
                                         className="h-10"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                                        {t('confirmPassword')} <span className="text-destructive">*</span>
+                                    </Label>
                                     <PasswordField
                                         id="confirmPassword"
                                         value={formData.confirmPassword}
@@ -431,7 +438,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                         showPassword={showConfirmPassword}
                                         onToggleVisibility={onConfirmPasswordToggle}
                                         errors={[]}
-                                        label={t('confirmPassword')}
+                                        label=""
                                         required
                                         className={`h-10 ${formData.confirmPassword && formData.password !== formData.confirmPassword
                                             ? 'border-destructive focus:border-destructive'
@@ -440,7 +447,6 @@ This is an automated message from Soit-Med Admin Panel`;
                                                 : ''
                                             }`}
                                     />
-
                                     {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                                         <p className="text-sm text-destructive flex items-center gap-1.5">
                                             <AlertCircle className="h-3.5 w-3.5" />
@@ -462,16 +468,20 @@ This is an automated message from Soit-Med Admin Panel`;
                             <div className="flex items-center gap-3 pb-3 border-b">
                                 <h2 className="text-lg font-semibold">Profile Information</h2>
                             </div>
+                            <p className="text-sm text-muted-foreground -mt-2">Profile image and additional user details</p>
 
-                            <ImageUploadField
-                                imagePreview={imagePreview}
-                                imageError={imageError}
-                                onImageSelect={onImageSelect}
-                                onRemoveImage={onRemoveImage}
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium">Profile Image</Label>
+                                    <ImageUploadField
+                                        imagePreview={imagePreview}
+                                        imageError={imageError}
+                                        onImageSelect={onImageSelect}
+                                        onRemoveImage={onRemoveImage}
+                                    />
+                                </div>
 
-                            {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
                                     <div className="space-y-2">
                                         <Label htmlFor="specialty" className="text-sm font-medium">
                                             {t('specialty')} <span className="text-destructive">*</span>
@@ -485,16 +495,17 @@ This is an automated message from Soit-Med Admin Panel`;
                                             required
                                         />
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
 
                         {/* Role-Specific Information Section */}
                         {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'technician' || selectedRole === 'sales-manager' || selectedRole === 'maintenance-manager' || selectedRole === 'maintenance-support' || selectedRole === 'spare-parts-coordinator' || selectedRole === 'inventory-manager') && (
-                            <div className="space-y-4">
+                            <div className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-center gap-3 pb-3 border-b">
                                     <h2 className="text-lg font-semibold">Role-Specific Information</h2>
                                 </div>
+                                <p className="text-sm text-muted-foreground -mt-2"></p>
 
                                 {roleConfig.requiresHospital && (
                                     <HospitalSelector

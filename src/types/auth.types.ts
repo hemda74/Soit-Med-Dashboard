@@ -30,9 +30,9 @@ export interface AuthUser {
 	departmentId: number;
 	departmentName: string;
 	departmentDescription: string;
-	emailConfirmed: boolean;
-	phoneNumberConfirmed: boolean;
 	phoneNumber: string | null;
+	personalMail?: string | null;
+	dateOfBirth?: string | null;
 	profileImage: {
 		id: number;
 		userId: string;
@@ -55,6 +55,16 @@ export interface AuthContextType {
 	logout: () => void;
 	isAuthenticated: boolean;
 	isAdmin: boolean;
+}
+
+// Profile completion status
+export interface ProfileCompletionDTO {
+	progress: number;
+	completedSteps: number;
+	totalSteps: number;
+	remainingSteps: number;
+	completedFields: string[];
+	missingFields: string[];
 }
 
 // Additional auth-related types

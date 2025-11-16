@@ -2,7 +2,6 @@ import React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface PasswordFieldProps {
@@ -26,7 +25,6 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
     showPassword,
     onToggleVisibility,
     errors,
-    label,
     required = false,
     className = ''
 }) => {
@@ -34,7 +32,6 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
 
     return (
         <div className="space-y-2">
-            <Label htmlFor={id}>{label} {required && '*'}</Label>
             <div className="relative">
                 <Input
                     id={id}

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { salesApi } from '@/services/sales/salesApi';
+import type { OfferEquipment } from '@/types/sales.types';
 import ClientSearch from './ClientSearch';
 import SalesSupportClientDetails from './SalesSupportClientDetails';
 import OfferRequestForm from './OfferRequestForm';
@@ -22,9 +25,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { downloadOfferPDF } from '@/utils/pdfGenerator';
+import toast from 'react-hot-toast';
+import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
+import { usePerformance } from '@/hooks/usePerformance';
 
 const SalesSupportDashboard: React.FC = () => {
+	usePerformance('SalesSupportDashboard');
 	const { t } = useTranslation();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const {
 		getAssignedRequests,
 		updateRequestStatus,
@@ -48,6 +57,9 @@ const SalesSupportDashboard: React.FC = () => {
 	const [selectedClient, setSelectedClient] = useState<any>(null);
 	const [selectedRequest, setSelectedRequest] = useState<any>(null);
 	const [selectedOffer, setSelectedOffer] = useState<any>(null);
+	const [offerEquipment, setOfferEquipment] = useState<OfferEquipment[]>([]);
+	const [loadingEquipment, setLoadingEquipment] = useState(false);
+	const [equipmentImageUrls, setEquipmentImageUrls] = useState<Record<number, string>>({});
 	const [showOfferForm, setShowOfferForm] = useState(false);
 	const [activeTab, setActiveTab] = useState('overview');
 	const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +69,22 @@ const SalesSupportDashboard: React.FC = () => {
 		getAssignedRequests();
 		getMyOffers();
 	}, [getAssignedRequests, getMyOffers]);
+
+	// Handle offerId from URL parameter (for navigation from notifications)
+	useEffect(() => {
+		const offerIdFromUrl = searchParams.get('offerId');
+		if (offerIdFromUrl && offers.length > 0) {
+			const offer = offers.find((o: any) => o.id.toString() === offerIdFromUrl);
+			if (offer) {
+				setSelectedOffer(offer);
+				// Switch to offers tab to show the offer
+				setActiveTab('offers');
+				// Clear the URL parameter after opening the offer
+				searchParams.delete('offerId');
+				setSearchParams(searchParams, { replace: true });
+			}
+		}
+	}, [searchParams, offers, setSearchParams]);
 
 	// Load all clients when clients tab is opened
 	useEffect(() => {
@@ -72,12 +100,156 @@ const SalesSupportDashboard: React.FC = () => {
 		}
 	}, [selectedClient, getOffersByClient]);
 
+	// Load equipment images - use direct URLs since static files should be public
+	useEffect(() => {
+		const loadEquipmentImages = async () => {
+			if (offerEquipment.length > 0 && selectedOffer?.id) {
+				const imageUrls: Record<number, string> = {};
+
+				// Try to load images for each equipment
+				for (const equipment of offerEquipment) {
+					// Check all possible field names for imagePath
+					let imagePath = equipment.imagePath ||
+						(equipment as any).ImagePath ||
+						(equipment as any).imagePath ||
+						(equipment as any).ImagePath;
+
+					// If no image path in equipment data, try to fetch it from API
+					if (!imagePath || imagePath.trim() === '' || imagePath.includes('equipment-placeholder.png')) {
+						try {
+							const imageResponse = await salesApi.getEquipmentImage(selectedOffer.id, equipment.id);
+							if (imageResponse.success && imageResponse.data) {
+								imagePath = imageResponse.data.imagePath ||
+									(imageResponse.data as any).ImagePath ||
+									(imageResponse.data as any).imagePath;
+							}
+						} catch (error) {
+							// Silently handle image fetch errors
+						}
+					}
+
+					if (imagePath && imagePath.trim() !== '' && !imagePath.includes('equipment-placeholder.png')) {
+						const imageUrl = getStaticFileUrl(imagePath);
+						imageUrls[equipment.id] = imageUrl;
+					}
+				}
+				setEquipmentImageUrls(imageUrls);
+			} else {
+				setEquipmentImageUrls({});
+			}
+		};
+
+		loadEquipmentImages();
+	}, [offerEquipment, selectedOffer?.id]);
+
+	// Load offer equipment when an offer is selected
+	useEffect(() => {
+		const loadOfferEquipment = async () => {
+			if (selectedOffer?.id) {
+				setLoadingEquipment(true);
+				try {
+					const response = await salesApi.getOfferEquipment(selectedOffer.id);
+					if (response.data && Array.isArray(response.data)) {
+						setOfferEquipment(response.data);
+					} else {
+						setOfferEquipment([]);
+					}
+				} catch (error) {
+					setOfferEquipment([]);
+				} finally {
+					setLoadingEquipment(false);
+				}
+			} else {
+				setOfferEquipment([]);
+			}
+		};
+
+		loadOfferEquipment();
+	}, [selectedOffer]);
+
 	const handleStatusUpdate = async (requestId: string, status: string, comment: string = '') => {
 		try {
 			await updateRequestStatus(requestId, status as any, comment);
 			getAssignedRequests();
 		} catch (error) {
-			console.error('Error updating request status:', error);
+			// Error updating request status
+		}
+	};
+
+	const handleSendToSalesman = async () => {
+		if (!selectedOffer) return;
+		try {
+			await salesApi.sendOfferToSalesman(selectedOffer.id);
+			// Refresh offer data
+			const { data } = await salesApi.getOffer(selectedOffer.id);
+			if (data) {
+				setSelectedOffer(data);
+			}
+			toast.success('Offer sent to salesman successfully');
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to send offer to salesman');
+		}
+	};
+
+	const handleExportPdf = async () => {
+		if (!selectedOffer) return;
+		try {
+			// Handle arrays - convert to string for PDF display
+			const formatArray = (arr: string[] | string | undefined): string => {
+				if (!arr) return '';
+				if (Array.isArray(arr)) {
+					return arr.filter(item => item && item.trim()).join('; ');
+				}
+				return String(arr);
+			}
+
+			// Fetch equipment data for PDF
+			let equipmentData: any[] = [];
+			try {
+				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
+				if (equipmentResponse.success && equipmentResponse.data) {
+					// Normalize equipment data to match PDF generator interface
+					equipmentData = equipmentResponse.data.map((eq: any) => ({
+						id: eq.id,
+						name: eq.name || 'N/A',
+						model: eq.model,
+						provider: eq.provider || eq.Provider || eq.manufacturer,
+						country: eq.country || eq.Country,
+						year: eq.year ?? eq.Year,
+						price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
+						description: eq.description || eq.Description || eq.specifications,
+						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
+						imagePath: eq.imagePath || eq.ImagePath,
+					}));
+				}
+			} catch (e) {
+				// Equipment data not available for PDF
+			}
+
+			// Generate PDF from frontend
+			await downloadOfferPDF({
+				id: selectedOffer.id,
+				clientName: selectedOffer.clientName || 'Client',
+				clientType: undefined,
+				clientLocation: undefined,
+				products: selectedOffer.products,
+				totalAmount: selectedOffer.totalAmount,
+				discountAmount: selectedOffer.discountAmount,
+				validUntil: formatArray(selectedOffer.validUntil),
+				paymentTerms: formatArray(selectedOffer.paymentTerms),
+				deliveryTerms: formatArray(selectedOffer.deliveryTerms),
+				warrantyTerms: formatArray(selectedOffer.warrantyTerms),
+				createdAt: selectedOffer.createdAt,
+				status: selectedOffer.status,
+				assignedToName: selectedOffer.assignedToName,
+				equipment: equipmentData,
+			}, {
+				generateBothLanguages: true, // Generate both Arabic and English versions
+				showProductHeaders: true,
+			});
+			toast.success('PDF exported successfully! Both Arabic and English versions downloaded.');
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to export PDF');
 		}
 	};
 
@@ -201,11 +373,11 @@ const SalesSupportDashboard: React.FC = () => {
 						<CardContent className="p-6">
 							<div className="flex items-center justify-between">
 								<div>
-									<p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+									<p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('completed') || 'Completed'}</p>
 									<p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
 										{offers?.filter(o => o.status === 'Accepted').length || 0}
 									</p>
-									<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Accepted</p>
+									<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('accepted') || 'Accepted'}</p>
 								</div>
 								<div className="bg-green-100 dark:bg-green-900 p-4 rounded-full">
 									<CheckCircleIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -412,9 +584,14 @@ const SalesSupportDashboard: React.FC = () => {
 															{offer.products || 'N/A'}
 														</p>
 														<div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-500">
-															<span>Created: {offer.createdAt ? format(new Date(offer.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
+															<span>{t('created') || 'Created'}: {offer.createdAt ? format(new Date(offer.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
 															{offer.validUntil && (
-																<span>Valid Until: {format(new Date(offer.validUntil), 'MMM dd, yyyy')}</span>
+																<span>
+																	{t('validUntil') || 'Valid Until'}: {Array.isArray(offer.validUntil)
+																		? offer.validUntil.map((d: string) => format(new Date(d), 'MMM dd, yyyy')).join(', ')
+																		: format(new Date(offer.validUntil), 'MMM dd, yyyy')
+																	}
+																</span>
 															)}
 														</div>
 													</div>
@@ -440,7 +617,7 @@ const SalesSupportDashboard: React.FC = () => {
 														e.stopPropagation();
 														setSelectedOffer(offer);
 													}}>
-														View Details
+														{t('viewDetails') || 'View Details'}
 													</Button>
 												</div>
 											</div>
@@ -449,7 +626,7 @@ const SalesSupportDashboard: React.FC = () => {
 								) : (
 									<div className="text-center py-16">
 										<ArchiveBoxIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-										<p className="text-gray-500 dark:text-gray-400 text-lg">No offers found</p>
+										<p className="text-gray-500 dark:text-gray-400 text-lg">{t('noOffersFound') || 'No offers found'}</p>
 										{searchQuery && (
 											<p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Try adjusting your search</p>
 										)}
@@ -496,8 +673,8 @@ const SalesSupportDashboard: React.FC = () => {
 																{request.description}
 															</p>
 															<div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-500">
-																<span>Client: {request.clientName}</span>
-																<span>Requested by: {request.requestedByName}</span>
+																<span>{t('client') || 'Client'}: {request.clientName}</span>
+																<span>{t('requestedBy') || 'Requested by'}: {request.requestedByName}</span>
 																<span>{request.createdAt ? format(new Date(request.createdAt), 'MMM dd, yyyy') : 'N/A'}</span>
 															</div>
 														</div>
@@ -536,7 +713,7 @@ const SalesSupportDashboard: React.FC = () => {
 															size="sm"
 															className="bg-green-600 hover:bg-green-700"
 														>
-															Complete
+															{t('complete') || 'Complete'}
 														</Button>
 													)}
 													<Button
@@ -544,7 +721,7 @@ const SalesSupportDashboard: React.FC = () => {
 														size="sm"
 														onClick={() => setSelectedRequest(request)}
 													>
-														View Details
+														{t('viewDetails') || 'View Details'}
 													</Button>
 												</div>
 											</div>
@@ -566,14 +743,15 @@ const SalesSupportDashboard: React.FC = () => {
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 							<Card className="lg:col-span-1 shadow-md">
 								<CardHeader>
-									<CardTitle>Search Clients</CardTitle>
+									<CardTitle>{t('searchClients') || 'Search Clients'}</CardTitle>
 									<CardDescription>Find and manage clients</CardDescription>
 								</CardHeader>
 								<CardContent>
 									<ClientSearch
 										onClientSelect={setSelectedClient}
-										placeholder="Search by name, type, or location..."
+										placeholder="Search by name, phone, or organization..."
 										className="mb-4"
+										showClassificationFilter={true}
 									/>
 									<Separator />
 									<div className="mt-4">
@@ -598,9 +776,11 @@ const SalesSupportDashboard: React.FC = () => {
 														>
 															<div className="font-medium text-gray-900 dark:text-gray-100">{client.name}</div>
 															<div className="text-sm text-gray-500 dark:text-gray-400">
-																{client.type} • {client.specialization || 'N/A'}
+																{client.organizationName || 'N/A'} {client.classification ? `• ${client.classification}` : ''}
 															</div>
-															<div className="text-xs text-gray-400 dark:text-gray-500">{client.location}</div>
+															{client.phone && (
+																<div className="text-xs text-gray-400 dark:text-gray-500">{client.phone}</div>
+															)}
 														</div>
 													))}
 												</div>
@@ -613,10 +793,10 @@ const SalesSupportDashboard: React.FC = () => {
 															onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
 															disabled={!pagination.hasPreviousPage || clientsLoading}
 														>
-															Previous
+															{t('previous') || 'Previous'}
 														</Button>
 														<span className="text-sm text-gray-600 dark:text-gray-400">
-															Page {pagination.page} of {pagination.totalPages}
+															{t('page') || 'Page'} {pagination.page} {t('of') || 'of'} {pagination.totalPages}
 														</span>
 														<Button
 															variant="outline"
@@ -624,7 +804,7 @@ const SalesSupportDashboard: React.FC = () => {
 															onClick={() => setCurrentPage(p => p + 1)}
 															disabled={!pagination.hasNextPage || clientsLoading}
 														>
-															Next
+															{t('next') || 'Next'}
 														</Button>
 													</div>
 												)}
@@ -679,20 +859,23 @@ const SalesSupportDashboard: React.FC = () => {
 
 				{/* Offer Details Modal */}
 				{selectedOffer && (
-					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-						<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl shadow-2xl">
+					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+						<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl shadow-2xl my-8">
 							<div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
 								<div className="flex justify-between items-start">
 									<div>
 										<h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-											Offer Details
+											{t('offerDetails') || 'Offer Details'}
 										</h3>
 										<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
 											{selectedOffer.clientName}
 										</p>
 									</div>
 									<Button
-										onClick={() => setSelectedOffer(null)}
+										onClick={() => {
+											setSelectedOffer(null);
+											setOfferEquipment([]);
+										}}
 										variant="destructive"
 										size="sm"
 										className="h-8 w-8 p-0"
@@ -702,20 +885,12 @@ const SalesSupportDashboard: React.FC = () => {
 								</div>
 							</div>
 
-							<div className="p-6 space-y-4">
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-										Products
-									</label>
-									<p className="text-base text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-										{selectedOffer.products || 'N/A'}
-									</p>
-								</div>
-
+							<div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+								{/* Offer Info Section */}
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-											Status
+											{t('status') || 'Status'}
 										</label>
 										<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
 											{selectedOffer.status}
@@ -725,19 +900,364 @@ const SalesSupportDashboard: React.FC = () => {
 										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
 											Value
 										</label>
-										<p className="text-base text-gray-900 dark:text-gray-100">
+										<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
 											{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
 										</p>
+										{selectedOffer.discountAmount && selectedOffer.discountAmount > 0 && (
+											<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+												{t('discount') || 'Discount'}: EGP {selectedOffer.discountAmount.toLocaleString()}
+											</p>
+										)}
 									</div>
 								</div>
 
-								<div className="text-xs text-gray-500 dark:text-gray-500 pt-4 border-t dark:border-gray-700">
-									Created: {selectedOffer.createdAt ? format(new Date(selectedOffer.createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
-									{selectedOffer.validUntil && (
-										<span className="ml-4">
-											Valid Until: {format(new Date(selectedOffer.validUntil), 'MMM dd, yyyy HH:mm')}
-										</span>
+								<Separator />
+
+								{/* Products Section */}
+								<div>
+									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+										Equipment Details
+									</label>
+
+									{loadingEquipment ? (
+										<div className="text-center py-4">
+											<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+											<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading equipment details...</p>
+										</div>
+									) : offerEquipment && offerEquipment.length > 0 ? (
+										<div className="space-y-4">
+											{offerEquipment.map((equipment, index) => (
+												<div
+													key={equipment.id || index}
+													className="bg-gray-50 dark:bg-gray-700 p-5 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
+												>
+													{/* Header with Image, Name and Price */}
+													<div className="flex gap-4 mb-4 pb-3 border-b border-gray-200 dark:border-gray-600">
+														{/* Equipment Image - Always show container */}
+														<div className="flex-shrink-0">
+															{(() => {
+																const imagePath = equipment.imagePath || (equipment as any).ImagePath || (equipment as any).imagePath;
+																const imageUrlFromState = equipmentImageUrls[equipment.id];
+
+																// Get image URL - prefer state, fallback to constructing from path
+																let imageUrl: string | null = null;
+																if (imageUrlFromState) {
+																	imageUrl = imageUrlFromState;
+																} else if (imagePath && imagePath.trim() !== '') {
+																	imageUrl = getStaticFileUrl(imagePath);
+																}
+
+																// Skip placeholder images
+																if (imageUrl &&
+																	imagePath &&
+																	!imagePath.includes('equipment-placeholder.png') &&
+																	!imageUrl.includes('No Image') &&
+																	!imageUrl.startsWith('data:image/svg+xml')) {
+																	// Try to use direct API endpoint as fallback if static URL fails
+																	const apiImageUrl = `${getApiBaseUrl()}/api/Offer/${selectedOffer.id}/equipment/${equipment.id}/image-file`;
+
+																	return (
+																		<img
+																			src={imageUrl}
+																			alt={equipment.name || 'Equipment image'}
+																			className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+																			loading="lazy"
+																			onError={(e) => {
+																				// Try API endpoint as fallback
+																				const target = e.target as HTMLImageElement;
+																				target.src = apiImageUrl;
+																				target.onerror = () => {
+																					// If API endpoint also fails, show placeholder
+																					target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"%3E%3Crect fill="%23e5e7eb" width="96" height="96"/%3E%3Ctext fill="%239ca3af" font-family="Arial" font-size="12" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+																					target.onerror = null; // Prevent infinite loop
+																				};
+																			}}
+																		/>
+																	);
+																} else {
+																	// Show placeholder if no image path or is placeholder
+																	return (
+																		<div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-500 flex items-center justify-center">
+																			<span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
+																		</div>
+																	);
+																}
+															})()}
+														</div>
+														<div className="flex-1">
+															<h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1">
+																{equipment.name}
+															</h4>
+															{(equipment.model || (equipment as any).provider || (equipment as any).Provider) && (
+																<p className="text-sm text-gray-600 dark:text-gray-400">
+																	{((equipment as any).provider || (equipment as any).Provider) && (
+																		<span className="font-medium">{(equipment as any).provider || (equipment as any).Provider}</span>
+																	)}
+																	{((equipment as any).provider || (equipment as any).Provider) && equipment.model && ' - '}
+																	{equipment.model && <span>{equipment.model}</span>}
+																</p>
+															)}
+														</div>
+														<div className="text-right ml-4">
+															<p className="font-bold text-xl text-blue-600 dark:text-blue-400">
+																EGP {((equipment as any).price ?? (equipment as any).Price ?? (equipment as any).totalPrice ?? (equipment as any).TotalPrice ?? 0).toLocaleString()}
+															</p>
+														</div>
+													</div>
+
+													{/* Equipment Details Grid - Show ALL fields */}
+													<div className="grid grid-cols-2 gap-4 mb-3">
+														{/* Price - Always show */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('price') || 'Price'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																EGP {((equipment as any).price ?? (equipment as any).Price ?? (equipment as any).totalPrice ?? (equipment as any).TotalPrice ?? 0).toLocaleString()}
+															</p>
+														</div>
+
+														{/* Quantity - show if available */}
+														{((equipment as any).quantity !== undefined || (equipment as any).Quantity !== undefined) && (
+															<div>
+																<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																	{t('quantity') || 'Quantity'}
+																</label>
+																<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																	{(equipment as any).quantity ?? (equipment as any).Quantity ?? 1}
+																</p>
+															</div>
+														)}
+
+														{/* Unit Price - show if available */}
+														{((equipment as any).unitPrice !== undefined || (equipment as any).UnitPrice !== undefined) && (
+															<div>
+																<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																	Unit Price
+																</label>
+																<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																	EGP {((equipment as any).unitPrice ?? (equipment as any).UnitPrice ?? 0).toLocaleString()}
+																</p>
+															</div>
+														)}
+
+														{/* Provider (Manufacturer) - Always show field */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('provider') || 'Provider'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{(equipment as any).provider || (equipment as any).Provider || (equipment as any).manufacturer || (equipment as any).Manufacturer || 'N/A'}
+															</p>
+														</div>
+
+														{/* Model - Always show field */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('model') || 'Model'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{equipment.model || (equipment as any).Model || 'N/A'}
+															</p>
+														</div>
+
+														{/* Country - Always show field */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('country') || 'Country'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{(equipment as any).country || (equipment as any).Country || 'N/A'}
+															</p>
+														</div>
+
+														{/* Year - Always show field */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																Year
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{(equipment as any).year ?? (equipment as any).Year ?? 'N/A'}
+															</p>
+														</div>
+
+														{/* In Stock - Always show */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																Stock Status
+															</label>
+															<Badge className={((equipment as any).inStock ?? (equipment as any).InStock ?? true) ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}>
+																{((equipment as any).inStock ?? (equipment as any).InStock ?? true) ? 'In Stock' : 'Out of Stock'}
+															</Badge>
+														</div>
+
+														{/* Warranty Period - Always show field */}
+														<div>
+															<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+																{t('warrantyPeriod') || 'Warranty Period'}
+															</label>
+															<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																{(equipment as any).warrantyPeriod || (equipment as any).WarrantyPeriod || 'N/A'}
+															</p>
+														</div>
+													</div>
+
+													{/* Description (Specifications) - Always show */}
+													<div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+															{((equipment as any).specifications || (equipment as any).Specifications) ? (t('specifications') || 'Specifications') : (t('description') || 'Description')}
+														</label>
+														<p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+															{(equipment as any).specifications || (equipment as any).Specifications || (equipment as any).description || (equipment as any).Description || 'No description available'}
+														</p>
+													</div>
+
+													{/* Price Breakdown (if quantity > 1) */}
+													{(equipment as any).quantity > 1 && (equipment as any).unitPrice !== undefined && (
+														<div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+															<div className="flex justify-between items-center text-sm">
+																<span className="text-gray-600 dark:text-gray-400">
+																	{(equipment as any).quantity ?? 1} × EGP {((equipment as any).unitPrice ?? 0).toLocaleString()}
+																</span>
+																<span className="font-semibold text-gray-900 dark:text-gray-100">
+																	= EGP {((equipment as any).totalPrice ?? (equipment as any).price ?? 0).toLocaleString()}
+																</span>
+															</div>
+														</div>
+													)}
+												</div>
+											))}
+										</div>
+									) : (
+										<div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+											<p className="text-base text-gray-900 dark:text-gray-100">
+												{selectedOffer.products || 'No equipment details available'}
+											</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+												Equipment details will be displayed here when available.
+											</p>
+										</div>
 									)}
+								</div>
+
+								{/* Additional Details */}
+								{(selectedOffer.paymentTerms || selectedOffer.deliveryTerms || selectedOffer.warrantyTerms || selectedOffer.notes) && (
+									<>
+										<Separator />
+										<div className="space-y-3">
+											{selectedOffer.paymentTerms && (
+												<div>
+													<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+														{t('paymentTerms') || 'Payment Terms'}
+													</label>
+													{Array.isArray(selectedOffer.paymentTerms) ? (
+														<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.paymentTerms.map((term: string, idx: number) => (
+																<li key={idx}>{term}</li>
+															))}
+														</ul>
+													) : (
+														<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.paymentTerms}
+														</p>
+													)}
+												</div>
+											)}
+											{selectedOffer.deliveryTerms && (
+												<div>
+													<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+														{t('deliveryTerms') || 'Delivery Terms'}
+													</label>
+													{Array.isArray(selectedOffer.deliveryTerms) ? (
+														<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.deliveryTerms.map((term: string, idx: number) => (
+																<li key={idx}>{term}</li>
+															))}
+														</ul>
+													) : (
+														<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.deliveryTerms}
+														</p>
+													)}
+												</div>
+											)}
+											{selectedOffer.warrantyTerms && (
+												<div>
+													<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+														Warranty Terms
+													</label>
+													{Array.isArray(selectedOffer.warrantyTerms) ? (
+														<ul className="list-disc list-inside space-y-1 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.warrantyTerms.map((term: string, idx: number) => (
+																<li key={idx}>{term}</li>
+															))}
+														</ul>
+													) : (
+														<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+															{selectedOffer.warrantyTerms}
+														</p>
+													)}
+												</div>
+											)}
+											{selectedOffer.notes && (
+												<div>
+													<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+														{t('notes') || 'Notes'}
+													</label>
+													<p className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+														{selectedOffer.notes}
+													</p>
+												</div>
+											)}
+										</div>
+									</>
+								)}
+
+								<Separator />
+
+								{/* Footer Info */}
+								<div className="text-sm text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700 space-y-1">
+									<div className="flex justify-between">
+										<span>
+											<strong>{t('created') || 'Created'}:</strong> {selectedOffer.createdAt ? format(new Date(selectedOffer.createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
+										</span>
+										{selectedOffer.validUntil && (
+											<span>
+												<strong>{t('validUntil') || 'Valid Until'}:</strong> {Array.isArray(selectedOffer.validUntil)
+													? selectedOffer.validUntil.map((d: string) => format(new Date(d), 'MMM dd, yyyy')).join(', ')
+													: format(new Date(selectedOffer.validUntil), 'MMM dd, yyyy')
+												}
+											</span>
+										)}
+									</div>
+									{selectedOffer.assignedToName && (
+										<div>
+											<strong>{t('assignedTo') || 'Assigned To'}:</strong> {selectedOffer.assignedToName}
+										</div>
+									)}
+									{selectedOffer.createdByName && (
+										<div>
+											<strong>{t('createdBy') || 'Created By'}:</strong> {selectedOffer.createdByName}
+										</div>
+									)}
+								</div>
+
+								{/* Action Buttons */}
+								<Separator className="my-4" />
+								<div className="flex justify-end gap-3 pt-4">
+									<Button
+										onClick={handleSendToSalesman}
+										className="bg-blue-600 hover:bg-blue-700 text-white"
+									>
+										{t('sendToSalesman') || 'Send to Salesman'}
+									</Button>
+									<Button
+										variant="outline"
+										onClick={handleExportPdf}
+										className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
+									>
+										Export PDF
+									</Button>
 								</div>
 							</div>
 						</div>
@@ -772,7 +1292,7 @@ const SalesSupportDashboard: React.FC = () => {
 							<div className="p-6 space-y-4">
 								<div>
 									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-										Description
+										{t('description') || 'Description'}
 									</label>
 									<p className="text-base text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
 										{selectedRequest.description}
@@ -782,7 +1302,7 @@ const SalesSupportDashboard: React.FC = () => {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-											Status
+											{t('status') || 'Status'}
 										</label>
 										<Badge className={getStatusColor(selectedRequest.status)}>
 											{selectedRequest.status}
@@ -812,7 +1332,7 @@ const SalesSupportDashboard: React.FC = () => {
 								{selectedRequest?.comments && selectedRequest.comments.length > 0 && (
 									<div>
 										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-											Comments
+											{t('notes') || 'Comments'}
 										</label>
 										<div className="space-y-2 max-h-48 overflow-y-auto">
 											{selectedRequest.comments.map((comment: any, index: number) => (

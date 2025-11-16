@@ -13,8 +13,8 @@ export const LanguageSelector: React.FC = () => {
     const { language, setLanguage } = useThemeStore();
 
     const languages = [
-        { code: 'en', name: 'English', flag: '🇺🇸' },
-        { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+        { code: 'en', name: 'English' },
+        { code: 'ar', name: 'العربية' },
     ];
 
     return (
@@ -36,7 +36,6 @@ export const LanguageSelector: React.FC = () => {
                         onClick={() => setLanguage(lang.code as 'en' | 'ar')}
                         className="flex items-center gap-3 cursor-pointer"
                     >
-                        <span className="text-lg">{lang.flag}</span>
                         <span className="flex-1">{lang.name}</span>
                         {language === lang.code && (
                             <span className="text-primary">✓</span>

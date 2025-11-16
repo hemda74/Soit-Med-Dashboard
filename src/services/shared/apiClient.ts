@@ -1,6 +1,7 @@
 // Shared API client and utilities
 
 import { getApiUrl } from '@/config/api';
+import { performanceMonitor } from '@/utils/performance';
 
 // Generic API request function with error handling
 export async function apiRequest<T>(
@@ -8,56 +9,58 @@ export async function apiRequest<T>(
 	options: RequestInit = {},
 	token?: string
 ): Promise<T> {
-	const url = getApiUrl(endpoint);
+	return performanceMonitor.measureApiCall(endpoint, async () => {
+		const url = getApiUrl(endpoint);
 
-	const defaultHeaders: HeadersInit = {};
+		const defaultHeaders: HeadersInit = {};
 
-	// Only set Content-Type for JSON requests, not for FormData
-	if (!(options.body instanceof FormData)) {
-		defaultHeaders['Content-Type'] = 'application/json';
-	}
-
-	if (token) {
-		defaultHeaders.Authorization = `Bearer ${token}`;
-	}
-
-	const response = await fetch(url, {
-		...options,
-		headers: {
-			...defaultHeaders,
-			...options.headers,
-		},
-	});
-
-	if (!response.ok) {
-		const errorText = await response.text();
-		let errorData: any;
-
-		try {
-			errorData = JSON.parse(errorText);
-		} catch {
-			errorData = {
-				message:
-					errorText ||
-					`HTTP ${response.status}: Request failed`,
-				status: response.status,
-			};
+		// Only set Content-Type for JSON requests, not for FormData
+		if (!(options.body instanceof FormData)) {
+			defaultHeaders['Content-Type'] = 'application/json';
 		}
 
-		throw errorData;
-	}
+		if (token) {
+			defaultHeaders.Authorization = `Bearer ${token}`;
+		}
 
-	const responseText = await response.text();
-	let jsonData: T;
+		const response = await fetch(url, {
+			...options,
+			headers: {
+				...defaultHeaders,
+				...options.headers,
+			},
+		});
 
-	try {
-		jsonData = JSON.parse(responseText);
-	} catch (parseError) {
-		console.error('JSON parse error:', parseError);
-		throw new Error('Failed to parse response as JSON');
-	}
+		if (!response.ok) {
+			const errorText = await response.text();
+			let errorData: any;
 
-	return jsonData;
+			try {
+				errorData = JSON.parse(errorText);
+			} catch {
+				errorData = {
+					message:
+						errorText ||
+						`HTTP ${response.status}: Request failed`,
+					status: response.status,
+				};
+			}
+
+			throw errorData;
+		}
+
+		const responseText = await response.text();
+		let jsonData: T;
+
+		try {
+			jsonData = JSON.parse(responseText);
+		} catch (parseError) {
+			console.error('JSON parse error:', parseError);
+			throw new Error('Failed to parse response as JSON');
+		}
+
+		return jsonData;
+	});
 }
 
 // API Error interface
@@ -86,4 +89,10 @@ export interface PaginatedApiResponse<T> {
 	message: string;
 	data: T;
 	timestamp: string;
+	pagination: {
+		currentPage: number;
+		totalPages: number;
+		totalItems: number;
+		itemsPerPage: number;
+	};
 }

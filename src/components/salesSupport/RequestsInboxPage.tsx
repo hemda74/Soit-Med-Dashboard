@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useSalesStore } from '@/stores/salesStore';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { useSearchParams } from 'react-router-dom';
 import { salesApi } from '@/services/sales/salesApi';
-import { useTranslation } from '@/hooks/useTranslation';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { usePerformance } from '@/hooks/usePerformance';
 import {
     InboxIcon,
     CheckCircleIcon,
@@ -38,11 +38,12 @@ import {
 import toast from 'react-hot-toast';
 import type { OfferRequest } from '@/types/sales.types';
 
-type OfferRequestStatus = 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
+type OfferRequestStatus = 'Requested' | 'Assigned' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
 
 export default function RequestsInboxPage() {
-    const { t } = useTranslation();
+    usePerformance('RequestsInboxPage');
     const { user } = useAuthStore();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [offerRequests, setOfferRequests] = useState<OfferRequest[]>([]);
     const [filteredRequests, setFilteredRequests] = useState<OfferRequest[]>([]);
     const [loading, setLoading] = useState(false);
@@ -56,13 +57,10 @@ export default function RequestsInboxPage() {
     const [selectedRequest, setSelectedRequest] = useState<OfferRequest | null>(null);
     const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-    // Assign dialog
-    const [showAssignDialog, setShowAssignDialog] = useState(false);
-    const [assigningTo, setAssigningTo] = useState('');
 
     // Status update dialog
     const [showStatusDialog, setShowStatusDialog] = useState(false);
-    const [newStatus, setNewStatus] = useState<OfferRequestStatus>('Pending');
+    const [newStatus, setNewStatus] = useState<OfferRequestStatus>('Requested');
     const [statusNotes, setStatusNotes] = useState('');
 
     // Load offer requests
@@ -104,6 +102,24 @@ export default function RequestsInboxPage() {
         loadOfferRequests();
     }, [statusFilter]);
 
+    // Handle URL parameter for direct navigation from notification
+    useEffect(() => {
+        const requestIdFromUrl = searchParams.get('requestId');
+        if (requestIdFromUrl && offerRequests.length > 0) {
+            const request = offerRequests.find(
+                (req) => req.id.toString() === requestIdFromUrl
+            );
+            if (request) {
+                setSelectedRequest(request);
+                setShowDetailsDialog(true);
+                // Clear the URL parameter after opening the dialog
+                searchParams.delete('requestId');
+                setSearchParams(searchParams);
+                toast.success('Opening request from notification');
+            }
+        }
+    }, [searchParams, offerRequests, setSearchParams]);
+
     // Filter by search query
     useEffect(() => {
         if (!searchQuery.trim()) {
@@ -121,27 +137,6 @@ export default function RequestsInboxPage() {
         );
         setFilteredRequests(filtered);
     }, [searchQuery, offerRequests]);
-
-    // Assign request
-    const handleAssign = async () => {
-        if (!selectedRequest || !assigningTo.trim()) {
-            toast.error('Please enter a support user ID');
-            return;
-        }
-
-        try {
-            await salesApi.assignOfferRequest(selectedRequest.id, {
-                assignedTo: assigningTo.trim(),
-            });
-            toast.success('Request assigned successfully');
-            setShowAssignDialog(false);
-            setAssigningTo('');
-            loadOfferRequests();
-            setSelectedRequest(null);
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to assign request');
-        }
-    };
 
     // Assign to myself
     const handleAssignToMyself = async (request: OfferRequest) => {
@@ -172,20 +167,13 @@ export default function RequestsInboxPage() {
             });
             toast.success('Status updated successfully');
             setShowStatusDialog(false);
-            setNewStatus('Pending');
+            setNewStatus('Requested');
             setStatusNotes('');
             loadOfferRequests();
             setSelectedRequest(null);
         } catch (err: any) {
             toast.error(err.message || 'Failed to update status');
         }
-    };
-
-    // Open assign dialog
-    const openAssignDialog = (request: OfferRequest) => {
-        setSelectedRequest(request);
-        setAssigningTo(user?.id || '');
-        setShowAssignDialog(true);
     };
 
     // Open status dialog
@@ -199,14 +187,16 @@ export default function RequestsInboxPage() {
     // Get status color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Pending':
+            case 'Requested':
                 return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
             case 'Assigned':
                 return 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
             case 'InProgress':
                 return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
-            case 'Completed':
+            case 'Ready':
                 return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
+            case 'Sent':
+                return 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-700';
             case 'Cancelled':
                 return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700';
             default:
@@ -231,10 +221,11 @@ export default function RequestsInboxPage() {
     // Stats
     const stats = {
         total: offerRequests.length,
-        pending: offerRequests.filter((r) => r.status === 'Pending').length,
+        requested: offerRequests.filter((r) => r.status === 'Requested').length,
         assigned: offerRequests.filter((r) => r.status === 'Assigned').length,
         inProgress: offerRequests.filter((r) => r.status === 'InProgress').length,
-        completed: offerRequests.filter((r) => r.status === 'Completed').length,
+        ready: offerRequests.filter((r) => r.status === 'Ready').length,
+        sent: offerRequests.filter((r) => r.status === 'Sent').length,
     };
 
     return (
@@ -280,9 +271,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Requested</p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-                                        {stats.pending}
+                                        {stats.requested}
                                     </p>
                                 </div>
                                 <ClockIcon className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
@@ -322,9 +313,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ready</p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
-                                        {stats.completed}
+                                        {stats.ready}
                                     </p>
                                 </div>
                                 <CheckCircleIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -354,10 +345,11 @@ export default function RequestsInboxPage() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Statuses</SelectItem>
-                                        <SelectItem value="Pending">Pending</SelectItem>
+                                        <SelectItem value="Requested">Requested</SelectItem>
                                         <SelectItem value="Assigned">Assigned</SelectItem>
                                         <SelectItem value="InProgress">In Progress</SelectItem>
-                                        <SelectItem value="Completed">Completed</SelectItem>
+                                        <SelectItem value="Ready">Ready</SelectItem>
+                                        <SelectItem value="Sent">Sent</SelectItem>
                                         <SelectItem value="Cancelled">Cancelled</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -468,7 +460,7 @@ export default function RequestsInboxPage() {
                                             >
                                                 View Details
                                             </Button>
-                                            {request.status === 'Pending' && (
+                                            {request.status === 'Requested' && (
                                                 <Button
                                                     size="sm"
                                                     className="bg-purple-600 hover:bg-purple-700"
@@ -478,17 +470,7 @@ export default function RequestsInboxPage() {
                                                     Assign to Me
                                                 </Button>
                                             )}
-                                            {request.status !== 'Pending' && request.status !== 'Cancelled' && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => openAssignDialog(request)}
-                                                >
-                                                    <UserPlusIcon className="h-4 w-4 mr-2" />
-                                                    Reassign
-                                                </Button>
-                                            )}
-                                            {request.status !== 'Completed' && request.status !== 'Cancelled' && (
+                                            {request.status !== 'Ready' && request.status !== 'Sent' && request.status !== 'Cancelled' && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -591,7 +573,7 @@ export default function RequestsInboxPage() {
                             <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
                                 Close
                             </Button>
-                            {selectedRequest?.status === 'Pending' && (
+                            {selectedRequest?.status === 'Requested' && (
                                 <Button onClick={() => {
                                     setShowDetailsDialog(false);
                                     handleAssignToMyself(selectedRequest);
@@ -599,37 +581,6 @@ export default function RequestsInboxPage() {
                                     Assign to Me
                                 </Button>
                             )}
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Assign Dialog */}
-                <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Assign Offer Request</DialogTitle>
-                            <DialogDescription>
-                                Assign request #{selectedRequest?.id} to a SalesSupport member
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div>
-                                <Label>Support User ID</Label>
-                                <Input
-                                    value={assigningTo}
-                                    onChange={(e) => setAssigningTo(e.target.value)}
-                                    placeholder="Enter SalesSupport user ID"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Enter the user ID of the SalesSupport member to assign this request to
-                                </p>
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setShowAssignDialog(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={handleAssign}>Assign</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -654,10 +605,11 @@ export default function RequestsInboxPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Pending">Pending</SelectItem>
+                                        <SelectItem value="Requested">Requested</SelectItem>
                                         <SelectItem value="Assigned">Assigned</SelectItem>
                                         <SelectItem value="InProgress">In Progress</SelectItem>
-                                        <SelectItem value="Completed">Completed</SelectItem>
+                                        <SelectItem value="Ready">Ready</SelectItem>
+                                        <SelectItem value="Sent">Sent</SelectItem>
                                         <SelectItem value="Cancelled">Cancelled</SelectItem>
                                     </SelectContent>
                                 </Select>

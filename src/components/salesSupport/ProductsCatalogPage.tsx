@@ -25,10 +25,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
+import { usePerformance } from '@/hooks/usePerformance'
 
 const CATEGORIES = ['X-Ray', 'Ultrasound', 'CT Scanner', 'MRI', 'Other']
 
 export default function ProductsCatalogPage() {
+    usePerformance('ProductsCatalogPage');
     const [products, setProducts] = useState<Product[]>([])
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(false)
