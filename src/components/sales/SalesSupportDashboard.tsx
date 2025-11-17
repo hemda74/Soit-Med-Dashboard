@@ -444,8 +444,8 @@ const SalesSupportDashboard: React.FC = () => {
 							{/* Recent Offers */}
 							<Card className="shadow-md">
 								<CardHeader>
-									<CardTitle>Recent {t('offers')}</CardTitle>
-									<CardDescription>Your latest created {t('offers').toLowerCase()}</CardDescription>
+									<CardTitle>{t('recentOffers')}</CardTitle>
+									<CardDescription>{t('yourLatestCreatedOffers')}</CardDescription>
 								</CardHeader>
 								<CardContent>
 									{offersLoading ? (
@@ -531,7 +531,7 @@ const SalesSupportDashboard: React.FC = () => {
 										</div>
 									) : (
 										<div className="text-center py-8 text-gray-500 dark:text-gray-400">
-											No pending requests
+											{t('noPendingRequests')}
 										</div>
 									)}
 								</CardContent>
@@ -545,8 +545,8 @@ const SalesSupportDashboard: React.FC = () => {
 							<CardHeader>
 								<div className="flex justify-between items-center">
 									<div>
-										<CardTitle>My Created Offers</CardTitle>
-										<CardDescription>All offers you've created</CardDescription>
+										<CardTitle>{t('myCreatedOffers')}</CardTitle>
+										<CardDescription>{t('allOffersYouveCreated')}</CardDescription>
 									</div>
 									<div className="w-64">
 										<Input
@@ -561,7 +561,7 @@ const SalesSupportDashboard: React.FC = () => {
 								{offersLoading ? (
 									<div className="text-center py-12">
 										<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-										<p className="text-gray-500 dark:text-gray-400 mt-4">Loading offers...</p>
+										<p className="text-gray-500 dark:text-gray-400 mt-4">{t('loadingOffers')}</p>
 									</div>
 								) : offersError ? (
 									<div className="text-center py-12 text-red-500 dark:text-red-400">
@@ -628,7 +628,7 @@ const SalesSupportDashboard: React.FC = () => {
 										<ArchiveBoxIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
 										<p className="text-gray-500 dark:text-gray-400 text-lg">{t('noOffersFound') || 'No offers found'}</p>
 										{searchQuery && (
-											<p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Try adjusting your search</p>
+											<p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('tryAdjustingYourSearch')}</p>
 										)}
 									</div>
 								)}
@@ -640,14 +640,14 @@ const SalesSupportDashboard: React.FC = () => {
 					<TabsContent value="requests" className="space-y-6">
 						<Card className="shadow-md">
 							<CardHeader>
-								<CardTitle>Assigned Requests</CardTitle>
-								<CardDescription>Requests assigned to you</CardDescription>
+								<CardTitle>{t('assignedRequests')}</CardTitle>
+								<CardDescription>{t('requestsAssignedToYou')}</CardDescription>
 							</CardHeader>
 							<CardContent>
 								{requestWorkflowsLoading ? (
 									<div className="text-center py-12">
 										<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-										<p className="text-gray-500 dark:text-gray-400 mt-4">Loading requests...</p>
+										<p className="text-gray-500 dark:text-gray-400 mt-4">{t('loadingRequests')}</p>
 									</div>
 								) : requestWorkflowsError ? (
 									<div className="text-center py-12 text-red-500 dark:text-red-400">
@@ -730,8 +730,8 @@ const SalesSupportDashboard: React.FC = () => {
 								) : (
 									<div className="text-center py-16">
 										<CheckCircleIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-										<p className="text-gray-500 dark:text-gray-400 text-lg">No requests assigned</p>
-										<p className="text-sm text-gray-400 dark:text-gray-500 mt-2">All caught up!</p>
+										<p className="text-gray-500 dark:text-gray-400 text-lg">{t('noRequestsAssigned')}</p>
+										<p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{t('allCaughtUp')}</p>
 									</div>
 								)}
 							</CardContent>
@@ -743,8 +743,8 @@ const SalesSupportDashboard: React.FC = () => {
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 							<Card className="lg:col-span-1 shadow-md">
 								<CardHeader>
-									<CardTitle>{t('searchClients') || 'Search Clients'}</CardTitle>
-									<CardDescription>Find and manage clients</CardDescription>
+									<CardTitle>{t('clientSearch')}</CardTitle>
+									<CardDescription>{t('findAndManageClients')}</CardDescription>
 								</CardHeader>
 								<CardContent>
 									<ClientSearch
@@ -755,7 +755,7 @@ const SalesSupportDashboard: React.FC = () => {
 									/>
 									<Separator />
 									<div className="mt-4">
-										<h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Recent Clients</h3>
+										<h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('recentClients')}</h3>
 										{clientsLoading ? (
 											<div className="text-center py-4">
 												<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
@@ -831,7 +831,7 @@ const SalesSupportDashboard: React.FC = () => {
 										<CardContent className="flex items-center justify-center h-96">
 											<div className="text-center">
 												<UserGroupIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-												<p className="text-gray-500 dark:text-gray-400">Select a client to view details</p>
+												<p className="text-gray-500 dark:text-gray-400">{t('selectAClientToViewDetails')}</p>
 											</div>
 										</CardContent>
 									</Card>
@@ -922,7 +922,7 @@ const SalesSupportDashboard: React.FC = () => {
 									{loadingEquipment ? (
 										<div className="text-center py-4">
 											<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-											<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading equipment details...</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{t('loadingEquipmentDetails')}</p>
 										</div>
 									) : offerEquipment && offerEquipment.length > 0 ? (
 										<div className="space-y-4">
@@ -978,7 +978,7 @@ const SalesSupportDashboard: React.FC = () => {
 																	// Show placeholder if no image path or is placeholder
 																	return (
 																		<div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-500 flex items-center justify-center">
-																			<span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
+																			<span className="text-xs text-gray-500 dark:text-gray-400">{t('noImage')}</span>
 																		</div>
 																	);
 																}
@@ -1256,7 +1256,7 @@ const SalesSupportDashboard: React.FC = () => {
 										onClick={handleExportPdf}
 										className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
 									>
-										Export PDF
+										{t('exportPdf')}
 									</Button>
 								</div>
 							</div>

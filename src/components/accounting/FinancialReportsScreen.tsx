@@ -21,9 +21,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const FinancialReportsScreen: React.FC = () => {
 	usePerformance('FinancialReportsScreen');
+	const { t } = useTranslation();
 	const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'statistics'>('daily');
 
 	// Daily report state
@@ -105,8 +107,8 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardHeader>
 							<div className="flex items-center justify-between">
 								<div>
-									<CardTitle>Daily Report</CardTitle>
-									<CardDescription>Financial summary for a specific date</CardDescription>
+									<CardTitle>{t('dailyReport')}</CardTitle>
+									<CardDescription>{t('financialSummaryForSpecificDate')}</CardDescription>
 								</div>
 								<div className="flex items-center gap-2">
 									<Label htmlFor="daily-date">Date</Label>
@@ -123,13 +125,13 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardContent>
 							{loadingDaily ? (
 								<div className="text-center py-8">
-									<p className="text-gray-500">Loading report...</p>
+									<p className="text-gray-500">{t('loadingReport')}</p>
 								</div>
 							) : dailyReport ? (
 								<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalRevenue')}</p>
 											<p className="text-2xl font-bold text-green-600">
 												{dailyReport.totalRevenue.toLocaleString()} EGP
 											</p>
@@ -137,7 +139,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Payments</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalPayments')}</p>
 											<p className="text-2xl font-bold text-blue-600">
 												{dailyReport.totalPayments.toLocaleString()} EGP
 											</p>
@@ -145,7 +147,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Outstanding</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('outstanding')}</p>
 											<p className="text-2xl font-bold text-red-600">
 												{dailyReport.outstandingPayments.toLocaleString()} EGP
 											</p>
@@ -153,14 +155,14 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Transactions</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('transactions')}</p>
 											<p className="text-2xl font-bold">{dailyReport.totalTransactions}</p>
 										</CardContent>
 									</Card>
 								</div>
 							) : (
 								<div className="text-center py-8">
-									<p className="text-gray-500">No data available for selected date</p>
+									<p className="text-gray-500">{t('noDataAvailableForSelectedDate')}</p>
 								</div>
 							)}
 						</CardContent>
@@ -173,8 +175,8 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardHeader>
 							<div className="flex items-center justify-between">
 								<div>
-									<CardTitle>Monthly Report</CardTitle>
-									<CardDescription>Financial summary for a specific month</CardDescription>
+									<CardTitle>{t('monthlyReport')}</CardTitle>
+									<CardDescription>{t('financialSummaryForSpecificMonth')}</CardDescription>
 								</div>
 								<div className="flex items-center gap-2">
 									<Select
@@ -213,13 +215,13 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardContent>
 							{loadingMonthly ? (
 								<div className="text-center py-8">
-									<p className="text-gray-500">Loading report...</p>
+									<p className="text-gray-500">{t('loadingReport')}</p>
 								</div>
 							) : monthlyReport ? (
 								<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalRevenue')}</p>
 											<p className="text-2xl font-bold text-green-600">
 												{monthlyReport.totalRevenue.toLocaleString()} EGP
 											</p>
@@ -227,7 +229,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Payments</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalPayments')}</p>
 											<p className="text-2xl font-bold text-blue-600">
 												{monthlyReport.totalPayments.toLocaleString()} EGP
 											</p>
@@ -235,7 +237,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Outstanding</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('outstanding')}</p>
 											<p className="text-2xl font-bold text-red-600">
 												{monthlyReport.outstandingPayments.toLocaleString()} EGP
 											</p>
@@ -243,14 +245,14 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Transactions</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('transactions')}</p>
 											<p className="text-2xl font-bold">{monthlyReport.totalTransactions}</p>
 										</CardContent>
 									</Card>
 								</div>
 							) : (
 								<div className="text-center py-8">
-									<p className="text-gray-500">No data available for selected month</p>
+									<p className="text-gray-500">{t('noDataAvailableForSelectedMonth')}</p>
 								</div>
 							)}
 						</CardContent>
@@ -263,8 +265,8 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardHeader>
 							<div className="flex items-center justify-between">
 								<div>
-									<CardTitle>Yearly Report</CardTitle>
-									<CardDescription>Financial summary for a specific year</CardDescription>
+									<CardTitle>{t('yearlyReport')}</CardTitle>
+									<CardDescription>{t('financialSummaryForSpecificYear')}</CardDescription>
 								</div>
 								<div className="flex items-center gap-2">
 									<Label htmlFor="yearly-year">Year</Label>
@@ -289,13 +291,13 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardContent>
 							{loadingYearly ? (
 								<div className="text-center py-8">
-									<p className="text-gray-500">Loading report...</p>
+									<p className="text-gray-500">{t('loadingReport')}</p>
 								</div>
 							) : yearlyReport ? (
 								<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalRevenue')}</p>
 											<p className="text-2xl font-bold text-green-600">
 												{yearlyReport.totalRevenue.toLocaleString()} EGP
 											</p>
@@ -303,7 +305,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Total Payments</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('totalPayments')}</p>
 											<p className="text-2xl font-bold text-blue-600">
 												{yearlyReport.totalPayments.toLocaleString()} EGP
 											</p>
@@ -311,7 +313,7 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Outstanding</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('outstanding')}</p>
 											<p className="text-2xl font-bold text-red-600">
 												{yearlyReport.outstandingPayments.toLocaleString()} EGP
 											</p>
@@ -319,14 +321,14 @@ const FinancialReportsScreen: React.FC = () => {
 									</Card>
 									<Card>
 										<CardContent className="p-4">
-											<p className="text-sm text-gray-500 dark:text-gray-400">Transactions</p>
+											<p className="text-sm text-gray-500 dark:text-gray-400">{t('transactions')}</p>
 											<p className="text-2xl font-bold">{yearlyReport.totalTransactions}</p>
 										</CardContent>
 									</Card>
 								</div>
 							) : (
 								<div className="text-center py-8">
-									<p className="text-gray-500">No data available for selected year</p>
+									<p className="text-gray-500">{t('noDataAvailableForSelectedYear')}</p>
 								</div>
 							)}
 						</CardContent>
@@ -367,7 +369,7 @@ const FinancialReportsScreen: React.FC = () => {
 						<CardContent>
 							{loadingStats ? (
 								<div className="text-center py-8">
-									<p className="text-gray-500">Loading statistics...</p>
+									<p className="text-gray-500">{t('loadingStatistics')}</p>
 								</div>
 							) : paymentMethodStats && paymentMethodStats.length > 0 ? (
 								<div className="space-y-4">
@@ -410,7 +412,7 @@ const FinancialReportsScreen: React.FC = () => {
 								</div>
 							) : (
 								<div className="text-center py-8">
-									<p className="text-gray-500">No statistics available for selected date range</p>
+									<p className="text-gray-500">{t('noStatisticsAvailable')}</p>
 								</div>
 							)}
 						</CardContent>

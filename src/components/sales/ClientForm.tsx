@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,25 +18,21 @@ import type { Client, CreateClientDto, UpdateClientDto } from '@/types/sales.typ
 const CLASSIFICATIONS = ['A', 'B', 'C', 'D'] as const;
 type Classification = typeof CLASSIFICATIONS[number];
 
-// Validation schema for client creation
+// Validation schema for client creation - translations will be applied via form validation
 const createClientSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(200, 'Name must be less than 200 characters'),
-	phone: z.string().max(20, 'Phone must be less than 20 characters').optional().or(z.literal('')),
-	organizationName: z.string().max(200, 'Organization name must be less than 200 characters').optional().or(z.literal('')),
-	classification: z.enum(['A', 'B', 'C', 'D'], {
-		errorMap: () => ({ message: 'Classification must be A, B, C, or D' })
-	}).optional(),
+	name: z.string().min(1).max(200),
+	phone: z.string().max(20).optional().or(z.literal('')),
+	organizationName: z.string().max(200).optional().or(z.literal('')),
+	classification: z.enum(['A', 'B', 'C', 'D']).optional(),
 	assignedTo: z.string().optional().or(z.literal('')),
 });
 
-// Validation schema for client update
+// Validation schema for client update - translations will be applied via form validation
 const updateClientSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(200, 'Name must be less than 200 characters').optional(),
-	phone: z.string().max(20, 'Phone must be less than 20 characters').optional().or(z.literal('')),
-	organizationName: z.string().max(200, 'Organization name must be less than 200 characters').optional().or(z.literal('')),
-	classification: z.enum(['A', 'B', 'C', 'D'], {
-		errorMap: () => ({ message: 'Classification must be A, B, C, or D' })
-	}).optional(),
+	name: z.string().min(1).max(200).optional(),
+	phone: z.string().max(20).optional().or(z.literal('')),
+	organizationName: z.string().max(200).optional().or(z.literal('')),
+	classification: z.enum(['A', 'B', 'C', 'D']).optional(),
 	assignedTo: z.string().optional().or(z.literal('')),
 });
 
@@ -50,6 +47,7 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ client, onSuccess, onCancel, mode = 'create' }: ClientFormProps) {
+	const { t } = useTranslation();
 	const { createClient, updateClient } = useSalesStore();
 	const { user } = useAuthStore();
 	const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -113,7 +111,7 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 	return (
 		<Card className="w-full max-w-2xl mx-auto">
 			<CardHeader>
-				<CardTitle>{mode === 'create' ? 'Create New Client' : 'Edit Client'}</CardTitle>
+				<CardTitle>{mode === 'create' ? t('createNewClient') : t('editClient')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<Form {...form}>
@@ -123,9 +121,9 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 							name="name"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Name *</FormLabel>
+									<FormLabel>{t('name')} *</FormLabel>
 									<FormControl>
-										<Input placeholder="Client name" {...field} />
+										<Input placeholder={t('clientNamePlaceholder')} {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -137,9 +135,9 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 							name="phone"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Phone</FormLabel>
+									<FormLabel>{t('phone')}</FormLabel>
 									<FormControl>
-										<Input placeholder="Phone number" {...field} />
+										<Input placeholder={t('phoneNumberPlaceholder')} {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -151,9 +149,9 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 							name="organizationName"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Organization Name</FormLabel>
+									<FormLabel>{t('organizationName')}</FormLabel>
 									<FormControl>
-										<Input placeholder="Organization name" {...field} />
+										<Input placeholder={t('organizationNamePlaceholder')} {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -165,18 +163,18 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 							name="classification"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Classification</FormLabel>
+									<FormLabel>{t('classification')}</FormLabel>
 									<Select
 										onValueChange={(value) => field.onChange(value as Classification)}
 										defaultValue={field.value}
 									>
 										<FormControl>
 											<SelectTrigger>
-												<SelectValue placeholder="Select classification (A, B, C, or D)" />
+												<SelectValue placeholder={t('selectClassificationPlaceholder')} />
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent>
-											<SelectItem value="">None</SelectItem>
+											<SelectItem value="">{t('common.close')}</SelectItem>
 											{CLASSIFICATIONS.map((classification) => (
 												<SelectItem key={classification} value={classification}>
 													{classification}
@@ -185,7 +183,7 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 										</SelectContent>
 									</Select>
 									<FormDescription>
-										Client classification: A (Highest priority), B (High), C (Medium), D (Low)
+										{t('classificationDescription')}
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -197,12 +195,12 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 							name="assignedTo"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Assigned To</FormLabel>
+									<FormLabel>{t('assignedTo')}</FormLabel>
 									<FormControl>
-										<Input placeholder="User ID (optional)" {...field} />
+										<Input placeholder={t('userIdOptionalPlaceholder')} {...field} />
 									</FormControl>
 									<FormDescription>
-										User ID to assign this client to (leave empty to assign to yourself)
+										{t('assignedToDescription')}
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -212,11 +210,11 @@ export default function ClientForm({ client, onSuccess, onCancel, mode = 'create
 						<div className="flex justify-end space-x-4">
 							{onCancel && (
 								<Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-									Cancel
+									{t('common.cancel')}
 								</Button>
 							)}
 							<Button type="submit" disabled={isSubmitting}>
-								{isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Client' : 'Update Client'}
+								{isSubmitting ? t('saving') : mode === 'create' ? t('createClient') : t('updateClient')}
 							</Button>
 						</div>
 					</form>

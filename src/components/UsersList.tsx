@@ -20,6 +20,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { UserStatusToggle } from './UserStatusToggle';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type ViewMode = 'all' | 'filtered';
 
@@ -63,6 +64,7 @@ const userEditSchema = z.object({
 type UserEditFormData = z.infer<typeof userEditSchema>;
 
 const UsersList: React.FC = () => {
+    const { t } = useTranslation();
     const { user, hasAnyRole } = useAuthStore();
     const { setLoading } = useAppStore();
     const { success, errorNotification: showError } = useNotificationStore();
@@ -403,16 +405,16 @@ const UsersList: React.FC = () => {
                         <thead>
                             <tr className="border-b border-border">
                                 <th className="text-start py-3 px-4 font-semibold text-foreground">
-                                    User
+                                    {t('user')}
                                 </th>
                                 <th className="text-start py-3 px-4 font-semibold text-foreground">
-                                    Role & Department
+                                    {t('roleAndDepartment')}
                                 </th>
                                 <th className="text-start py-3 px-4 font-semibold text-foreground">
-                                    Status
+                                    {t('status')}
                                 </th>
                                 <th className="text-start py-3 px-4 font-semibold text-foreground">
-                                    Actions
+                                    {t('actions')}
                                 </th>
                             </tr>
                         </thead>

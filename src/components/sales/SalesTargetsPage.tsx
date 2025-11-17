@@ -16,9 +16,11 @@ import { TargetType as TargetTypeEnum } from '@/types/sales.types'
 import type { EmployeeInfo } from '@/types/weeklyPlan.types'
 import toast from 'react-hot-toast'
 import { usePerformance } from '@/hooks/usePerformance'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function SalesTargetsPage() {
     usePerformance('SalesTargetsPage');
+    const { t } = useTranslation();
     const { user } = useAuthStore()
     const [targets, setTargets] = useState<SalesmanTargetDTO[]>([])
     const [salesmen, setSalesmen] = useState<EmployeeInfo[]>([])
@@ -106,7 +108,7 @@ export default function SalesTargetsPage() {
             setTargets(Array.from(uniqueTargetsMap.values()))
         } catch (error) {
             console.error('Failed to fetch targets:', error)
-            toast.error('Failed to load targets')
+            toast.error(t('failedToLoadTargets'))
         } finally {
             setLoading(false)
         }
@@ -132,15 +134,15 @@ export default function SalesTargetsPage() {
                     }))
                 setSalesmen(transformedSalesmen)
                 if (transformedSalesmen.length === 0) {
-                    toast.error('No active salesmen found')
+                    toast.error(t('noActiveSalesmenFound'))
                 }
             } else {
                 console.error('Failed to fetch salesmen: No data returned')
-                toast.error('Failed to load salesmen list')
+                toast.error(t('failedToLoadSalesmenList'))
             }
         } catch (error: any) {
             console.error('Failed to fetch salesmen:', error)
-            toast.error(error.message || 'Failed to load salesmen list')
+            toast.error(error.message || t('failedToLoadSalesmenList'))
         } finally {
             setLoadingSalesmen(false)
         }
@@ -193,16 +195,16 @@ export default function SalesTargetsPage() {
         // Validate required fields for money targets
         if (targetCategory === 'money') {
             if (!isManager) {
-                toast.error('Only managers can set money targets')
+                toast.error(t('onlyManagersCanSetMoneyTargets'))
                 return
             }
             if (!formData.targetRevenue || parseFloat(formData.targetRevenue) <= 0) {
-                toast.error('Please enter a valid target revenue amount')
+                toast.error(t('pleaseEnterValidTargetRevenue'))
                 return
             }
             // For individual money targets, salesman must be selected
             if (targetScope === 'individual' && !selectedSalesman) {
-                toast.error('Please select a salesman for individual money target')
+                toast.error(t('pleaseSelectSalesmanForIndividualTarget'))
                 return
             }
         }
@@ -210,17 +212,17 @@ export default function SalesTargetsPage() {
         // Validate required fields for activity targets
         if (targetCategory === 'activity') {
             if (!isSalesman) {
-                toast.error('Only salesmen can set activity targets')
+                toast.error(t('onlySalesmenCanSetActivityTargets'))
                 return
             }
             if (!formData.targetVisits || !formData.targetSuccessfulVisits || !formData.targetOffers || !formData.targetDeals) {
-                toast.error('Please fill in all required activity target fields')
+                toast.error(t('pleaseFillAllRequiredActivityFields'))
                 return
             }
             // For activity targets set by salesman, ensure they're setting for themselves
             if (isSalesman && !editingTarget && targetScope === 'individual') {
                 if (selectedSalesman !== user?.id) {
-                    toast.error('You can only set activity targets for yourself')
+                    toast.error(t('youCanOnlySetActivityTargetsForYourself'))
                     return
                 }
             }
@@ -245,34 +247,34 @@ export default function SalesTargetsPage() {
             setLoading(true)
             if (editingTarget) {
                 await salesApi.updateSalesmanTarget(editingTarget.id, targetData)
-                toast.success('Target updated successfully')
+                toast.success(t('targetUpdatedSuccessfully'))
             } else {
                 await salesApi.createSalesmanTarget(targetData)
-                toast.success('Target created successfully')
+                toast.success(t('targetCreatedSuccessfully'))
             }
             setShowDialog(false)
             fetchTargets()
         } catch (error: any) {
             console.error('Failed to save target:', error)
-            toast.error(error.message || 'Failed to save target')
+            toast.error(error.message || t('failedToSaveTarget'))
         } finally {
             setLoading(false)
         }
     }
 
     const handleDeleteTarget = async (target: SalesmanTargetDTO) => {
-        if (!window.confirm('Are you sure you want to delete this target?')) {
+        if (!window.confirm(t('areYouSureDeleteTarget'))) {
             return
         }
 
         try {
             setLoading(true)
             await salesApi.deleteSalesmanTarget(target.id)
-            toast.success('Target deleted successfully')
+            toast.success(t('targetDeletedSuccessfully'))
             fetchTargets()
         } catch (error: any) {
             console.error('Failed to delete target:', error)
-            toast.error(error.message || 'Failed to delete target')
+            toast.error(error.message || t('failedToDeleteTarget'))
         } finally {
             setLoading(false)
         }
@@ -285,15 +287,22 @@ export default function SalesTargetsPage() {
     const quarterlyTargets = targets.filter(t => t.quarter)
     const yearlyTargets = targets.filter(t => !t.quarter)
 
+    // Calculate statistics
+    const totalRevenueTarget = moneyTargets.reduce((sum, t) => sum + (t.targetRevenue || 0), 0)
+    const totalVisitsTarget = activityTargets.reduce((sum, t) => sum + t.targetVisits, 0)
+    const totalOffersTarget = activityTargets.reduce((sum, t) => sum + t.targetOffers, 0)
+    const totalDealsTarget = activityTargets.reduce((sum, t) => sum + t.targetDeals, 0)
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            {/* Header Section */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white/90 mb-2 flex items-center gap-2">
                         <Target className="h-8 w-8 text-primary" />
                         Sales Targets
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                         Money targets are set by managers. Activity targets (visits/offers/deals) are set by salesmen themselves.
                     </p>
                 </div>
@@ -301,131 +310,270 @@ export default function SalesTargetsPage() {
                     {isManager && (
                         <Button onClick={() => handleCreateTarget('money')} className="flex items-center gap-2" variant="default">
                             <DollarSign className="h-4 w-4" />
-                            Create Money Target
+                            {t('createMoneyTarget')}
                         </Button>
                     )}
                     {isSalesman && (
                         <Button onClick={() => handleCreateTarget('activity')} className="flex items-center gap-2" variant="outline">
                             <Activity className="h-4 w-4" />
-                            Set My Activity Target
+                            {t('setMyActivityTarget')}
                         </Button>
                     )}
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Filter by Year</CardTitle>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+                    <CardContent className="p-5 md:p-6">
+                        <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl dark:bg-blue-900/30 mb-5">
+                            <Target className="text-blue-600 h-6 w-6 dark:text-blue-400" />
+                        </div>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('totalTargets')}</span>
+                                <h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+                                    {targets.length}
+                                </h4>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+                    <CardContent className="p-5 md:p-6">
+                        <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-xl dark:bg-yellow-900/30 mb-5">
+                            <DollarSign className="text-yellow-600 h-6 w-6 dark:text-yellow-400" />
+                        </div>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('revenueTarget')}</span>
+                                <h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+                                    ${totalRevenueTarget.toLocaleString()}
+                                </h4>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+                    <CardContent className="p-5 md:p-6">
+                        <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl dark:bg-purple-900/30 mb-5">
+                            <Activity className="text-purple-600 h-6 w-6 dark:text-purple-400" />
+                        </div>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('activityTargets')}</span>
+                                <h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+                                    {activityTargets.length}
+                                </h4>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+                    <CardContent className="p-5 md:p-6">
+                        <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl dark:bg-green-900/30 mb-5">
+                            <Users className="text-green-600 h-6 w-6 dark:text-green-400" />
+                        </div>
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <span className="text-sm text-gray-500 dark:text-gray-400">{t('teamTargets')}</span>
+                                <h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+                                    {teamTargets.length}
+                                </h4>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Filters Section */}
+            <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <CardHeader className="pb-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white/90">{t('filters')}</CardTitle>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('filterTargetsByYearAndCategory')}</p>
+                        </div>
+                        <Select
+                            value={selectedYear.toString()}
+                            onValueChange={(value) => setSelectedYear(parseInt(value))}
+                        >
+                            <SelectTrigger className="w-48">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[2024, 2025, 2026].map((year) => (
+                                    <SelectItem key={year} value={year.toString()}>
+                                        {year}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardHeader>
-                <CardContent>
-                    <Select
-                        value={selectedYear.toString()}
-                        onValueChange={(value) => setSelectedYear(parseInt(value))}
-                    >
-                        <SelectTrigger className="w-48">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[2024, 2025, 2026].map((year) => (
-                                <SelectItem key={year} value={year.toString()}>
-                                    {year}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </CardContent>
             </Card>
 
-            <Tabs defaultValue="all" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="all">All Targets ({targets.length})</TabsTrigger>
-                    <TabsTrigger value="money">Money Targets ({moneyTargets.length})</TabsTrigger>
-                    <TabsTrigger value="activity">Activity Targets ({activityTargets.length})</TabsTrigger>
-                    <TabsTrigger value="individual">Individual ({individualTargets.length})</TabsTrigger>
-                    <TabsTrigger value="team">Team ({teamTargets.length})</TabsTrigger>
-                    <TabsTrigger value="quarterly">Quarterly ({quarterlyTargets.length})</TabsTrigger>
-                    <TabsTrigger value="yearly">Yearly ({yearlyTargets.length})</TabsTrigger>
-                </TabsList>
+            {/* Targets Section */}
+            <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <CardHeader>
+                    <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white/90">{t('targetsOverview')}</CardTitle>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('viewAndManageAllSalesTargets')}</p>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="all" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 mb-6">
+                            <TabsTrigger value="all" className="text-xs sm:text-sm">{t('all')} ({targets.length})</TabsTrigger>
+                            <TabsTrigger value="money" className="text-xs sm:text-sm">{t('money')} ({moneyTargets.length})</TabsTrigger>
+                            <TabsTrigger value="activity" className="text-xs sm:text-sm">{t('activityTargets')} ({activityTargets.length})</TabsTrigger>
+                            <TabsTrigger value="individual" className="text-xs sm:text-sm">{t('individual')} ({individualTargets.length})</TabsTrigger>
+                            <TabsTrigger value="team" className="text-xs sm:text-sm">{t('team')} ({teamTargets.length})</TabsTrigger>
+                            <TabsTrigger value="quarterly" className="text-xs sm:text-sm">{t('quarterly')} ({quarterlyTargets.length})</TabsTrigger>
+                            <TabsTrigger value="yearly" className="text-xs sm:text-sm">{t('yearly')} ({yearlyTargets.length})</TabsTrigger>
+                        </TabsList>
 
-                <TabsContent value="all" className="space-y-4">
-                    {targets.length > 0 ? (
-                        targets.map((target) => (
-                            <TargetCard
-                                key={target.id}
-                                target={target}
-                                onEdit={handleEditTarget}
-                                onDelete={handleDeleteTarget}
-                            />
-                        ))
-                    ) : (
-                        <Card>
-                            <CardContent className="py-8 text-center text-muted-foreground">
-                                No targets found for {selectedYear}
-                            </CardContent>
-                        </Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="all" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : targets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {targets.map((target) => (
+                                        <TargetCard
+                                            key={target.id}
+                                            target={target}
+                                            onEdit={handleEditTarget}
+                                            onDelete={handleDeleteTarget}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Target className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noTargetsFoundForYear')} {selectedYear}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="money" className="space-y-4">
-                    {moneyTargets.length > 0 ? (
-                        moneyTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No money targets found</CardContent></Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="money" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : moneyTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {moneyTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <DollarSign className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noMoneyTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="activity" className="space-y-4">
-                    {activityTargets.length > 0 ? (
-                        activityTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No activity targets found</CardContent></Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="activity" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : activityTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {activityTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Activity className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noActivityTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="individual" className="space-y-4">
-                    {individualTargets.length > 0 ? (
-                        individualTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No individual targets found</CardContent></Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="individual" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : individualTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {individualTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <User className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noIndividualTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="team" className="space-y-4">
-                    {teamTargets.length > 0 ? (
-                        teamTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No team targets found</CardContent></Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="team" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : teamTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {teamTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Users className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noTeamTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="quarterly" className="space-y-4">
-                    {quarterlyTargets.length > 0 ? (
-                        quarterlyTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No quarterly targets found</CardContent></Card>
-                    )}
-                </TabsContent>
+                        <TabsContent value="quarterly" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : quarterlyTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {quarterlyTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Target className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noQuarterlyTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
 
-                <TabsContent value="yearly" className="space-y-4">
-                    {yearlyTargets.length > 0 ? (
-                        yearlyTargets.map((target) => (
-                            <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
-                        ))
-                    ) : (
-                        <Card><CardContent className="py-8 text-center text-muted-foreground">No yearly targets found</CardContent></Card>
-                    )}
-                </TabsContent>
-            </Tabs>
+                        <TabsContent value="yearly" className="space-y-4 mt-0">
+                            {loading ? (
+                                <div className="py-12 text-center">
+                                    <p className="text-gray-500 dark:text-gray-400">{t('loadingTargets')}</p>
+                                </div>
+                            ) : yearlyTargets.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    {yearlyTargets.map((target) => (
+                                        <TargetCard key={target.id} target={target} onEdit={handleEditTarget} onDelete={handleDeleteTarget} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Target className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                                    <p className="text-gray-500 dark:text-gray-400">{t('noYearlyTargetsFound')}</p>
+                                </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
 
             <Dialog open={showDialog} onOpenChange={setShowDialog}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -439,10 +587,10 @@ export default function SalesTargetsPage() {
                                 <div className="flex items-start gap-2">
                                     <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                                     <div>
-                                        <p className="font-semibold text-blue-900 dark:text-blue-100">Creating Money Target</p>
+                                        <p className="font-semibold text-blue-900 dark:text-blue-100">{t('creatingMoneyTarget')}</p>
                                         <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                                             As a manager, you can set money targets for individual salesmen or for the entire team. 
-                                            Select "Individual" to set a target for a specific salesman, or "Team" for a team-wide target.
+                                            {t('selectIndividualToSetTarget')}
                                         </p>
                                     </div>
                                 </div>
@@ -450,22 +598,22 @@ export default function SalesTargetsPage() {
                         )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Target Category</Label>
+                                <Label>{t('targetCategory')}</Label>
                                 <Select value={targetCategory} onValueChange={(value: 'money' | 'activity') => setTargetCategory(value)} disabled={!!editingTarget}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="money"><div className="flex items-center gap-2"><DollarSign className="h-4 w-4" />Money Target</div></SelectItem>
-                                        <SelectItem value="activity"><div className="flex items-center gap-2"><Activity className="h-4 w-4" />Activity Target</div></SelectItem>
+                                        <SelectItem value="money"><div className="flex items-center gap-2"><DollarSign className="h-4 w-4" />{t('revenueTarget')}</div></SelectItem>
+                                        <SelectItem value="activity"><div className="flex items-center gap-2"><Activity className="h-4 w-4" />{t('activityTargets')}</div></SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label>Target Scope</Label>
+                                <Label>{t('targetScope')}</Label>
                                 <Select value={targetScope} onValueChange={(value: 'individual' | 'team') => setTargetScope(value)} disabled={!!editingTarget || (targetCategory === 'activity' && isSalesman)}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="individual"><div className="flex items-center gap-2"><User className="h-4 w-4" />Individual</div></SelectItem>
-                                        <SelectItem value="team"><div className="flex items-center gap-2"><Users className="h-4 w-4" />Team</div></SelectItem>
+                                        <SelectItem value="individual"><div className="flex items-center gap-2"><User className="h-4 w-4" />{t('individual')}</div></SelectItem>
+                                        <SelectItem value="team"><div className="flex items-center gap-2"><Users className="h-4 w-4" />{t('team')}</div></SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -473,17 +621,17 @@ export default function SalesTargetsPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Period</Label>
+                                <Label>{t('period')}</Label>
                                 <Select value={periodType} onValueChange={(value: 'quarterly' | 'yearly') => setPeriodType(value)} disabled={!!editingTarget}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                                        <SelectItem value="yearly">Yearly</SelectItem>
+                                        <SelectItem value="quarterly">{t('quarterly')}</SelectItem>
+                                        <SelectItem value="yearly">{t('yearly')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
-                                <Label>Year</Label>
+                                <Label>{t('year')}</Label>
                                 <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))} disabled={!!editingTarget}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -497,14 +645,14 @@ export default function SalesTargetsPage() {
 
                         {targetScope === 'individual' && (
                             <div>
-                                <Label>Salesman {targetCategory === 'money' && '*'}</Label>
+                                <Label>{t('salesman')} {targetCategory === 'money' && '*'}</Label>
                                 <Select 
                                     value={selectedSalesman} 
                                     onValueChange={setSelectedSalesman} 
                                     disabled={!!editingTarget || (targetCategory === 'activity' && isSalesman) || loadingSalesmen}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={loadingSalesmen ? "Loading salesmen..." : "Select salesman"} />
+                                        <SelectValue placeholder={loadingSalesmen ? t('loadingSalesmen') : t('selectSalesman')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {salesmen.length > 0 ? (
@@ -515,7 +663,7 @@ export default function SalesTargetsPage() {
                                             ))
                                         ) : (
                                             <SelectItem value="no-salesmen" disabled>
-                                                {loadingSalesmen ? "Loading..." : "No salesmen available"}
+                                                {loadingSalesmen ? t('loading') : t('noSalesmenAvailable')}
                                             </SelectItem>
                                         )}
                                     </SelectContent>
@@ -523,20 +671,20 @@ export default function SalesTargetsPage() {
                                 {targetCategory === 'money' && (
                                     <p className="text-sm text-muted-foreground mt-1">
                                         {salesmen.length === 0 
-                                            ? "No salesmen available. Please ensure there are active salesmen in the system."
-                                            : "Select a salesman to set an individual money target"
+                                            ? t('noSalesmenAvailableMessage')
+                                            : t('selectSalesmanForIndividualTarget')
                                         }
                                     </p>
                                 )}
                                 {targetCategory === 'activity' && isSalesman && !editingTarget && (
-                                    <p className="text-sm text-muted-foreground mt-1">You can only set activity targets for yourself</p>
+                                    <p className="text-sm text-muted-foreground mt-1">{t('youCanOnlySetActivityTargetsForYourself')}</p>
                                 )}
                             </div>
                         )}
 
                         {periodType === 'quarterly' && (
                             <div>
-                                <Label>Quarter</Label>
+                                <Label>{t('quarter')}</Label>
                                 <Select value={selectedQuarter.toString()} onValueChange={(value) => setSelectedQuarter(parseInt(value))} disabled={!!editingTarget}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -550,7 +698,7 @@ export default function SalesTargetsPage() {
 
                         {targetCategory === 'money' ? (
                             <div>
-                                <Label>Target Revenue (Money) *</Label>
+                                <Label>{t('targetRevenueMoney')} *</Label>
                                 <Input 
                                     type="number" 
                                     value={formData.targetRevenue} 
@@ -561,20 +709,20 @@ export default function SalesTargetsPage() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
-                                <div><Label>Target Visits *</Label><Input type="number" value={formData.targetVisits} onChange={(e) => setFormData({ ...formData, targetVisits: e.target.value })} placeholder="50" /></div>
-                                <div><Label>Target Successful Visits *</Label><Input type="number" value={formData.targetSuccessfulVisits} onChange={(e) => setFormData({ ...formData, targetSuccessfulVisits: e.target.value })} placeholder="35" /></div>
-                                <div><Label>Target Offers *</Label><Input type="number" value={formData.targetOffers} onChange={(e) => setFormData({ ...formData, targetOffers: e.target.value })} placeholder="30" /></div>
-                                <div><Label>Target Deals *</Label><Input type="number" value={formData.targetDeals} onChange={(e) => setFormData({ ...formData, targetDeals: e.target.value })} placeholder="15" /></div>
-                                <div className="col-span-2"><Label>Target Offer Acceptance Rate (%)</Label><Input type="number" value={formData.targetOfferAcceptanceRate} onChange={(e) => setFormData({ ...formData, targetOfferAcceptanceRate: e.target.value })} placeholder="60" min="0" max="100" /></div>
+                                <div><Label>{t('targetVisits')} *</Label><Input type="number" value={formData.targetVisits} onChange={(e) => setFormData({ ...formData, targetVisits: e.target.value })} placeholder="50" /></div>
+                                <div><Label>{t('targetSuccessfulVisits')} *</Label><Input type="number" value={formData.targetSuccessfulVisits} onChange={(e) => setFormData({ ...formData, targetSuccessfulVisits: e.target.value })} placeholder="35" /></div>
+                                <div><Label>{t('targetOffers')} *</Label><Input type="number" value={formData.targetOffers} onChange={(e) => setFormData({ ...formData, targetOffers: e.target.value })} placeholder="30" /></div>
+                                <div><Label>{t('targetDeals')} *</Label><Input type="number" value={formData.targetDeals} onChange={(e) => setFormData({ ...formData, targetDeals: e.target.value })} placeholder="15" /></div>
+                                <div className="col-span-2"><Label>{t('targetOfferAcceptanceRate')}</Label><Input type="number" value={formData.targetOfferAcceptanceRate} onChange={(e) => setFormData({ ...formData, targetOfferAcceptanceRate: e.target.value })} placeholder="60" min="0" max="100" /></div>
                             </div>
                         )}
 
-                        <div><Label>Notes</Label><Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Additional notes about this target..." rows={3} /></div>
+                        <div><Label>{t('notes')}</Label><Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder={t('additionalNotesAboutTarget')} rows={3} /></div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDialog(false)} disabled={loading}>Cancel</Button>
-                        <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Saving...' : editingTarget ? 'Update' : 'Create'}</Button>
+                        <Button variant="outline" onClick={() => setShowDialog(false)} disabled={loading}>{t('common.cancel')}</Button>
+                        <Button onClick={handleSubmit} disabled={loading}>{loading ? t('saving') : editingTarget ? t('update') : t('create')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -587,53 +735,125 @@ function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; o
     const creatorName = target.createdByManagerName || target.createdBySalesmanName || 'Unknown'
     
     return (
-        <Card>
-            <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                            {isMoneyTarget ? (
-                                <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"><DollarSign className="h-3 w-3 mr-1" />Money Target</Badge>
-                            ) : (
-                                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"><Activity className="h-3 w-3 mr-1" />Activity Target</Badge>
-                            )}
-                            {target.isTeamTarget ? (
-                                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"><Users className="h-3 w-3 mr-1" />Team</Badge>
-                            ) : (
-                                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"><User className="h-3 w-3 mr-1" />Individual</Badge>
-                            )}
-                            {target.quarter && <Badge variant="outline">Q{target.quarter} {target.year}</Badge>}
-                            {!target.quarter && <Badge variant="outline">{target.year} - Yearly</Badge>}
-                        </div>
-                        <h3 className="font-semibold text-lg mb-1">{target.isTeamTarget ? 'Team Target' : target.salesmanName}</h3>
-                        
+        <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-all duration-200 overflow-hidden">
+            <CardContent className="p-5 md:p-6">
+                {/* Header with badges */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex flex-wrap items-center gap-2 flex-1">
                         {isMoneyTarget ? (
-                            <div className="mt-4">
-                                <div><p className="text-sm text-muted-foreground">Target Revenue</p><p className="text-lg font-semibold">${target.targetRevenue?.toLocaleString() || '0'}</p></div>
-                            </div>
+                            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border-0">
+                                <DollarSign className="h-3 w-3 mr-1" />
+                                Money
+                            </Badge>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                <div><p className="text-sm text-muted-foreground">Target Visits</p><p className="text-lg font-semibold">{target.targetVisits}</p></div>
-                                <div><p className="text-sm text-muted-foreground">Successful Visits</p><p className="text-lg font-semibold">{target.targetSuccessfulVisits}</p></div>
-                                <div><p className="text-sm text-muted-foreground">Target Offers</p><p className="text-lg font-semibold">{target.targetOffers}</p></div>
-                                <div><p className="text-sm text-muted-foreground">Target Deals</p><p className="text-lg font-semibold">{target.targetDeals}</p></div>
-                            </div>
+                            <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-0">
+                                <Activity className="h-3 w-3 mr-1" />
+                                Activity
+                            </Badge>
                         )}
-                        
-                        {!isMoneyTarget && target.targetOfferAcceptanceRate && (
-                            <div className="mt-2"><p className="text-sm text-muted-foreground">Offer Acceptance Rate</p><p className="text-lg font-semibold">{target.targetOfferAcceptanceRate}%</p></div>
+                        {target.isTeamTarget ? (
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-0">
+                                <Users className="h-3 w-3 mr-1" />
+                                Team
+                            </Badge>
+                        ) : (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-0">
+                                <User className="h-3 w-3 mr-1" />
+                                {t('individual')}
+                            </Badge>
                         )}
-                        {target.notes && (
-                            <div className="mt-3"><p className="text-sm text-muted-foreground">Notes</p><p className="text-sm">{target.notes}</p></div>
+                        {target.quarter ? (
+                            <Badge variant="outline" className="text-xs">
+                                Q{target.quarter} {target.year}
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-xs">
+                                {target.year} {t('yearly')}
+                            </Badge>
                         )}
-                        <div className="mt-4 text-xs text-muted-foreground">
-                            Created by {creatorName} on {new Date(target.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="flex gap-1">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => onEdit(target)}
+                            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => onDelete(target)}
+                            className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="font-semibold text-lg text-gray-800 dark:text-white/90 mb-4">
+                    {target.isTeamTarget ? t('teamTarget') : target.salesmanName || t('unknownSalesman')}
+                </h3>
+                
+                {/* Content based on target type */}
+                {isMoneyTarget ? (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-xl dark:bg-yellow-900/30 mx-auto mb-3">
+                            <DollarSign className="text-yellow-600 h-8 w-8 dark:text-yellow-400" />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('revenueTarget')}</p>
+                            <p className="text-2xl font-bold text-gray-800 dark:text-white/90">
+                                ${target.targetRevenue?.toLocaleString() || '0'}
+                            </p>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => onEdit(target)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="outline" size="sm" onClick={() => onDelete(target)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('targetVisits')}</p>
+                                <p className="text-lg font-semibold text-gray-800 dark:text-white/90">{target.targetVisits}</p>
+                            </div>
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('targetSuccessfulVisits')}</p>
+                                <p className="text-lg font-semibold text-gray-800 dark:text-white/90">{target.targetSuccessfulVisits}</p>
+                            </div>
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('targetOffers')}</p>
+                                <p className="text-lg font-semibold text-gray-800 dark:text-white/90">{target.targetOffers}</p>
+                            </div>
+                            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('targetDeals')}</p>
+                                <p className="text-lg font-semibold text-gray-800 dark:text-white/90">{target.targetDeals}</p>
+                            </div>
+                        </div>
+                        {target.targetOfferAcceptanceRate && (
+                            <div className="rounded-lg bg-purple-50 dark:bg-purple-900/20 p-3 text-center">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('targetOfferAcceptanceRate')}</p>
+                                <p className="text-xl font-semibold text-purple-600 dark:text-purple-400">
+                                    {target.targetOfferAcceptanceRate}%
+                                </p>
+                            </div>
+                        )}
                     </div>
+                )}
+                
+                {/* Notes */}
+                {target.notes && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('notes')}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{target.notes}</p>
+                    </div>
+                )}
+                
+                {/* Footer */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Created by <span className="font-medium">{creatorName}</span> on {new Date(target.createdAt).toLocaleDateString()}
+                    </p>
                 </div>
             </CardContent>
         </Card>

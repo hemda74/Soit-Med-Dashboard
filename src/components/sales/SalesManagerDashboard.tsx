@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DealApprovalForm from './DealApprovalForm';
 import type { Deal } from '@/types/sales.types';
 import { usePerformance } from '@/hooks/usePerformance';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Helper function to safely format dates
 const safeFormatDate = (date: any, fallback: string = 'N/A'): string => {
@@ -36,6 +37,7 @@ const safeFormatDate = (date: any, fallback: string = 'N/A'): string => {
 
 const SalesManagerDashboard: React.FC = () => {
 	usePerformance('SalesManagerDashboard');
+	const { t } = useTranslation();
 	const {
 		getSalesManagerDashboard,
 		getSalesReports,
@@ -71,10 +73,9 @@ const SalesManagerDashboard: React.FC = () => {
 		getPendingApprovals();
 	}, [getSalesManagerDashboard, getSalesReports, getWeeklyPlans, getDeals, getPendingApprovals]);
 
-	const handlePlanReview = async (planId: number, rating?: number) => {
+	const handlePlanReview = async (planId: number) => {
 		try {
 			await reviewWeeklyPlan(planId, {
-				rating,
 				comment: reviewComment,
 			});
 			setSelectedPlan(null);
@@ -130,7 +131,7 @@ const SalesManagerDashboard: React.FC = () => {
 		return (
 			<div className="text-center py-8">
 				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-				<p className="mt-4 text-gray-600">Loading dashboard...</p>
+				<p className="mt-4 text-gray-600">{t('loadingDashboard')}</p>
 			</div>
 		);
 	}
@@ -157,10 +158,10 @@ const SalesManagerDashboard: React.FC = () => {
 			{/* Main Content Tabs */}
 			<Tabs value={activeTab} onValueChange={setActiveTab}>
 				<TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800">
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="deals">Deal Approvals</TabsTrigger>
-					<TabsTrigger value="plans">Weekly Plans</TabsTrigger>
-					<TabsTrigger value="reports">Reports</TabsTrigger>
+					<TabsTrigger value="overview">{t('overview')}</TabsTrigger>
+					<TabsTrigger value="deals">{t('pendingDealApprovals')}</TabsTrigger>
+					<TabsTrigger value="plans">{t('weeklyPlans')}</TabsTrigger>
+					<TabsTrigger value="reports">{t('reports')}</TabsTrigger>
 				</TabsList>
 
 				{/* Overview Tab */}
@@ -289,7 +290,7 @@ const SalesManagerDashboard: React.FC = () => {
 						<CardHeader>
 							<CardTitle className="flex items-center">
 								<HandshakeIconOutline className="h-5 w-5 mr-2" />
-								Pending Deal Approvals
+								{t('pendingDealApprovals')}
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
@@ -319,7 +320,7 @@ const SalesManagerDashboard: React.FC = () => {
 															{deal.dealDescription}
 														</p>
 														<p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400">
-															Created by: {deal.createdByName} • {deal.createdAt ? format(new Date(deal.createdAt), 'MMM dd, yyyy') : 'N/A'}
+															{t('createdBy')}: {deal.createdByName} • {deal.createdAt ? format(new Date(deal.createdAt), 'MMM dd, yyyy') : 'N/A'}
 														</p>
 													</div>
 													<Badge className={getDealStatusColor(deal.status)}>
@@ -329,14 +330,14 @@ const SalesManagerDashboard: React.FC = () => {
 
 												<div className="flex justify-between items-center">
 													<div className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400">
-														<strong>Deal Value:</strong> EGP {deal.dealValue.toLocaleString()}
+														<strong>{t('dealValue')}:</strong> EGP {deal.dealValue.toLocaleString()}
 													</div>
 													<div className="flex space-x-2">
 														<Button
 															onClick={() => handleDealApproval(deal)}
 															className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
 														>
-															Review Deal
+															{t('reviewDeal')}
 														</Button>
 													</div>
 												</div>
@@ -345,7 +346,7 @@ const SalesManagerDashboard: React.FC = () => {
 								</div>
 							) : (
 								<div className="text-center py-8 text-gray-500 dark:text-gray-400 dark:text-gray-400">
-									No deals pending approval
+									{t('noDealsPendingApproval')}
 								</div>
 							)}
 						</CardContent>
@@ -360,7 +361,7 @@ const SalesManagerDashboard: React.FC = () => {
 							<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
 								<h2 className="text-lg font-semibold flex items-center text-gray-900 dark:text-gray-100">
 									<CalendarIcon className="h-5 w-5 mr-2" />
-									Weekly Plans Pending Approval
+									{t('weeklyPlansPendingApproval')}
 								</h2>
 							</div>
 							<div className="p-6">
@@ -431,7 +432,7 @@ const SalesManagerDashboard: React.FC = () => {
 							<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
 								<h2 className="text-lg font-semibold flex items-center text-gray-900 dark:text-gray-100">
 									<ChartBarIcon className="h-5 w-5 mr-2" />
-									Recent Sales Reports
+									{t('recentSalesReports')}
 								</h2>
 							</div>
 							<div className="p-6">
@@ -558,7 +559,7 @@ const SalesManagerDashboard: React.FC = () => {
 						<CardHeader>
 							<CardTitle className="flex items-center">
 								<ChartBarIcon className="h-5 w-5 mr-2" />
-								<span>Recent Sales Reports</span>
+								<span>{t('recentSalesReports')}</span>
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
@@ -617,7 +618,7 @@ const SalesManagerDashboard: React.FC = () => {
 						<CardHeader>
 							<CardTitle className="flex items-center">
 								<ChartBarIcon className="h-5 w-5 mr-2" />
-								Sales Reports
+								{t('salesReports')}
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
@@ -767,24 +768,12 @@ const SalesManagerDashboard: React.FC = () => {
 									>
 										Cancel
 									</Button>
-									<div className="flex gap-2">
-										{[1, 2, 3, 4, 5].map((rating) => (
-											<Button
-												key={rating}
-												type="button"
-												onClick={() => handlePlanReview(selectedPlan.id, rating)}
-												className="bg-green-600 hover:bg-green-700"
-											>
-												{rating} Star{rating > 1 ? 's' : ''}
-											</Button>
-										))}
-									</div>
 									<Button
 										type="button"
 										onClick={() => handlePlanReview(selectedPlan.id)}
-										className="bg-gray-600 hover:bg-gray-700"
+										className="bg-blue-600 hover:bg-blue-700"
 									>
-										Review without rating
+										Submit Review
 									</Button>
 								</div>
 							</div>
