@@ -37,9 +37,11 @@ import type {
 import { SparePartAvailabilityStatus as Status } from '@/types/maintenance.types';
 import ImageGallery from '@/components/shared/ImageGallery';
 import { useAttachmentsByRequest } from '@/hooks/useMaintenanceQueries';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const SparePartRequestManagement: React.FC = () => {
 	usePerformance('SparePartRequestManagement');
+	const { t } = useTranslation();
 	const { hasAnyRole } = useAuthStore();
 	const [selectedRequest, setSelectedRequest] = useState<SparePartRequestResponseDTO | null>(null);
 	const [showPriceDialog, setShowPriceDialog] = useState(false);
@@ -138,16 +140,16 @@ const SparePartRequestManagement: React.FC = () => {
 			{/* Requests List */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Spare Part Requests ({requests.length})</CardTitle>
+					<CardTitle>{t('sparePartRequests')} ({requests.length})</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{isLoading ? (
 						<div className="text-center py-8">
-							<p className="text-gray-500">Loading requests...</p>
+							<p className="text-gray-500">{t('loadingRequests')}</p>
 						</div>
 					) : requests.length === 0 ? (
 						<div className="text-center py-8">
-							<p className="text-gray-500">No spare part requests found</p>
+							<p className="text-gray-500">{t('noSparePartRequestsFound')}</p>
 						</div>
 					) : (
 						<div className="space-y-4">
@@ -183,21 +185,21 @@ const SparePartRequestManagement: React.FC = () => {
 			<Dialog open={showPriceDialog} onOpenChange={setShowPriceDialog}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Set Spare Part Price</DialogTitle>
+						<DialogTitle>{t('setSparePartPrice')}</DialogTitle>
 						<DialogDescription>
-							Set the company and customer prices for this spare part
+							{t('setCompanyAndCustomerPrices')}
 						</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
 						{selectedRequest && (
 							<div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-								<p className="text-sm text-gray-600 dark:text-gray-400">Part Name</p>
+								<p className="text-sm text-gray-600 dark:text-gray-400">{t('partName')}</p>
 								<p className="font-medium">{selectedRequest.partName}</p>
 							</div>
 						)}
 
 						<div>
-							<Label htmlFor="companyPrice">Company Price (EGP) *</Label>
+							<Label htmlFor="companyPrice">{t('companyPriceEgp')} *</Label>
 							<Input
 								id="companyPrice"
 								type="number"
@@ -213,7 +215,7 @@ const SparePartRequestManagement: React.FC = () => {
 						</div>
 
 						<div>
-							<Label htmlFor="customerPrice">Customer Price (EGP) *</Label>
+							<Label htmlFor="customerPrice">{t('customerPriceEgp')} *</Label>
 							<Input
 								id="customerPrice"
 								type="number"
@@ -245,22 +247,22 @@ const SparePartRequestManagement: React.FC = () => {
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>
-							{approvalData.approved ? 'Approve Spare Part' : 'Reject Spare Part'}
+							{approvalData.approved ? t('approveSparePart') : t('rejectSparePart')}
 						</DialogTitle>
 						<DialogDescription>
 							{approvalData.approved
-								? 'Confirm approval of this spare part request'
-								: 'Provide a reason for rejection'}
+								? t('confirmApprovalSparePart')
+								: t('provideRejectionReason')}
 						</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
 						{selectedRequest && (
 							<div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-								<p className="text-sm text-gray-600 dark:text-gray-400">Part Name</p>
+								<p className="text-sm text-gray-600 dark:text-gray-400">{t('partName')}</p>
 								<p className="font-medium">{selectedRequest.partName}</p>
 								{selectedRequest.customerPrice && (
 									<div className="mt-2">
-										<p className="text-sm text-gray-600 dark:text-gray-400">Price</p>
+										<p className="text-sm text-gray-600 dark:text-gray-400">{t('price')}</p>
 										<p className="font-medium text-lg">
 											{selectedRequest.customerPrice.toLocaleString()} EGP
 										</p>
@@ -271,14 +273,14 @@ const SparePartRequestManagement: React.FC = () => {
 
 						{!approvalData.approved && (
 							<div>
-								<Label htmlFor="rejectionReason">Rejection Reason *</Label>
+								<Label htmlFor="rejectionReason">{t('rejectionReason')} *</Label>
 								<Textarea
 									id="rejectionReason"
 									value={approvalData.rejectionReason || ''}
 									onChange={(e) =>
 										setApprovalData({ ...approvalData, rejectionReason: e.target.value })
 									}
-									placeholder="Enter rejection reason..."
+									placeholder={t('enterRejectionReason')}
 									rows={4}
 									required
 								/>
@@ -287,7 +289,7 @@ const SparePartRequestManagement: React.FC = () => {
 
 						<div className="flex justify-end gap-2">
 							<Button variant="outline" onClick={() => setShowApprovalDialog(false)}>
-								Cancel
+								{t('common.cancel')}
 							</Button>
 							<Button
 								onClick={handleCustomerDecision}
@@ -299,11 +301,11 @@ const SparePartRequestManagement: React.FC = () => {
 							>
 								{decisionMutation.isPending
 									? approvalData.approved
-										? 'Approving...'
-										: 'Rejecting...'
+										? t('approving')
+										: t('rejecting')
 									: approvalData.approved
-										? 'Approve'
-										: 'Reject'}
+										? t('approve')
+										: t('reject')}
 							</Button>
 						</div>
 					</div>
@@ -362,23 +364,23 @@ const SparePartRequestCard: React.FC<SparePartRequestCardProps> = ({
 
 						<div className="grid grid-cols-2 gap-4 text-sm">
 							<div>
-								<p className="text-gray-500 dark:text-gray-400">Part Name</p>
+								<p className="text-gray-500 dark:text-gray-400">{t('partName')}</p>
 								<p className="font-medium">{request.partName}</p>
 							</div>
 							{request.partNumber && (
 								<div>
-									<p className="text-gray-500 dark:text-gray-400">Part Number</p>
+									<p className="text-gray-500 dark:text-gray-400">{t('partNumber')}</p>
 									<p className="font-medium">{request.partNumber}</p>
 								</div>
 							)}
 							{request.manufacturer && (
 								<div>
-									<p className="text-gray-500 dark:text-gray-400">Manufacturer</p>
+									<p className="text-gray-500 dark:text-gray-400">{t('manufacturer')}</p>
 									<p className="font-medium">{request.manufacturer}</p>
 								</div>
 							)}
 							<div>
-								<p className="text-gray-500 dark:text-gray-400">Created</p>
+								<p className="text-gray-500 dark:text-gray-400">{t('created')}</p>
 								<p className="font-medium">
 									{format(new Date(request.createdAt), 'MMM dd, yyyy HH:mm')}
 								</p>
@@ -395,14 +397,14 @@ const SparePartRequestCard: React.FC<SparePartRequestCardProps> = ({
 						{request.customerPrice && (
 							<div className="flex items-center gap-4">
 								<div>
-									<p className="text-sm text-gray-500">Customer Price</p>
+									<p className="text-sm text-gray-500">{t('customerPriceEgp')}</p>
 									<p className="font-medium text-lg text-green-600">
 										{request.customerPrice.toLocaleString()} EGP
 									</p>
 								</div>
 								{request.companyPrice && (
 									<div>
-										<p className="text-sm text-gray-500">Company Price</p>
+										<p className="text-sm text-gray-500">{t('companyPriceEgp')}</p>
 										<p className="font-medium text-sm text-gray-600">
 											{request.companyPrice.toLocaleString()} EGP
 										</p>

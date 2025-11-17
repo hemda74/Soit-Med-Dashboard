@@ -26,11 +26,13 @@ import {
 } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 import { usePerformance } from '@/hooks/usePerformance'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const CATEGORIES = ['X-Ray', 'Ultrasound', 'CT Scanner', 'MRI', 'Other']
 
 export default function ProductsCatalogPage() {
     usePerformance('ProductsCatalogPage');
+    const { t } = useTranslation();
     const [products, setProducts] = useState<Product[]>([])
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(false)
@@ -96,8 +98,8 @@ export default function ProductsCatalogPage() {
             setProducts(response.data || [])
             setFilteredProducts(response.data || [])
         } catch (err: any) {
-            setError(err.message || 'Failed to load products')
-            toast.error(err.message || 'Failed to load products')
+            setError(err.message || t('failedToLoadProducts'))
+            toast.error(err.message || t('failedToLoadProducts'))
         } finally {
             setLoading(false)
         }
@@ -115,7 +117,7 @@ export default function ProductsCatalogPage() {
             setProducts(response.data || [])
             setFilteredProducts(response.data || [])
         } catch (err: any) {
-            toast.error(err.message || 'Search failed')
+            toast.error(err.message || t('searchFailed'))
         } finally {
             setLoading(false)
         }
@@ -164,13 +166,13 @@ export default function ProductsCatalogPage() {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
         if (!allowedTypes.includes(file.type)) {
-            toast.error('Invalid file type. Please select JPG, PNG, or GIF')
+            toast.error(t('invalidFileType'))
             return
         }
 
         // Validate file size (5MB)
         if (file.size > 5 * 1024 * 1024) {
-            toast.error('File size must be less than 5MB')
+            toast.error(t('fileSizeMustBeLessThan5MB'))
             return
         }
 
@@ -188,7 +190,7 @@ export default function ProductsCatalogPage() {
         e.preventDefault()
 
         if (!formData.name || formData.basePrice <= 0) {
-            toast.error('Name and price are required')
+            toast.error(t('nameAndPriceAreRequired'))
             return
         }
 
@@ -206,7 +208,7 @@ export default function ProductsCatalogPage() {
                     await productApi.uploadProductImage(editingProduct.id, selectedImage)
                 }
 
-                toast.success('Product updated successfully')
+                toast.success(t('productUpdatedSuccessfully'))
             } else {
                 // Create
                 const response = await productApi.createProduct(formData)
@@ -217,27 +219,27 @@ export default function ProductsCatalogPage() {
                     await productApi.uploadProductImage(newProduct.id, selectedImage)
                 }
 
-                toast.success('Product created successfully')
+                toast.success(t('productCreatedSuccessfully'))
             }
 
             setDialogOpen(false)
             loadProducts()
         } catch (err: any) {
-            toast.error(err.message || 'Failed to save product')
+            toast.error(err.message || t('failedToSaveProduct'))
         }
     }
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this product?')) {
+        if (!confirm(t('areYouSureDeleteProduct'))) {
             return
         }
 
         try {
             await productApi.deleteProduct(id)
-            toast.success('Product deleted successfully')
+            toast.success(t('productDeletedSuccessfully'))
             loadProducts()
         } catch (err: any) {
-            toast.error(err.message || 'Failed to delete product')
+            toast.error(err.message || t('failedToDeleteProduct'))
         }
     }
 
@@ -253,12 +255,12 @@ export default function ProductsCatalogPage() {
         <div className="container mx-auto p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Products Catalog</h1>
+                    <h1 className="text-3xl font-bold">{t('productsCatalog')}</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your product catalog for offer creation
+                        {t('manageProductCatalogForOfferCreation')}
                     </p>
                 </div>
-                <Button onClick={openCreateDialog}>+ Add Product</Button>
+                <Button onClick={openCreateDialog}>+ {t('addProduct')}</Button>
             </div>
 
             {/* Filters */}
@@ -266,35 +268,39 @@ export default function ProductsCatalogPage() {
                 <CardContent className="pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                            <Label>Search</Label>
+                            <Label>{t('search')}</Label>
                             <div className="flex gap-2">
                                 <Input
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    placeholder="Search products..."
+                                    placeholder={t('searchProducts')}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                 />
-                                <Button onClick={handleSearch}>Search</Button>
+                                <Button onClick={handleSearch}>{t('search')}</Button>
                             </div>
                         </div>
                         <div>
-                            <Label>Category</Label>
+                            <Label>{t('category')}</Label>
                             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="All Categories" />
+                                    <SelectValue placeholder={t('allCategories')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Categories</SelectItem>
+                                    <SelectItem value="all">{t('allCategories')}</SelectItem>
                                     {CATEGORIES.map((cat) => (
                                         <SelectItem key={cat} value={cat}>
-                                            {cat}
+                                            {cat === 'X-Ray' ? t('xRay') : 
+                                             cat === 'Ultrasound' ? t('ultrasound') :
+                                             cat === 'CT Scanner' ? t('ctScanner') :
+                                             cat === 'MRI' ? t('mri') :
+                                             t('other')}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
-                            <Label>Stock Status</Label>
+                            <Label>{t('stockStatus')}</Label>
                             <Select
                                 value={inStockFilter === null ? 'all' : inStockFilter.toString()}
                                 onValueChange={(v) =>
@@ -305,9 +311,9 @@ export default function ProductsCatalogPage() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="true">In Stock</SelectItem>
-                                    <SelectItem value="false">Out of Stock</SelectItem>
+                                    <SelectItem value="all">{t('all')}</SelectItem>
+                                    <SelectItem value="true">{t('inStock')}</SelectItem>
+                                    <SelectItem value="false">{t('outOfStock')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -321,7 +327,7 @@ export default function ProductsCatalogPage() {
                                     loadProducts()
                                 }}
                             >
-                                Clear Filters
+                                {t('clearFilters')}
                             </Button>
                         </div>
                     </div>
@@ -329,10 +335,10 @@ export default function ProductsCatalogPage() {
             </Card>
 
             {/* Products Grid */}
-            {loading && <div className="text-center py-8">Loading...</div>}
+            {loading && <div className="text-center py-8">{t('loading')}</div>}
             {error && (
                 <div className="text-center py-8 text-destructive">
-                    Error: {error}
+                    {t('error')}: {error}
                 </div>
             )}
 
@@ -342,7 +348,7 @@ export default function ProductsCatalogPage() {
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <p className="text-muted-foreground">
-                                    No products found. Start by adding a new product.
+                                    {t('noProductsFound')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -370,20 +376,20 @@ export default function ProductsCatalogPage() {
                                                 </h3>
                                                 {product.model && (
                                                     <p className="text-sm text-muted-foreground">
-                                                        Model: {product.model}
+                                                        {t('model')}: {product.model}
                                                     </p>
                                                 )}
                                             </div>
                                             <Badge
                                                 variant={product.inStock ? 'default' : 'secondary'}
                                             >
-                                                {product.inStock ? 'In Stock' : 'Out of Stock'}
+                                                {product.inStock ? t('inStock') : t('outOfStock')}
                                             </Badge>
                                         </div>
 
                                         {product.provider && (
                                             <p className="text-sm text-muted-foreground mb-1">
-                                                Provider: {product.provider}
+                                                {t('provider')}: {product.provider}
                                             </p>
                                         )}
                                         {product.category && (
@@ -407,14 +413,14 @@ export default function ProductsCatalogPage() {
                                                 size="sm"
                                                 onClick={() => openEditDialog(product)}
                                             >
-                                                Edit
+                                                {t('edit')}
                                             </Button>
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => handleDelete(product.id)}
                                             >
-                                                Delete
+                                                {t('delete')}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -430,12 +436,12 @@ export default function ProductsCatalogPage() {
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>
-                            {editingProduct ? 'Edit Product' : 'Add New Product'}
+                            {editingProduct ? t('editProduct') : t('addNewProduct')}
                         </DialogTitle>
                         <DialogDescription>
                             {editingProduct
-                                ? 'Update product information'
-                                : 'Add a new product to the catalog'}
+                                ? t('updateProductInformation')
+                                : t('addNewProductToCatalog')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -443,7 +449,7 @@ export default function ProductsCatalogPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2">
                                 <Label>
-                                    Name <span className="text-destructive">*</span>
+                                    {t('name')} <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     value={formData.name}
@@ -455,7 +461,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>Model</Label>
+                                <Label>{t('model')}</Label>
                                 <Input
                                     value={formData.model}
                                     onChange={(e) =>
@@ -465,7 +471,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>Provider</Label>
+                                <Label>{t('provider')}</Label>
                                 <Input
                                     value={formData.provider}
                                     onChange={(e) =>
@@ -475,7 +481,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>Category</Label>
+                                <Label>{t('category')}</Label>
                                 <Select
                                     value={formData.category || ''}
                                     onValueChange={(v) =>
@@ -483,7 +489,7 @@ export default function ProductsCatalogPage() {
                                     }
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select category" />
+                                        <SelectValue placeholder={t('selectCategory')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {CATEGORIES.map((cat) => (
@@ -496,7 +502,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>Country</Label>
+                                <Label>{t('country')}</Label>
                                 <Input
                                     value={formData.country}
                                     onChange={(e) =>
@@ -507,7 +513,7 @@ export default function ProductsCatalogPage() {
 
                             <div>
                                 <Label>
-                                    Base Price <span className="text-destructive">*</span>
+                                    {t('basePrice')} <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     type="number"
@@ -525,7 +531,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>Year</Label>
+                                <Label>{t('year')}</Label>
                                 <Input
                                     type="number"
                                     value={formData.year || ''}
@@ -549,12 +555,12 @@ export default function ProductsCatalogPage() {
                                     className="w-4 h-4"
                                 />
                                 <Label htmlFor="inStock" className="cursor-pointer">
-                                    In Stock
+                                    {t('inStock')}
                                 </Label>
                             </div>
 
                             <div className="col-span-2">
-                                <Label>Description</Label>
+                                <Label>{t('description')}</Label>
                                 <Textarea
                                     value={formData.description}
                                     onChange={(e) =>
@@ -565,7 +571,7 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div className="col-span-2">
-                                <Label>Product Image</Label>
+                                <Label>{t('productImage')}</Label>
                                 <Input
                                     type="file"
                                     accept="image/*"
@@ -575,7 +581,7 @@ export default function ProductsCatalogPage() {
                                     <div className="mt-2">
                                         <img
                                             src={imagePreview}
-                                            alt="Preview"
+                                            alt={t('preview')}
                                             className="w-32 h-32 object-cover rounded"
                                         />
                                     </div>
@@ -589,10 +595,10 @@ export default function ProductsCatalogPage() {
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button type="submit">
-                                {editingProduct ? 'Update' : 'Create'}
+                                {editingProduct ? t('update') : t('create')}
                             </Button>
                         </div>
                     </form>

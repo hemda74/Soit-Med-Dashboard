@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { OfferRequest, CreateOfferRequestDto, UpdateOfferRequestDto, AssignOfferRequestDto } from '@/types/sales.types';
 
 // Validation schema for offer request creation
@@ -68,6 +69,7 @@ export default function OfferRequestForm({
     taskProgressId,
     mode = 'create'
 }: OfferRequestFormProps) {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuthStore();
     const {
@@ -243,7 +245,7 @@ export default function OfferRequestForm({
                 <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground">
                         <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                        <p>You don't have permission to create offer requests.</p>
+                        <p>{t('youDontHavePermission')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -256,7 +258,7 @@ export default function OfferRequestForm({
                 <CardContent className="pt-6">
                     <div className="text-center text-muted-foreground">
                         <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                        <p>You don't have permission to update this offer request.</p>
+                        <p>{t('youDontHavePermissionToUpdate')}</p>
                     </div>
                 </CardContent>
             </Card>
