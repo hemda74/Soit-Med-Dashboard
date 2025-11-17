@@ -643,10 +643,13 @@ export const translations = {
 		// Sales Manager specific
 		reportsReview: 'Reports Review',
 		weeklyPlansReview: 'Weekly Plans Review',
+		pendingApprovals: 'Pending Approvals',
+		pendingDealApprovals: 'Pending Deal Approvals',
 
 		// Sales Support specific
 		offerCreation: 'Offer Creation',
 		requestsInbox: 'Requests Inbox',
+		productsCatalog: 'Products Catalog',
 
 		// Sales Module General
 		clients: 'Clients',
@@ -743,20 +746,120 @@ export const translations = {
 		enterInventorySpecialty: 'Enter inventory specialty',
 		// New Roles
 		sparePartsCoordinator: 'Spare Parts Coordinator',
-		sparePartsCoordinatorDescription: 'Coordinate spare part requests and manage inventory',
+		sparePartsCoordinatorDescription:
+			'Coordinate spare part requests and manage inventory',
 		inventoryManager: 'Inventory Manager',
-		inventoryManagerDescription: 'Manage inventory and set prices for spare parts',
-		sparePartsCoordinatorDashboard: 'Spare Parts Coordinator Dashboard',
+		inventoryManagerDescription:
+			'Manage inventory and set prices for spare parts',
+		sparePartsCoordinatorDashboard:
+			'Spare Parts Coordinator Dashboard',
 		inventoryManagerDashboard: 'Inventory Manager Dashboard',
-		manageSparePartRequests: 'Manage spare part requests and coordinate with inventory',
-		manageInventoryAndPricing: 'Manage inventory, set prices, and track spare parts',
+		accountingDashboard: 'Accounting Dashboard',
+		manageSparePartRequests:
+			'Manage spare part requests and coordinate with inventory',
+		manageInventoryAndPricing:
+			'Manage inventory, set prices, and track spare parts',
 		pendingPricing: 'Pending Pricing',
 		requestsNeedingPrice: 'Requests needing price setting',
 		pricedRequests: 'Priced Requests',
 		requestsWithPricesSet: 'Requests with prices set',
 		totalInventory: 'Total Inventory',
 		itemsInInventory: 'Items in inventory',
-		manageInventoryAndSetPrices: 'Manage inventory and set prices for spare part requests',
+		manageInventoryAndSetPrices:
+			'Manage inventory and set prices for spare part requests',
+
+		// Offer Requests Management
+		offerRequests: {
+			headerTitle: 'Offer Requests Management',
+			headerSubtitle:
+				'Manage and track offer requests from salesmen',
+			stats: {
+				total: 'Total',
+				requested: 'Requested',
+				assigned: 'Assigned',
+				inProgress: 'In Progress',
+				ready: 'Ready',
+			},
+			searchPlaceholder:
+				'Search by client, salesman, products, or ID...',
+			filters: {
+				statusPlaceholder: 'Filter by status',
+			},
+			status: {
+				all: 'All Statuses',
+				requested: 'Requested',
+				assigned: 'Assigned',
+				inProgress: 'In Progress',
+				ready: 'Ready',
+				sent: 'Sent',
+				cancelled: 'Cancelled',
+			},
+			actions: {
+				myAssigned: 'My Assigned Requests',
+				viewDetails: 'View Details',
+				assignToMe: 'Assign to Me',
+				updateStatus: 'Update Status',
+			},
+			list: {
+				title: 'Offer Requests',
+				count: '{{count}} requests found',
+				loading: 'Loading requests...',
+				empty: 'No requests found',
+				adjustFilters:
+					'Try adjusting your search or filters',
+			},
+			card: {
+				requestLabel: 'Request #',
+				requestedProducts: 'Requested Products',
+				notes: 'Notes',
+				requestedBy: 'Requested by',
+				assignedTo: 'Assigned to',
+			},
+			details: {
+				title: 'Offer Request Details',
+				subtitle: 'Complete information about this offer request',
+				status: 'Status',
+				priority: 'Priority',
+				client: 'Client',
+				specialNotes: 'Special Notes',
+				followUpNotes: 'Follow-up Notes',
+				requestedBy: 'Requested By',
+				requestDate: 'Request Date',
+				assignedTo: 'Assigned To',
+				createdOfferId: 'Created Offer ID',
+			},
+			statusDialog: {
+				title: 'Update Request Status',
+				description: 'Update the status of request',
+				newStatus: 'New Status',
+				notesLabel: 'Notes (Optional)',
+				notesPlaceholder:
+					'Add notes about this status update...',
+			},
+			messages: {
+				openFromNotification:
+					'Opening request from notification',
+				assignedToYou:
+					'Request assigned to you successfully',
+				statusUpdated: 'Status updated successfully',
+			},
+			errors: {
+				loadFailed: 'Failed to load offer requests',
+				loadAssignedFailed:
+					'Failed to load assigned requests',
+				assignFailed: 'Failed to assign request',
+				statusUpdateFailed: 'Failed to update status',
+			},
+		},
+		common: {
+			refresh: 'Refresh',
+			retry: 'Retry',
+			close: 'Close',
+			cancel: 'Cancel',
+			errors: {
+				userIdMissing: 'User ID not found',
+			},
+		},
 	},
 	ar: {
 		Hello: 'مرحبا',
@@ -1262,10 +1365,13 @@ export const translations = {
 		// Sales Manager specific
 		reportsReview: 'مراجعة التقارير',
 		weeklyPlansReview: 'مراجعة الخطط الأسبوعية',
+		pendingApprovals: 'الموافقات المعلقة',
+		pendingDealApprovals: 'موافقات الصفقات المعلقة',
 
 		// Sales Support specific
 		offerCreation: 'إنشاء العروض',
 		requestsInbox: 'صندوق الطلبات',
+		productsCatalog: 'كتالوج المنتجات',
 
 		// Sales Module General
 		salesModule: 'وحدة المبيعات',
@@ -1357,20 +1463,115 @@ export const translations = {
 		enterInventorySpecialty: 'أدخل تخصص المخزون',
 		// New Roles
 		sparePartsCoordinator: 'منسق قطع الغيار',
-		sparePartsCoordinatorDescription: 'تنسيق طلبات قطع الغيار وإدارة المخزون',
+		sparePartsCoordinatorDescription:
+			'تنسيق طلبات قطع الغيار وإدارة المخزون',
 		inventoryManager: 'مدير المخزون',
-		inventoryManagerDescription: 'إدارة المخزون وتحديد أسعار قطع الغيار',
+		inventoryManagerDescription:
+			'إدارة المخزون وتحديد أسعار قطع الغيار',
 		sparePartsCoordinatorDashboard: 'لوحة تحكم منسق قطع الغيار',
 		inventoryManagerDashboard: 'لوحة تحكم مدير المخزون',
-		manageSparePartRequests: 'إدارة طلبات قطع الغيار والتنسيق مع المخزون',
-		manageInventoryAndPricing: 'إدارة المخزون وتحديد الأسعار وتتبع قطع الغيار',
+		accountingDashboard: 'لوحة تحكم المحاسبة',
+		manageSparePartRequests:
+			'إدارة طلبات قطع الغيار والتنسيق مع المخزون',
+		manageInventoryAndPricing:
+			'إدارة المخزون وتحديد الأسعار وتتبع قطع الغيار',
 		pendingPricing: 'أسعار معلقة',
 		requestsNeedingPrice: 'طلبات تحتاج تحديد سعر',
 		pricedRequests: 'طلبات مسعرة',
 		requestsWithPricesSet: 'طلبات تم تحديد أسعارها',
 		totalInventory: 'إجمالي المخزون',
 		itemsInInventory: 'عناصر في المخزون',
-		manageInventoryAndSetPrices: 'إدارة المخزون وتحديد الأسعار لطلبات قطع الغيار',
+		manageInventoryAndSetPrices:
+			'إدارة المخزون وتحديد الأسعار لطلبات قطع الغيار',
+
+		// Offer Requests Management
+		offerRequests: {
+			headerTitle: 'إدارة طلبات العروض',
+			headerSubtitle:
+				'إدارة ومتابعة طلبات العروض من المندوبين',
+			stats: {
+				total: 'الإجمالي',
+				requested: 'مطلوب',
+				assigned: 'معين',
+				inProgress: 'قيد المعالجة',
+				ready: 'جاهز',
+			},
+			searchPlaceholder:
+				'البحث بالعميل، المندوب، المنتجات، أو الرقم...',
+			filters: {
+				statusPlaceholder: 'تصفية حسب الحالة',
+			},
+			status: {
+				all: 'جميع الحالات',
+				requested: 'مطلوب',
+				assigned: 'معين',
+				inProgress: 'قيد المعالجة',
+				ready: 'جاهز',
+				sent: 'تم الإرسال',
+				cancelled: 'ملغي',
+			},
+			actions: {
+				myAssigned: 'طلباتي المعينة',
+				viewDetails: 'عرض التفاصيل',
+				assignToMe: 'تعيين لي',
+				updateStatus: 'تحديث الحالة',
+			},
+			list: {
+				title: 'طلبات العروض',
+				count: 'تم العثور على {{count}} طلب',
+				loading: 'جاري تحميل الطلبات...',
+				empty: 'لم يتم العثور على طلبات',
+				adjustFilters: 'حاول تعديل البحث أو المرشحات',
+			},
+			card: {
+				requestLabel: 'طلب #',
+				requestedProducts: 'المنتجات المطلوبة',
+				notes: 'ملاحظات',
+				requestedBy: 'مطلوب من قبل',
+				assignedTo: 'معين لـ',
+			},
+			details: {
+				title: 'تفاصيل طلب العرض',
+				subtitle: 'معلومات كاملة عن طلب العرض هذا',
+				status: 'الحالة',
+				priority: 'الأولوية',
+				client: 'العميل',
+				specialNotes: 'ملاحظات خاصة',
+				followUpNotes: 'ملاحظات المتابعة',
+				requestedBy: 'مطلوب من قبل',
+				requestDate: 'تاريخ الطلب',
+				assignedTo: 'معين لـ',
+				createdOfferId: 'رقم العرض المنشأ',
+			},
+			statusDialog: {
+				title: 'تحديث حالة الطلب',
+				description: 'تحديث حالة الطلب',
+				newStatus: 'الحالة الجديدة',
+				notesLabel: 'ملاحظات (اختياري)',
+				notesPlaceholder:
+					'أضف ملاحظات حول تحديث الحالة هذا...',
+			},
+			messages: {
+				openFromNotification: 'فتح الطلب من الإشعار',
+				assignedToYou: 'تم تعيين الطلب لك بنجاح',
+				statusUpdated: 'تم تحديث الحالة بنجاح',
+			},
+			errors: {
+				loadFailed: 'فشل تحميل طلبات العروض',
+				loadAssignedFailed: 'فشل تحميل الطلبات المعينة',
+				assignFailed: 'فشل تعيين الطلب',
+				statusUpdateFailed: 'فشل تحديث الحالة',
+			},
+		},
+		common: {
+			refresh: 'تحديث',
+			retry: 'إعادة المحاولة',
+			close: 'إغلاق',
+			cancel: 'إلغاء',
+			errors: {
+				userIdMissing: 'معرف المستخدم غير موجود',
+			},
+		},
 	},
 };
 
