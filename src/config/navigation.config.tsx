@@ -84,6 +84,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <BarChart3 />,
+    name: t('salesAnalytics') || 'Sales Analytics',
+    path: '/sales-analytics',
+    roles: ['SalesManager', 'SuperAdmin'] as const,
+  },
+  {
+    icon: <BarChart3 />,
     name: t('reportsReview'),
     path: '/sales-manager/reports-review',
     roles: ['SalesManager', 'SuperAdmin'] as const,
@@ -93,6 +99,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     name: t('deals'),
     path: '/sales-manager/deals',
     roles: ['SalesManager', 'SuperAdmin'] as const,
+  },
+  {
+    icon: <Users />,
+    name: t('salesClients.title') || 'Sales Clients',
+    path: '/sales-manager/clients',
+    roles: ['SalesManager', 'SalesSupport', 'SuperAdmin'] as const,
   },
   {
     icon: <Clock className={ICON_SIZE} />,

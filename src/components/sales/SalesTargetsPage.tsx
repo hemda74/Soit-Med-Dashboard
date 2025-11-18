@@ -731,6 +731,7 @@ export default function SalesTargetsPage() {
 }
 
 function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; onEdit: (target: SalesmanTargetDTO) => void; onDelete: (target: SalesmanTargetDTO) => void }) {
+    const { t } = useTranslation();
     const isMoneyTarget = target.targetType === TargetTypeEnum.Money
     const creatorName = target.createdByManagerName || target.createdBySalesmanName || 'Unknown'
     
