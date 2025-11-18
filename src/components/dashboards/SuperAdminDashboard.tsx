@@ -10,10 +10,15 @@ import {
     SystemHealthChart
 } from '@/components/charts';
 import { usePerformance } from '@/hooks/usePerformance';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight } from 'lucide-react';
 
 const SuperAdminDashboard: React.FC = () => {
     usePerformance('SuperAdminDashboard');
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { user } = useAuthStore();
     const statistics = useStatistics();
     const loading = useStatisticsLoading();
@@ -129,6 +134,31 @@ const SuperAdminDashboard: React.FC = () => {
                 <div className="grid gap-6">
                     <SystemHealthChart />
                 </div>
+            </div>
+
+            {/* Sales Analytics Section */}
+            <div className="space-y-8 animate-fadeIn mt-8">
+                <Card className="border-2 border-border shadow-lg">
+                    <CardContent className="p-8">
+                        <div className="flex flex-col items-center justify-center text-center space-y-4">
+                            <BarChart3 className="w-16 h-16 text-primary" />
+                            <div>
+                                <h3 className="text-2xl font-bold text-foreground mb-2">Sales Analytics</h3>
+                                <p className="text-muted-foreground mb-6">
+                                    View comprehensive sales statistics, performance metrics, and detailed analytics
+                                </p>
+                                <Button 
+                                    onClick={() => navigate('/sales-analytics')}
+                                    size="lg"
+                                    className="flex items-center gap-2"
+                                >
+                                    View Sales Analytics
+                                    <ArrowRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </>
     );

@@ -18,6 +18,7 @@ import ReportsScreen from '@/components/finance/ReportsScreen'
 import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
 import { SalesManagerDashboard, SalesSupportDashboard } from '@/components/sales'
 import SalesStatisticsPage from '@/components/sales/SalesStatisticsPage'
+import SalesAnalyticsPage from '@/components/sales/SalesAnalyticsPage'
 import RoleGuard from '@/components/shared/RoleGuard'
 import SalesTargetsPage from '@/components/sales/SalesTargetsPage'
 import ManagerReportsReviewPage from '@/components/sales/ManagerReportsReviewPage'
@@ -30,8 +31,8 @@ import OffersManagementPage from '@/pages/OffersManagementPage'
 import TestEquipmentImagePage from '@/pages/TestEquipmentImagePage'
 import PerformancePage from '@/pages/PerformancePage'
 import DealsManagementPage from '@/pages/salesManager/DealsManagementPage'
-import OffersManagementPageSM from '@/pages/salesManager/OffersManagementPage'
 import DealApprovalsPage from '@/pages/salesManager/DealApprovalsPage'
+import SalesClientsPage from '@/pages/salesManager/SalesClientsPage'
 import SuperAdminDealApprovalsPage from '@/pages/superAdmin/SuperAdminDealApprovalsPage'
 import {
 	MaintenanceSupportDashboard,
@@ -92,8 +93,10 @@ function App() {
                 <Route path="sales-manager/reports-review" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><ManagerReportsReviewPage /></RoleGuard>} />
                 <Route path="sales-manager/deals" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><DealsManagementPage /></RoleGuard>} />
                 <Route path="sales-manager/deal-approvals" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><DealApprovalsPage /></RoleGuard>} />
-                <Route path="sales-manager/offers" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><OffersManagementPageSM /></RoleGuard>} />
+                <Route path="sales-manager/clients" element={<RoleGuard requiredAnyRoles={["SalesManager", "SalesSupport", "SuperAdmin"]}><SalesClientsPage /></RoleGuard>} />
+                <Route path="sales-manager/offers" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><OffersManagementPage /></RoleGuard>} />
                 <Route path="sales-statistics" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesStatisticsPage /></RoleGuard>} />
+                <Route path="sales-analytics" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesAnalyticsPage /></RoleGuard>} />
                 <Route path="super-admin/deal-approvals" element={<RoleGuard requiredAnyRoles={["SuperAdmin"]}><SuperAdminDealApprovalsPage /></RoleGuard>} />
 
 
@@ -106,7 +109,6 @@ function App() {
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/create-sales-support" element={<SalesSupportUserCreation />} />
                 <Route path="admin/users" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><UsersList /></RoleGuard>} />
-                <Route path="admin/offers" element={<RoleGuard requiredAnyRoles={["SuperAdmin"]}><OffersManagementPage /></RoleGuard>} />
                 <Route path="admin/test-equipment-image" element={<RoleGuard requiredAnyRoles={["SuperAdmin", "SalesSupport", "SalesManager"]}><TestEquipmentImagePage /></RoleGuard>} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="maintenance-support" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "SuperAdmin"]}><MaintenanceSupportDashboard /></RoleGuard>} />
