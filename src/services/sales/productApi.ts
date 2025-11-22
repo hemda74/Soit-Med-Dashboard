@@ -8,7 +8,7 @@ import type {
 } from '@/types/sales.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
-import { getStaticFileUrl } from '@/utils/apiConfig';
+import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
 import { performanceMonitor } from '@/utils/performance';
 
 class ProductApiService {
@@ -23,9 +23,7 @@ class ProductApiService {
 			}
 
 			// Endpoints already include /api prefix, so use them directly
-			const baseUrl =
-				import.meta.env.VITE_API_BASE_URL ||
-				'http://localhost:5117';
+			const baseUrl = getApiBaseUrl();
 			const fullUrl = `${baseUrl}${endpoint}`;
 
 			// Don't set Content-Type for FormData - browser sets it automatically with boundary

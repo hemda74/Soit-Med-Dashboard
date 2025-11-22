@@ -8,9 +8,13 @@ export interface Client {
 	phone?: string;
 	organizationName?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
+	city?: string;
+	governorate?: string;
+	governorateId?: number;
 	createdBy: string;
 	assignedTo?: string;
-	assignedSalesmanName?: string; // For display purposes
+	assignedToName?: string; // For display purposes - salesman name
+	assignedSalesmanName?: string; // Legacy - kept for backward compatibility
 	createdAt: string;
 	updatedAt: string;
 	// Sales tracking - Updated to match new business logic
@@ -44,6 +48,9 @@ export interface ClientSearchFilters {
 	query?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
 	assignedSalesmanId?: string;
+	city?: string;
+	governorateId?: number;
+	equipmentCategory?: string; // Filter by equipment category (e.g., "X-Ray", "Ultrasound")
 	createdFrom?: string;
 	createdTo?: string;
 	sortBy?: string;
@@ -135,6 +142,7 @@ export interface DealFailureDto {
 
 export interface OfferRequest {
 	id: number;
+	followUpNotes?: string;
 	requestedBy: string;
 	requestedByName: string;
 	clientId: number;

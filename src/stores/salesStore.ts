@@ -486,7 +486,7 @@ export interface SalesActions {
 	// Reports actions
 	generateSalesReport: (data: CreateSalesReportDto) => Promise<void>;
 	getSalesReports: (filters?: any) => Promise<void>;
-	getSalesManagerDashboard: () => Promise<void>;
+	getSalesManagerDashboard: (year?: number, quarter?: number) => Promise<void>;
 	getSalesmanPerformance: (
 		salesmanId: string,
 		period?: string
@@ -693,7 +693,7 @@ export const useSalesStore = create<SalesStore>()(
 							clientsLoading: false,
 						});
 						toast.success(
-							`Found ${response.data.clients.length} clients`
+							`Found ${response.data.totalCount} clients`
 						);
 					} catch (error: any) {
 						set({
@@ -1036,56 +1036,41 @@ export const useSalesStore = create<SalesStore>()(
 							await salesApi.getDeals(
 								filters
 							);
+						
+						// Backend returns ApiResponse<List<DealResponseDTO>> - simple array, not paginated
+						const dealsData = Array.isArray(response.data) ? response.data : [];
+						
+						// Set pagination metadata (backend doesn't provide pagination, so we calculate it)
+						const paginationData = {
+							page: 1,
+							pageSize: dealsData.length || 20,
+							totalCount: dealsData.length,
+							totalPages: 1,
+							hasNextPage: false,
+							hasPreviousPage: false,
+						};
+
 						set({
-							deals:
-								response.data
-									.data ||
-								[],
-							pagination: {
-								page:
-									response
-										.data
-										.page ||
-									1,
-								pageSize:
-									response
-										.data
-										.pageSize ||
-									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
-								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
-									false,
-								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
-									false,
-							},
+							deals: dealsData,
+							pagination: paginationData,
 							dealsLoading: false,
 						});
 					} catch (error: any) {
+						console.error('Error fetching deals:', error);
+						const is404 = error.status === 404 || error.response?.status === 404;
 						set({
-							dealsError:
-								error.message ||
-								'Failed to fetch deals',
+							dealsError: is404
+								? null
+								: error.message || 'Failed to fetch deals',
+							deals: [], // Set empty array on error
 							dealsLoading: false,
 						});
-						toast.error(
-							error.message ||
-								'Failed to fetch deals'
-						);
+						// Only show toast for non-404 errors
+						if (!is404) {
+							toast.error(
+								error.message || 'Failed to fetch deals'
+							);
+						}
 					}
 				},
 
@@ -1621,21 +1606,29 @@ export const useSalesStore = create<SalesStore>()(
 						set((state) => ({
 							offersByClient: {
 								...state.offersByClient,
-								[clientId]: response.data,
+								[clientId]: Array.isArray(response.data) ? response.data : [],
 							},
 							offersLoading: false,
 						}));
 					} catch (error: any) {
-						set({
-							offersError:
-								error.message ||
-								'Failed to fetch offers by client',
+						console.error('Error fetching offers by client:', error);
+						const is404 = error.status === 404 || error.response?.status === 404;
+						set((state) => ({
+							offersByClient: {
+								...state.offersByClient,
+								[clientId]: [], // Set empty array on error
+							},
+							offersError: is404
+								? null
+								: error.message || 'Failed to fetch offers by client',
 							offersLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to fetch offers by client'
-						);
+						}));
+						// Only show toast for non-404 errors
+						if (!is404) {
+							toast.error(
+								error.message || 'Failed to fetch offers by client'
+							);
+						}
 					}
 				},
 
@@ -1753,17 +1746,22 @@ export const useSalesStore = create<SalesStore>()(
 								false,
 						});
 					} catch (error: any) {
+						console.error('Error fetching offer requests:', error);
+						const is404 = error.status === 404 || error.response?.status === 404;
 						set({
-							offerRequestsError:
-								error.message ||
-								'Failed to fetch offer requests',
+							offerRequestsError: is404
+								? null
+								: error.message || 'Failed to fetch offer requests',
+							offerRequests: [], // Set empty array on error
 							offerRequestsLoading:
 								false,
 						});
-						toast.error(
-							error.message ||
-								'Failed to fetch offer requests'
-						);
+						// Only show toast for non-404 errors
+						if (!is404) {
+							toast.error(
+								error.message || 'Failed to fetch offer requests'
+							);
+						}
 					}
 				},
 
@@ -2138,23 +2136,32 @@ export const useSalesStore = create<SalesStore>()(
 						set({
 							taskProgress:
 								response.data
-									.data ||
-								response.data,
+									?.data ||
+								response.data ||
+								[],
 							taskProgressLoading:
 								false,
 						});
 					} catch (error: any) {
+						// Handle 404 and other errors gracefully
+						console.error('Error fetching client task progress:', error);
+						const is404 = error.status === 404 || error.response?.status === 404;
 						set({
-							taskProgressError:
-								error.message ||
-								'Failed to fetch client task progress',
+							taskProgressError: is404
+								? null // Don't show error for 404
+								: error.message ||
+								  'Failed to fetch client task progress',
+							taskProgress: [], // Set empty array on error
 							taskProgressLoading:
 								false,
 						});
-						toast.error(
-							error.message ||
-								'Failed to fetch client task progress'
-						);
+						// Only show toast for non-404 errors
+						if (!is404) {
+							toast.error(
+								error.message ||
+									'Failed to fetch client task progress'
+							);
+						}
 					}
 				},
 
@@ -2295,20 +2302,28 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							clientVisits:
-								response.data,
+								response.data || [],
 							visitsLoading: false,
 						});
 					} catch (error: any) {
+						// Handle 404 and other errors gracefully
+						console.error('Error fetching client visits:', error);
+						const is404 = error.status === 404 || error.response?.status === 404;
 						set({
-							visitsError:
-								error.message ||
-								'Failed to fetch client visits',
+							visitsError: is404
+								? null // Don't show error for 404, just empty array
+								: error.message ||
+								  'Failed to fetch client visits',
+							clientVisits: [], // Set empty array on error
 							visitsLoading: false,
 						});
-						toast.error(
-							error.message ||
-								'Failed to fetch client visits'
-						);
+						// Only show toast for non-404 errors
+						if (!is404) {
+							toast.error(
+								error.message ||
+									'Failed to fetch client visits'
+							);
+						}
 					}
 				},
 
@@ -3530,10 +3545,11 @@ export const useSalesStore = create<SalesStore>()(
 								requestId,
 								{
 									status: status as
-										| 'Pending'
+										| 'Requested'
 										| 'Assigned'
 										| 'InProgress'
-										| 'Completed'
+										| 'Ready'
+										| 'Sent'
 										| 'Cancelled',
 									notes: comment,
 								}
@@ -3888,32 +3904,36 @@ export const useSalesStore = create<SalesStore>()(
 								quarter
 							);
 						// Response structure: { success, data: { year, quarter, teamStatistics: {...}, salesmen: [...] } }
+						const teamStats = response.data?.teamStatistics || {};
+						const salesmenList = response.data?.salesmen || [];
+						
 						const dashboardData = {
-							...response.data
-								?.teamStatistics,
-							salesmen:
-								response.data
-									?.salesmen ||
-								[],
-							teamPerformance:
-								response.data
-									?.salesmen ||
-								[],
+							// Spread team statistics
+							...teamStats,
+							// Salesmen list
+							salesmen: salesmenList,
+							// Team performance array (same as salesmen for now)
+							teamPerformance: salesmenList,
+							// Overview metrics
 							overview: {
 								totalClients: 0, // Calculate from clients if needed
-								teamPerformance:
-									response
-										.data
-										?.teamStatistics
-										?.averageSuccessRate ||
-									0,
-								revenueThisMonth:
-									response
-										.data
-										?.teamStatistics
-										?.totalRevenue ||
-									0,
+								activeClients: 0,
+								potentialClients: 0,
+								newClientsThisMonth: 0,
+								totalVisitsThisMonth: teamStats.totalVisits || 0,
+								totalOffersThisMonth: teamStats.totalOffers || 0,
+								totalDealsThisMonth: teamStats.totalDeals || 0,
+								revenueThisMonth: teamStats.totalRevenue || 0,
+								conversionRate: teamStats.averageSuccessRate || 0,
+								// Team performance percentage (average success rate)
+								teamPerformance: teamStats.averageSuccessRate || 0,
 							},
+							// Recent activity (empty for now, can be populated from other endpoints)
+							recentActivity: [],
+							// Upcoming visits (empty for now)
+							upcomingVisits: [],
+							// Overdue items (empty for now)
+							overdueItems: [],
 						};
 						set({
 							salesDashboard:
