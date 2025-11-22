@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,12 @@ import {
     ChevronLeft,
     ChevronRight,
     Users,
+    CheckCircle2,
+    Clock,
+    TrendingUp,
+    FileText,
 } from 'lucide-react';
-import { LoadingSpinner, EmptyState, ErrorDisplay, PageHeader, FilterCard } from '@/components/shared';
+import { LoadingSpinner, EmptyState, ErrorDisplay } from '@/components/shared';
 import { useWeeklyPlans } from '@/hooks/useWeeklyPlans';
 // import { useUsersForFilter } from '@/hooks/useUsersForFilter'; // Disabled - SalesManager doesn't have access
 import { useAuthStore } from '@/stores/authStore';
@@ -32,28 +36,6 @@ import type { WeeklyPlan, FilterWeeklyPlansDto } from '@/types/weeklyPlan.types'
 import { format } from 'date-fns';
 
 // Helper function to render stars
-const renderStars = (rating: number | null) => {
-    if (!rating) return null;
-
-    const stars = Array.from({ length: 5 }, (_, i) => i + 1);
-
-    return (
-        <div className="flex items-center gap-1">
-            {stars.map((star) => (
-                <Star
-                    key={star}
-                    className={`h-4 w-4 ${star <= rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                        }`}
-                />
-            ))}
-            <span className="text-sm text-gray-600 dark:text-gray-400 ml-1">
-                ({rating}/5)
-            </span>
-        </div>
-    );
-};
 
 export const WeeklyPlansScreen: React.FC = () => {
     const {
@@ -127,6 +109,28 @@ export const WeeklyPlansScreen: React.FC = () => {
         fetchPlans(updatedFilters);
     };
 
+    // Calculate statistics
+    const statistics = useMemo(() => {
+        const totalPlans = pagination.totalCount || plans.length;
+        const completedTasks = plans.reduce((acc, plan) => {
+            return acc + (plan.tasks?.filter(t => t.status === 'Completed').length || 0);
+        }, 0);
+        const totalTasks = plans.reduce((acc, plan) => {
+            return acc + (plan.tasks?.length || 0);
+        }, 0);
+        // Calculate hasManagerReview based on managerReviewedAt (real data from backend)
+        const pendingReviews = plans.filter(plan => !plan.managerReviewedAt).length;
+        const reviewedPlans = plans.filter(plan => !!plan.managerReviewedAt).length;
+        return {
+            totalPlans,
+            completedTasks,
+            totalTasks,
+            pendingReviews,
+            reviewedPlans,
+            completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+        };
+    }, [plans, pagination.totalCount]);
+
     if (!hasAccess) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -144,25 +148,104 @@ export const WeeklyPlansScreen: React.FC = () => {
     }
 
     return (
-        <div className="space-y-6">
-            <PageHeader
-                title="Weekly Plans"
-                description="Manage and track weekly to-do lists and progress"
-                action={
-                    canCreate ? (
-                        <Button
-                            onClick={() => setShowCreateModal(true)}
-                            className="flex items-center gap-2"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Create Plan
-                        </Button>
-                    ) : undefined
-                }
-            />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Enhanced Professional Header */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-700 dark:from-indigo-700 dark:to-purple-800 rounded-xl shadow-lg p-8 text-white">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2 text-white">Weekly Plans</h1>
+                            <p className="text-indigo-100 dark:text-indigo-200 text-lg">
+                                Manage and track weekly to-do lists and progress
+                            </p>
+                            <p className="text-indigo-200 dark:text-indigo-300 text-sm mt-2">
+                                Stay organized and monitor your team's weekly achievements
+                            </p>
+                        </div>
+                        {canCreate && (
+                            <Button
+                                onClick={() => setShowCreateModal(true)}
+                                className="bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 shadow-md transition-all duration-200"
+                                size="lg"
+                            >
+                                <Plus className="h-5 w-5 mr-2" />
+                                Create Plan
+                            </Button>
+                        )}
+                    </div>
+                </div>
 
-            <FilterCard>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-indigo-500 dark:border-l-indigo-400">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+                                        {statistics.totalPlans}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {statistics.reviewedPlans} reviewed
+                                    </p>
+                                </div>
+                                <div className="bg-indigo-100 dark:bg-indigo-900 p-4 rounded-full">
+                                    <FileText className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 dark:border-l-green-400">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completion Rate</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+                                        {statistics.completionRate}%
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {statistics.completedTasks} / {statistics.totalTasks} tasks
+                                    </p>
+                                </div>
+                                <div className="bg-green-100 dark:bg-green-900 p-4 rounded-full">
+                                    <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-yellow-500 dark:border-l-yellow-400">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Reviews</p>
+                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+                                        {statistics.pendingReviews}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Awaiting manager review
+                                    </p>
+                                </div>
+                                <div className="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-full">
+                                    <Clock className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                </div>
+
+                {/* Enhanced Filter Section */}
+                <Card className="border-0 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <ListChecks className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                            Filters & Search
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {canReview && (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -300,309 +383,280 @@ export const WeeklyPlansScreen: React.FC = () => {
                                 </Select>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Minimum Rating
-                                </label>
-                                <Select
-                                    value={
-                                        filters.minRating?.toString() ||
-                                        'all'
-                                    }
-                                    onValueChange={(
-                                        value
-                                    ) =>
-                                        handleFilterChange(
-                                            {
-                                                minRating:
-                                                    value ===
-                                                        'all'
-                                                        ? undefined
-                                                        : parseInt(
-                                                            value
-                                                        ),
-                                            }
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All ratings" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            All ratings
-                                        </SelectItem>
-                                        <SelectItem value="1">
-                                            1+ stars
-                                        </SelectItem>
-                                        <SelectItem value="2">
-                                            2+ stars
-                                        </SelectItem>
-                                        <SelectItem value="3">
-                                            3+ stars
-                                        </SelectItem>
-                                        <SelectItem value="4">
-                                            4+ stars
-                                        </SelectItem>
-                                        <SelectItem value="5">
-                                            5 stars
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </>
                     )}
-                </div>
-            </FilterCard>
+                        </div>
+                    </CardContent>
+                </Card>
 
-            {error && (
-                <ErrorDisplay message={error} onDismiss={clearError} />
-            )}
+                {error && (
+                    <ErrorDisplay message={error} onDismiss={clearError} />
+                )}
 
-            {loading ? (
-                <div className="flex justify-center py-8">
-                    <LoadingSpinner
-                        size="lg"
-                        text="Loading plans..."
-                    />
-                </div>
-            ) : plans.length === 0 ? (
-                <EmptyState
-                    title="No plans found"
-                    description={
-                        canCreate
-                            ? 'Create your first weekly plan to get started.'
-                            : 'No weekly plans available yet.'
-                    }
-                    action={
-                        canCreate ? (
-                            <Button
-                                onClick={() =>
-                                    setShowCreateModal(
-                                        true
-                                    )
-                                }
-                                className="flex items-center gap-2"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Create Plan
-                            </Button>
-                        ) : undefined
-                    }
-                />
-            ) : (
-                <>
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Showing {plans.length} of{' '}
-                            {pagination.totalCount} plans
-                        </p>
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <LoadingSpinner
+                            size="lg"
+                            text="Loading plans..."
+                        />
                     </div>
+                ) : plans.length === 0 ? (
+                    <EmptyState
+                        title="No plans found"
+                        description={
+                            canCreate
+                                ? 'Create your first weekly plan to get started.'
+                                : 'No weekly plans available yet.'
+                        }
+                        action={
+                            canCreate ? (
+                                <Button
+                                    onClick={() =>
+                                        setShowCreateModal(
+                                            true
+                                        )
+                                    }
+                                    className="flex items-center gap-2"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Create Plan
+                                </Button>
+                            ) : undefined
+                        }
+                    />
+                ) : (
+                    <>
+                        {/* Results Header */}
+                        <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Showing <span className="font-bold text-indigo-600 dark:text-indigo-400">{plans.length}</span> of{' '}
+                                <span className="font-bold text-indigo-600 dark:text-indigo-400">{pagination.totalCount}</span> plans
+                            </p>
+                        </div>
 
-                    <div className="grid gap-4">
-                        {plans.map((plan) => (
-                            <Card
-                                key={plan.id}
-                                className="hover:shadow-md transition-shadow"
-                            >
-                                <CardContent className="p-6">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                                    {
-                                                        plan.title
-                                                    }
-                                                </h3>
-                                                {plan.rating && (
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="flex items-center gap-1"
-                                                    >
-                                                        {renderStars(
-                                                            plan.rating
+                        {/* Enhanced Plan Cards Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {plans.map((plan) => {
+                                const totalTasks = plan.tasks?.length || 0;
+                                // Check completion: status === 'Completed' OR has progress records
+                                const completedTasks = plan.tasks?.filter(t => {
+                                    if (t.status === 'Completed') return true;
+                                    // Fallback: tasks with progress are considered completed
+                                    if ((t.progressCount && t.progressCount > 0) || (t.progresses && t.progresses.length > 0)) return true;
+                                    return false;
+                                }).length || 0;
+                                const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                const isComplete = progressPercentage === 100;
+                                // Pending Review: plan has no manager review yet (managerReviewedAt is null) and user can review
+                                const isPendingReview = !plan.managerReviewedAt && canReview;
+
+                                return (
+                                    <Card
+                                        key={plan.id}
+                                        className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
+                                            isComplete
+                                                ? 'border-l-green-500 dark:border-l-green-400'
+                                                : isPendingReview
+                                                ? 'border-l-yellow-500 dark:border-l-yellow-400'
+                                                : 'border-l-indigo-500 dark:border-l-indigo-400'
+                                        }`}
+                                    >
+                                        <CardContent className="p-6">
+                                            <div className="space-y-4">
+                                                {/* Header Section */}
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                                                                {plan.title}
+                                                            </h3>
+                                                            {isComplete && (
+                                                                <Badge className="bg-green-500 text-white">
+                                                                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                                    Complete
+                                                                </Badge>
+                                                            )}
+                                                            {isPendingReview && (
+                                                                <Badge className="bg-yellow-500 text-white">
+                                                                    <Clock className="h-3 w-3 mr-1" />
+                                                                    Pending Review
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+
+                                                        {plan.description && (
+                                                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                                                                {plan.description}
+                                                            </p>
                                                         )}
-                                                    </Badge>
-                                                )}
-                                            </div>
-
-                                            {plan.description && (
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
-                                                    {
-                                                        plan.description
-                                                    }
-                                                </p>
-                                            )}
-
-                                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                                <div className="flex items-center gap-1">
-                                                    <User className="h-4 w-4" />
-                                                    {plan.employee
-                                                        ? `${plan.employee.firstName} ${plan.employee.lastName}`
-                                                        : plan.employeeId
-                                                    }
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="h-4 w-4" />
-                                                    {format(
-                                                        new Date(
-                                                            plan.weekStartDate
-                                                        ),
-                                                        'MMM dd'
-                                                    )}{' '}
-                                                    -{' '}
-                                                    {format(
-                                                        new Date(
-                                                            plan.weekEndDate
-                                                        ),
-                                                        'MMM dd, yyyy'
+
+                                                {/* Info Section */}
+                                                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+                                                            <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Employee</p>
+                                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                                {plan.employee
+                                                                    ? `${plan.employee.firstName} ${plan.employee.lastName}`
+                                                                    : plan.employeeId}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                                                            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Week</p>
+                                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                                {format(
+                                                                    new Date(plan.weekStartDate),
+                                                                    'MMM dd'
+                                                                )}{' '}
+                                                                -{' '}
+                                                                {format(
+                                                                    new Date(plan.weekEndDate),
+                                                                    'MMM dd'
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Progress Section */}
+                                                <div className="space-y-2 pt-2">
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            <ListChecks className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                                                                Tasks Progress
+                                                            </span>
+                                                        </div>
+                                                        <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                            {completedTasks} / {totalTasks}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                                                        <div
+                                                            className={`h-3 rounded-full transition-all duration-500 ${
+                                                                isComplete
+                                                                    ? 'bg-gradient-to-r from-green-500 to-green-600'
+                                                                    : 'bg-gradient-to-r from-indigo-500 to-indigo-600'
+                                                            }`}
+                                                            style={{
+                                                                width: `${progressPercentage}%`,
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 text-right">
+                                                        {progressPercentage}% complete
+                                                    </p>
+                                                </div>
+
+                                                {/* Actions Section */}
+                                                <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => setViewingPlan(plan)}
+                                                        className="flex-1 flex items-center justify-center gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                        View
+                                                    </Button>
+                                                    {canReview && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => setReviewingPlan(plan)}
+                                                            className="flex-1 flex items-center justify-center gap-2 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                                                        >
+                                                            <Star className="h-4 w-4" />
+                                                            Review
+                                                        </Button>
+                                                    )}
+                                                    {plan.employeeId === user?.id && canCreate && (
+                                                        <>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => setEditingPlan(plan)}
+                                                                className="flex items-center justify-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => setDeletingPlan(plan)}
+                                                                className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <ListChecks className="h-4 w-4" />
-                                                    {plan.tasks?.filter(t => t.status === 'Completed').length || 0}
-                                                    /
-                                                    {plan.tasks?.length || 0}{' '}
-                                                    tasks
-                                                </div>
                                             </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
 
-                                            {/* Progress bar */}
-                                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                                <div
-                                                    className="bg-green-500 h-2 rounded-full transition-all"
-                                                    style={{
-                                                        width: `${plan.tasks && plan.tasks.length > 0
-                                                            ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
-                                                            : 0}%`,
-                                                    }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-xs text-gray-500">
-                                                {plan.tasks && plan.tasks.length > 0
-                                                    ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
-                                                    : 0
-                                                }% complete
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 ml-4">
+                        {/* Enhanced Pagination */}
+                        {pagination.totalPages > 1 && (
+                            <Card className="border-0 shadow-md">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Page <span className="font-bold text-indigo-600 dark:text-indigo-400">{pagination.page}</span> of{' '}
+                                            <span className="font-bold text-indigo-600 dark:text-indigo-400">{pagination.totalPages}</span>
+                                        </p>
+                                        <div className="flex items-center gap-2">
                                             <Button
-                                                size="sm"
                                                 variant="outline"
+                                                size="sm"
                                                 onClick={() =>
-                                                    setViewingPlan(
-                                                        plan
+                                                    handlePageChange(
+                                                        pagination.page - 1
                                                     )
                                                 }
-                                                className="flex items-center gap-1"
+                                                disabled={pagination.page === 1}
+                                                className="flex items-center gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                                             >
-                                                <Eye className="h-4 w-4" />
-                                                View
+                                                <ChevronLeft className="h-4 w-4" />
+                                                Previous
                                             </Button>
-                                            {canReview && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        setReviewingPlan(
-                                                            plan
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-1"
-                                                >
-                                                    <Star className="h-4 w-4" />
-                                                    Review
-                                                </Button>
-                                            )}
-                                            {plan.employeeId ===
-                                                user?.id &&
-                                                canCreate && (
-                                                    <>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                setEditingPlan(
-                                                                    plan
-                                                                )
-                                                            }
-                                                            className="flex items-center gap-1"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                            Edit
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                setDeletingPlan(
-                                                                    plan
-                                                                )
-                                                            }
-                                                            className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            Delete
-                                                        </Button>
-                                                    </>
-                                                )}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    handlePageChange(
+                                                        pagination.page + 1
+                                                    )
+                                                }
+                                                disabled={!pagination.hasNextPage}
+                                                className="flex items-center gap-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                            >
+                                                Next
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
-                        ))}
-                    </div>
+                        )}
+                    </>
+                )}
 
-                    {pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Page {pagination.page} of{' '}
-                                {pagination.totalPages}
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        handlePageChange(
-                                            pagination.page -
-                                            1
-                                        )
-                                    }
-                                    disabled={
-                                        pagination.page === 1
-                                    }
-                                    className="flex items-center gap-1"
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    Previous
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        handlePageChange(
-                                            pagination.page +
-                                            1
-                                        )
-                                    }
-                                    disabled={
-                                        !pagination.hasNextPage
-                                    }
-                                    className="flex items-center gap-1"
-                                >
-                                    Next
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </>
-            )}
-
-            {/* Modals */}
-            {showCreateModal && (
+                {/* Modals */}
+                {showCreateModal && (
                 <CreateWeeklyPlanModal
                     onClose={() => setShowCreateModal(false)}
                     onSubmit={createPlan}
@@ -664,7 +718,8 @@ export const WeeklyPlansScreen: React.FC = () => {
                         return success;
                     }}
                 />
-            )}
+                )}
+            </div>
         </div>
     );
 };

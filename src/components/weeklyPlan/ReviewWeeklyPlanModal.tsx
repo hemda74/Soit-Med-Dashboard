@@ -12,14 +12,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Star, X } from 'lucide-react';
+import { MessageSquare, X } from 'lucide-react';
 import type { ReviewWeeklyPlanDto, WeeklyPlan } from '@/types/weeklyPlan.types';
 
 const reviewPlanSchema = z.object({
-    rating: z
-        .number()
-        .min(1, 'Please select a rating')
-        .max(5, 'Rating must be between 1 and 5'),
     managerComment: z
         .string()
         .max(1000, 'Comment must be less than 1000 characters')
@@ -40,34 +36,22 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
     onSubmit,
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedRating, setSelectedRating] = useState<number | undefined>(
-        plan.rating || undefined
-    );
 
     const {
         register,
         handleSubmit,
         formState: { errors },
-        setValue,
     } = useForm<ReviewPlanFormData>({
         resolver: zodResolver(reviewPlanSchema),
         defaultValues: {
-            rating: plan.rating || undefined,
             managerComment: plan.managerComment || '',
         },
     });
 
-    const handleRatingClick = (rating: number) => {
-        setSelectedRating(rating);
-        setValue('rating', rating);
-    };
-
     const handleFormSubmit = async (data: ReviewPlanFormData) => {
         setIsSubmitting(true);
         try {
-            // Map to ReviewWeeklyPlanDto (rating is required)
             const reviewData: ReviewWeeklyPlanDto = {
-                rating: data.rating!,
                 managerComment: data.managerComment,
             };
             const success = await onSubmit(reviewData);
@@ -86,11 +70,11 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-2xl">
-                        <Star className="h-6 w-6 text-yellow-500" />
+                        <MessageSquare className="h-6 w-6 text-blue-500" />
                         Review Weekly Plan
                     </DialogTitle>
                     <DialogDescription>
-                        Provide feedback and rating for this weekly plan.
+                        Provide feedback for this weekly plan.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -114,43 +98,6 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
                     className="space-y-6"
                 >
                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Rating</Label>
-                            <div className="flex items-center gap-2">
-                                {[1, 2, 3, 4, 5].map((rating) => (
-                                    <button
-                                        key={rating}
-                                        type="button"
-                                        onClick={() =>
-                                            handleRatingClick(
-                                                rating
-                                            )
-                                        }
-                                        className="focus:outline-none transition-transform hover:scale-110"
-                                    >
-                                        <Star
-                                            className={`h-10 w-10 ${selectedRating &&
-                                                rating <=
-                                                selectedRating
-                                                ? 'text-yellow-400 fill-current'
-                                                : 'text-gray-300 hover:text-yellow-200'
-                                                }`}
-                                        />
-                                    </button>
-                                ))}
-                                {selectedRating && (
-                                    <span className="ml-2 text-lg font-semibold">
-                                        {selectedRating}/5
-                                    </span>
-                                )}
-                            </div>
-                            {errors.rating && (
-                                <p className="text-sm text-red-500">
-                                    {errors.rating.message}
-                                </p>
-                            )}
-                        </div>
-
                         <div className="space-y-2">
                             <Label htmlFor="managerComment">
                                 Manager Comment
@@ -203,7 +150,7 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
                                 </>
                             ) : (
                                 <>
-                                    <Star className="h-4 w-4" />
+                                    <MessageSquare className="h-4 w-4" />
                                     Submit Review
                                 </>
                             )}

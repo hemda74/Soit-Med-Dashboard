@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,10 @@ import {
 	Clock,
 	AlertCircle,
 	CheckCircle,
+	FileText,
+	DollarSign,
 } from 'lucide-react';
-import { LoadingSpinner, EmptyState, ErrorDisplay, PageHeader, FilterCard } from '@/components/shared';
+import { LoadingSpinner, EmptyState, ErrorDisplay } from '@/components/shared';
 import { useAuthStore } from '@/stores/authStore';
 import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
@@ -89,27 +91,46 @@ const OffersManagementPage: React.FC = () => {
 	const [needsModificationReason, setNeedsModificationReason] = useState('');
 	const [processingAction, setProcessingAction] = useState<string | null>(null);
 
-	// Check if user is SuperAdmin
-	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+	// Role checks
+	const userRoles = user?.roles || [];
+	const isSuperAdmin = userRoles.includes('SuperAdmin');
+	const isSalesManager = userRoles.includes('SalesManager');
+	const canAccessPage = isSuperAdmin || isSalesManager;
 
 	const loadSalesmen = useCallback(async () => {
-		if (!user?.token) return;
+		if (!user?.token || !canAccessPage) return;
 
 		try {
 			setLoadingSalesmen(true);
-			const response = await salesApi.getAllSalesmen();
+			const response = isSuperAdmin
+				? await salesApi.getAllSalesmen()
+				: await salesApi.getOfferSalesmen();
+
 			if (response.success && response.data) {
-				setSalesmen(response.data);
+				const rawSalesmen = Array.isArray(response.data)
+					? response.data
+					: response.data?.items || response.data?.salesmen || [];
+
+				const normalizedSalesmen = (rawSalesmen || [])
+					.map((salesman: any) => ({
+						id: salesman.id || salesman.userId || salesman?.user?.id,
+						firstName: salesman.firstName || salesman?.user?.firstName || '',
+						lastName: salesman.lastName || salesman?.user?.lastName || '',
+						userName: salesman.userName || salesman?.user?.userName || '',
+					}))
+					.filter((salesman: Salesman) => salesman.id);
+
+				setSalesmen(normalizedSalesmen);
 			}
 		} catch (err) {
 			console.error('Failed to load salesmen:', err);
 		} finally {
 			setLoadingSalesmen(false);
 		}
-	}, [user?.token]);
+	}, [user?.token, canAccessPage, isSuperAdmin]);
 
 	const loadOffers = useCallback(async () => {
-		if (!user?.token || !isSuperAdmin) {
+		if (!user?.token || !canAccessPage) {
 			setError('Access denied');
 			setLoading(false);
 			return;
@@ -132,16 +153,64 @@ const OffersManagementPage: React.FC = () => {
 				filters.salesmanId = salesmanFilter;
 			}
 
-			const response = await salesApi.getAllOffersWithFilters(filters);
+			let response;
+			try {
+				response = await salesApi.getAllOffersWithFilters(filters);
+			} catch (apiError: any) {
+				const isForbidden =
+					apiError?.status === 403 ||
+					apiError?.message?.includes('403');
 
-			if (response.success && response.data) {
+				if (!isSuperAdmin && isSalesManager && isForbidden) {
+					try {
+						const fallbackResponse = await salesApi.getOffers({
+							status: statusFilter !== 'all' ? statusFilter : undefined,
+							page: pagination.page,
+							pageSize: pagination.pageSize,
+						});
+
+						if (fallbackResponse.success && fallbackResponse.data) {
+							let offersData = Array.isArray(fallbackResponse.data)
+								? fallbackResponse.data
+								: [];
+
+							if (salesmanFilter !== 'all') {
+								offersData = offersData.filter((offer: any) =>
+									offer.assignedTo === salesmanFilter ||
+									offer.assignedToId === salesmanFilter
+								);
+							}
+
+							setOffers(offersData);
+							setPagination({
+								page: pagination.page,
+								pageSize: pagination.pageSize,
+								totalCount: offersData.length,
+								totalPages: Math.max(1, Math.ceil(offersData.length / pagination.pageSize)),
+								hasPreviousPage: pagination.page > 1,
+								hasNextPage: offersData.length === pagination.pageSize,
+							});
+							return;
+						}
+					} catch (fallbackError: any) {
+						console.error('Fallback endpoint also failed:', fallbackError);
+						setError('Access denied. Please ensure you have the correct role.');
+						return;
+					}
+				}
+
+				throw apiError;
+			}
+
+			if (response?.success && response.data) {
 				// Backend returns { offers: [], totalCount, page, pageSize, ... }
 				const data = response.data as any;
-				setOffers(data.offers || data.Offers || []);
+				const offersData = data.offers || data.Offers || [];
+				setOffers(offersData);
 				setPagination({
 					page: data.page || data.Page || 1,
 					pageSize: data.pageSize || data.PageSize || 10,
-					totalCount: data.totalCount || data.TotalCount || 0,
+					totalCount: data.totalCount || data.TotalCount || offersData.length || 0,
 					totalPages: data.totalPages || data.TotalPages || 0,
 					hasPreviousPage: data.hasPreviousPage || data.HasPreviousPage || false,
 					hasNextPage: data.hasNextPage || data.HasNextPage || false,
@@ -155,19 +224,28 @@ const OffersManagementPage: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [user?.token, isSuperAdmin, pagination.page, pagination.pageSize, statusFilter, salesmanFilter]);
+	}, [
+		user?.token,
+		canAccessPage,
+		isSuperAdmin,
+		isSalesManager,
+		pagination.page,
+		pagination.pageSize,
+		statusFilter,
+		salesmanFilter,
+	]);
 
 	useEffect(() => {
-		if (isSuperAdmin) {
+		if (canAccessPage) {
 			loadSalesmen();
 		}
-	}, [isSuperAdmin, loadSalesmen]);
+	}, [canAccessPage, loadSalesmen]);
 
 	useEffect(() => {
-		if (isSuperAdmin) {
+		if (canAccessPage) {
 			loadOffers();
 		}
-	}, [isSuperAdmin, pagination.page, pagination.pageSize, statusFilter, salesmanFilter, loadOffers]);
+	}, [canAccessPage, pagination.page, pagination.pageSize, statusFilter, salesmanFilter, loadOffers]);
 
 	const handleFilterChange = (newStatus: string, newSalesman: string) => {
 		setStatusFilter(newStatus);
@@ -469,7 +547,7 @@ const OffersManagementPage: React.FC = () => {
 		}
 	};
 
-	if (!isSuperAdmin) {
+	if (!canAccessPage) {
 		return (
 			<div className="flex items-center justify-center min-h-[400px]">
 				<div className="text-center">
@@ -484,116 +562,209 @@ const OffersManagementPage: React.FC = () => {
 		);
 	}
 
+	// Calculate statistics
+	const totalOffers = pagination.totalCount;
+	const draftOffers = offers.filter(o => o.status === 'Draft').length;
+	const sentOffers = offers.filter(o => o.status === 'Sent').length;
+	const acceptedOffers = offers.filter(o => o.status === 'Accepted').length;
+	const totalAmount = offers.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
 	return (
 		<div className="space-y-6">
-			<PageHeader
-				title={t('allOffersManagement')}
-				description={t('allOffersDescription')}
-				action={
-					<div className="flex gap-2">
-						{isSuperAdmin && (
+			{/* Header Section */}
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="text-3xl font-bold text-gray-800 dark:text-white/90 mb-2 flex items-center gap-2">
+						<FileText className="h-8 w-8 text-primary" />
+						{t('allOffersManagement') || 'All Offers Management'}
+					</h1>
+					<p className="text-sm text-gray-500 dark:text-gray-400">
+						{t('allOffersDescription') || 'View and manage all offers in the system'}
+					</p>
+				</div>
+				<div className="flex gap-2">
+					<Button
+						onClick={async () => {
+							try {
+								const response = await salesApi.updateExpiredOffers();
+								if (response.success) {
+									toast.success(
+										`Updated ${response.data?.expiredCount || 0} offers to expired status`
+									);
+									loadOffers();
+								} else {
+									toast.error(response.message || 'Failed to update expired offers');
+								}
+							} catch (error: any) {
+								console.error('Error updating expired offers:', error);
+								toast.error(error.message || 'Failed to update expired offers');
+							}
+						}}
+						variant="outline"
+						className="flex items-center gap-2 border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900"
+					>
+						<AlertCircle className="h-4 w-4" />
+						{t('updateExpired') || 'Update Expired'}
+					</Button>
+					<Button
+						onClick={loadOffers}
+						variant="outline"
+						className="flex items-center gap-2"
+					>
+						<RefreshCw className="h-4 w-4" />
+						{t('refresh')}
+					</Button>
+				</div>
+			</div>
+
+			{/* Statistics Cards */}
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				<Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+					<CardContent className="p-5 md:p-6">
+						<div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl dark:bg-blue-900/30 mb-5">
+							<FileText className="text-blue-600 h-6 w-6 dark:text-blue-400" />
+						</div>
+						<div className="flex items-end justify-between">
+							<div>
+								<span className="text-sm text-gray-500 dark:text-gray-400">Total Offers</span>
+								<h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+									{totalOffers}
+								</h4>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+					<CardContent className="p-5 md:p-6">
+						<div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl dark:bg-green-900/30 mb-5">
+							<CheckCircle className="text-green-600 h-6 w-6 dark:text-green-400" />
+						</div>
+						<div className="flex items-end justify-between">
+							<div>
+								<span className="text-sm text-gray-500 dark:text-gray-400">Accepted</span>
+								<h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+									{acceptedOffers}
+								</h4>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+					<CardContent className="p-5 md:p-6">
+						<div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-xl dark:bg-yellow-900/30 mb-5">
+							<Clock className="text-yellow-600 h-6 w-6 dark:text-yellow-400" />
+						</div>
+						<div className="flex items-end justify-between">
+							<div>
+								<span className="text-sm text-gray-500 dark:text-gray-400">Pending</span>
+								<h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+									{draftOffers + sentOffers}
+								</h4>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-shadow">
+					<CardContent className="p-5 md:p-6">
+						<div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl dark:bg-purple-900/30 mb-5">
+							<DollarSign className="text-purple-600 h-6 w-6 dark:text-purple-400" />
+						</div>
+						<div className="flex items-end justify-between">
+							<div>
+								<span className="text-sm text-gray-500 dark:text-gray-400">Total Amount</span>
+								<h4 className="mt-2 text-2xl font-bold text-gray-800 dark:text-white/90">
+									{new Intl.NumberFormat('en-US', {
+										style: 'currency',
+										currency: 'EGP',
+										maximumFractionDigits: 0,
+									}).format(totalAmount)}
+								</h4>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+
+			{/* Filters Section */}
+			<Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+				<CardHeader className="pb-4">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							<CardTitle className="text-lg font-semibold text-gray-800 dark:text-white/90">Filters</CardTitle>
+							<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Filter offers by status and salesman</p>
+						</div>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<div className="space-y-2">
+							<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+								{t('status')}
+							</label>
+							<Select
+								value={statusFilter}
+								onValueChange={(value) => handleFilterChange(value, salesmanFilter)}
+							>
+								<SelectTrigger>
+									<SelectValue placeholder={t('allStatuses')} />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">{t('allStatuses')}</SelectItem>
+									<SelectItem value="Draft">{t('draft')}</SelectItem>
+									<SelectItem value="Sent">{t('sent')}</SelectItem>
+									<SelectItem value="Accepted">{t('accepted')}</SelectItem>
+									<SelectItem value="Rejected">{t('rejected')}</SelectItem>
+									<SelectItem value="UnderReview">{t('underReview')}</SelectItem>
+									<SelectItem value="NeedsModification">{t('needsModification')}</SelectItem>
+									<SelectItem value="Expired">{t('expired')}</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-2">
+							<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+								{t('salesman')}
+							</label>
+							<Select
+								value={salesmanFilter}
+								onValueChange={(value) => handleFilterChange(statusFilter, value)}
+								disabled={loadingSalesmen}
+							>
+								<SelectTrigger>
+									<SelectValue
+										placeholder={loadingSalesmen ? t('loading') : t('allSalesmen')}
+									/>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">{t('allSalesmen')}</SelectItem>
+									{salesmen.map((salesman) => (
+										<SelectItem key={salesman.id} value={salesman.id}>
+											{salesman.firstName} {salesman.lastName} ({salesman.userName})
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-2 flex items-end">
 							<Button
-								onClick={async () => {
-									try {
-										const response = await salesApi.updateExpiredOffers();
-										if (response.success) {
-											toast.success(
-												`Updated ${response.data?.expiredCount || 0} offers to expired status`
-											);
-											loadOffers();
-										} else {
-											toast.error(response.message || 'Failed to update expired offers');
-										}
-									} catch (error: any) {
-										console.error('Error updating expired offers:', error);
-										toast.error(error.message || 'Failed to update expired offers');
-									}
+								onClick={() => {
+									setStatusFilter('all');
+									setSalesmanFilter('all');
+									setPagination(prev => ({ ...prev, page: 1 }));
 								}}
 								variant="outline"
-								className="flex items-center gap-2 border-orange-600 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900"
+								className="w-full"
 							>
-								<AlertCircle className="h-4 w-4" />
-								{t('updateExpired') || 'Update Expired'}
+								{t('clearFilters')}
 							</Button>
-						)}
-						<Button
-							onClick={loadOffers}
-							variant="outline"
-							className="flex items-center gap-2"
-						>
-							<RefreshCw className="h-4 w-4" />
-							{t('refresh')}
-						</Button>
+						</div>
 					</div>
-				}
-			/>
-
-			<FilterCard>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					<div className="space-y-2">
-						<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-							{t('status')}
-						</label>
-						<Select
-							value={statusFilter}
-							onValueChange={(value) => handleFilterChange(value, salesmanFilter)}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder={t('allStatuses')} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">{t('allStatuses')}</SelectItem>
-								<SelectItem value="Draft">{t('draft')}</SelectItem>
-								<SelectItem value="Sent">{t('sent')}</SelectItem>
-								<SelectItem value="Accepted">{t('accepted')}</SelectItem>
-								<SelectItem value="Rejected">{t('rejected')}</SelectItem>
-								<SelectItem value="UnderReview">{t('underReview')}</SelectItem>
-								<SelectItem value="NeedsModification">{t('needsModification')}</SelectItem>
-								<SelectItem value="Expired">{t('expired')}</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-
-					<div className="space-y-2">
-						<label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-							{t('salesman')}
-						</label>
-						<Select
-							value={salesmanFilter}
-							onValueChange={(value) => handleFilterChange(statusFilter, value)}
-							disabled={loadingSalesmen}
-						>
-							<SelectTrigger>
-								<SelectValue
-									placeholder={loadingSalesmen ? t('loading') : t('allSalesmen')}
-								/>
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">{t('allSalesmen')}</SelectItem>
-								{salesmen.map((salesman) => (
-									<SelectItem key={salesman.id} value={salesman.id}>
-										{salesman.firstName} {salesman.lastName} ({salesman.userName})
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-
-					<div className="space-y-2 flex items-end">
-						<Button
-							onClick={() => {
-								setStatusFilter('all');
-								setSalesmanFilter('all');
-								setPagination(prev => ({ ...prev, page: 1 }));
-							}}
-							variant="outline"
-							className="w-full"
-						>
-							{t('clearFilters')}
-						</Button>
-					</div>
-				</div>
-			</FilterCard>
+				</CardContent>
+			</Card>
 
 			{loading ? (
 				<LoadingSpinner />
@@ -606,67 +777,67 @@ const OffersManagementPage: React.FC = () => {
 				/>
 			) : (
 				<>
-					<div className="grid gap-4">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 						{offers.map((offer) => (
-							<Card key={offer.id} className="hover:shadow-md transition-shadow">
-								<CardContent className="p-6">
-									<div className="flex items-start justify-between">
+							<Card key={offer.id} className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-all duration-200">
+								<CardContent className="p-5 md:p-6">
+									<div className="flex items-start justify-between gap-4">
 										<div className="flex-1">
-											<div className="flex items-center gap-3 mb-2">
-												<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+											<div className="flex items-center gap-3 mb-4">
+												<h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
 													{t('offer')} #{offer.id}
 												</h3>
-												<Badge className={getStatusColor(offer.status)}>
+												<Badge className={`${getStatusColor(offer.status)} text-white border-0`}>
 													{getStatusLabel(offer.status)}
 												</Badge>
 											</div>
-											<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-												<div>
-													<p className="text-sm text-gray-600 dark:text-gray-400">
+											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+												<div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+													<p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
 														{t('client')}
 													</p>
-													<p className="font-medium text-gray-900 dark:text-white">
+													<p className="font-semibold text-gray-800 dark:text-white/90">
 														{offer.clientName || 'N/A'}
 													</p>
 												</div>
-												<div>
-													<p className="text-sm text-gray-600 dark:text-gray-400">
+												<div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+													<p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
 														{t('assignedTo')}
 													</p>
-													<p className="font-medium text-gray-900 dark:text-white">
+													<p className="font-semibold text-gray-800 dark:text-white/90">
 														{offer.assignedToName || 'N/A'}
 													</p>
 												</div>
-												<div>
-													<p className="text-sm text-gray-600 dark:text-gray-400">
+												<div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+													<p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
 														{t('createdBy')}
 													</p>
-													<p className="font-medium text-gray-900 dark:text-white">
+													<p className="font-semibold text-gray-800 dark:text-white/90">
 														{offer.createdByName || 'N/A'}
 													</p>
 												</div>
-												<div>
-													<p className="text-sm text-gray-600 dark:text-gray-400">
+												<div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-3">
+													<p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
 														{t('totalAmount')}
 													</p>
-													<p className="font-medium text-gray-900 dark:text-white">
+													<p className="text-lg font-bold text-blue-600 dark:text-blue-400">
 														{new Intl.NumberFormat('en-US', {
 															style: 'currency',
 															currency: 'EGP',
 														}).format(offer.totalAmount)}
 													</p>
 												</div>
-												<div>
-													<p className="text-sm text-gray-600 dark:text-gray-400">
+												<div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3">
+													<p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
 														{t('createdAt')}
 													</p>
-													<p className="font-medium text-gray-900 dark:text-white">
-														{format(new Date(offer.createdAt), 'PPp')}
+													<p className="font-semibold text-gray-800 dark:text-white/90">
+														{format(new Date(offer.createdAt), 'MMM dd, yyyy')}
 													</p>
 												</div>
 											</div>
 										</div>
-										<div className="ml-4 flex flex-col gap-2">
+										<div className="flex flex-col gap-2 flex-shrink-0">
 											<Button
 												variant="outline"
 												size="sm"

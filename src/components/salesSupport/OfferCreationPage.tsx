@@ -28,6 +28,7 @@ import { productApi } from '@/services/sales/productApi'
 import type { Product } from '@/types/sales.types'
 import { downloadOfferPDF } from '@/utils/pdfGenerator'
 import { usePerformance } from '@/hooks/usePerformance'
+import { useTranslation } from '@/hooks/useTranslation'
 
 function useQuery() {
     const { search } = useLocation()
@@ -36,6 +37,11 @@ function useQuery() {
 
 export default function OfferCreationPage() {
     usePerformance('OfferCreationPage');
+	const { t } = useTranslation();
+	const translate = (key: string, fallback: string) => {
+		const value = t(key);
+		return value && value !== key ? value : fallback;
+	};
     const query = useQuery()
     const navigate = useNavigate()
 
@@ -60,6 +66,8 @@ export default function OfferCreationPage() {
     const emptyProduct = { name: '', model: '', factory: '', country: '', year: '', price: '', imageUrl: '', description: '', inStock: true as boolean }
     const [newProduct, setNewProduct] = useState<typeof emptyProduct>({ ...emptyProduct })
     const [showManualProductForm, setShowManualProductForm] = useState(false)
+    const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null)
+    const [editingProduct, setEditingProduct] = useState<typeof emptyProduct>({ ...emptyProduct })
     const [totalAmount, setTotalAmount] = useState<string>('')
     const [discountAmount, setDiscountAmount] = useState<string>('')
     const [paymentTerms, setPaymentTerms] = useState<string[]>([])
@@ -106,9 +114,9 @@ export default function OfferCreationPage() {
             }
 
             setCatalogProducts(response.data || [])
-        } catch (err: any) {
-            console.error('Error loading catalog products:', err)
-            toast.error(err.message || 'Failed to load products')
+		} catch (err: any) {
+			console.error('Error loading catalog products:', err)
+			toast.error(err.message || translate('offerCreationPage.errors.loadProducts', 'Failed to load products'))
             setCatalogProducts([])
         } finally {
             setLoadingCatalog(false)
@@ -125,8 +133,8 @@ export default function OfferCreationPage() {
         try {
             const response = await productApi.searchProducts(catalogSearchTerm)
             setCatalogProducts(response.data || [])
-        } catch (err: any) {
-            toast.error(err.message || 'Search failed')
+		} catch (err: any) {
+			toast.error(err.message || translate('offerCreationPage.errors.searchFailed', 'Search failed'))
         } finally {
             setLoadingCatalog(false)
         }
@@ -148,13 +156,13 @@ export default function OfferCreationPage() {
 
         // Check if already added
         const exists = productItems.some((p) => p.name === product.name && p.model === productItem.model)
-        if (exists) {
-            toast.error('Product already added')
+		if (exists) {
+			toast.error(translate('offerCreationPage.errors.productExists', 'Product already added'))
             return
         }
 
         setProductItems((prev) => [...prev, productItem])
-        toast.success('Product added from catalog')
+		toast.success(translate('offerCreationPage.success.productAdded', 'Product added from catalog'))
         setCatalogDialogOpen(false)
     }
 
@@ -197,8 +205,8 @@ export default function OfferCreationPage() {
                 // reflect into form
                 setValue('clientIdHidden', cid)
                 setValue('products', data.requestedProducts || '')
-            } catch (e: any) {
-                toast.error(e.message || 'Failed to load request details')
+			} catch (e: any) {
+				toast.error(e.message || translate('offerCreationPage.errors.loadRequestDetails', 'Failed to load request details'))
             } finally {
                 setLoadingRequest(false)
             }
@@ -274,12 +282,12 @@ export default function OfferCreationPage() {
                 setSalesmen([])
 
                 // Show toast for specific errors
-                if (error.response?.status === 403) {
-                    toast.error('Access denied: You do not have permission to view salesmen')
-                } else if (error.response?.status === 401) {
-                    toast.error('Unauthorized: Please log in again')
-                } else if (error.message) {
-                    toast.error(`Failed to load salesmen: ${error.message}`)
+				if (error.response?.status === 403) {
+					toast.error(translate('offerCreationPage.errors.salesmenAccessDenied', 'Access denied: You do not have permission to view salesmen'))
+				} else if (error.response?.status === 401) {
+					toast.error(translate('offerCreationPage.errors.salesmenUnauthorized', 'Unauthorized: Please log in again'))
+				} else if (error.message) {
+					toast.error(`${translate('offerCreationPage.errors.salesmenLoadFailedPrefix', 'Failed to load salesmen:')} ${error.message}`)
                 }
             } finally {
                 setLoadingSalesmen(false)
@@ -291,8 +299,8 @@ export default function OfferCreationPage() {
     // Create offer
     const createOffer = async (formData: OfferFormInputs) => {
         // Validation
-        if (!clientId || !assignedToSalesmanId) {
-            toast.error('Please select client and salesman')
+		if (!clientId || !assignedToSalesmanId) {
+			toast.error(translate('offerCreationPage.errors.selectClientAndSalesman', 'Please select client and salesman'))
             return
         }
 
@@ -311,13 +319,13 @@ export default function OfferCreationPage() {
         }
 
         // Final validation
-        if (!productsString || productsString.trim() === '') {
-            toast.error('Please add at least one product (from catalog or text description)')
+		if (!productsString || productsString.trim() === '') {
+			toast.error(translate('offerCreationPage.errors.missingProducts', 'Please add at least one product (from catalog or text description)'))
             return
         }
 
-        if (calculatedTotal <= 0) {
-            toast.error('Total amount must be greater than 0')
+		if (calculatedTotal <= 0) {
+			toast.error(translate('offerCreationPage.errors.invalidTotal', 'Total amount must be greater than 0'))
             return
         }
 
@@ -394,9 +402,9 @@ export default function OfferCreationPage() {
                 const resp = await salesApi.createOffer(payload);
                 setOffer(resp.data);
             }
-            toast.success('Offer created successfully! You can now send it to the salesman or export as PDF.')
-        } catch (e: any) {
-            toast.error(e.message || 'Failed to create offer')
+			toast.success(translate('offerCreationPage.success.offerCreated', 'Offer created successfully! It is now pending SalesManager approval. Once approved, you can send it to the salesman.'))
+		} catch (e: any) {
+			toast.error(e.message || translate('offerCreationPage.errors.createOfferFailed', 'Failed to create offer'))
         } finally {
             setCreatingOffer(false)
         }
@@ -406,6 +414,11 @@ export default function OfferCreationPage() {
     const sendToSalesman = async () => {
         if (!offer) return
         try {
+            // Check if offer has been approved by SalesManager
+            if (offer.status !== 'Sent') {
+                toast.error('Offer must be approved by SalesManager before it can be sent to salesman')
+                return
+            }
             await salesApi.sendOfferToSalesman(offer.id)
             const { data } = await salesApi.getOffer(offer.id)
             setOffer(data)
@@ -948,14 +961,204 @@ export default function OfferCreationPage() {
                                     </span>
                                 </div>
                                 {productItems.map((p, idx) => (
-                                    <div key={idx} className="p-3 border rounded-md flex items-center justify-between gap-4 bg-white dark:bg-gray-900">
-                                        <div className="flex-1">
-                                            <p className="font-medium">{p.name} {p.model && `• ${p.model}`}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{p.factory} • {p.country} • {p.year}</p>
-                                            <p className="text-xs font-semibold text-green-600 dark:text-green-400">Price: ${Number(p.price).toFixed(2)}</p>
-                                            {p.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{p.description}</p>}
-                                        </div>
-                                        <Button variant="destructive" size="sm" onClick={() => setProductItems((prev) => prev.filter((_, i) => i !== idx))}>Remove</Button>
+                                    <div key={idx} className="p-4 border rounded-md bg-white dark:bg-gray-900">
+                                        {editingProductIndex === idx ? (
+                                            // Edit Mode
+                                            <div className="space-y-3">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h4 className="font-medium text-primary">Editing Product</h4>
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                // Save changes
+                                                                setProductItems((prev) => {
+                                                                    const updated = [...prev]
+                                                                    updated[idx] = { ...editingProduct }
+                                                                    return updated
+                                                                })
+                                                                setEditingProductIndex(null)
+                                                                setEditingProduct({ ...emptyProduct })
+                                                                toast.success(translate('offerCreationPage.success.productUpdated', 'Product updated'))
+                                                            }}
+                                                        >
+                                                            Save
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setEditingProductIndex(null)
+                                                                setEditingProduct({ ...emptyProduct })
+                                                            }}
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <Label>Name *</Label>
+                                                        <Input 
+                                                            value={editingProduct.name} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} 
+                                                            placeholder="Product name" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Model</Label>
+                                                        <Input 
+                                                            value={editingProduct.model} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, model: e.target.value })} 
+                                                            placeholder="Model number" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Factory/Manufacturer</Label>
+                                                        <Input 
+                                                            value={editingProduct.factory} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, factory: e.target.value })} 
+                                                            placeholder="Manufacturer" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Country</Label>
+                                                        <Input 
+                                                            value={editingProduct.country} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, country: e.target.value })} 
+                                                            placeholder="Country of origin" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Year</Label>
+                                                        <Input 
+                                                            type="number"
+                                                            value={editingProduct.year as any} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, year: e.target.value })} 
+                                                            placeholder="Year" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Price *</Label>
+                                                        <Input 
+                                                            type="number" 
+                                                            step="0.01"
+                                                            value={editingProduct.price as any} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })} 
+                                                            placeholder="0.00" 
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <Label>Image URL</Label>
+                                                        <Input 
+                                                            value={editingProduct.imageUrl} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })} 
+                                                            placeholder="https://..." 
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-3">
+                                                        <Label>Description</Label>
+                                                        <Textarea 
+                                                            rows={3} 
+                                                            value={editingProduct.description} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} 
+                                                            placeholder="Product description, specifications, features..." 
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                id={`inStock-${idx}`}
+                                                                checked={editingProduct.inStock}
+                                                                onChange={(e) => setEditingProduct({ ...editingProduct, inStock: e.target.checked })}
+                                                                className="rounded"
+                                                            />
+                                                            <Label htmlFor={`inStock-${idx}`} className="cursor-pointer">
+                                                                In Stock
+                                                            </Label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // View Mode
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <p className="font-medium text-base">{p.name}</p>
+                                                        {p.model && <span className="text-sm text-muted-foreground">• {p.model}</span>}
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                        {p.factory && (
+                                                            <p className="text-muted-foreground">
+                                                                <span className="font-medium">Factory:</span> {p.factory}
+                                                            </p>
+                                                        )}
+                                                        {p.country && (
+                                                            <p className="text-muted-foreground">
+                                                                <span className="font-medium">Country:</span> {p.country}
+                                                            </p>
+                                                        )}
+                                                        {p.year && (
+                                                            <p className="text-muted-foreground">
+                                                                <span className="font-medium">Year:</span> {p.year}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                                            <span className="font-medium">Price:</span> ${Number(p.price).toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                    {p.description && (
+                                                        <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                                                            <p className="text-xs font-medium text-muted-foreground mb-1">Description:</p>
+                                                            <p className="text-sm text-foreground">{p.description}</p>
+                                                        </div>
+                                                    )}
+                                                    {p.imageUrl && (
+                                                        <div className="mt-2">
+                                                            <img 
+                                                                src={p.imageUrl} 
+                                                                alt={p.name}
+                                                                className="w-20 h-20 object-cover rounded border"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        onClick={() => {
+                                                            setEditingProduct({ ...p })
+                                                            setEditingProductIndex(idx)
+                                                        }}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Edit
+                                                    </Button>
+                                                    <Button 
+                                                        variant="destructive" 
+                                                        size="sm" 
+                                                        onClick={() => {
+                                                            setProductItems((prev) => prev.filter((_, i) => i !== idx))
+                                                            toast.success(translate('offerCreationPage.success.productRemoved', 'Product removed'))
+                                                        }}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                        Remove
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -1007,14 +1210,30 @@ export default function OfferCreationPage() {
                     {/* Finalize */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Finalize Offer</CardTitle>
-                            <CardDescription>Send to salesman or export as PDF</CardDescription>
+                            <CardTitle>Offer Status</CardTitle>
+                            <CardDescription>
+                                {offer.status === 'PendingSalesManagerApproval' 
+                                    ? 'Offer is pending SalesManager approval. Once approved, you can send it to the salesman.'
+                                    : offer.status === 'Sent'
+                                    ? 'Offer has been approved and is ready to send to salesman.'
+                                    : 'Manage your offer'}
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-2">
-                                <Button onClick={sendToSalesman}>
-                                    Send to Salesman
-                                </Button>
+                                {offer.status === 'Sent' && (
+                                    <Button onClick={sendToSalesman}>
+                                        Send to Salesman
+                                    </Button>
+                                )}
+                                {offer.status === 'PendingSalesManagerApproval' && (
+                                    <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                        <span className="text-sm font-medium">Awaiting SalesManager Approval</span>
+                                    </div>
+                                )}
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF
                                 </Button>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -12,40 +12,61 @@ import {
     User,
     CheckCircle2,
     Circle,
-    Star,
+    MessageSquare,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WeeklyPlan } from '@/types/weeklyPlan.types';
+import { weeklyPlanApi } from '@/services/weeklyPlan/weeklyPlanApi';
+import { LoadingSpinner } from '@/components/shared';
 
 interface ViewWeeklyPlanModalProps {
     plan: WeeklyPlan;
     onClose: () => void;
 }
 
-const renderStars = (rating: number) => {
-    const stars = Array.from({ length: 5 }, (_, i) => i + 1);
-    return (
-        <div className="flex items-center gap-1">
-            {stars.map((star) => (
-                <Star
-                    key={star}
-                    className={`h-5 w-5 ${star <= rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                        }`}
-                />
-            ))}
-        </div>
-    );
-};
 
 const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
     plan,
     onClose,
 }) => {
+    const [fullPlan, setFullPlan] = useState<WeeklyPlan | null>(plan);
+    const [loading, setLoading] = useState(false);
+
+    // Fetch full plan details with progresses when modal opens
+    useEffect(() => {
+        const fetchFullPlan = async () => {
+            try {
+                setLoading(true);
+                const response = await weeklyPlanApi.getWeeklyPlanById(plan.id);
+                if (response.success && response.data) {
+                    setFullPlan(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch full plan details:', error);
+                // Keep the original plan if fetch fails
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Only fetch if we don't have progresses loaded
+        const hasProgresses = plan.tasks?.some(task => task.progresses && task.progresses.length > 0);
+        if (!hasProgresses) {
+            fetchFullPlan();
+        }
+    }, [plan.id]);
+
+    const displayPlan = fullPlan || plan;
+
     return (
         <Dialog open={true} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+                {loading ? (
+                    <div className="flex justify-center py-8">
+                        <LoadingSpinner size="md" text="Loading plan details..." />
+                    </div>
+                ) : (
+                    <>
                 <DialogHeader>
                     <DialogDescription>
                         View weekly plan details and progress
@@ -54,25 +75,25 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                         <div className="flex-1">
                             <DialogTitle className="flex items-center gap-2 text-2xl mb-2">
                                 <ListChecks className="h-6 w-6" />
-                                {plan.title}
+                                {displayPlan.title}
                             </DialogTitle>
                             <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                                 <div className="flex items-center gap-1">
                                     <User className="h-4 w-4" />
-                                    {plan.employee ? `${plan.employee.firstName} ${plan.employee.lastName}` : plan.employeeId}
+                                    {displayPlan.employee ? `${displayPlan.employee.firstName} ${displayPlan.employee.lastName}` : displayPlan.employeeId}
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
                                     {format(
                                         new Date(
-                                            plan.weekStartDate
+                                            displayPlan.weekStartDate
                                         ),
                                         'MMM dd'
                                     )}{' '}
                                     -{' '}
                                     {format(
                                         new Date(
-                                            plan.weekEndDate
+                                            displayPlan.weekEndDate
                                         ),
                                         'MMM dd, yyyy'
                                     )}
@@ -84,13 +105,13 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
 
                 <div className="space-y-6">
                     {/* Description */}
-                    {plan.description && (
+                    {displayPlan.description && (
                         <div>
                             <h3 className="font-semibold mb-2">
                                 Description
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
-                                {plan.description}
+                                {displayPlan.description}
                             </p>
                         </div>
                     )}
@@ -102,24 +123,47 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                 Overall Progress
                             </span>
                             <span className="text-2xl font-bold text-green-600">
-                                {plan.tasks && plan.tasks.length > 0
-                                    ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
-                                    : 0}%
+                                {(() => {
+                                    const totalTasks = displayPlan.tasks?.length || 0;
+                                    if (totalTasks === 0) return 0;
+                                    // Check completion: status === 'Completed' OR has progress records
+                                    const completedTasks = displayPlan.tasks?.filter(t => {
+                                        if (t.status === 'Completed') return true;
+                                        // Fallback: tasks with progress are considered completed
+                                        if ((t.progressCount && t.progressCount > 0) || (t.progresses && t.progresses.length > 0)) return true;
+                                        return false;
+                                    }).length || 0;
+                                    return Math.round((completedTasks / totalTasks) * 100);
+                                })()}%
                             </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                             <div
                                 className="bg-green-500 h-3 rounded-full transition-all"
                                 style={{
-                                    width: `${plan.tasks && plan.tasks.length > 0
-                                        ? Math.round((plan.tasks.filter(t => t.status === 'Completed').length / plan.tasks.length) * 100)
-                                        : 0}%`,
+                                    width: `${(() => {
+                                        const totalTasks = displayPlan.tasks?.length || 0;
+                                        if (totalTasks === 0) return 0;
+                                        const completedTasks = displayPlan.tasks?.filter(t => {
+                                            if (t.status === 'Completed') return true;
+                                            if ((t.progressCount && t.progressCount > 0) || (t.progresses && t.progresses.length > 0)) return true;
+                                            return false;
+                                        }).length || 0;
+                                        return Math.round((completedTasks / totalTasks) * 100);
+                                    })()}%`,
                                 }}
                             ></div>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            {plan.tasks?.filter(t => t.status === 'Completed').length || 0} of {plan.tasks?.length || 0}{' '}
-                            tasks completed
+                            {(() => {
+                                const totalTasks = displayPlan.tasks?.length || 0;
+                                const completedTasks = displayPlan.tasks?.filter(t => {
+                                    if (t.status === 'Completed') return true;
+                                    if ((t.progressCount && t.progressCount > 0) || (t.progresses && t.progresses.length > 0)) return true;
+                                    return false;
+                                }).length || 0;
+                                return `${completedTasks} of ${totalTasks}`;
+                            })()} tasks completed
                         </p>
                     </div>
 
@@ -127,10 +171,10 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                     <div>
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                             <ListChecks className="h-5 w-5" />
-                            Tasks ({plan.tasks?.length || 0})
+                            Tasks ({displayPlan.tasks?.length || 0})
                         </h3>
                         <div className="space-y-2">
-                            {plan.tasks
+                            {displayPlan.tasks
                                 ?.map((task) => (
                                     <div
                                         key={task.id}
@@ -148,15 +192,27 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium">
-                                                        {task.taskType}
+                                                        {task.taskType || task.title}
                                                     </span>
-                                                    <span className={`text-xs px-2 py-1 rounded ${
-                                                        task.priority === 'High' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                                                        task.priority === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
-                                                        'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                                                    }`}>
-                                                        {task.priority}
-                                                    </span>
+                                                    {task.priority && (
+                                                        <span className={`text-xs px-2 py-1 rounded ${
+                                                            task.priority === 'High' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                                                            task.priority === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                                            'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                                                        }`}>
+                                                            {task.priority}
+                                                        </span>
+                                                    )}
+                                                    {task.status && (
+                                                        <span className={`text-xs px-2 py-1 rounded ${
+                                                            task.status === 'Completed' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                                                            task.status === 'InProgress' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                            task.status === 'Cancelled' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                                                            'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                                                        }`}>
+                                                            {task.status}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {task.clientName && (
                                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -168,10 +224,51 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                                         Scheduled: {format(new Date(task.plannedDate), 'MMM dd, yyyy')}
                                                     </p>
                                                 )}
-                                                {task.purpose && (
+                                                {task.notes && (
                                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                                        {task.purpose}
+                                                        {task.notes}
                                                     </p>
+                                                )}
+                                                
+                                                {/* Task Progresses */}
+                                                {task.progresses && task.progresses.length > 0 && (
+                                                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                        <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                            Progress Updates ({task.progresses.length})
+                                                        </p>
+                                                        <div className="space-y-2">
+                                                            {task.progresses.map((progress) => (
+                                                                <div
+                                                                    key={progress.id}
+                                                                    className="p-2 bg-gray-50 dark:bg-gray-800 rounded-md text-xs"
+                                                                >
+                                                                    <div className="flex items-center justify-between mb-1">
+                                                                        <span className="font-medium text-gray-900 dark:text-white">
+                                                                            {format(new Date(progress.progressDate), 'MMM dd, yyyy')}
+                                                                        </span>
+                                                                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                                                                            {progress.progressType}
+                                                                        </span>
+                                                                    </div>
+                                                                    {progress.description && (
+                                                                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                                                                            {progress.description}
+                                                                        </p>
+                                                                    )}
+                                                                    {progress.visitResult && (
+                                                                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                                                                            Result: <span className="font-medium">{progress.visitResult}</span>
+                                                                        </p>
+                                                                    )}
+                                                                    {progress.nextStep && (
+                                                                        <p className="text-gray-600 dark:text-gray-400 mt-1">
+                                                                            Next Step: <span className="font-medium">{progress.nextStep}</span>
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -183,7 +280,7 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                     {/* Daily Progress section removed - Not part of new WeeklyPlan API structure */}
 
                     {/* Manager Review */}
-                    {plan.rating && (
+                    {displayPlan.rating && (
                         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 rounded-lg">
                             <h3 className="font-semibold mb-3 flex items-center gap-2">
                                 <Star className="h-5 w-5 text-yellow-500" />
@@ -191,29 +288,29 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                             </h3>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    {renderStars(plan.rating)}
+                                    {renderStars(displayPlan.rating)}
                                     <span className="text-lg font-semibold">
-                                        {plan.rating}/5
+                                        {displayPlan.rating}/5
                                     </span>
                                 </div>
-                                {plan.managerComment && (
+                                {displayPlan.managerComment && (
                                     <div className="mt-3">
                                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Comment:
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
                                             {
-                                                plan.managerComment
+                                                displayPlan.managerComment
                                             }
                                         </p>
                                     </div>
                                 )}
-                                {plan.managerReviewedAt && (
+                                {displayPlan.managerReviewedAt && (
                                     <p className="text-xs text-gray-500 mt-2">
                                         Reviewed on{' '}
                                         {format(
                                             new Date(
-                                                plan.managerReviewedAt
+                                                displayPlan.managerReviewedAt
                                             ),
                                             'MMMM dd, yyyy'
                                         )}
@@ -223,6 +320,8 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                         </div>
                     )}
                 </div>
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     );

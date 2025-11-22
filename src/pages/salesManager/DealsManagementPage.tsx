@@ -12,9 +12,10 @@ import {
 	RefreshCw,
 	Search,
 	CheckCircle2,
-	XCircle,
 	Clock,
 	DollarSign,
+	FileText,
+	User,
 } from 'lucide-react';
 import { LoadingSpinner, EmptyState, ErrorDisplay, PageHeader } from '@/components/shared';
 import { useAuthStore } from '@/stores/authStore';
@@ -54,6 +55,17 @@ interface Deal {
 	createdByName?: string;
 	dealDescription?: string;
 	expectedCloseDate?: string;
+	offerDetails?: {
+		id: number;
+		clientName?: string;
+		assignedToName?: string;
+		createdByName?: string;
+		totalAmount?: number;
+		products?: string;
+		status?: string;
+		createdAt?: string;
+		updatedAt?: string;
+	};
 }
 
 interface Salesman {
@@ -124,7 +136,12 @@ const DealsManagementPage: React.FC = () => {
 
 			const response = await salesApi.getDeals(filters);
 			if (response.success && response.data) {
-				let dealsData = response.data;
+				// response.data is PaginatedData<T>, so response.data.data is the actual array
+				let dealsData = Array.isArray(response.data.data)
+					? response.data.data
+					: Array.isArray(response.data)
+						? response.data
+						: [];
 
 				// Filter by salesman if selected
 				if (salesmanFilter !== 'all') {
@@ -145,13 +162,25 @@ const DealsManagementPage: React.FC = () => {
 				}
 
 				setDeals(dealsData);
-				if (response.meta) {
+
+				// Pagination metadata is in response.data (PaginatedData structure)
+				const paginationData = response.data;
+				if (paginationData && typeof paginationData === 'object' && 'totalCount' in paginationData) {
 					setPagination((prev) => ({
 						...prev,
-						totalCount: response.meta.totalCount || dealsData.length,
-						totalPages: response.meta.totalPages || 1,
-						hasPreviousPage: response.meta.hasPreviousPage || false,
-						hasNextPage: response.meta.hasNextPage || false,
+						totalCount: paginationData.totalCount || dealsData.length,
+						totalPages: paginationData.totalPages || 1,
+						hasPreviousPage: paginationData.hasPreviousPage || false,
+						hasNextPage: paginationData.hasNextPage || false,
+					}));
+				} else {
+					// Fallback if structure is different
+					setPagination((prev) => ({
+						...prev,
+						totalCount: dealsData.length,
+						totalPages: 1,
+						hasPreviousPage: false,
+						hasNextPage: false,
 					}));
 				}
 			} else {
@@ -192,10 +221,27 @@ const DealsManagementPage: React.FC = () => {
 		try {
 			const response = await salesApi.getDeal(deal.id);
 			if (response.success && response.data) {
-				setSelectedDeal(response.data);
+				const dealData = response.data;
+				if (!dealData.offerId) {
+					setSelectedDeal(dealData);
+					setShowDetailsModal(true);
+					return;
+				}
+
+				try {
+					const offerResponse = await salesApi.getOffer(dealData.offerId.toString());
+					if (offerResponse.success && offerResponse.data) {
+						dealData.offerDetails = offerResponse.data;
+					}
+				} catch (offerError) {
+					console.warn('Failed to load offer details for deal', deal.id, offerError);
+				}
+
+				setSelectedDeal(dealData);
 				setShowDetailsModal(true);
 			}
 		} catch (err: any) {
+			console.error('Failed to load deal details:', err);
 			toast.error('Failed to load deal details');
 		}
 	};
@@ -288,52 +334,126 @@ const DealsManagementPage: React.FC = () => {
 						/>
 					) : (
 						<>
-							<div className="space-y-4">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								{filteredDeals.map((deal) => (
-									<Card key={deal.id} className="hover:shadow-md transition-shadow">
-										<CardContent className="p-6">
-											<div className="flex justify-between items-start">
-												<div className="flex-1">
-													<div className="flex items-center gap-3 mb-3">
-														{getStatusBadge(deal.status)}
-														<span className="text-sm text-muted-foreground">
-															ID: {deal.id}
-														</span>
-													</div>
-													<h3 className="text-lg font-semibold mb-2">{deal.salesmanName || deal.createdByName || 'Unknown Salesman'}</h3>
-													{(deal.completionNotes || deal.failureNotes) && (
-														<p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-															{deal.failureNotes || deal.completionNotes}
-														</p>
-													)}
-													<div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-														<div>
-															<p className="text-muted-foreground">Deal Value</p>
-															<p className="font-semibold flex items-center gap-1">
-																<DollarSign className="h-4 w-4" />
-																{(deal.totalValue || deal.dealValue)?.toLocaleString() || 'N/A'}
-															</p>
-														</div>
-														<div>
-															<p className="text-muted-foreground">Client</p>
-															<p className="font-semibold">{deal.clientName || 'N/A'}</p>
-														</div>
-														<div>
-															<p className="text-muted-foreground">Created At</p>
-															<p className="font-semibold">
-																{format(new Date(deal.createdAt), 'MMM dd, yyyy')}
-															</p>
-														</div>
+									<Card
+										key={deal.id}
+										className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.02] hover:shadow-xl transition-all duration-200"
+									>
+										<CardContent className="p-5 md:p-6 space-y-4">
+											<div className="flex items-center justify-between gap-3">
+												<div className="flex items-center gap-3">
+													{getStatusBadge(deal.status)}
+													<div className="text-xs uppercase tracking-wide text-muted-foreground">
+														Deal #{deal.id}
 													</div>
 												</div>
 												<Button
 													variant="outline"
 													size="sm"
 													onClick={() => handleViewDetails(deal)}
-													className="ml-4"
+													className="gap-1"
 												>
-													<Eye className="h-4 w-4 mr-2" />
-													View Details
+													<Eye className="h-4 w-4" />
+													View
+												</Button>
+											</div>
+
+											<div className="space-y-2">
+												<p className="text-sm text-muted-foreground">Client</p>
+												<div className="flex items-center gap-2">
+													<User className="h-4 w-4 text-primary" />
+													<p className="text-lg font-semibold text-foreground">
+														{deal.clientName || 'Unknown Client'}
+													</p>
+												</div>
+											</div>
+
+											<div className="grid grid-cols-2 gap-4 text-sm">
+												<div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 border border-emerald-100 dark:border-emerald-900/40">
+													<p className="text-xs text-emerald-700 dark:text-emerald-300">Deal Value</p>
+													<p className="mt-1 text-xl font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1">
+														<DollarSign className="h-4 w-4" />
+														{new Intl.NumberFormat('en-US', {
+															style: 'currency',
+															currency: 'EGP',
+															maximumFractionDigits: 0,
+														}).format(deal.totalValue || deal.dealValue || 0)}
+													</p>
+												</div>
+												<div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-100 dark:border-blue-900/40">
+													<p className="text-xs text-blue-700 dark:text-blue-300">Salesman</p>
+													<p className="mt-1 font-semibold text-blue-900 dark:text-blue-100">
+														{deal.salesmanName || deal.createdByName || 'Unknown'}
+													</p>
+													<p className="text-xs text-blue-600/80 dark:text-blue-300/70">
+														Created {format(new Date(deal.createdAt), 'MMM dd, yyyy')}
+													</p>
+												</div>
+											</div>
+
+											<div className="flex flex-wrap gap-3 text-xs">
+												<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+													<Clock className="h-4 w-4 text-slate-500" />
+													<span>
+														Manager:{' '}
+														<strong>
+															{deal.managerApprovedAt
+																? format(new Date(deal.managerApprovedAt), 'MMM dd, yyyy')
+																: deal.managerRejectionReason
+																	? `Rejected (${deal.managerRejectionReason})`
+																	: 'Pending'}
+														</strong>
+													</span>
+												</div>
+												<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+													<Clock className="h-4 w-4 text-slate-500" />
+													<span>
+														Super Admin:{' '}
+														<strong>
+															{deal.superAdminApprovedAt
+																? format(new Date(deal.superAdminApprovedAt), 'MMM dd, yyyy')
+																: deal.superAdminRejectionReason
+																	? `Rejected (${deal.superAdminRejectionReason})`
+																	: 'Pending'}
+														</strong>
+													</span>
+												</div>
+												{deal.closedDate && (
+													<div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+														<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+														<span>
+															Closed:{' '}
+															<strong>
+																{format(new Date(deal.closedDate), 'MMM dd, yyyy')}
+															</strong>
+														</span>
+													</div>
+												)}
+											</div>
+
+											{deal.failureNotes && (
+												<div className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-3 text-sm text-red-800 dark:text-red-100">
+													<p className="font-semibold mb-1">Failure Notes</p>
+													<p className="line-clamp-2">{deal.failureNotes}</p>
+												</div>
+											)}
+											{deal.completionNotes && !deal.failureNotes && (
+												<div className="rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/10 p-3 text-sm text-emerald-900 dark:text-emerald-100">
+													<p className="font-semibold mb-1">Completion Notes</p>
+													<p className="line-clamp-2">{deal.completionNotes}</p>
+												</div>
+											)}
+
+											<div className="flex justify-end">
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => handleViewDetails(deal)}
+													className="text-primary hover:text-primary/80 gap-2"
+												>
+													<Eye className="h-4 w-4" />
+													View Timeline
 												</Button>
 											</div>
 										</CardContent>
@@ -382,62 +502,148 @@ const DealsManagementPage: React.FC = () => {
 					</DialogHeader>
 					{selectedDeal && (
 						<div className="space-y-4">
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<p className="text-sm text-muted-foreground">Deal ID</p>
-									<p className="font-semibold">{selectedDeal.id}</p>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<div className="space-y-3">
+									<div>
+										<p className="text-sm text-muted-foreground">Deal ID</p>
+										<p className="font-semibold text-lg">{selectedDeal.id}</p>
+									</div>
+									<div>
+										<p className="text-sm text-muted-foreground">Client</p>
+										<p className="font-semibold">{selectedDeal.clientName}</p>
+									</div>
+									<div>
+										<p className="text-sm text-muted-foreground">Deal Value</p>
+										<p className="font-semibold flex items-center gap-1 text-emerald-600 text-lg">
+											<DollarSign className="h-4 w-4" />
+											{(selectedDeal.totalValue || selectedDeal.dealValue)?.toLocaleString('en-US', {
+												maximumFractionDigits: 0,
+											}) || 'N/A'}
+										</p>
+									</div>
+									<div>
+										<p className="text-sm text-muted-foreground">Created At</p>
+										<p className="font-semibold">
+											{format(new Date(selectedDeal.createdAt), 'MMM dd, yyyy')}
+										</p>
+									</div>
 								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Status</p>
-									{getStatusBadge(selectedDeal.status)}
-								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Client</p>
-									<p className="font-semibold">{selectedDeal.clientName}</p>
-								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Deal Value</p>
-									<p className="font-semibold flex items-center gap-1">
-										<DollarSign className="h-4 w-4" />
-										{(selectedDeal.totalValue || selectedDeal.dealValue)?.toLocaleString() || 'N/A'}
-									</p>
-								</div>
-								<div>
-									<p className="text-sm text-muted-foreground">Salesman</p>
-									<p className="font-semibold">{selectedDeal.salesmanName || selectedDeal.createdByName || 'Unknown'}</p>
+
+								<div className="space-y-3">
+									<div>
+										<p className="text-sm text-muted-foreground">Status</p>
+										<div className="mt-1">{getStatusBadge(selectedDeal.status)}</div>
+									</div>
+									<div>
+										<p className="text-sm text-muted-foreground">Salesman</p>
+										<p className="font-semibold">{selectedDeal.salesmanName || selectedDeal.createdByName || 'Unknown'}</p>
+									</div>
+									<div>
+										<p className="text-sm text-muted-foreground">Approvals</p>
+										<div className="space-y-1 text-sm">
+											<p>
+												<strong>Manager:</strong>{' '}
+												{selectedDeal.managerApprovedByName
+													? `Approved by ${selectedDeal.managerApprovedByName} on ${selectedDeal.managerApprovedAt
+														? format(new Date(selectedDeal.managerApprovedAt), 'MMM dd, yyyy')
+														: 'N/A'
+													}`
+													: selectedDeal.managerRejectionReason
+														? `Rejected (${selectedDeal.managerRejectionReason})`
+														: 'Pending'}
+											</p>
+											<p>
+												<strong>Super Admin:</strong>{' '}
+												{selectedDeal.superAdminApprovedByName
+													? `Approved by ${selectedDeal.superAdminApprovedByName} on ${selectedDeal.superAdminApprovedAt
+														? format(new Date(selectedDeal.superAdminApprovedAt), 'MMM dd, yyyy')
+														: 'N/A'
+													}`
+													: selectedDeal.superAdminRejectionReason
+														? `Rejected (${selectedDeal.superAdminRejectionReason})`
+														: 'Pending'}
+											</p>
+										</div>
+									</div>
 								</div>
 							</div>
+
+							{selectedDeal.expectedDeliveryDate && (
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div>
+										<p className="text-sm text-muted-foreground">Expected Delivery Date</p>
+										<p className="font-semibold">
+											{format(new Date(selectedDeal.expectedDeliveryDate), 'MMM dd, yyyy')}
+										</p>
+									</div>
+									{selectedDeal.closedDate && (
+										<div>
+											<p className="text-sm text-muted-foreground">Closed Date</p>
+											<p className="font-semibold">
+												{format(new Date(selectedDeal.closedDate), 'MMM dd, yyyy')}
+											</p>
+										</div>
+									)}
+								</div>
+							)}
+
 							{(selectedDeal.completionNotes || selectedDeal.failureNotes) && (
-								<div>
+								<div className="rounded-lg border border-muted p-4 bg-muted/30">
 									<p className="text-sm text-muted-foreground mb-2">
 										{selectedDeal.failureNotes ? 'Failure Notes' : 'Completion Notes'}
 									</p>
 									<p className="text-sm">{selectedDeal.failureNotes || selectedDeal.completionNotes}</p>
 								</div>
 							)}
-							{selectedDeal.managerApprovedByName && (
-								<div>
-									<p className="text-sm text-muted-foreground">Manager Approval</p>
-									<p className="font-semibold">
-										Approved by {selectedDeal.managerApprovedByName} on{' '}
-										{selectedDeal.managerApprovedAt
-											? format(new Date(selectedDeal.managerApprovedAt), 'MMM dd, yyyy')
-											: 'N/A'}
-									</p>
-								</div>
-							)}
-							{selectedDeal.completedAt && (
-								<div>
-									<p className="text-sm text-muted-foreground">Completed At</p>
-									<p className="font-semibold">
-										{format(new Date(selectedDeal.completedAt), 'MMM dd, yyyy')}
-									</p>
-								</div>
-							)}
-							{selectedDeal.failureNotes && (
-								<div>
-									<p className="text-sm text-muted-foreground">Failure Notes</p>
-									<p className="text-sm text-red-600">{selectedDeal.failureNotes}</p>
+
+							{selectedDeal.offerDetails && (
+								<div className="border rounded-xl p-4 space-y-3">
+									<h3 className="text-lg font-semibold flex items-center gap-2">
+										<FileText className="h-4 w-4 text-primary" />
+										Linked Offer
+									</h3>
+									<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+										<div>
+											<p className="text-muted-foreground">Offer ID</p>
+											<p className="font-semibold">#{selectedDeal.offerDetails.id}</p>
+										</div>
+										<div>
+											<p className="text-muted-foreground">Offer Value</p>
+											<p className="font-semibold">
+												EGP {(selectedDeal.offerDetails.totalAmount || 0).toLocaleString('en-US', {
+													maximumFractionDigits: 0,
+												})}
+											</p>
+										</div>
+										<div>
+											<p className="text-muted-foreground">Status</p>
+											<p className="font-semibold">{selectedDeal.offerDetails.status || 'N/A'}</p>
+										</div>
+										<div>
+											<p className="text-muted-foreground">Assigned To</p>
+											<p className="font-semibold">{selectedDeal.offerDetails.assignedToName || 'N/A'}</p>
+										</div>
+										<div>
+											<p className="text-muted-foreground">Created By</p>
+											<p className="font-semibold">{selectedDeal.offerDetails.createdByName || 'N/A'}</p>
+										</div>
+										<div>
+											<p className="text-muted-foreground">Created At</p>
+											<p className="font-semibold">
+												{selectedDeal.offerDetails.createdAt
+													? format(new Date(selectedDeal.offerDetails.createdAt), 'MMM dd, yyyy')
+													: 'N/A'}
+											</p>
+										</div>
+									</div>
+									{selectedDeal.offerDetails.products && (
+										<div>
+											<p className="text-sm text-muted-foreground mb-1">Products</p>
+											<p className="text-sm whitespace-pre-line">
+												{selectedDeal.offerDetails.products}
+											</p>
+										</div>
+									)}
 								</div>
 							)}
 						</div>
