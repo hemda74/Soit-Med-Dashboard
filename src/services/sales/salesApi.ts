@@ -1,5 +1,3 @@
-// Sales API Service - Comprehensive sales module API integration
-
 import type {
 	Client,
 	CreateClientDto,
@@ -25,6 +23,7 @@ import type {
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
 import { performanceMonitor } from '@/utils/performance';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 // Weekly Plan Types
 interface WeeklyPlan {
@@ -163,8 +162,8 @@ interface PaymentTerms {
 	updatedAt: string;
 }
 
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+// Get API base URL - automatically detects network IP when accessed from network
+const getApiBaseUrlForService = () => getApiBaseUrl();
 
 class SalesApiService {
 	private async makeRequest<T>(
@@ -179,27 +178,31 @@ class SalesApiService {
 				);
 			}
 
-			const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-				...options,
-				headers: {
-					Authorization: `Bearer ${token}`,
-					'Content-Type': 'application/json',
-					...options.headers,
-				},
-			});
-
-		if (!response.ok) {
-			const errorData = await response
-				.json()
-				.catch(() => ({}));
-			const error: any = new Error(
-				errorData.message ||
-					`API request failed with status ${response.status}`
+			const response = await fetch(
+				`${getApiBaseUrlForService()}${endpoint}`,
+				{
+					...options,
+					headers: {
+						Authorization: `Bearer ${token}`,
+						'Content-Type':
+							'application/json',
+						...options.headers,
+					},
+				}
 			);
-			error.status = response.status;
-			error.response = errorData;
-			throw error;
-		}
+
+			if (!response.ok) {
+				const errorData = await response
+					.json()
+					.catch(() => ({}));
+				const error: any = new Error(
+					errorData.message ||
+						`API request failed with status ${response.status}`
+				);
+				error.status = response.status;
+				error.response = errorData;
+				throw error;
+			}
 
 			return response.json();
 		});
@@ -218,11 +221,25 @@ class SalesApiService {
 		if (filters.query)
 			queryParams.append('searchTerm', filters.query);
 		if (filters.classification)
-			queryParams.append('classification', filters.classification);
+			queryParams.append(
+				'classification',
+				filters.classification
+			);
 		if (filters.assignedSalesmanId)
 			queryParams.append(
 				'assignedSalesmanId',
 				filters.assignedSalesmanId
+			);
+		if (filters.city) queryParams.append('city', filters.city);
+		if (filters.governorateId)
+			queryParams.append(
+				'governorateId',
+				filters.governorateId.toString()
+			);
+		if (filters.equipmentCategory)
+			queryParams.append(
+				'equipmentCategory',
+				filters.equipmentCategory
 			);
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
@@ -245,36 +262,11 @@ class SalesApiService {
 			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
 			: API_ENDPOINTS.SALES.CLIENT.SEARCH;
 
-		// API returns array directly, normalize to paginated response
-		const response = await this.makeRequest<ApiResponse<any[]>>(
-			endpoint,
-			{
-				method: 'GET',
-			}
-		);
-
-		// Normalize response to expected paginated structure
-		const clientsArray = response.data || [];
-		const page = filters.page || 1;
-		const pageSize = filters.pageSize || 20;
-
-		return {
-			success: response.success,
-			message: response.message,
-			data: {
-				clients: clientsArray,
-				totalCount: clientsArray.length,
-				page: page,
-				pageSize: pageSize,
-				totalPages: Math.ceil(
-					clientsArray.length / pageSize
-				),
-				hasNextPage:
-					page * pageSize < clientsArray.length,
-				hasPreviousPage: page > 1,
-			},
-			timestamp: response.timestamp,
-		};
+		return this.makeRequest<
+			PaginatedApiResponse<ClientSearchResult>
+		>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	/**
@@ -367,16 +359,22 @@ class SalesApiService {
 		const queryParams = new URLSearchParams();
 
 		if (filters.query) queryParams.append('query', filters.query);
-		if (filters.type) queryParams.append('type', filters.type);
-		if (filters.specialization)
+		if (filters.classification)
 			queryParams.append(
-				'specialization',
-				filters.specialization
+				'classification',
+				filters.classification
 			);
-		if (filters.location)
-			queryParams.append('location', filters.location);
-		if (filters.status)
-			queryParams.append('status', filters.status);
+		if (filters.city) queryParams.append('city', filters.city);
+		if (filters.governorateId)
+			queryParams.append(
+				'governorateId',
+				filters.governorateId.toString()
+			);
+		if (filters.equipmentCategory)
+			queryParams.append(
+				'equipmentCategory',
+				filters.equipmentCategory
+			);
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
 		if (filters.createdTo)
@@ -483,39 +481,84 @@ class SalesApiService {
 			endDate?: string;
 		} = {}
 	): Promise<PaginatedApiResponse<ClientVisit[]>> {
-		const queryParams = new URLSearchParams();
-
-		if (filters.page)
-			queryParams.append('page', filters.page.toString());
-		if (filters.pageSize)
-			queryParams.append(
-				'pageSize',
-				filters.pageSize.toString()
+		try {
+			// Use TaskProgress endpoint instead of ClientVisit (which doesn't exist)
+			// TaskProgress contains visit/interaction data
+			const response = await this.getClientTaskProgress(
+				clientId
 			);
-		if (filters.visitType)
-			queryParams.append('visitType', filters.visitType);
-		if (filters.status)
-			queryParams.append('status', filters.status);
-		if (filters.startDate)
-			queryParams.append('startDate', filters.startDate);
-		if (filters.endDate)
-			queryParams.append('endDate', filters.endDate);
 
-		const queryString = queryParams.toString();
-		const endpoint = queryString
-			? `${API_ENDPOINTS.SALES.CLIENT_VISIT.BY_CLIENT(
-					clientId
-			  )}?${queryString}`
-			: API_ENDPOINTS.SALES.CLIENT_VISIT.BY_CLIENT(clientId);
+			// Transform TaskProgress to ClientVisit format if needed
+			// For now, return empty array if no data or return task progress as visits
+			if (response.data && Array.isArray(response.data)) {
+				// Map task progress to visit format
+				const visits = response.data.map(
+					(progress: any) => ({
+						id:
+							progress.id?.toString() ||
+							'',
+						clientId:
+							progress.clientId?.toString() ||
+							clientId,
+						visitType:
+							progress.progressType ||
+							'Visit',
+						visitDate:
+							progress.progressDate ||
+							progress.createdAt,
+						location:
+							progress.description ||
+							'',
+						purpose:
+							progress.description ||
+							'',
+						notes:
+							progress.notes ||
+							progress.description ||
+							'',
+						visitResult:
+							progress.visitResult ||
+							null,
+						createdBy:
+							progress.employeeId ||
+							'',
+						createdByName:
+							progress.employeeName ||
+							'',
+						createdAt:
+							progress.createdAt ||
+							new Date().toISOString(),
+					})
+				);
 
-		// Removed verbose console logs for production
-
-		return this.makeRequest<PaginatedApiResponse<ClientVisit[]>>(
-			endpoint,
-			{
-				method: 'GET',
+				return {
+					success: true,
+					data: visits,
+					message: 'Client visits retrieved successfully',
+					timestamp: new Date().toISOString(),
+				} as PaginatedApiResponse<ClientVisit[]>;
 			}
-		);
+
+			// Return empty result if no data
+			return {
+				success: true,
+				data: [],
+				message: 'No visits found',
+				timestamp: new Date().toISOString(),
+			} as PaginatedApiResponse<ClientVisit[]>;
+		} catch (error: any) {
+			// Handle 404 and other errors gracefully
+			if (error.status === 404) {
+				return {
+					success: true,
+					data: [],
+					message: 'No visits found for this client',
+					timestamp: new Date().toISOString(),
+				} as PaginatedApiResponse<ClientVisit[]>;
+			}
+			// Re-throw other errors
+			throw error;
+		}
 	}
 
 	/**
@@ -1356,7 +1399,7 @@ class SalesApiService {
 		}
 
 		const response = await fetch(
-			`${API_BASE_URL}${API_ENDPOINTS.SALES.SALES_REPORT.EXPORT(
+			`${getApiBaseUrlForService()}${API_ENDPOINTS.SALES.SALES_REPORT.EXPORT(
 				reportId
 			)}?format=${format}`,
 			{
@@ -1398,20 +1441,62 @@ class SalesApiService {
 	}
 
 	async getDeals(
-		filters = {}
-	): Promise<PaginatedApiResponseWithMeta<any[]>> {
+		filters: { clientId?: string | number; [key: string]: any } = {}
+	): Promise<ApiResponse<any[]>> {
+		// If clientId is provided, use the by-client endpoint
+		if (filters.clientId) {
+			return this.getDealsByClient(filters.clientId);
+		}
+
 		const queryParams = new URLSearchParams();
 		Object.entries(filters).forEach(([key, value]) => {
-			if (value) queryParams.append(key, value.toString());
+			if (
+				value &&
+				key !== 'clientId' &&
+				key !== 'page' &&
+				key !== 'pageSize'
+			) {
+				queryParams.append(key, value.toString());
+			}
 		});
 		const queryString = queryParams.toString();
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.DEALS.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES.DEALS.BASE;
-		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			endpoint,
-			{ method: 'GET' }
-		);
+		// Backend returns List<DealResponseDTO>, not paginated
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
+	}
+
+	/**
+	 * Get deals by client ID
+	 */
+	async getDealsByClient(
+		clientId: string | number
+	): Promise<ApiResponse<any[]>> {
+		try {
+			return await this.makeRequest<ApiResponse<any[]>>(
+				API_ENDPOINTS.SALES.DEALS.BY_CLIENT(
+					`${clientId}`
+				),
+				{ method: 'GET' }
+			);
+		} catch (error: any) {
+			// Handle 404 gracefully
+			if (
+				error.status === 404 ||
+				error.response?.status === 404
+			) {
+				return {
+					success: true,
+					data: [],
+					message: 'No deals found for this client',
+					timestamp: new Date().toISOString(),
+				} as ApiResponse<any[]>;
+			}
+			throw error;
+		}
 	}
 
 	async getDeal(dealId: string): Promise<ApiResponse<any>> {
@@ -1566,29 +1651,8 @@ class SalesApiService {
 			startDate?: string;
 			endDate?: string;
 		} = {}
-	): Promise<ApiResponse<{
-		offers: any[];
-		totalCount: number;
-		page: number;
-		pageSize: number;
-		totalPages: number;
-		hasPreviousPage: boolean;
-		hasNextPage: boolean;
-	}>> {
-		const queryParams = new URLSearchParams();
-		if (filters.status) queryParams.append('status', filters.status);
-		if (filters.salesmanId) queryParams.append('salesmanId', filters.salesmanId);
-		if (filters.page) queryParams.append('page', filters.page.toString());
-		if (filters.pageSize) queryParams.append('pageSize', filters.pageSize.toString());
-		if (filters.startDate) queryParams.append('startDate', filters.startDate);
-		if (filters.endDate) queryParams.append('endDate', filters.endDate);
-
-		const queryString = queryParams.toString();
-		const endpoint = queryString
-			? `${API_ENDPOINTS.SALES.OFFERS.ALL}?${queryString}`
-			: API_ENDPOINTS.SALES.OFFERS.ALL;
-
-		return this.makeRequest<ApiResponse<{
+	): Promise<
+		ApiResponse<{
 			offers: any[];
 			totalCount: number;
 			page: number;
@@ -1596,7 +1660,41 @@ class SalesApiService {
 			totalPages: number;
 			hasPreviousPage: boolean;
 			hasNextPage: boolean;
-		}>>(endpoint, {
+		}>
+	> {
+		const queryParams = new URLSearchParams();
+		if (filters.status)
+			queryParams.append('status', filters.status);
+		if (filters.salesmanId)
+			queryParams.append('salesmanId', filters.salesmanId);
+		if (filters.page)
+			queryParams.append('page', filters.page.toString());
+		if (filters.pageSize)
+			queryParams.append(
+				'pageSize',
+				filters.pageSize.toString()
+			);
+		if (filters.startDate)
+			queryParams.append('startDate', filters.startDate);
+		if (filters.endDate)
+			queryParams.append('endDate', filters.endDate);
+
+		const queryString = queryParams.toString();
+		const endpoint = queryString
+			? `${API_ENDPOINTS.SALES.OFFERS.ALL}?${queryString}`
+			: API_ENDPOINTS.SALES.OFFERS.ALL;
+
+		return this.makeRequest<
+			ApiResponse<{
+				offers: any[];
+				totalCount: number;
+				page: number;
+				pageSize: number;
+				totalPages: number;
+				hasPreviousPage: boolean;
+				hasNextPage: boolean;
+			}>
+		>(endpoint, {
 			method: 'GET',
 		});
 	}
@@ -1630,12 +1728,43 @@ class SalesApiService {
 		);
 	}
 
+	async salesManagerApproval(
+		offerId: string,
+		data: {
+			approved: boolean;
+			comments?: string;
+			rejectionReason?: string;
+		}
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.SALESMANAGER_APPROVAL(
+				offerId
+			),
+			{
+				method: 'POST',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
+	async getPendingSalesManagerApprovals(): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.OFFERS
+				.PENDING_SALESMANAGER_APPROVALS,
+			{
+				method: 'GET',
+			}
+		);
+	}
+
 	async recordClientResponse(
 		offerId: string,
 		data: any
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/client-response`,
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(
+				offerId
+			)}/client-response`,
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -1661,7 +1790,9 @@ class SalesApiService {
 		reason?: string
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/needs-modification`,
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(
+				offerId
+			)}/needs-modification`,
 			{
 				method: 'POST',
 				body: JSON.stringify({ reason }),
@@ -1669,18 +1800,20 @@ class SalesApiService {
 		);
 	}
 
-	async markAsUnderReview(
-		offerId: string
-	): Promise<ApiResponse<any>> {
+	async markAsUnderReview(offerId: string): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId)}/under-review`,
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(
+				offerId
+			)}/under-review`,
 			{
 				method: 'POST',
 			}
 		);
 	}
 
-	async updateExpiredOffers(): Promise<ApiResponse<{ expiredCount: number }>> {
+	async updateExpiredOffers(): Promise<
+		ApiResponse<{ expiredCount: number }>
+	> {
 		return this.makeRequest<ApiResponse<{ expiredCount: number }>>(
 			`${API_ENDPOINTS.SALES.OFFERS.BASE}/update-expired`,
 			{
@@ -1758,21 +1891,60 @@ class SalesApiService {
 		filters: {
 			status?: string; // Single status or comma-separated statuses like 'Requested,Assigned,InProgress,Ready'
 			requestedBy?: string;
+			clientId?: string; // Filter by client ID
 			page?: number;
 			pageSize?: number;
 		} = {}
 	): Promise<ApiResponse<any[]>> {
 		const queryParams = new URLSearchParams();
 		Object.entries(filters).forEach(([key, value]) => {
-			if (value) queryParams.append(key, value.toString());
+			if (
+				value &&
+				key !== 'clientId' &&
+				key !== 'page' &&
+				key !== 'pageSize'
+			) {
+				queryParams.append(key, value.toString());
+			}
 		});
 		const queryString = queryParams.toString();
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE}?${queryString}`
 			: API_ENDPOINTS.SALES.OFFER_REQUESTS.BASE;
-		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
-			method: 'GET',
-		});
+
+		try {
+			const response = await this.makeRequest<
+				ApiResponse<any[]>
+			>(endpoint, {
+				method: 'GET',
+			});
+
+			// If clientId filter was provided, filter the results client-side
+			if (
+				filters.clientId &&
+				response.data &&
+				Array.isArray(response.data)
+			) {
+				response.data = response.data.filter(
+					(req: any) =>
+						req.clientId?.toString() ===
+						filters.clientId?.toString()
+				);
+			}
+
+			return response;
+		} catch (error: any) {
+			// Handle 404 gracefully
+			if (error.status === 404) {
+				return {
+					success: true,
+					data: [],
+					message: 'No offer requests found',
+					timestamp: new Date().toISOString(),
+				} as ApiResponse<any[]>;
+			}
+			throw error;
+		}
 	}
 
 	async getOfferRequest(
@@ -2089,12 +2261,28 @@ class SalesApiService {
 	async getEquipmentImage(
 		offerId: string | number,
 		equipmentId: number
-	): Promise<ApiResponse<{ imagePath: string; equipmentId: number; offerId: number }>> {
+	): Promise<
+		ApiResponse<{
+			imagePath: string;
+			equipmentId: number;
+			offerId: number;
+		}>
+	> {
 		return this.makeRequest<
-			ApiResponse<{ imagePath: string; equipmentId: number; offerId: number }>
-		>(API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_IMAGE(offerId, equipmentId), {
-			method: 'GET',
-		});
+			ApiResponse<{
+				imagePath: string;
+				equipmentId: number;
+				offerId: number;
+			}>
+		>(
+			API_ENDPOINTS.SALES.OFFERS.EQUIPMENT_IMAGE(
+				offerId,
+				equipmentId
+			),
+			{
+				method: 'GET',
+			}
+		);
 	}
 
 	/**
@@ -2162,7 +2350,7 @@ class SalesApiService {
 		}
 
 		const response = await fetch(
-			`${API_BASE_URL}${API_ENDPOINTS.SALES.OFFERS.UPLOAD_IMAGE(
+			`${getApiBaseUrlForService()}${API_ENDPOINTS.SALES.OFFERS.UPLOAD_IMAGE(
 				offerId,
 				equipmentId
 			)}`,
@@ -2422,6 +2610,79 @@ class SalesApiService {
 		}
 		return this.makeRequest<ApiResponse<any>>(
 			`/api/SalesmanStatistics/targets/team?${params.toString()}`
+		);
+	}
+
+	/**
+	 * Get my statistics (for current user)
+	 */
+	async getMyStatistics(
+		year?: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams();
+		if (year) {
+			params.append('year', year.toString());
+		}
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		const queryString = params.toString();
+		const endpoint = queryString
+			? `/api/SalesmanStatistics/my-statistics?${queryString}`
+			: '/api/SalesmanStatistics/my-statistics';
+		return this.makeRequest<ApiResponse<any>>(endpoint);
+	}
+
+	/**
+	 * Get my progress (for current user)
+	 */
+	async getMyProgress(
+		year?: number,
+		quarter?: number
+	): Promise<ApiResponse<any>> {
+		const params = new URLSearchParams();
+		if (year) {
+			params.append('year', year.toString());
+		}
+		if (quarter) {
+			params.append('quarter', quarter.toString());
+		}
+		const queryString = params.toString();
+		const endpoint = queryString
+			? `/api/SalesmanStatistics/my-progress?${queryString}`
+			: '/api/SalesmanStatistics/my-progress';
+		return this.makeRequest<ApiResponse<any>>(endpoint);
+	}
+
+	/**
+	 * Get my targets (for current user)
+	 */
+	async getMyTargets(year?: number): Promise<ApiResponse<any[]>> {
+		const params = new URLSearchParams();
+		if (year) {
+			params.append('year', year.toString());
+		}
+		const queryString = params.toString();
+		const endpoint = queryString
+			? `/api/SalesmanStatistics/my-targets?${queryString}`
+			: '/api/SalesmanStatistics/my-targets';
+		return this.makeRequest<ApiResponse<any[]>>(endpoint);
+	}
+
+	/**
+	 * Patch salesman target (partial update)
+	 */
+	async patchSalesmanTarget(
+		targetId: number,
+		data: Partial<any>
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`/api/SalesmanStatistics/targets/${targetId}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			}
 		);
 	}
 

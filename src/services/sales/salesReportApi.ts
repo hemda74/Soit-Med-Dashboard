@@ -12,9 +12,7 @@ import type {
 } from '@/types/salesReport.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
-
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 class SalesReportApiService {
 	private async makeRequest<T>(
@@ -28,7 +26,7 @@ class SalesReportApiService {
 			);
 		}
 
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
 			...options,
 			headers: {
 				Authorization: `Bearer ${token}`,
