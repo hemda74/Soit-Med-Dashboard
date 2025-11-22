@@ -5,18 +5,15 @@
 
 /**
  * Get the base API URL from environment variables
+ * Reads from VITE_API_BASE_URL environment variable
  * Falls back to development default if not set
  *
  * @returns The base API URL string
  * @throws {Error} If the URL format is invalid
  */
 export function getApiBaseUrl(): string {
-	const url =
-		import.meta.env.VITE_API_BASE_URL ||
-		import.meta.env.VITE_API_URL ||
-		'http://localhost:5117';
+	const url = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
 
-	// Validate URL format
 	try {
 		new URL(url);
 		return url;

@@ -5,38 +5,51 @@
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 0 0% 3.9%;
+		/* Background: Soft off-white (#fafafa) - reduces eye strain, better than pure white */
+		--background: 0 0% 95%;
+		/* Foreground: Dark gray (#1a1a1a) - softer than pure black, better readability */
+		--foreground: 0 0% 10%;
+		/* Card: Slightly lighter than background for subtle elevation effect */
 		--card: 0 0% 100%;
-		--card-foreground: 0 0% 3.9%;
+		--card-foreground: 0 0% 10%;
+		/* Popover: Same as card for consistency */
 		--popover: 0 0% 100%;
-		--popover-foreground: 0 0% 3.9%;
+		--popover-foreground: 0 0% 10%;
+		/* Primary colors - maintain brand identity */
 		--primary: 218 50% 40%;
 		--primary-foreground: 0 0% 98%;
 		--secondary: 150 30% 50%;
 		--secondary-foreground: 0 0% 98%;
-		--muted: 0 0% 80%;
-		--muted-foreground: 0 0% 48%;
+		/* Muted: Light gray for subtle backgrounds */
+		--muted: 0 0% 96%;
+		--muted-foreground: 0 0% 45%;
+		/* Accent: Match primary for consistency */
 		--accent: 218 50% 40%;
-		--accent-foreground: 218 50% 40%;
+		--accent-foreground: 0 0% 98%;
+		/* Destructive: Red for errors/warnings */
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 0 0% 98%;
-		--border: 0 0% 80%;
-		--input: 0 0% 80%;
+		/* Border: Subtle gray for separation without harshness */
+		--border: 0 0% 89%;
+		/* Input: Slightly darker border for better visibility */
+		--input: 0 0% 89%;
+		/* Ring: Focus indicator */
 		--ring: 218 50% 40%;
+		/* Chart colors: Vibrant but accessible */
 		--chart-1: 12 76% 61%;
 		--chart-2: 150 30% 50%;
 		--chart-3: 75 50% 50%;
 		--chart-4: 43 74% 66%;
 		--chart-5: 27 87% 67%;
 		--radius: 0.5rem;
-		--sidebar-background: 0 0% 98%;
+		/* Sidebar: Slightly darker than main background for visual separation */
+		--sidebar-background: 0 0% 97%;
 		--sidebar-foreground: 240 5.3% 26.1%;
 		--sidebar-primary: 240 5.9% 10%;
 		--sidebar-primary-foreground: 0 0% 98%;
 		--sidebar-accent: 217 91% 60%;
 		--sidebar-accent-foreground: 0 0% 98%;
-		--sidebar-border: 220 13% 91%;
+		--sidebar-border: 220 13% 88%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
 	}
 
@@ -165,9 +178,11 @@
 	* {
 		@apply border-border;
 	}
-	
+
 	/* Override for form elements to prevent double borders */
-	input, select, textarea {
+	input,
+	select,
+	textarea {
 		@apply border-border;
 	}
 

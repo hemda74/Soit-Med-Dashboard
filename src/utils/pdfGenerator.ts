@@ -1737,12 +1737,15 @@ async function generateOfferHTML(
 					? `background-image: url('${letterheadBase64}');
 			background-size: 210mm 297mm;
 			background-position: 0 0;
-			background-repeat: repeat-y;`
+			background-repeat: no-repeat;`
 					: ''
 			}
 		}
 		* { margin: 0; padding: 0; box-sizing: border-box; }
 		html {
+			width: 210mm;
+			min-height: 100%;
+			/* Letterhead background on html - ensures coverage for all pages */
 			background: ${
 				letterheadBase64
 					? `url('${letterheadBase64}') repeat-y center top / 210mm 297mm`
@@ -1750,158 +1753,102 @@ async function generateOfferHTML(
 			};
 			background-size: 210mm 297mm;
 			background-repeat: repeat-y;
-			width: 210mm;
-			min-height: 100%;
 		}
 		body {
 			font-family: 'Cairo', Arial, sans-serif;
 			direction: ${isRTL ? 'rtl' : 'ltr'};
-			font-size: 12px; /* Increased from 10px */
+			font-size: 10px; /* Match English: 10px base */
 			line-height: 1.4;
-			color: #1e293b;
+			color: #34495e; /* Match English: secondaryColor [52, 73, 94] */
+			position: relative;
+			width: 210mm;
+			margin: 0;
+			padding: 0;
+			/* Letterhead background on body - covers full page and repeats for all pages */
 			background: ${
 				letterheadBase64
 					? `url('${letterheadBase64}') repeat-y center top / 210mm 297mm`
 					: 'white'
 			};
-			background-size: 210mm 297mm !important;
-			background-repeat: repeat-y !important;
-			background-attachment: scroll;
-			position: relative;
-			width: 210mm;
-			min-height: 297mm;
-			margin: 0;
-			padding: 0;
-		}
-		/* Full document letterhead - ensures letterhead covers full page on each page */
-		.letterhead-full {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 210mm;
-			height: 100%;
+			background-size: 210mm 297mm;
+			background-repeat: repeat-y;
+			background-attachment: local;
+			/* Ensure body expands to contain all content for html2canvas */
 			min-height: 100%;
-			z-index: -1;
-			pointer-events: none;
-			${letterheadBase64 ? '' : 'display: none;'}
 		}
-		.letterhead-full img {
-			width: 210mm;
-			height: 297mm;
-			object-fit: cover;
-			display: block;
-			position: absolute;
-			top: 0;
-			left: 0;
-		}
-		/* Repeat letterhead for each page - every 297mm */
-		.letterhead-full::after {
-			content: '';
-			position: absolute;
-			top: 297mm;
-			left: 0;
-			width: 210mm;
-			height: 297mm;
-			background-image: ${letterheadBase64 ? `url('${letterheadBase64}')` : 'none'};
-			background-size: 210mm 297mm;
-			background-position: 0 0;
-			background-repeat: no-repeat;
-			${letterheadBase64 ? '' : 'display: none;'}
-		}
-		.letterhead-full::before {
-			content: '';
-			position: absolute;
-			top: 594mm;
-			left: 0;
-			width: 210mm;
-			height: 297mm;
-			background-image: ${letterheadBase64 ? `url('${letterheadBase64}')` : 'none'};
-			background-size: 210mm 297mm;
-			background-position: 0 0;
-			background-repeat: no-repeat;
-			${letterheadBase64 ? '' : 'display: none;'}
-		}
-		/* Letterhead wrapper - ensure it appears on all pages and covers full page height */
-		/* Match English version: letterhead covers full 297mm x 210mm on every page */
+		/* Page wrapper - contains all content, transparent to show body letterhead */
 		.page-wrapper {
 			position: relative;
 			width: 210mm;
 			min-height: 297mm;
-			background: ${
-				letterheadBase64
-					? `url('${letterheadBase64}') repeat-y center top / 210mm 297mm`
-					: 'transparent'
-			};
-			background-size: 210mm 297mm !important;
-			background-repeat: repeat-y !important;
-			background-attachment: scroll;
+			/* Transparent so body letterhead shows through */
+			background: transparent;
 		}
-		/* Letterhead pages - positioned at exact page boundaries for html2canvas */
+		/* Letterhead pages - Backup method: positioned divs for html2canvas */
+		/* These ensure letterhead is captured at page boundaries as backup */
 		.letterhead-page {
 			position: absolute;
+			left: 0;
 			width: 210mm;
 			height: 297mm;
 			z-index: -1;
 			pointer-events: none;
-		}
-		.letterhead-page img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-			display: block;
-		}
-		.letterhead {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 210mm;
-			height: 297mm;
-			z-index: 0;
-			pointer-events: none;
 			${letterheadBase64 ? '' : 'display: none;'}
 		}
-		.letterhead img {
-			width: 100%;
-			height: 100%;
+		.letterhead-page img {
+			width: 210mm;
+			height: 297mm;
 			object-fit: cover;
 			display: block;
 		}
+		/* Content area - Match English: 16% top margin, 15% bottom margin, 15mm side margins */
+		/* Padding applied to container - but we need margins on each page section */
 		.content {
-			padding: 16% 15mm 15% 15mm;
+			padding: 0 15mm;
 			position: relative;
 			z-index: 1;
 			background: transparent;
-			min-height: calc(297mm - 16% - 15%);
 		}
-		/* Ensure body always has full page height sections */
-		body::after {
-			content: '';
-			display: block;
-			height: 297mm;
-			width: 210mm;
-			background: ${
-				letterheadBase64
-					? `url('${letterheadBase64}') no-repeat center top / 210mm 297mm`
-					: 'transparent'
-			};
-			${letterheadBase64 ? '' : 'display: none;'}
+		/* Page section wrapper - ensures margins on each page when html2pdf splits */
+		.page-section {
+			padding-top: 16%;
+			padding-bottom: 15%;
+			min-height: 297mm;
+			page-break-after: always;
+		}
+		.page-section:last-child {
+			page-break-after: auto;
+		}
+		/* First element in content gets top margin */
+		.content > *:first-child {
+			margin-top: 16%;
+		}
+		/* Elements after page breaks get top margin */
+		.product-card:nth-child(2n) {
+			margin-top: 16%;
 		}
 		.info-section {
-			margin-bottom: 12px;
+			margin-bottom: 8px; /* Match English: yPos += 8 */
 		}
 		.info-row {
 			margin: 4px 0;
-			font-size: 12px; /* Increased from 10px */
+			font-size: 10px; /* Match English: 10px for date */
+		}
+		.info-row:first-child {
+			font-size: 10px; /* Match English: 10px for date */
+		}
+		.info-row:nth-child(2) {
+			font-size: 11px; /* Match English: 11px for dear client */
 		}
 		.label {
 			font-weight: bold;
 			display: inline;
 		}
 		.section-title {
-			font-size: 18px; /* Increased from 14px */
+			font-size: 14px; /* Match English: 14px section titles */
 			font-weight: bold;
-			color: #2980b9;
-			margin: 15px 0 10px 0;
+			color: #2980b9; /* Match English: primaryColor [41, 128, 185] */
+			margin: 8px 0; /* Match English: yPos += 8 after title */
 		}
 		/* Product table header - exact match to English */
 		.product-header {
@@ -1912,32 +1859,33 @@ async function generateOfferHTML(
 			margin: 0;
 		}
 		.product-header-cell {
-			padding: 6px 5px;
-			font-size: 11px; /* Increased from 9px */
+			padding: 6px 5px; /* Match English: yPos + 6, colPadding = 5 */
+			font-size: 9px; /* Match English: 9px for headers */
 			font-weight: bold;
-			color: #2980b9;
+			color: #2980b9; /* Match English: primaryColor */
 			text-align: ${isRTL ? 'right' : 'left'};
 			border-${isRTL ? 'left' : 'right'}: 0.2px solid rgb(200, 200, 200);
 		}
 		.product-header-cell:last-child {
 			border: none;
 		}
-		/* Product rows - Arabic version: 25% page height, max 2 per page */
+		/* Product rows - Match English: calculated row height, 2 per page */
 		.product-grid {
 			margin: 0;
-			margin-top: 6px; /* Space after section title */
+			margin-top: 8px; /* Match English: yPos += 8 after title */
 		}
 		.product-card {
-			border: 0.3px solid rgb(220, 220, 220);
+			border: 0.3px solid rgb(220, 220, 220); /* Match English: doc.setDrawColor(220, 220, 220) */
 			border-top: none;
-			background: transparent;
+			background: transparent; /* Match English: transparent background */
 			padding: 0;
 			page-break-inside: avoid;
 			display: grid;
 			grid-template-columns: 1fr 1fr 1fr;
-			min-height: 280px; /* 25% of ~1123px (A4 height at 96dpi) */
-			height: 280px; /* Fixed height: 25% of page */
-			margin-bottom: 0;
+			/* Match English: calculated row height based on content */
+			min-height: auto;
+			height: auto;
+			margin-bottom: 15px; /* Match English: yPos += actualRowHeight + 15 */
 		}
 		.product-card:first-of-type {
 			border-top: 0.3px solid rgb(220, 220, 220);
@@ -1948,26 +1896,14 @@ async function generateOfferHTML(
 			margin-bottom: 0;
 			position: relative;
 		}
-		/* Add letterhead before each page break - ensures it appears on next page */
-		.product-card:nth-child(2n)::before {
-			content: '';
-			position: absolute;
-			top: -297mm;
-			left: -15mm;
-			width: 210mm;
-			height: 297mm;
-			background: ${
-				letterheadBase64
-					? `url('${letterheadBase64}') no-repeat center top / 210mm 297mm`
-					: 'transparent'
-			};
-			z-index: -1;
-			pointer-events: none;
-			${letterheadBase64 ? '' : 'display: none;'}
+		/* Add top margin after page breaks to maintain 16% top margin on each page */
+		.product-card:nth-child(2n+1):not(:first-child) {
+			margin-top: 16%;
 		}
+		/* Page break handling - letterhead will be added via letterhead-page divs */
 		.product-col {
-			padding: 6px 5px; /* Match: yPos + 6 for top, colPadding = 5 */
-			border-${isRTL ? 'left' : 'right'}: 0.2px solid rgb(200, 200, 200);
+			padding: 6px 5px; /* Match English: yPos + 6 for top, colPadding = 5 */
+			border-${isRTL ? 'left' : 'right'}: 0.2px solid rgb(200, 200, 200); /* Match English: doc.setDrawColor(200, 200, 200) */
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-start;
@@ -1992,55 +1928,56 @@ async function generateOfferHTML(
 			text-align: ${isRTL ? 'left' : 'left'}; /* English text starts from left */
 		}
 		.product-name {
-			font-size: 14px; /* Increased from 11px */
-			font-weight: bold;
-			margin-bottom: 0; /* Will be set dynamically based on line count */
-			color: rgb(30, 30, 30); /* Match: doc.setTextColor(30, 30, 30) */
-			line-height: 1.25; /* Approximate: nameLines.length * 5 / 11px */
+			font-size: 11px; /* Match English: doc.setFontSize(11) */
+			font-weight: bold; /* Match English: setFontForLanguage(doc, lang, 'bold') */
+			margin-bottom: 0;
+			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
+			line-height: 1.25;
 		}
 		.product-name + .product-desc {
-			margin-top: 8px; /* Match: col1Y += nameLines.length * 5 + 8 */
+			margin-top: 8px; /* Match English: col1Y += nameLines.length * 5 + 8 */
 		}
 		.product-desc {
-			font-size: 11px; /* Increased from 9px */
-			color: rgb(80, 80, 80); /* Match: doc.setTextColor(80, 80, 80) */
+			font-size: 9px; /* Match English: doc.setFontSize(9) */
+			color: rgb(80, 80, 80); /* Match English: doc.setTextColor(80, 80, 80) */
 			line-height: 1.3;
 			margin-top: 0;
 		}
 		.product-image {
 			width: 100% !important;
-			height: 250px !important; /* Fixed height: Much bigger images for Arabic version */
-			min-height: 250px !important;
+			height: 60mm !important; /* Match English: imgHeight = 60 */
+			min-height: 60mm !important;
+			max-height: 60mm !important;
 			object-fit: contain;
 			object-position: center;
-			margin-bottom: 10px;
+			margin-bottom: 10px; /* Match English: col2Y += imgHeight + 10 */
 			display: block;
 		}
 		.product-model {
-			font-size: 12px; /* Increased from 10px */
-			color: rgb(50, 50, 50); /* Match: doc.setTextColor(50, 50, 50) */
-			text-align: left; /* English text starts from left */
+			font-size: 10px; /* Match English: doc.setFontSize(10) */
+			color: rgb(50, 50, 50); /* Match English: doc.setTextColor(50, 50, 50) */
+			text-align: left;
 		}
 		.product-provider {
-			font-size: 12px; /* Increased from 10px */
-			font-weight: bold;
-			margin-bottom: 8px; /* Match: col3Y += providerLines.length * 5 + 8 */
-			color: rgb(30, 30, 30); /* Match: doc.setTextColor(30, 30, 30) */
-			text-align: left; /* English text starts from left */
+			font-size: 10px; /* Match English: doc.setFontSize(10) */
+			font-weight: bold; /* Match English: setFontForLanguage(doc, lang, 'bold') */
+			margin-bottom: 8px; /* Match English: col3Y += providerLines.length * 5 + 8 */
+			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
+			text-align: left;
 		}
 		.product-country {
-			font-size: 11px; /* Increased from 9px */
-			color: rgb(80, 80, 80); /* Match: doc.setTextColor(80, 80, 80) */
-			text-align: left; /* English text starts from left */
+			font-size: 9px; /* Match English: doc.setFontSize(9) */
+			color: rgb(80, 80, 80); /* Match English: doc.setTextColor(80, 80, 80) */
+			text-align: left;
 		}
 		.financial-table {
 			width: 100%;
 			border-collapse: collapse;
-			margin: 10px 0;
-			font-size: 11px; /* Increased from 9px */
+			margin: 4px 0; /* Match English: yPos += 4 after title */
+			font-size: 9px; /* Match English: fontSize: 9 */
 		}
 		.financial-table td {
-			padding: 6px 8px;
+			padding: 2px; /* Match English: cellPadding: 2 */
 			border: none;
 		}
 		.financial-table .label-col {
@@ -2053,52 +1990,59 @@ async function generateOfferHTML(
 			font-weight: bold;
 		}
 		.terms-section {
-			margin: 10px 0;
-			font-size: 10px; /* Increased from 8px */
+			margin: 4px 0; /* Match English: yPos += 4 after title */
+			font-size: 8px; /* Match English: doc.setFontSize(8) */
 		}
 		.term-row {
-			margin: 6px 0;
+			margin: 2px 0; /* Match English: cellPadding: 2 */
 		}
 		.term-label {
 			font-weight: bold;
 			display: inline;
 		}
 		.footer-info {
-			margin-top: 15px;
-			font-size: 12px; /* Increased from 10px */
+			margin-top: 0; /* Match English: spacing handled by yPos */
+			font-size: 10px; /* Match English: doc.setFontSize(10) */
 		}
 		.footer-row {
-			margin: 4px 0;
+			margin: 4px 0; /* Match English: spacing between rows */
 		}
 	</style>
 </head>
 <body>
+	${
+		letterheadBase64
+			? `
+	<!-- Letterhead images covering FULL page at each page boundary - Match English: letterhead at (0, 0) full page -->
+	<!-- Positioned fixed to cover entire page background including margins -->
+	<div class="letterhead-page" style="top: 0mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 297mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 594mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 891mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 1188mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 1485mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 1782mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	<div class="letterhead-page" style="top: 2079mm;">
+		<img src="${letterheadBase64}" alt="Letterhead" />
+	</div>
+	`
+			: ''
+	}
 	<div class="page-wrapper">
-		${
-			letterheadBase64
-				? `
-		<!-- Letterhead images at fixed page positions - html2canvas will capture these on each page -->
-		<div class="letterhead-page" style="position: absolute; top: 0mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 1" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		<div class="letterhead-page" style="position: absolute; top: 297mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 2" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		<div class="letterhead-page" style="position: absolute; top: 594mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 3" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		<div class="letterhead-page" style="position: absolute; top: 891mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 4" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		<div class="letterhead-page" style="position: absolute; top: 1188mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 5" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		<div class="letterhead-page" style="position: absolute; top: 1485mm; left: 0; width: 210mm; height: 297mm; z-index: -1; pointer-events: none;">
-			<img src="${letterheadBase64}" alt="Letterhead Page 6" style="width: 210mm; height: 297mm; object-fit: cover; display: block;" />
-		</div>
-		`
-				: ''
-		}
 		<div class="content">
 		<div class="info-section">
 			<div class="info-row">
@@ -2111,9 +2055,7 @@ async function generateOfferHTML(
 			</div>
 		</div>
 		
-		<div style="margin: 12px 0; font-size: 12px;">
-			${t.documentTitle}
-		</div>
+		<div style="margin: 8px 0; font-size: 10px;">${t.documentTitle}</div>
 		
 		<div class="section-title">${t.productsEquipment}</div>
 		
@@ -2141,8 +2083,8 @@ async function generateOfferHTML(
 						<div class="product-col product-col2">
 							${
 								eq.imageBase64
-									? `<img src="${eq.imageBase64}" class="product-image" alt="Product" style="width: 100% !important; height: 250px !important; min-height: 250px !important; max-height: 250px !important; object-fit: contain !important; display: block !important;" />`
-									: `<div style="width: 100%; height: 250px; border: 0.5px solid #c8c8c8; display: flex; align-items: center; justify-content: center; color: #969696; font-size: 6px;">${t.noImage}</div>`
+									? `<img src="${eq.imageBase64}" class="product-image" alt="Product" />`
+									: `<div style="width: 100%; height: 60mm; border: 0.5px solid rgb(200, 200, 200); display: flex; align-items: center; justify-content: center; color: rgb(150, 150, 150); font-size: 6px;">${t.noImage}</div>`
 							}
 							<div class="product-model">${eq.model || eq.Model || 'N/A'}</div>
 						</div>

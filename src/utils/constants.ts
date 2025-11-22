@@ -1,4 +1,10 @@
-export const API_BASE_URL = 'http://localhost:5117/api';
+import { getApiBaseUrl } from './apiConfig';
+
+// Get API base URL - automatically detects network IP when accessed from network
+export const getApiBaseUrlForConstants = () => {
+	const base = getApiBaseUrl();
+	return base.endsWith('/api') ? base : `${base}/api`;
+};
 
 export const STORAGE_KEYS = {
 	AUTH_TOKEN: 'authToken',
