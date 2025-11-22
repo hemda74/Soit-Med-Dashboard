@@ -3,6 +3,7 @@ import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalesmanStatisticsDTO } from "@/types/sales.types";
 import { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ConversionRateChartProps {
 	data: SalesmanStatisticsDTO[];
@@ -12,6 +13,8 @@ interface ConversionRateChartProps {
 }
 
 export default function ConversionRateChart({ data, year, quarter, className }: ConversionRateChartProps) {
+	const { t, language } = useTranslation();
+
 	const conversionData = useMemo(() => {
 		return data
 			.map((stat) => ({
@@ -24,7 +27,7 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 			.slice(0, 10);
 	}, [data]);
 
-	const options: ApexOptions = {
+	const options: ApexOptions = useMemo(() => ({
 		colors: ["#10b981", "#3b82f6", "#f59e0b"],
 		chart: {
 			fontFamily: "Inter, sans-serif",
@@ -65,7 +68,7 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 		},
 		yaxis: {
 			title: {
-				text: "Rate (%)",
+				text: t('ratePercentage'),
 				style: {
 					fontSize: "14px",
 					color: "#374151",
@@ -103,24 +106,24 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 				},
 			},
 		},
-	};
+	}), [conversionData, language, t]);
 
-	const series = [
+	const series = useMemo(() => [
 		{
-			name: "Success Rate",
+			name: t('successRate'),
 			data: conversionData.map((item) => item.successRate),
 		},
 		{
-			name: "Offer Acceptance Rate",
+			name: t('offerAcceptanceRate'),
 			data: conversionData.map((item) => item.offerAcceptanceRate),
 		},
 		{
-			name: "Deal Conversion Rate",
+			name: t('dealConversionRate'),
 			data: conversionData.map((item) => item.dealConversionRate),
 		},
-	];
+	], [conversionData, language, t]);
 
-	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : "All Time";
+	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : t('allTime');
 	const avgSuccessRate = data.length > 0 
 		? data.reduce((sum, stat) => sum + stat.successRate, 0) / data.length 
 		: 0;
@@ -131,15 +134,15 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 	return (
 		<Card className={className}>
 			<CardHeader>
-				<CardTitle>Conversion Rates</CardTitle>
+				<CardTitle>{t('conversionRates')}</CardTitle>
 				<CardDescription>
-					Conversion metrics by salesman for {periodLabel} • Avg Success: {avgSuccessRate.toFixed(1)}% • Avg Offer Acceptance: {avgOfferAcceptance.toFixed(1)}%
+					{t('conversionRatesDescription')} {periodLabel} • {t('avgSuccessShort')}: {avgSuccessRate.toFixed(1)}% • {t('avgOfferAcceptanceShort')}: {avgOfferAcceptance.toFixed(1)}%
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				{conversionData.length === 0 ? (
 					<div className="flex items-center justify-center h-[300px] text-muted-foreground">
-						No conversion data available
+						{t('noConversionDataAvailable')}
 					</div>
 				) : (
 					<div className="w-full">

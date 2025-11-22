@@ -1,6 +1,6 @@
 export { default as SuperAdminDashboard } from './SuperAdminDashboard';
-export { default as SalesManagerDashboardOverview } from './SalesManagerDashboardOverview';
+// SalesManagerDashboardOverview replaced by UnifiedSalesManagerDashboard
 export { default as SalesSupportDashboardOverview } from './SalesSupportDashboardOverview';
 export { default as MaintenanceSupportDashboard } from './MaintenanceSupportDashboard';
-export { default as SalesManagerDashboard } from '../sales/SalesManagerDashboard';
+// SalesManagerDashboard replaced by UnifiedSalesManagerDashboard
 export { default as SalesSupportDashboard } from '../sales/SalesSupportDashboard';

@@ -3,6 +3,7 @@ import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalesmanStatisticsDTO } from "@/types/sales.types";
 import { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface VisitsTrendChartProps {
 	data: SalesmanStatisticsDTO[];
@@ -12,6 +13,8 @@ interface VisitsTrendChartProps {
 }
 
 export default function VisitsTrendChart({ data, year, quarter, className }: VisitsTrendChartProps) {
+	const { t, language } = useTranslation();
+
 	const visitsData = useMemo(() => {
 		return data
 			.map((stat) => ({
@@ -24,7 +27,7 @@ export default function VisitsTrendChart({ data, year, quarter, className }: Vis
 			.slice(0, 10);
 	}, [data]);
 
-	const options: ApexOptions = {
+	const options: ApexOptions = useMemo(() => ({
 		colors: ["#3b82f6", "#10b981", "#ef4444"],
 		chart: {
 			fontFamily: "Inter, sans-serif",
@@ -77,7 +80,7 @@ export default function VisitsTrendChart({ data, year, quarter, className }: Vis
 		},
 		yaxis: {
 			title: {
-				text: "Number of Visits",
+				text: t('numberOfVisits'),
 				style: {
 					fontSize: "14px",
 					color: "#374151",
@@ -95,7 +98,7 @@ export default function VisitsTrendChart({ data, year, quarter, className }: Vis
 		},
 		tooltip: {
 			y: {
-				formatter: (val: number) => `${val} visits`,
+				formatter: (val: number) => `${val} ${t('visits')}`,
 			},
 		},
 		legend: {
@@ -115,39 +118,39 @@ export default function VisitsTrendChart({ data, year, quarter, className }: Vis
 				},
 			},
 		},
-	};
+	}), [visitsData, language, t]);
 
-	const series = [
+	const series = useMemo(() => [
 		{
-			name: "Total Visits",
+			name: t('totalVisits'),
 			data: visitsData.map((item) => item.total),
 		},
 		{
-			name: "Successful",
+			name: t('successfulLabel'),
 			data: visitsData.map((item) => item.successful),
 		},
 		{
-			name: "Failed",
+			name: t('failedLabel'),
 			data: visitsData.map((item) => item.failed),
 		},
-	];
+	], [visitsData, language, t]);
 
-	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : "All Time";
+	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : t('allTime');
 	const totalVisits = data.reduce((sum, stat) => sum + stat.totalVisits, 0);
 	const totalSuccessful = data.reduce((sum, stat) => sum + stat.successfulVisits, 0);
 
 	return (
 		<Card className={className}>
 			<CardHeader>
-				<CardTitle>Visits Trend</CardTitle>
+				<CardTitle>{t('visitsTrend')}</CardTitle>
 				<CardDescription>
-					Visit performance by salesman for {periodLabel} • Total: {totalVisits} visits ({totalSuccessful} successful)
+					{t('visitsTrendDescription')} {periodLabel} • {t('total')}: {totalVisits} {t('visits')} ({totalSuccessful} {t('successfulLabel')})
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				{visitsData.length === 0 ? (
 					<div className="flex items-center justify-center h-[300px] text-muted-foreground">
-						No visits data available
+						{t('noVisitsData')}
 					</div>
 				) : (
 					<div className="w-full">

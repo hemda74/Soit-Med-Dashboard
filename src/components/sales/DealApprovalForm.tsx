@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Deal, DealApprovalDto } from '@/types/sales.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Validation schema for deal approval
 const approvalSchema = z.object({
@@ -37,6 +38,7 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
     const [action, setAction] = useState<'approve' | 'reject' | null>(null);
     const { user } = useAuthStore();
     const { approveDeal } = useSalesStore();
+	const { t } = useTranslation();
 
     const form = useForm<ApprovalFormValues>({
         resolver: zodResolver(approvalSchema),
@@ -58,17 +60,16 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
             };
 
             // Use correct endpoint based on user role and deal status
+            // Note: SalesManager approval step has been removed - deals go directly to SuperAdmin
             if (user?.roles.includes('SuperAdmin') && deal.status === 'PendingSuperAdminApproval') {
                 await salesApi.superAdminApproval(deal.id, approvalData);
-            } else if (user?.roles.includes('SalesManager') && deal.status === 'PendingManagerApproval') {
-                await approveDeal(deal.id, approvalData);
-            } else {
-                throw new Error('Invalid approval action');
-            }
+			} else {
+				throw new Error(t('dealApprovalForm.errors.invalidAction') || 'You do not have permission to approve this deal');
+			}
             
             onSuccess?.();
         } catch (error) {
-            console.error('Error approving deal:', error);
+			console.error(t('dealApprovalForm.errors.approveFailed'), error);
             throw error;
         } finally {
             setIsSubmitting(false);
@@ -105,6 +106,12 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
         }
     };
 
+	const getStatusLabel = (status: string) => {
+		const key = `dealApprovalForm.statusLabels.${status}`;
+		const translated = t(key);
+		return translated === key ? status.replace(/([A-Z])/g, ' $1').trim() : translated;
+	};
+
     const canApprove = () => {
         if (!user) return false;
 
@@ -113,10 +120,8 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
             return deal.status === 'PendingSuperAdminApproval';
         }
 
-        // SalesManager can approve deals pending manager approval
-        if (user.roles.includes('SalesManager')) {
-            return deal.status === 'PendingManagerApproval';
-        }
+        // Note: SalesManager approval step has been removed - deals go directly to SuperAdmin
+        // SalesManager can no longer approve deals
 
         return false;
     };
@@ -125,9 +130,9 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
         return (
             <Card className="w-full max-w-2xl mx-auto">
                 <CardContent className="pt-6">
-                    <div className="text-center text-muted-foreground">
-                        <AlertCircle className="h-12 w-12 mx-auto mb-4" />
-                        <p>You don't have permission to approve this deal.</p>
+					<div className="text-center text-muted-foreground">
+						<AlertCircle className="h-12 w-12 mx-auto mb-4" />
+						<p>{t('dealApprovalForm.noPermission')}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -136,50 +141,50 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
 
     return (
         <Card className="w-full max-w-2xl mx-auto">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    Deal Approval
-                    <Badge className={getStatusColor(deal.status)}>
-                        {getStatusIcon(deal.status)}
-                        <span className="ml-1">{deal.status.replace(/([A-Z])/g, ' $1').trim()}</span>
-                    </Badge>
-                </CardTitle>
-            </CardHeader>
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2">
+					{t('dealApprovalForm.title')}
+					<Badge className={getStatusColor(deal.status)}>
+						{getStatusIcon(deal.status)}
+						<span className="ml-1">{getStatusLabel(deal.status)}</span>
+					</Badge>
+				</CardTitle>
+			</CardHeader>
             <CardContent className="space-y-6">
                 {/* Deal Information */}
                 <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">Client</label>
-                            <p className="text-sm">{deal.clientName}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">Deal Value</label>
-                            <p className="text-sm font-semibold">EGP {deal.dealValue.toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium text-muted-foreground">Description</label>
-                        <p className="text-sm">{deal.dealDescription}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">Expected Close Date</label>
-                            <p className="text-sm">
-                                {deal.expectedCloseDate && !isNaN(new Date(deal.expectedCloseDate).getTime())
-                                    ? format(new Date(deal.expectedCloseDate), 'PPP')
-                                    : 'Not specified'}
-                            </p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">Created</label>
-                            <p className="text-sm">
-                                {deal.createdAt && !isNaN(new Date(deal.createdAt).getTime())
-                                    ? format(new Date(deal.createdAt), 'PPP')
-                                    : 'N/A'}
-                            </p>
-                        </div>
-                    </div>
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<label className="text-sm font-medium text-muted-foreground">{t('dealApprovalForm.info.client')}</label>
+							<p className="text-sm">{deal.clientName}</p>
+						</div>
+						<div>
+							<label className="text-sm font-medium text-muted-foreground">{t('dealApprovalForm.info.dealValue')}</label>
+							<p className="text-sm font-semibold">EGP {deal.dealValue.toLocaleString()}</p>
+						</div>
+					</div>
+					<div>
+						<label className="text-sm font-medium text-muted-foreground">{t('dealApprovalForm.info.description')}</label>
+						<p className="text-sm">{deal.dealDescription}</p>
+					</div>
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<label className="text-sm font-medium text-muted-foreground">{t('dealApprovalForm.info.expectedCloseDate')}</label>
+							<p className="text-sm">
+								{deal.expectedCloseDate && !isNaN(new Date(deal.expectedCloseDate).getTime())
+									? format(new Date(deal.expectedCloseDate), 'PPP')
+									: t('dealApprovalForm.info.notSpecified')}
+							</p>
+						</div>
+						<div>
+							<label className="text-sm font-medium text-muted-foreground">{t('dealApprovalForm.info.created')}</label>
+							<p className="text-sm">
+								{deal.createdAt && !isNaN(new Date(deal.createdAt).getTime())
+									? format(new Date(deal.createdAt), 'PPP')
+									: t('dealApprovalForm.info.notAvailable')}
+							</p>
+						</div>
+					</div>
                 </div>
 
                 <Separator />
@@ -192,10 +197,10 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                             name="notes"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Notes (Optional)</FormLabel>
+									<FormLabel>{t('dealApprovalForm.form.notesLabel')}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Add any notes or comments..."
+											placeholder={t('dealApprovalForm.form.notesPlaceholder')}
                                             className="min-h-[120px]"
                                             {...field}
                                         />
@@ -218,10 +223,10 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                                             />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel>Require SuperAdmin approval</FormLabel>
-                                            <p className="text-sm text-muted-foreground">
-                                                Check this if the deal requires additional SuperAdmin approval
-                                            </p>
+											<FormLabel>{t('dealApprovalForm.form.superAdminLabel')}</FormLabel>
+											<p className="text-sm text-muted-foreground">
+												{t('dealApprovalForm.form.superAdminDescription')}
+											</p>
                                         </div>
                                     </FormItem>
                                 )}
@@ -232,7 +237,7 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                         <div className="flex justify-end space-x-2">
                             {onCancel && (
                                 <Button type="button" variant="outline" onClick={onCancel}>
-                                    Cancel
+									{t('cancel')}
                                 </Button>
                             )}
                             <Button
@@ -241,18 +246,20 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                                 onClick={() => setAction('reject')}
                                 disabled={isSubmitting || action === 'approve'}
                                 className={action === 'reject' ? 'bg-red-600 hover:bg-red-700' : ''}
-                            >
+							>
                                 <XCircle className="h-4 w-4 mr-2" />
-                                Reject Deal
+								{t('dealApprovalForm.actions.reject')}
                             </Button>
                             <Button
                                 type="submit"
                                 onClick={() => setAction('approve')}
                                 disabled={isSubmitting || action === 'reject'}
                                 className={action === 'approve' ? 'bg-green-600 hover:bg-green-700' : ''}
-                            >
+							>
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                {isSubmitting ? 'Processing...' : 'Approve Deal'}
+								{isSubmitting
+									? t('dealApprovalForm.actions.processing')
+									: t('dealApprovalForm.actions.approve')}
                             </Button>
                         </div>
                     </form>

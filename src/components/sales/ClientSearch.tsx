@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSalesStore } from '@/stores/salesStore';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const CLASSIFICATIONS = ['A', 'B', 'C', 'D'] as const;
 type Classification = typeof CLASSIFICATIONS[number] | '';
@@ -15,11 +16,13 @@ interface ClientSearchProps {
 
 const ClientSearch: React.FC<ClientSearchProps> = ({
     onClientSelect,
-    placeholder = 'Search clients...',
+    placeholder,
     className = '',
     showClassificationFilter = true,
 }) => {
     const { searchClients, clientSearchResults, clientsLoading, clientsError } = useSalesStore();
+    const { t } = useTranslation();
+    const searchPlaceholder = placeholder ?? t('clientSearch.searchPlaceholder');
     const [query, setQuery] = useState('');
     const [classification, setClassification] = useState<Classification>('');
     const [showResults, setShowResults] = useState(false);
@@ -67,20 +70,20 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
-                    placeholder={placeholder}
+                    placeholder={searchPlaceholder}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
             </div>
             {showClassificationFilter && (
                 <Select value={classification} onValueChange={(value) => setClassification(value as Classification)}>
                     <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Filter by Classification (optional)" />
+                        <SelectValue placeholder={t('clientSearch.filterPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">All Classifications</SelectItem>
+                        <SelectItem value="">{t('clientSearch.allClassifications')}</SelectItem>
                         {CLASSIFICATIONS.map((cls) => (
                             <SelectItem key={cls} value={cls}>
-                                Classification {cls}
+                                {t('clientSearch.classificationOption').replace('{{value}}', cls)}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -93,7 +96,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
                         <div className="p-4 text-center text-gray-500">
                             <div className="flex items-center justify-center">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                                Searching...
+                                {t('clientSearch.searching')}
                             </div>
                         </div>
                     ) : clientsError ? (
@@ -117,7 +120,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
                                 )}
                                 {client.classification && (
                                     <div className="text-sm text-gray-500">
-                                        Classification: {client.classification}
+                                        {t('clientSearch.classificationLabel').replace('{{value}}', client.classification)}
                                     </div>
                                 )}
                                 {client.phone && (
@@ -129,7 +132,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
                         ))
                     ) : (
                         <div className="p-4 text-center text-gray-500">
-                            No clients found
+                            {t('clientSearch.noResults')}
                         </div>
                     )}
                 </div>

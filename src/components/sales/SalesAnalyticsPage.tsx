@@ -184,7 +184,7 @@ export default function SalesAnalyticsPage() {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
 							<BarChart3 className="w-6 h-6 text-primary" />
-							<CardTitle className="text-2xl font-bold">Sales Statistics</CardTitle>
+							<CardTitle className="text-2xl font-bold">{t('salesStatistics')}</CardTitle>
 						</div>
 						<div className="flex items-center gap-3">
 							<Select
@@ -192,7 +192,7 @@ export default function SalesAnalyticsPage() {
 								onValueChange={(value) => setSelectedYear(parseInt(value))}
 							>
 								<SelectTrigger className="w-[120px]">
-									<SelectValue placeholder="Year" />
+									<SelectValue placeholder={t('year')} />
 								</SelectTrigger>
 								<SelectContent>
 									{Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
@@ -209,10 +209,10 @@ export default function SalesAnalyticsPage() {
 								}
 							>
 								<SelectTrigger className="w-[120px]">
-									<SelectValue placeholder="Quarter" />
+									<SelectValue placeholder={t('quarter')} />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="all">All Quarters</SelectItem>
+									<SelectItem value="all">{t('allQuarters')}</SelectItem>
 									<SelectItem value="1">Q1</SelectItem>
 									<SelectItem value="2">Q2</SelectItem>
 									<SelectItem value="3">Q3</SelectItem>
@@ -227,7 +227,7 @@ export default function SalesAnalyticsPage() {
 			{/* Aggregate Statistics Cards */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 				<StatCard
-					title="Total Visits"
+					title={t('totalVisits')}
 					value={aggregateStats.totalVisits}
 					icon={Users}
 					borderColor="border-l-blue-500"
@@ -235,18 +235,18 @@ export default function SalesAnalyticsPage() {
 					iconColor="text-blue-600 dark:text-blue-400"
 				/>
 				<StatCard
-					title="Total Offers"
+					title={t('totalOffers')}
 					value={aggregateStats.totalOffers}
-					subtitle={`${aggregateStats.averageOfferAcceptanceRate.toFixed(1)}% avg acceptance`}
+					subtitle={`${aggregateStats.averageOfferAcceptanceRate.toFixed(1)}% ${t('avgAcceptanceShort')}`}
 					icon={Target}
 					borderColor="border-l-green-500"
 					iconBgColor="bg-green-100 dark:bg-green-900/20"
 					iconColor="text-green-600 dark:text-green-400"
 				/>
 				<StatCard
-					title="Total Deals"
+					title={t('totalDeals')}
 					value={aggregateStats.totalDeals}
-					subtitle={`${aggregateStats.averageSuccessRate.toFixed(1)}% avg success`}
+					subtitle={`${aggregateStats.averageSuccessRate.toFixed(1)}% ${t('avgSuccessShort')}`}
 					icon={CheckCircle}
 					borderColor="border-l-purple-500"
 					iconBgColor="bg-purple-100 dark:bg-purple-900/20"
@@ -256,7 +256,7 @@ export default function SalesAnalyticsPage() {
 					<CardContent className="p-6">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+								<p className="text-sm font-medium text-muted-foreground">{t('totalRevenue')}</p>
 								<p className="text-3xl font-bold text-foreground mt-2">
 									EGP {aggregateStats.totalRevenue.toLocaleString()}
 								</p>
@@ -272,14 +272,14 @@ export default function SalesAnalyticsPage() {
 			{/* Performance Charts */}
 			<div className="grid gap-4 md:grid-cols-2">
 				<PerformanceChart
-					title="Average Success Rate"
+					title={t('averageSuccessRate')}
 					value={aggregateStats.averageSuccessRate}
 					percentage={0}
 					isGood={aggregateStats.averageSuccessRate >= 70}
 					icon={<TrendingUp className="w-5 h-5 text-primary" />}
 				/>
 				<PerformanceChart
-					title="Average Offer Acceptance Rate"
+					title={t('averageOfferAcceptanceRate')}
 					value={aggregateStats.averageOfferAcceptanceRate}
 					percentage={0}
 					isGood={aggregateStats.averageOfferAcceptanceRate >= 50}
@@ -296,16 +296,16 @@ export default function SalesAnalyticsPage() {
 			{/* Team Performance */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Team Performance</CardTitle>
+					<CardTitle>{t('teamPerformance')}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{loading ? (
-						<LoadingState message="Loading statistics..." />
+						<LoadingState message={t('loadingStatistics')} />
 					) : statistics.length === 0 ? (
 						<EmptyState
 							icon={BarChart3}
-							title="No statistics available for this period"
-							description="Try selecting a different year or quarter"
+							title={t('noStatisticsForPeriod')}
+							description={t('tryDifferentYearQuarter')}
 						/>
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -341,7 +341,7 @@ export default function SalesAnalyticsPage() {
 				{/* Overview Tab */}
 				<TabsContent value="overview" className="space-y-6 mt-0">
 					{loading ? (
-						<LoadingState message={t('loadingAnalytics') || 'Loading analytics...'} />
+						<LoadingState message={t('loadingAnalyticsData')} />
 					) : statistics.length > 0 ? (
 						<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 							<VisitsTrendChart {...chartProps} />
@@ -350,8 +350,8 @@ export default function SalesAnalyticsPage() {
 					) : (
 						<EmptyState
 							icon={BarChart3}
-							title={t('noAnalyticsDataAvailable') || 'No analytics data available for this period'}
-							description={t('trySelectingDifferentPeriod') || 'Try selecting a different year or quarter'}
+							title={t('noAnalyticsDataAvailable')}
+							description={t('tryDifferentYearQuarter')}
 						/>
 					)}
 				</TabsContent>
@@ -359,7 +359,7 @@ export default function SalesAnalyticsPage() {
 				{/* Performance Tab */}
 				<TabsContent value="performance" className="space-y-6 mt-0">
 					{loading ? (
-						<LoadingState message={t('loadingAnalytics') || 'Loading analytics...'} />
+						<LoadingState message={t('loadingAnalyticsData')} />
 					) : statistics.length > 0 ? (
 						<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 							<DealStatusChart {...chartProps} />
@@ -368,7 +368,7 @@ export default function SalesAnalyticsPage() {
 					) : (
 						<EmptyState
 							icon={TrendingUp}
-							title={t('noPerformanceDataAvailable') || 'No performance data available'}
+							title={t('noPerformanceDataAvailable')}
 						/>
 					)}
 				</TabsContent>
@@ -376,7 +376,7 @@ export default function SalesAnalyticsPage() {
 				{/* Trends Tab */}
 				<TabsContent value="trends" className="space-y-6 mt-0">
 					{loading ? (
-						<LoadingState message={t('loadingAnalytics') || 'Loading analytics...'} />
+						<LoadingState message={t('loadingAnalyticsData')} />
 					) : statistics.length > 0 ? (
 						<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 							<VisitsTrendChart {...chartProps} />
@@ -385,7 +385,7 @@ export default function SalesAnalyticsPage() {
 					) : (
 						<EmptyState
 							icon={Activity}
-							title={t('noTrendsDataAvailable') || 'No trends data available'}
+							title={t('noTrendsDataAvailable')}
 						/>
 					)}
 				</TabsContent>
@@ -393,7 +393,7 @@ export default function SalesAnalyticsPage() {
 				{/* Conversion Tab */}
 				<TabsContent value="conversion" className="space-y-6 mt-0">
 					{loading ? (
-						<LoadingState message={t('loadingAnalytics') || 'Loading analytics...'} />
+						<LoadingState message={t('loadingAnalyticsData')} />
 					) : statistics.length > 0 ? (
 						<div className="grid grid-cols-1 gap-6">
 							<ConversionRateChart {...chartProps} />
@@ -401,7 +401,7 @@ export default function SalesAnalyticsPage() {
 					) : (
 						<EmptyState
 							icon={Target}
-							title={t('noConversionDataAvailable') || 'No conversion data available'}
+							title={t('noConversionDataAvailable')}
 						/>
 					)}
 				</TabsContent>
@@ -413,7 +413,7 @@ export default function SalesAnalyticsPage() {
 					{selectedSalesman && (
 						<>
 							<DialogHeader>
-								<DialogTitle>{selectedSalesman.salesmanName} - Detailed Statistics</DialogTitle>
+								<DialogTitle>{selectedSalesman.salesmanName} - {t('detailedStatistics')}</DialogTitle>
 							</DialogHeader>
 							<div className="space-y-4">
 								<div className="grid gap-4 md:grid-cols-2">
