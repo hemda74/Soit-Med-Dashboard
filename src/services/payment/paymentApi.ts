@@ -13,9 +13,7 @@ import type {
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
 import { performanceMonitor } from '@/utils/performance';
-
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 class PaymentApiService {
 	private async makeRequest<T>(
@@ -31,7 +29,7 @@ class PaymentApiService {
 			}
 
 			const response = await fetch(
-				`${API_BASE_URL}${endpoint}`,
+				`${getApiBaseUrl()}${endpoint}`,
 				{
 					...options,
 					headers: {

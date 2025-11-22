@@ -19,9 +19,7 @@ import type {
 } from '@/types/weeklyPlan.types';
 import { getAuthToken } from '@/utils/authUtils';
 import { API_ENDPOINTS } from '../shared/endpoints';
-
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 class WeeklyPlanApiService {
 	private async makeRequest<T>(
@@ -35,7 +33,7 @@ class WeeklyPlanApiService {
 			);
 		}
 
-		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+		const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
 			...options,
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -190,16 +188,6 @@ class WeeklyPlanApiService {
 				'hasManagerReview',
 				filters.hasManagerReview.toString()
 			);
-		if (filters.minRating)
-			queryParams.append(
-				'minRating',
-				filters.minRating.toString()
-			);
-		if (filters.maxRating)
-			queryParams.append(
-				'maxRating',
-				filters.maxRating.toString()
-			);
 
 		const queryString = queryParams.toString();
 		const endpoint = queryString
@@ -208,7 +196,7 @@ class WeeklyPlanApiService {
 
 		console.log(
 			'Fetching weekly plans with filters:',
-			`${API_BASE_URL}${endpoint}`
+			`${getApiBaseUrl()}${endpoint}`
 		);
 
 		return this.makeRequest<

@@ -185,6 +185,7 @@ export const API_ENDPOINTS = {
 		DEALS: {
 			BASE: '/api/Deal',
 			BY_ID: (id: string) => `/api/Deal/${id}`,
+			BY_CLIENT: (clientId: string) => `/api/Deal/by-client/${clientId}`,
 			MANAGER_APPROVAL: (id: string) =>
 				`/api/Deal/${id}/manager-approval`,
 			SUPERADMIN_APPROVAL: (id: string) =>
@@ -230,6 +231,9 @@ export const API_ENDPOINTS = {
 				`/api/Offer/${id}/installments`,
 			SEND_TO_SALESMAN: (id: number | string) =>
 				`/api/Offer/${id}/send-to-salesman`,
+			SALESMANAGER_APPROVAL: (id: number | string) =>
+				`/api/Offer/${id}/salesmanager-approval`,
+			PENDING_SALESMANAGER_APPROVALS: '/api/Offer/pending-salesmanager-approvals',
 		},
 		// Offer Requests (NEW)
 		OFFER_REQUESTS: {

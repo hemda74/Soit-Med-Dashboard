@@ -1,5 +1,4 @@
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 import type {
 	DeleteUserResponse,
 	DeleteUserParams,
@@ -10,7 +9,9 @@ import type {
  * Handles user deletion with proper error handling and type safety
  */
 class UserDeleteApiService {
-	private baseUrl = API_BASE_URL;
+	private get baseUrl() {
+		return getApiBaseUrl();
+	}
 
 	/**
 	 * Delete a user by their ID
