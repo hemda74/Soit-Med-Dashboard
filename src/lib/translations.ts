@@ -19,6 +19,11 @@ export const translations = {
 		// Dashboard
 		dashboard: 'Dashboard',
 		welcomeBackUser: 'Welcome back',
+		dashboardWelcomeTitle: 'Welcome to Soit-Med Dashboard',
+		dashboardNoPermissionMessage:
+			"You don't have permission to view analytics and statistics.",
+		dashboardContactAdmin:
+			'Please contact your administrator if you need access to this information.',
 		profile: 'Profile',
 		profileDescription: 'Your account information',
 		name: 'Name',
@@ -74,6 +79,50 @@ export const translations = {
 		results: 'results',
 		to: 'to',
 		of: 'of',
+
+		// Super Admin Dashboard
+		superAdminDashboard: 'Super Admin Dashboard',
+		superAdminDashboardDescription:
+			'Quickly jump into every mission-critical module across the platform.',
+		userAnalyticsDescription: 'View detailed user management.',
+		goToUsersAnalytics: 'Open Users Analytics',
+		salesAnalyticsDescription:
+			'View comprehensive sales statistics, performance metrics, and detailed analytics.',
+		goToSalesAnalytics: 'Open Sales Analytics',
+		dealApprovalsDescription:
+			'Review, approve, or reject high-priority deals awaiting your decision.',
+		reviewDeals: 'Review Deals',
+		awaitingApproval: 'Awaiting approval',
+		productsCatalogDescription:
+			'Audit product availability, pricing, and sales support materials.',
+		openCatalog: 'Open Catalog',
+		openDashboard: 'Open Dashboard',
+		viewMaintenance: 'Open Maintenance',
+		viewInventory: 'View Inventory',
+		accountingDashboardDescription:
+			'Inspect financial performance, invoicing, and payment follow-ups.',
+
+		// Monthly Activity Chart
+		monthlyActivityOverview: 'Monthly Activity Overview',
+		monthlyActivityDescription:
+			'User activities and system usage patterns',
+		numberOfActivities: 'Number of Activities',
+		activitiesLabel: 'activities',
+		loginsLabel: 'Logins',
+		reportsCreatedLabel: 'Reports Created',
+		dataExportsLabel: 'Data Exports',
+		janShort: 'Jan',
+		febShort: 'Feb',
+		marShort: 'Mar',
+		aprShort: 'Apr',
+		mayShort: 'May',
+		junShort: 'Jun',
+		julShort: 'Jul',
+		augShort: 'Aug',
+		sepShort: 'Sep',
+		octShort: 'Oct',
+		novShort: 'Nov',
+		decShort: 'Dec',
 
 		// Sidebar
 		menu: 'Menu',
@@ -472,9 +521,54 @@ export const translations = {
 		myVisits: 'My Visits',
 		myPerformance: 'My Performance',
 		salesAnalytics: 'Sales Analytics',
+		salesStatistics: 'Sales Statistics',
+		allQuarters: 'All Quarters',
+		avgAcceptanceShort: 'avg acceptance',
+		avgSuccessShort: 'Avg Success',
+		avgOfferAcceptanceShort: 'Avg Offer Acceptance',
+		averageSuccessRate: 'Average Success Rate',
+		averageOfferAcceptanceRate: 'Average Offer Acceptance Rate',
+		noStatisticsForPeriod:
+			'No statistics available for this period',
+		tryDifferentYearQuarter:
+			'Try selecting a different year or quarter',
+		noAnalyticsDataAvailable:
+			'No analytics data available for this period',
+		noPerformanceDataAvailable: 'No performance data available',
+		noTrendsDataAvailable: 'No trends data available',
+		noConversionDataAvailable: 'No conversion data available',
+		visitsTrend: 'Visits Trend',
+		visitsTrendDescription: 'Visit performance by salesman for',
+		offersTrend: 'Offers Trend',
+		offersTrendDescription: 'Offer performance by salesman for',
+		conversionRates: 'Conversion Rates',
+		conversionRatesDescription:
+			'Conversion metrics by salesman for',
+		dealStatusDistribution: 'Deal Status Distribution',
+		dealStatusDescription: 'Deal status breakdown for',
+		noVisitsData: 'No visits data available',
+		noOffersData: 'No offers data available',
+		noDealStatusData: 'No deal status data available',
+		numberOfVisits: 'Number of Visits',
+		numberOfOffers: 'Number of Offers',
+		ratePercentage: 'Rate (%)',
+		successfulLabel: 'Successful',
+		failedLabel: 'Failed',
+		allTime: 'All Time',
+		dealConversionRate: 'Deal Conversion Rate',
+		offerAcceptanceRate: 'Offer Acceptance Rate',
+		revenueTrend: 'Revenue Trend',
+		revenueTrendDescription: 'Revenue performance by salesman for',
+		revenueAxisLabel: 'Revenue (EGP)',
+		noRevenueData: 'No revenue data available',
+		totalDealsBySalesman: 'Total Deals by Salesman',
+		topPerformersFor: 'Top performers for',
+		noDealsDataAvailable: 'No deals data available',
+		numberOfDeals: 'Number of Deals',
+		detailedStatistics: 'Detailed Statistics',
 		clientManagement: 'Client Management',
 		visitManagement: 'Visit Management',
-		clientSearch: 'Client Search',
+		clientSearchTitle: 'Client Search',
 		searchClients: 'Search clients...',
 		addClient: 'Add Client',
 		createClient: 'Create Client',
@@ -497,7 +591,7 @@ export const translations = {
 			'User ID to assign this client to (leave empty to assign to yourself)',
 		allClassifications: 'All Classifications',
 		filterByClassification: 'Filter by Classification (optional)',
-		clientDetails: 'Client Details',
+		clientDetailsTitle: 'Client Details',
 		businessInformation: 'Business Information',
 		notes: 'Notes',
 		visits: 'Visits',
@@ -1086,6 +1180,292 @@ export const translations = {
 				statusUpdateFailed: 'Failed to update status',
 			},
 		},
+		dealForm: {
+			editTitle: 'Edit Deal',
+			createTitle: 'Create New Deal',
+			clientLabel: 'Client *',
+			clientPlaceholder: 'Select a client',
+			dealValueLabel: 'Deal Value (EGP) *',
+			dealValuePlaceholder: 'Enter deal value',
+			descriptionLabel: 'Description *',
+			descriptionPlaceholder: 'Describe the deal details...',
+			expectedCloseDateLabel: 'Expected Close Date *',
+			datePlaceholder: 'Pick a date',
+			updateButton: 'Update Deal',
+			createButton: 'Create Deal',
+			validation: {
+				clientRequired: 'Client is required',
+				dealValueRequired: 'Deal value is required',
+				dealValueInvalid:
+					'Please enter a valid deal value',
+				dealValueMin:
+					'Deal value must be greater than 0',
+				descriptionMin:
+					'Description must be at least 10 characters',
+				descriptionMax:
+					'Description must be less than 500 characters',
+				expectedCloseDateRequired:
+					'Expected close date is required',
+			},
+			errors: {
+				saveDeal: 'Error saving deal',
+			},
+		},
+		clientSearch: {
+			searchPlaceholder: 'Search clients...',
+			filterPlaceholder:
+				'Filter by classification (optional)',
+			allClassifications: 'All Classifications',
+			classificationOption: 'Classification {{value}}',
+			searching: 'Searching...',
+			noResults: 'No clients found',
+			classificationLabel: 'Classification: {{value}}',
+		},
+		salesClients: {
+			title: 'Sales Clients',
+			description: 'View and manage all sales clients',
+			filters: 'Filters',
+			searchPlaceholder: 'Search by name or organization...',
+			allClassifications: 'All Classifications',
+			allSalesmen: 'All Salesmen',
+			clientsList: 'Clients List',
+			total: 'total',
+			loading: 'Loading clients...',
+			error: 'Error loading clients',
+			retry: 'Retry',
+			noClients: 'No clients found',
+			name: 'Name',
+			organization: 'Organization',
+			phone: 'Phone',
+			classification: 'Classification',
+			assignedTo: 'Assigned To',
+			createdAt: 'Created At',
+			notAssigned: 'Not assigned',
+			noClassification: 'No classification',
+			clickToView: 'Click to view details',
+		},
+		clientDetails: {
+			loading: 'Loading client details...',
+			errorMessage: 'Error loading client details: {{error}}',
+			errorUnknown: 'Unknown error',
+			notAssigned: 'Not assigned',
+			notSpecified: 'Not specified',
+			stats: {
+				title: 'Client Statistics',
+				totalVisits: 'Total Visits',
+				totalOffers: 'Total Offers',
+				successfulDeals: 'Successful Deals',
+				totalRevenue: 'Total Revenue',
+			},
+			tabs: {
+				overview: 'Overview',
+				visits: 'Visits',
+				deals: 'Deals',
+				offers: 'Offers',
+				progress: 'Progress',
+			},
+			overview: {
+				title: 'Client Information',
+			},
+			performance: {
+				title: 'Performance Metrics',
+				averageSatisfaction: 'Average Satisfaction',
+				noRatings: 'No ratings yet',
+				conversionRate: 'Conversion Rate',
+				notCalculated: 'Not calculated',
+				lastInteraction: 'Last Interaction',
+				noInteractions: 'No interactions',
+			},
+			visits: {
+				title: 'Client Visits',
+				addProgress: 'Add Progress',
+				loading: 'Loading visits...',
+				empty: 'No visits recorded yet',
+				resultPrefix: 'Result:',
+			},
+			deals: {
+				title: 'Deals',
+				createButton: 'Create Deal',
+				loading: 'Loading deals...',
+				empty: 'No deals created yet',
+				expectedClose: 'Expected close: {{date}}',
+			},
+			offers: {
+				title: 'Offer Requests',
+				createButton: 'Create Request',
+				loading: 'Loading offers...',
+				empty: 'No offer requests yet',
+				requestedBy: 'Requested by: {{name}}',
+				assignedTo: 'Assigned to: {{name}}',
+			},
+			progress: {
+				title: 'Task Progress',
+				addButton: 'Add Progress',
+				loading: 'Loading progress...',
+				empty: 'No progress recorded yet',
+				resultPrefix: 'Result:',
+				nextPrefix: 'Next:',
+				satisfactionPrefix: 'Satisfaction: {{value}}/5',
+			},
+		},
+		taskProgressForm: {
+			title: 'Create Task Progress',
+			submitButton: 'Create Progress',
+			fields: {
+				client: 'Client *',
+				task: 'Task *',
+				progressType: 'Progress Type *',
+				description: 'Description *',
+				progressDate: 'Progress Date *',
+				visitResult: 'Visit Result',
+				nextStep: 'Next Step',
+				satisfactionRating: 'Satisfaction Rating (1-5)',
+				followUpDate: 'Follow-up Date',
+				requestedProducts: 'Requested Products *',
+			},
+			placeholders: {
+				client: 'Select a client',
+				task: 'Select a task',
+				progressType: 'Select progress type',
+				description:
+					'Describe what happened during this progress...',
+				date: 'Pick a date',
+				visitResult: 'Select visit result',
+				nextStep: 'Select next step',
+				satisfactionRating: 'Rate client satisfaction',
+				followUpDate: 'Pick a follow-up date',
+				requestedProducts:
+					'Describe the products the client is interested in...',
+			},
+			progressTypes: {
+				visit: 'Visit',
+				call: 'Call',
+				email: 'Email',
+				meeting: 'Meeting',
+			},
+			visitResults: {
+				interested: 'Interested',
+				notInterested: 'Not Interested',
+			},
+			nextSteps: {
+				needsOffer: 'Needs Offer',
+				needsDeal: 'Needs Deal',
+			},
+			priority: {
+				label: 'Priority',
+				placeholder: 'Select priority',
+				low: 'Low',
+				medium: 'Medium',
+				high: 'High',
+			},
+			createOfferRequest: {
+				label: 'Create Offer Request',
+				description:
+					'Automatically create an offer request for this client',
+			},
+			validation: {
+				clientRequired: 'Client is required',
+				taskRequired: 'Task is required',
+				progressTypeRequired:
+					'Progress type is required',
+				descriptionMin:
+					'Description must be at least 5 characters',
+				descriptionMax:
+					'Description must be less than 200 characters',
+				progressDateRequired:
+					'Progress date is required',
+				satisfactionInvalid:
+					'Please enter a value between 1 and 5',
+			},
+			errors: {
+				createFailed: 'Error creating task progress',
+			},
+			mockTasks: {
+				initialVisitTitle: 'Initial Client Visit',
+				initialVisitDescription:
+					'First visit to establish relationship',
+				productPresentationTitle:
+					'Product Presentation',
+				productPresentationDescription:
+					'Present product catalog and capabilities',
+				followUpCallTitle: 'Follow-up Call',
+				followUpCallDescription:
+					'Follow up on previous meeting',
+				proposalDiscussionTitle: 'Proposal Discussion',
+				proposalDiscussionDescription:
+					'Discuss proposal details and pricing',
+				contractNegotiationTitle:
+					'Contract Negotiation',
+				contractNegotiationDescription:
+					'Negotiate terms and conditions',
+			},
+		},
+		dealApprovalForm: {
+			title: 'Deal Approval',
+			noPermission:
+				"You don't have permission to approve this deal.",
+			info: {
+				client: 'Client',
+				dealValue: 'Deal Value',
+				description: 'Description',
+				expectedCloseDate: 'Expected Close Date',
+				created: 'Created',
+				notSpecified: 'Not specified',
+				notAvailable: 'N/A',
+			},
+			form: {
+				notesLabel: 'Notes (Optional)',
+				notesPlaceholder:
+					'Add any notes or comments...',
+				superAdminLabel: 'Require SuperAdmin approval',
+				superAdminDescription:
+					'Check this if the deal requires additional SuperAdmin approval',
+			},
+			actions: {
+				reject: 'Reject Deal',
+				approve: 'Approve Deal',
+				processing: 'Processing...',
+			},
+			statusLabels: {
+				PendingManagerApproval:
+					'Pending Manager Approval',
+				PendingSuperAdminApproval:
+					'Pending SuperAdmin Approval',
+				Approved: 'Approved',
+				Rejected: 'Rejected',
+			},
+			errors: {
+				invalidAction: 'Invalid approval action',
+				approveFailed: 'Error approving deal',
+			},
+		},
+		offerCreationPage: {
+			errors: {
+				loadProducts: 'Failed to load products',
+				searchFailed: 'Search failed',
+				productExists: 'Product already added',
+				loadRequestDetails:
+					'Failed to load request details',
+				salesmenAccessDenied:
+					'Access denied: You do not have permission to view salesmen',
+				salesmenUnauthorized:
+					'Unauthorized: Please log in again',
+				salesmenLoadFailedPrefix:
+					'Failed to load salesmen:',
+				selectClientAndSalesman:
+					'Please select client and salesman',
+				missingProducts:
+					'Please add at least one product (from catalog or text description)',
+				invalidTotal:
+					'Total amount must be greater than 0',
+				createOfferFailed: 'Failed to create offer',
+			},
+			success: {
+				productAdded: 'Product added from catalog',
+				offerCreated:
+					'Offer created successfully! You can now send it to the salesman or export as PDF.',
+			},
+		},
 		common: {
 			refresh: 'Refresh',
 			retry: 'Retry',
@@ -1115,6 +1495,11 @@ export const translations = {
 		// Dashboard
 		dashboard: 'لوحة التحكم',
 		welcomeBackUser: 'مرحباً بعودتك',
+		dashboardWelcomeTitle: 'مرحبًا بك في لوحة تحكم سويت-مد',
+		dashboardNoPermissionMessage:
+			'لا تملك صلاحية عرض التحليلات والإحصائيات.',
+		dashboardContactAdmin:
+			'يرجى التواصل مع المسؤول إذا كنت بحاجة إلى هذا الوصول.',
 		profile: 'الملف الشخصي',
 		profileDescription: 'معلومات حسابك',
 		name: 'الاسم',
@@ -1171,6 +1556,50 @@ export const translations = {
 		results: 'نتيجة',
 		to: 'إلى',
 		of: 'من',
+
+		// Super Admin Dashboard
+		superAdminDashboard: 'لوحة المدير الأعلى',
+		superAdminDashboardDescription:
+			'انتقل بسرعة إلى كل الوحدات المهمة عبر المنصة.',
+		userAnalyticsDescription: ' إدارة المستخدمين.',
+		goToUsersAnalytics: 'افتح تحليلات المستخدمين',
+		salesAnalyticsDescription:
+			'اعرض إحصاءات المبيعات الشاملة، مؤشرات الأداء، والتحليلات التفصيلية.',
+		goToSalesAnalytics: 'افتح تحليلات المبيعات',
+		dealApprovalsDescription:
+			'راجع ووافق أو ارفض الصفقات ذات الأولوية العالية التي تنتظر قرارك.',
+		reviewDeals: 'مراجعة الصفقات',
+		awaitingApproval: 'في انتظار الموافقة',
+		productsCatalogDescription:
+			'راجع توفر المنتجات، التسعير، ومواد دعم المبيعات.',
+		openCatalog: 'افتح الكتالوج',
+		openDashboard: 'افتح لوحة التحكم',
+		viewMaintenance: 'افتح الصيانة',
+		viewInventory: 'عرض المخزون',
+		accountingDashboardDescription:
+			'تفقد الأداء المالي، الفوترة، ومتابعة المدفوعات.',
+
+		// Monthly Activity Chart
+		monthlyActivityOverview: 'نظرة على النشاط الشهري',
+		monthlyActivityDescription:
+			'أنشطة المستخدمين وأنماط استخدام النظام',
+		numberOfActivities: 'عدد الأنشطة',
+		activitiesLabel: 'نشاط',
+		loginsLabel: 'عمليات تسجيل الدخول',
+		reportsCreatedLabel: 'التقارير المنشأة',
+		dataExportsLabel: 'عمليات تصدير البيانات',
+		janShort: 'يناير',
+		febShort: 'فبراير',
+		marShort: 'مارس',
+		aprShort: 'أبريل',
+		mayShort: 'مايو',
+		junShort: 'يونيو',
+		julShort: 'يوليو',
+		augShort: 'أغسطس',
+		sepShort: 'سبتمبر',
+		octShort: 'أكتوبر',
+		novShort: 'نوفمبر',
+		decShort: 'ديسمبر',
 
 		// Sidebar
 		menu: 'القائمة',
@@ -1625,9 +2054,53 @@ export const translations = {
 		myVisits: 'زياراتي',
 		myPerformance: 'أدائي',
 		salesAnalytics: 'تحليلات المبيعات',
+		salesStatistics: 'إحصائيات المبيعات',
+		allQuarters: 'كل الأرباع',
+		avgAcceptanceShort: 'متوسط القبول',
+		avgSuccessShort: 'متوسط النجاح',
+		avgOfferAcceptanceShort: 'متوسط قبول العروض',
+		averageSuccessRate: 'متوسط معدل النجاح',
+		averageOfferAcceptanceRate: 'متوسط معدل قبول العروض',
+		noStatisticsForPeriod: 'لا تتوفر إحصائيات لهذه الفترة',
+		tryDifferentYearQuarter: 'جرّب اختيار سنة أو ربع مختلف',
+		noAnalyticsDataAvailable: 'لا توجد بيانات تحليلات لهذه الفترة',
+		noPerformanceDataAvailable: 'لا توجد بيانات أداء',
+		noTrendsDataAvailable: 'لا توجد بيانات اتجاهات',
+		noConversionDataAvailable: 'لا توجد بيانات تحويل',
+		visitsTrend: 'اتجاه الزيارات',
+		visitsTrendDescription:
+			'أداء الزيارات من قبل مندوبي المبيعات لـ',
+		offersTrend: 'اتجاه العروض',
+		offersTrendDescription: 'أداء العروض من قبل مندوبي المبيعات لـ',
+		conversionRates: 'معدلات التحويل',
+		conversionRatesDescription:
+			'مقاييس التحويل لمندوبي المبيعات لـ',
+		dealStatusDistribution: 'توزيع حالات الصفقات',
+		dealStatusDescription: 'تفاصيل حالة الصفقات لـ',
+		noVisitsData: 'لا توجد بيانات زيارات متاحة',
+		noOffersData: 'لا توجد بيانات عروض متاحة',
+		noDealStatusData: 'لا توجد بيانات لحالة الصفقات',
+		numberOfVisits: 'عدد الزيارات',
+		numberOfOffers: 'عدد العروض',
+		ratePercentage: 'النسبة (%)',
+		successfulLabel: 'ناجحة',
+		failedLabel: 'فاشلة',
+		allTime: 'كل الوقت',
+		dealConversionRate: 'معدل تحويل الصفقات',
+		offerAcceptanceRate: 'معدل قبول العروض',
+		revenueTrend: 'اتجاه الإيرادات',
+		revenueTrendDescription:
+			'أداء الإيرادات من قبل مندوبي المبيعات لـ',
+		revenueAxisLabel: 'الإيرادات (جنيه)',
+		noRevenueData: 'لا توجد بيانات إيرادات متاحة',
+		totalDealsBySalesman: 'إجمالي الصفقات حسب المندوب',
+		topPerformersFor: 'أفضل المؤدين لـ',
+		noDealsDataAvailable: 'لا توجد بيانات صفقات متاحة',
+		numberOfDeals: 'عدد الصفقات',
+		detailedStatistics: 'الإحصائيات التفصيلية',
 		clientManagement: 'إدارة العملاء',
 		visitManagement: 'إدارة الزيارات',
-		clientSearch: 'البحث عن العملاء',
+		clientSearchTitle: 'البحث عن العملاء',
 		searchClients: 'البحث عن العملاء...',
 		addClient: 'إضافة عميل',
 		createClient: 'إنشاء عميل',
@@ -1649,7 +2122,7 @@ export const translations = {
 			'معرف المستخدم لتعيين هذا العميل إليه (اتركه فارغاً لتعيينه لنفسك)',
 		allClassifications: 'جميع التصنيفات',
 		filterByClassification: 'تصفية حسب التصنيف (اختياري)',
-		clientDetails: 'تفاصيل العميل',
+		clientDetailsTitle: 'تفاصيل العميل',
 		businessInformation: 'معلومات العمل',
 		clients: 'العملاء',
 		client: 'عميل',
@@ -2039,6 +2512,280 @@ export const translations = {
 				loadAssignedFailed: 'فشل تحميل الطلبات المعينة',
 				assignFailed: 'فشل تعيين الطلب',
 				statusUpdateFailed: 'فشل تحديث الحالة',
+			},
+		},
+		dealForm: {
+			editTitle: 'تعديل الصفقة',
+			createTitle: 'إنشاء صفقة جديدة',
+			clientLabel: 'العميل *',
+			clientPlaceholder: 'اختر عميلًا',
+			dealValueLabel: 'قيمة الصفقة (جنيه) *',
+			dealValuePlaceholder: 'أدخل قيمة الصفقة',
+			descriptionLabel: 'الوصف *',
+			descriptionPlaceholder: 'صف تفاصيل الصفقة...',
+			expectedCloseDateLabel: 'تاريخ الإغلاق المتوقع *',
+			datePlaceholder: 'اختر تاريخًا',
+			updateButton: 'تحديث الصفقة',
+			createButton: 'إنشاء الصفقة',
+			validation: {
+				clientRequired: 'العميل مطلوب',
+				dealValueRequired: 'قيمة الصفقة مطلوبة',
+				dealValueInvalid: 'يرجى إدخال قيمة صفقة صحيحة',
+				dealValueMin:
+					'يجب أن تكون قيمة الصفقة أكبر من 0',
+				descriptionMin: 'يجب ألا يقل الوصف عن 10 أحرف',
+				descriptionMax: 'يجب ألا يزيد الوصف عن 500 حرف',
+				expectedCloseDateRequired:
+					'تاريخ الإغلاق المتوقع مطلوب',
+			},
+			errors: {
+				saveDeal: 'حدث خطأ أثناء حفظ الصفقة',
+			},
+		},
+		clientSearch: {
+			searchPlaceholder: 'ابحث عن العملاء...',
+			filterPlaceholder: 'تصفية حسب التصنيف (اختياري)',
+			allClassifications: 'جميع التصنيفات',
+			classificationOption: 'التصنيف {{value}}',
+			searching: 'جاري البحث...',
+			noResults: 'لم يتم العثور على عملاء',
+			classificationLabel: 'التصنيف: {{value}}',
+		},
+		salesClients: {
+			title: 'عملاء المبيعات',
+			description: 'عرض وإدارة جميع عملاء المبيعات',
+			filters: 'الفلاتر',
+			searchPlaceholder: 'ابحث بالاسم أو المؤسسة...',
+			allClassifications: 'جميع التصنيفات',
+			allSalesmen: 'جميع مندوبي المبيعات',
+			clientsList: 'قائمة العملاء',
+			total: 'إجمالي',
+			loading: 'جاري تحميل العملاء...',
+			error: 'خطأ في تحميل العملاء',
+			retry: 'إعادة المحاولة',
+			noClients: 'لم يتم العثور على عملاء',
+			name: 'الاسم',
+			organization: 'المؤسسة',
+			phone: 'الهاتف',
+			classification: 'التصنيف',
+			assignedTo: 'مخصص لـ',
+			createdAt: 'تاريخ الإنشاء',
+			notAssigned: 'غير مخصص',
+			noClassification: 'لا يوجد تصنيف',
+			clickToView: 'انقر لعرض التفاصيل',
+		},
+		clientDetails: {
+			loading: 'جاري تحميل تفاصيل العميل...',
+			errorMessage:
+				'حدث خطأ أثناء تحميل تفاصيل العميل: {{error}}',
+			errorUnknown: 'خطأ غير معروف',
+			notAssigned: 'غير معيّن',
+			notSpecified: 'غير محدد',
+			stats: {
+				title: 'إحصائيات العميل',
+				totalVisits: 'إجمالي الزيارات',
+				totalOffers: 'إجمالي العروض',
+				successfulDeals: 'الصفقات الناجحة',
+				totalRevenue: 'إجمالي الإيرادات',
+			},
+			tabs: {
+				overview: 'نظرة عامة',
+				visits: 'الزيارات',
+				deals: 'الصفقات',
+				offers: 'العروض',
+				progress: 'التقدم',
+			},
+			overview: {
+				title: 'معلومات العميل',
+			},
+			performance: {
+				title: 'مؤشرات الأداء',
+				averageSatisfaction: 'متوسط الرضا',
+				noRatings: 'لا توجد تقييمات بعد',
+				conversionRate: 'معدل التحويل',
+				notCalculated: 'غير محسوب',
+				lastInteraction: 'آخر تفاعل',
+				noInteractions: 'لا توجد تفاعلات',
+			},
+			visits: {
+				title: 'زيارات العميل',
+				addProgress: 'إضافة تقدم',
+				loading: 'جاري تحميل الزيارات...',
+				empty: 'لا توجد زيارات مسجلة بعد',
+				resultPrefix: 'النتيجة:',
+			},
+			deals: {
+				title: 'الصفقات',
+				createButton: 'إنشاء صفقة',
+				loading: 'جاري تحميل الصفقات...',
+				empty: 'لا توجد صفقات بعد',
+				expectedClose: 'الإغلاق المتوقع: {{date}}',
+			},
+			offers: {
+				title: 'طلبات العروض',
+				createButton: 'إنشاء طلب',
+				loading: 'جاري تحميل العروض...',
+				empty: 'لا توجد طلبات عروض بعد',
+				requestedBy: 'تم الطلب بواسطة: {{name}}',
+				assignedTo: 'مُعيّن إلى: {{name}}',
+			},
+			progress: {
+				title: 'تقدم المهام',
+				addButton: 'إضافة تقدم',
+				loading: 'جاري تحميل التقدم...',
+				empty: 'لا يوجد تقدم مسجل بعد',
+				resultPrefix: 'النتيجة:',
+				nextPrefix: 'التالي:',
+				satisfactionPrefix: 'مستوى الرضا: {{value}}/5',
+			},
+		},
+		taskProgressForm: {
+			title: 'إنشاء تقدم مهمة',
+			submitButton: 'إنشاء تقدم',
+			fields: {
+				client: 'العميل *',
+				task: 'المهمة *',
+				progressType: 'نوع التقدم *',
+				description: 'الوصف *',
+				progressDate: 'تاريخ التقدم *',
+				visitResult: 'نتيجة الزيارة',
+				nextStep: 'الخطوة التالية',
+				satisfactionRating: 'مستوى الرضا (1-5)',
+				followUpDate: 'تاريخ المتابعة',
+				requestedProducts: 'المنتجات المطلوبة *',
+			},
+			placeholders: {
+				client: 'اختر عميلًا',
+				task: 'اختر مهمة',
+				progressType: 'اختر نوع التقدم',
+				description: 'صف ما حدث خلال هذا التقدم...',
+				date: 'اختر تاريخًا',
+				visitResult: 'اختر نتيجة الزيارة',
+				nextStep: 'اختر الخطوة التالية',
+				satisfactionRating: 'قيّم رضا العميل',
+				followUpDate: 'اختر تاريخ المتابعة',
+				requestedProducts:
+					'صف المنتجات التي يهتم بها العميل...',
+			},
+			progressTypes: {
+				visit: 'زيارة',
+				call: 'مكالمة',
+				email: 'بريد إلكتروني',
+				meeting: 'اجتماع',
+			},
+			visitResults: {
+				interested: 'مهتم',
+				notInterested: 'غير مهتم',
+			},
+			nextSteps: {
+				needsOffer: 'يحتاج عرضًا',
+				needsDeal: 'يحتاج صفقة',
+			},
+			priority: {
+				label: 'الأولوية',
+				placeholder: 'اختر الأولوية',
+				low: 'منخفضة',
+				medium: 'متوسطة',
+				high: 'مرتفعة',
+			},
+			createOfferRequest: {
+				label: 'إنشاء طلب عرض',
+				description:
+					'إنشاء طلب عرض لهذا العميل تلقائيًا',
+			},
+			validation: {
+				clientRequired: 'العميل مطلوب',
+				taskRequired: 'المهمة مطلوبة',
+				progressTypeRequired: 'نوع التقدم مطلوب',
+				descriptionMin: 'يجب ألا يقل الوصف عن 5 أحرف',
+				descriptionMax: 'يجب ألا يزيد الوصف عن 200 حرف',
+				progressDateRequired: 'تاريخ التقدم مطلوب',
+				satisfactionInvalid: 'يرجى إدخال قيمة بين 1 و5',
+			},
+			errors: {
+				createFailed: 'حدث خطأ أثناء إنشاء تقدم المهمة',
+			},
+			mockTasks: {
+				initialVisitTitle: 'زيارة العميل الأولى',
+				initialVisitDescription:
+					'الزيارة الأولى لبناء العلاقة',
+				productPresentationTitle: 'عرض المنتج',
+				productPresentationDescription:
+					'عرض كتالوج المنتجات والإمكانيات',
+				followUpCallTitle: 'مكالمة متابعة',
+				followUpCallDescription:
+					'متابعة الاجتماع السابق',
+				proposalDiscussionTitle: 'مناقشة المقترح',
+				proposalDiscussionDescription:
+					'مناقشة تفاصيل المقترح والتسعير',
+				contractNegotiationTitle: 'التفاوض على العقد',
+				contractNegotiationDescription:
+					'التفاوض على الشروط والأحكام',
+			},
+		},
+		dealApprovalForm: {
+			title: 'موافقة الصفقة',
+			noPermission:
+				'ليس لديك صلاحية للموافقة على هذه الصفقة.',
+			info: {
+				client: 'العميل',
+				dealValue: 'قيمة الصفقة',
+				description: 'الوصف',
+				expectedCloseDate: 'تاريخ الإغلاق المتوقع',
+				created: 'تاريخ الإنشاء',
+				notSpecified: 'غير محدد',
+				notAvailable: 'غير متاح',
+			},
+			form: {
+				notesLabel: 'ملاحظات (اختياري)',
+				notesPlaceholder:
+					'أضف أي ملاحظات أو تعليقات...',
+				superAdminLabel: 'يتطلب موافقة المدير الأعلى',
+				superAdminDescription:
+					'حدد هذا الخيار إذا كانت الصفقة تتطلب موافقة إضافية من المدير الأعلى',
+			},
+			actions: {
+				reject: 'رفض الصفقة',
+				approve: 'الموافقة على الصفقة',
+				processing: 'جاري المعالجة...',
+			},
+			statusLabels: {
+				PendingManagerApproval: 'بإنتظار موافقة المدير',
+				PendingSuperAdminApproval:
+					'بإنتظار موافقة المدير الأعلى',
+				Approved: 'مقبول',
+				Rejected: 'مرفوض',
+			},
+			errors: {
+				invalidAction: 'إجراء موافقة غير صالح',
+				approveFailed:
+					'حدث خطأ أثناء الموافقة على الصفقة',
+			},
+		},
+		offerCreationPage: {
+			errors: {
+				loadProducts: 'فشل تحميل المنتجات',
+				searchFailed: 'فشل البحث',
+				productExists: 'تمت إضافة المنتج مسبقًا',
+				loadRequestDetails: 'فشل تحميل تفاصيل الطلب',
+				salesmenAccessDenied:
+					'تم رفض الوصول: ليس لديك صلاحية لعرض مندوبي المبيعات',
+				salesmenUnauthorized:
+					'غير مصرح: يرجى تسجيل الدخول مرة أخرى',
+				salesmenLoadFailedPrefix:
+					'فشل تحميل مندوبي المبيعات:',
+				selectClientAndSalesman:
+					'يرجى اختيار العميل ومندوب المبيعات',
+				missingProducts:
+					'يرجى إضافة منتج واحد على الأقل (من الكتالوج أو وصف نصي)',
+				invalidTotal:
+					'يجب أن يكون المجموع الإجمالي أكبر من 0',
+				createOfferFailed: 'فشل إنشاء العرض',
+			},
+			success: {
+				productAdded: 'تمت إضافة المنتج من الكتالوج',
+				offerCreated:
+					'تم إنشاء العرض بنجاح! يمكنك الآن إرساله للمندوب أو تصديره كملف PDF.',
 			},
 		},
 		common: {
