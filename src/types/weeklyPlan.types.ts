@@ -41,6 +41,7 @@ export interface WeeklyPlanTask {
 	id: number;
 	weeklyPlanId: number;
 	title: string;
+	taskType?: string; // Visit, FollowUp
 	clientId?: number;
 	clientName?: string;
 	clientStatus?: string;
@@ -50,6 +51,8 @@ export interface WeeklyPlanTask {
 	clientLocation?: string;
 	plannedDate?: string;
 	notes?: string; // Description
+	priority?: string; // High, Medium, Low
+	status?: string; // Planned, InProgress, Completed, Cancelled
 	progressCount?: number;
 	isActive?: boolean;
 	createdAt?: string;
@@ -126,7 +129,6 @@ export interface WeeklyPlan {
 	title: string;
 	description: string;
 	isActive: boolean;
-	rating: number | null; // 1-5, null if not rated yet
 	managerComment: string | null;
 	managerReviewedAt: string | null;
 	// New view tracking fields
@@ -136,6 +138,8 @@ export interface WeeklyPlan {
 	createdAt: string;
 	updatedAt: string;
 	tasks: WeeklyPlanTask[];
+	// Computed field for convenience (calculated from managerReviewedAt)
+	hasManagerReview?: boolean; // true if managerReviewedAt is not null
 }
 
 export interface CreateWeeklyPlanDto {
@@ -153,7 +157,6 @@ export interface UpdateWeeklyPlanDto {
 }
 
 export interface ReviewWeeklyPlanDto {
-	rating: number; // Required, 1-5
 	managerComment?: string; // Optional
 }
 
@@ -164,8 +167,6 @@ export interface FilterWeeklyPlansDto {
 	weekEndDate?: string; // Optional, format: DateTime (<=)
 	isViewed?: boolean; // Optional, filter by viewed status (true = viewed, false = not viewed)
 	hasManagerReview?: boolean; // Optional, filter by review status (deprecated, use isViewed instead)
-	minRating?: number; // Optional, 1-5
-	maxRating?: number; // Optional, 1-5
 	page?: number; // Optional, default: 1
 	pageSize?: number; // Optional, default: 20, max: 100
 }

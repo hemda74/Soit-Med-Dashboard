@@ -1,8 +1,12 @@
+import { getApiBaseUrl } from '@/utils/apiConfig';
+
 // API Configuration
 export const API_CONFIG = {
-	BASE_URL:
-		import.meta.env.VITE_API_BASE_URL ||
-		'http://localhost:5117/api',
+	get BASE_URL() {
+		const base = getApiBaseUrl();
+		// Append /api if not already present
+		return base.endsWith('/api') ? base : `${base}/api`;
+	},
 	ENDPOINTS: {
 		LOGIN: '/Account/login',
 		USER_ME: '/User/me',

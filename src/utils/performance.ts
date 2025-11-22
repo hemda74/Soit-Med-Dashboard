@@ -27,7 +27,11 @@ class PerformanceMonitor {
 	/**
 	 * Record a performance metric
 	 */
-	recordMetric(name: string, value: number, rating: 'good' | 'needs-improvement' | 'poor' = 'good'): void {
+	recordMetric(
+		name: string,
+		value: number,
+		rating: 'good' | 'needs-improvement' | 'poor' = 'good'
+	): void {
 		const metric: PerformanceMetric = {
 			name,
 			value,
@@ -59,7 +63,11 @@ class PerformanceMonitor {
 		try {
 			const result = await fn();
 			const duration = performance.now() - start;
-			this.recordMetric(name, duration, this.getRating(duration, 1000));
+			this.recordMetric(
+				name,
+				duration,
+				this.getRating(duration, 1000)
+			);
 			return result;
 		} catch (error) {
 			const duration = performance.now() - start;
@@ -84,7 +92,11 @@ class PerformanceMonitor {
 			return result;
 		} catch (error) {
 			const duration = performance.now() - start;
-			this.recordMetric(`api_${endpoint}_error`, duration, 'poor');
+			this.recordMetric(
+				`api_${endpoint}_error`,
+				duration,
+				'poor'
+			);
 			throw error;
 		}
 	}
@@ -92,9 +104,16 @@ class PerformanceMonitor {
 	/**
 	 * Measure component render time
 	 */
-	measureComponentRender(componentName: string, renderTime: number): void {
+	measureComponentRender(
+		componentName: string,
+		renderTime: number
+	): void {
 		const rating = this.getRating(renderTime, 16); // 16ms = 60fps threshold
-		this.recordMetric(`render_${componentName}`, renderTime, rating);
+		this.recordMetric(
+			`render_${componentName}`,
+			renderTime,
+			rating
+		);
 	}
 
 	/**
@@ -131,7 +150,10 @@ class PerformanceMonitor {
 	/**
 	 * Get rating based on threshold
 	 */
-	private getRating(value: number, threshold: number): 'good' | 'needs-improvement' | 'poor' {
+	private getRating(
+		value: number,
+		threshold: number
+	): 'good' | 'needs-improvement' | 'poor' {
 		if (value < threshold * 0.75) return 'good';
 		if (value < threshold * 1.5) return 'needs-improvement';
 		return 'poor';
@@ -140,19 +162,32 @@ class PerformanceMonitor {
 	/**
 	 * Send metric to backend (optional - implement based on your backend)
 	 */
-	private async sendMetricToBackend(metric: PerformanceMetric): void {
+	private async sendMetricToBackend(
+		metric: PerformanceMetric
+	): Promise<void> {
 		// Only send in production or if explicitly enabled
-		if (import.meta.env.PROD && import.meta.env.VITE_ENABLE_PERFORMANCE_LOGGING === 'true') {
+		if (
+			import.meta.env.PROD &&
+			import.meta.env.VITE_ENABLE_PERFORMANCE_LOGGING ===
+				'true'
+		) {
 			try {
-				const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
-				await fetch(`${apiUrl}/api/Performance/metric`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(metric),
-					keepalive: true, // Send even if page is unloading
-				});
+				const { getApiBaseUrl } = await import(
+					'@/utils/apiConfig'
+				);
+				const apiUrl = getApiBaseUrl();
+				await fetch(
+					`${apiUrl}/api/Performance/metric`,
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type':
+								'application/json',
+						},
+						body: JSON.stringify(metric),
+						keepalive: true, // Send even if page is unloading
+					}
+				);
 			} catch (error) {
 				// Silently fail - don't break the app
 			}
@@ -169,37 +204,93 @@ export const performanceMonitor = new PerformanceMonitor();
 export function initWebVitals(): void {
 	if (typeof window === 'undefined') return;
 
-	import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
-		onCLS((metric) => {
-			const rating = metric.value < 0.1 ? 'good' : metric.value < 0.25 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('CLS', metric.value, rating);
-		});
+	import('web-vitals').then(
+		({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+			onCLS((metric) => {
+				const rating =
+					metric.value < 0.1
+						? 'good'
+						: metric.value < 0.25
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'CLS',
+					metric.value,
+					rating
+				);
+			});
 
-		onFID((metric) => {
-			const rating = metric.value < 100 ? 'good' : metric.value < 300 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('FID', metric.value, rating);
-		});
+			onFID((metric) => {
+				const rating =
+					metric.value < 100
+						? 'good'
+						: metric.value < 300
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'FID',
+					metric.value,
+					rating
+				);
+			});
 
-		onFCP((metric) => {
-			const rating = metric.value < 1800 ? 'good' : metric.value < 3000 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('FCP', metric.value, rating);
-		});
+			onFCP((metric) => {
+				const rating =
+					metric.value < 1800
+						? 'good'
+						: metric.value < 3000
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'FCP',
+					metric.value,
+					rating
+				);
+			});
 
-		onLCP((metric) => {
-			const rating = metric.value < 2500 ? 'good' : metric.value < 4000 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('LCP', metric.value, rating);
-		});
+			onLCP((metric) => {
+				const rating =
+					metric.value < 2500
+						? 'good'
+						: metric.value < 4000
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'LCP',
+					metric.value,
+					rating
+				);
+			});
 
-		onTTFB((metric) => {
-			const rating = metric.value < 800 ? 'good' : metric.value < 1800 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('TTFB', metric.value, rating);
-		});
+			onTTFB((metric) => {
+				const rating =
+					metric.value < 800
+						? 'good'
+						: metric.value < 1800
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'TTFB',
+					metric.value,
+					rating
+				);
+			});
 
-		onINP((metric) => {
-			const rating = metric.value < 200 ? 'good' : metric.value < 500 ? 'needs-improvement' : 'poor';
-			performanceMonitor.recordMetric('INP', metric.value, rating);
-		});
-	});
+			onINP((metric) => {
+				const rating =
+					metric.value < 200
+						? 'good'
+						: metric.value < 500
+						? 'needs-improvement'
+						: 'poor';
+				performanceMonitor.recordMetric(
+					'INP',
+					metric.value,
+					rating
+				);
+			});
+		}
+	);
 }
 
 /**
@@ -207,7 +298,7 @@ export function initWebVitals(): void {
  */
 export function onRenderCallback(
 	id: string,
-	phase: 'mount' | 'update',
+	phase: 'mount' | 'update' | 'nested-update',
 	actualDuration: number,
 	baseDuration: number,
 	startTime: number,
@@ -227,4 +318,3 @@ export function onRenderCallback(
 		performanceMonitor.measureComponentRender(id, actualDuration);
 	}
 }
-
