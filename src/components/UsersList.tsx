@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Edit, Key } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { BarChart3, Edit, Key, Settings, TestTube, UserPlus, Users } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
 import type { DepartmentUser } from '@/types/department.types';
 import type { UserFilters as UserFiltersType, PaginatedUserResponse, User } from '@/types/api.types';
@@ -21,6 +21,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { UserStatusToggle } from './UserStatusToggle';
 import { useTranslation } from '@/hooks/useTranslation';
+import {
+    useStatistics,
+    useStatisticsError,
+    useStatisticsLoading,
+    useStatisticsStore
+} from '@/stores/statisticsStore';
+import {
+    UnifiedAnalyticsCard,
+    MonthlyActivityChart,
+
+} from '@/components/charts';
 
 type ViewMode = 'all' | 'filtered';
 
@@ -66,8 +77,13 @@ type UserEditFormData = z.infer<typeof userEditSchema>;
 const UsersList: React.FC = () => {
     const { t } = useTranslation();
     const { user, hasAnyRole } = useAuthStore();
+    const navigate = useNavigate();
     const { setLoading } = useAppStore();
     const { success, errorNotification: showError } = useNotificationStore();
+    const statistics = useStatistics();
+    const statisticsLoading = useStatisticsLoading();
+    const statisticsError = useStatisticsError();
+    const fetchStatistics = useStatisticsStore((state) => state.fetchStatistics);
 
     // All state hooks must be called at the top level
     const [allUsers, setAllUsers] = useState<PaginatedUserResponse | null>(null);
@@ -103,6 +119,12 @@ const UsersList: React.FC = () => {
 
     // Check if current user is super admin
     const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+
+    useEffect(() => {
+        if (isSuperAdmin && user?.token) {
+            fetchStatistics(user.token);
+        }
+    }, [isSuperAdmin, user?.token, fetchStatistics]);
 
     const loadAllUsers = useCallback(async (page: number = 1) => {
         if (!user?.token) {
@@ -375,19 +397,147 @@ const UsersList: React.FC = () => {
         );
     }
 
+    const handleCreateUser = () => {
+        navigate('/admin/create-role-user');
+    };
+
     return (
         <div className="p-6">
             <div className="mb-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl font-bold text-foreground">
-                        Users Management
-                    </h1>
-                    <Logo />
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground">
+                            Users Management
+                        </h1>
+                        <p className="text-muted-foreground mt-2 md:hidden">
+                            {currentDescription}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Button
+                            onClick={handleCreateUser}
+                            className="flex items-center gap-2"
+                        >
+                            <UserPlus className="h-4 w-4" />
+                            {t('createUser')}
+                        </Button>
+                        <Logo />
+                    </div>
                 </div>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-muted-foreground mt-2 hidden md:block">
                     {currentDescription}
                 </p>
             </div>
+
+            {isSuperAdmin && (
+                <div className="space-y-10 mb-10">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        {statisticsLoading ? (
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="bg-card rounded-xl p-6 border-2 border-border shadow-lg h-32 flex flex-col justify-center">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-2">
+                                            <div className="h-4 bg-muted animate-pulse rounded w-20"></div>
+                                            <div className="h-8 bg-muted animate-pulse rounded w-16"></div>
+                                        </div>
+                                        <div className="w-14 h-14 bg-muted animate-pulse rounded-xl"></div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : statisticsError ? (
+                            <div className="col-span-full bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
+                                <p className="text-destructive font-medium">{statisticsError}</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="bg-card rounded-xl p-6 border-2 border-border shadow-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-muted-foreground font-semibold text-sm">{t('totalUsers')}</p>
+                                            <p className="text-3xl font-bold text-foreground">
+                                                {(statistics?.totalUsers ?? 0).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                            <Users className="w-7 h-7 text-white" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-card rounded-xl p-6 border-2 border-border shadow-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-muted-foreground font-semibold text-sm">{t('activeUsers')}</p>
+                                            <p className="text-3xl font-bold text-foreground">
+                                                {(statistics?.activeUsers ?? 0).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                            <TestTube className="w-7 h-7 text-white" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-card rounded-xl p-6 border-2 border-border shadow-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-muted-foreground font-semibold text-sm">{t('inactiveUsers')}</p>
+                                            <p className="text-3xl font-bold text-foreground">
+                                                {(statistics?.inactiveUsers ?? 0).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                            <UserPlus className="w-7 h-7 text-white" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-card rounded-xl p-6 border-2 border-border shadow-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-muted-foreground font-semibold text-sm">{t('successRate')}</p>
+                                            <p className="text-3xl font-bold text-foreground">
+                                                {statistics?.activeUsers && statistics?.totalUsers && statistics.totalUsers > 0
+                                                    ? `${((statistics.activeUsers / statistics.totalUsers) * 100).toFixed(1)}%`
+                                                    : '0%'}
+                                            </p>
+                                        </div>
+                                        <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
+                                            <Settings className="w-7 h-7 text-white" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <section className="space-y-6">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                                    <BarChart3 className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-sm text-primary font-semibold uppercase tracking-wide">
+                                        {t('userAnalytics') || 'User Analytics'}
+                                    </p>
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        {t('userAnalyticsOverview') || 'User statistics & health'}
+                                    </h2>
+                                    <p className="text-muted-foreground mt-1 max-w-2xl">
+                                        {t('userAnalyticsDescription') || 'Monitor user growth, activity, engagement, and system health directly where you manage users.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <UnifiedAnalyticsCard />
+                            <MonthlyActivityChart />
+                        </div>
+
+
+                    </section>
+                </div>
+            )}
 
 
             {/* Advanced Filters */}

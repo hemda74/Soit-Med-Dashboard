@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 interface ImageGalleryProps {
 	images: Array<{
@@ -43,8 +44,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 			return filePath;
 		}
 		// Otherwise, construct the API URL
-		const API_BASE_URL =
-			import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+		const API_BASE_URL = getApiBaseUrl();
 		return `${API_BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
 	}, []);
 
