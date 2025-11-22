@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DealForm from './DealForm';
 import TaskProgressForm from './TaskProgressForm';
 import OfferRequestForm from './OfferRequestForm';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ClientDetailsProps {
     clientId: string;
@@ -30,20 +31,21 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
         getClientVisits,
         getClientTaskProgress,
         getDeals,
-        getOfferRequests,
+        getOffersByClient,
         selectedClient,
         clientVisits,
         taskProgress,
         deals,
-        offerRequests,
+        offersByClient,
         clientsLoading,
         visitsLoading,
         taskProgressLoading,
         dealsLoading,
-        offerRequestsLoading,
+        offersLoading,
         clientsError
     } = useSalesStore();
 
+	const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
     const [showDealForm, setShowDealForm] = useState(false);
     const [showTaskProgressForm, setShowTaskProgressForm] = useState(false);
@@ -54,10 +56,11 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             getClient(clientId);
             getClientVisits(clientId);
             getClientTaskProgress(clientId);
+            // Use direct client-specific endpoints (same as deals/offers pages)
             getDeals({ clientId });
-            getOfferRequests({ clientId });
+            getOffersByClient(clientId);
         }
-    }, [clientId, getClient, getClientVisits, getClientTaskProgress, getDeals, getOfferRequests]);
+    }, [clientId, getClient, getClientVisits, getClientTaskProgress, getDeals, getOffersByClient]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -126,7 +129,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             <div className={`text-center py-8 ${className}`}>
                 <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-2"></div>
-                    Loading client details...
+					{t('clientDetails.loading')}
                 </div>
             </div>
         );
@@ -135,7 +138,12 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
     if (clientsError || !selectedClient) {
         return (
             <div className={`text-center py-8 ${className}`}>
-                <p className="text-red-600">Error loading client details: {clientsError}</p>
+				<p className="text-red-600">
+					{t('clientDetails.errorMessage').replace(
+						'{{error}}',
+						clientsError || t('clientDetails.errorUnknown')
+					)}
+				</p>
             </div>
         );
     }
@@ -154,10 +162,10 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">{client.name}</h1>
-                                <div className="flex items-center space-x-4 mt-2">
+								<div className="flex items-center space-x-4 mt-2">
                                     {client.classification && (
                                         <Badge className="bg-blue-100 text-blue-800">
-                                            Classification: {client.classification}
+											{`${t('classification')}: ${client.classification}`}
                                         </Badge>
                                     )}
                                     {client.organizationName && (
@@ -166,9 +174,11 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-500">Assigned to</p>
-                            <p className="font-medium">{client.assignedSalesmanName}</p>
+						<div className="text-right">
+							<p className="text-sm text-gray-500">{t('assignedTo')}</p>
+							<p className="font-medium">
+								{client.assignedSalesmanName || t('clientDetails.notAssigned')}
+							</p>
                         </div>
                     </div>
                 </CardHeader>
@@ -178,7 +188,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                     <PhoneIcon className="h-4 w-4 text-gray-400" />
-                                    <span className="text-sm text-gray-500">Phone</span>
+									<span className="text-sm text-gray-500">{t('phone')}</span>
                                 </div>
                                 <p className="font-medium">{client.phone}</p>
                             </div>
@@ -187,7 +197,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                     <BuildingOfficeIcon className="h-4 w-4 text-gray-400" />
-                                    <span className="text-sm text-gray-500">Organization</span>
+									<span className="text-sm text-gray-500">{t('organizationName')}</span>
                                 </div>
                                 <p className="font-medium">{client.organizationName}</p>
                             </div>
@@ -196,7 +206,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-2">
                                     <ChartBarIcon className="h-4 w-4 text-gray-400" />
-                                    <span className="text-sm text-gray-500">Classification</span>
+									<span className="text-sm text-gray-500">{t('classification')}</span>
                                 </div>
                                 <p className="font-medium">{client.classification}</p>
                             </div>
@@ -207,29 +217,29 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
 
             {/* Client Statistics */}
             <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                        <ChartBarIcon className="h-5 w-5" />
-                        <span>Client Statistics</span>
-                    </CardTitle>
-                </CardHeader>
+				<CardHeader>
+					<CardTitle className="flex items-center space-x-2">
+						<ChartBarIcon className="h-5 w-5" />
+						<span>{t('clientDetails.stats.title')}</span>
+					</CardTitle>
+				</CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center">
                             <p className="text-2xl font-bold text-blue-600">{client.totalVisits}</p>
-                            <p className="text-sm text-gray-500">Total Visits</p>
+							<p className="text-sm text-gray-500">{t('clientDetails.stats.totalVisits')}</p>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold text-green-600">{client.totalOffers}</p>
-                            <p className="text-sm text-gray-500">Total Offers</p>
+							<p className="text-sm text-gray-500">{t('clientDetails.stats.totalOffers')}</p>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold text-purple-600">{client.successfulDeals}</p>
-                            <p className="text-sm text-gray-500">Successful Deals</p>
+							<p className="text-sm text-gray-500">{t('clientDetails.stats.successfulDeals')}</p>
                         </div>
                         <div className="text-center">
                             <p className="text-2xl font-bold text-orange-600">EGP {client.totalRevenue?.toLocaleString() || 0}</p>
-                            <p className="text-sm text-gray-500">Total Revenue</p>
+							<p className="text-sm text-gray-500">{t('clientDetails.stats.totalRevenue')}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -238,56 +248,72 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="visits">Visits</TabsTrigger>
-                    <TabsTrigger value="deals">Deals</TabsTrigger>
-                    <TabsTrigger value="offers">Offers</TabsTrigger>
-                    <TabsTrigger value="progress">Progress</TabsTrigger>
+					<TabsTrigger value="overview">{t('clientDetails.tabs.overview')}</TabsTrigger>
+					<TabsTrigger value="visits">{t('clientDetails.tabs.visits')}</TabsTrigger>
+					<TabsTrigger value="deals">{t('clientDetails.tabs.deals')}</TabsTrigger>
+					<TabsTrigger value="offers">{t('clientDetails.tabs.offers')}</TabsTrigger>
+					<TabsTrigger value="progress">{t('clientDetails.tabs.progress')}</TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
                 <TabsContent value="overview" className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Client Information</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Organization Name</label>
-                                    <p className="text-sm">{client.organizationName || 'Not specified'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Phone</label>
-                                    <p className="text-sm">{client.phone || 'Not specified'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Classification</label>
-                                    <p className="text-sm">{client.classification || 'Not specified'}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-500">Assigned To</label>
-                                    <p className="text-sm">{client.assignedSalesmanName || client.assignedTo || 'Not assigned'}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
+						<Card>
+							<CardHeader>
+								<CardTitle>{t('clientDetails.overview.title')}</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div>
+									<label className="text-sm font-medium text-gray-500">{t('organizationName')}</label>
+									<p className="text-sm">{client.organizationName || t('clientDetails.notSpecified')}</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-gray-500">{t('phone')}</label>
+									<p className="text-sm">{client.phone || t('clientDetails.notSpecified')}</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-gray-500">{t('classification')}</label>
+									<p className="text-sm">{client.classification || t('clientDetails.notSpecified')}</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-gray-500">{t('assignedTo')}</label>
+									<p className="text-sm">
+										{client.assignedSalesmanName ||
+											client.assignedTo ||
+											t('clientDetails.notAssigned')}
+									</p>
+								</div>
+							</CardContent>
+						</Card>
 
                         <Card>
                             <CardHeader>
-                                <CardTitle>Performance Metrics</CardTitle>
+								<CardTitle>{t('clientDetails.performance.title')}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Average Satisfaction</label>
-                                    <p className="text-sm">{client.averageSatisfaction ? `${client.averageSatisfaction.toFixed(1)}/5` : 'No ratings yet'}</p>
+									<label className="text-sm font-medium text-gray-500">{t('clientDetails.performance.averageSatisfaction')}</label>
+									<p className="text-sm">
+										{client.averageSatisfaction
+											? `${client.averageSatisfaction.toFixed(1)}/5`
+											: t('clientDetails.performance.noRatings')}
+									</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Conversion Rate</label>
-                                    <p className="text-sm">{client.conversionRate ? `${(client.conversionRate * 100).toFixed(1)}%` : 'Not calculated'}</p>
+									<label className="text-sm font-medium text-gray-500">{t('clientDetails.performance.conversionRate')}</label>
+									<p className="text-sm">
+										{client.conversionRate
+											? `${(client.conversionRate * 100).toFixed(1)}%`
+											: t('clientDetails.performance.notCalculated')}
+									</p>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-500">Last Interaction</label>
-                                    <p className="text-sm">{client.lastInteractionDate ? format(new Date(client.lastInteractionDate), 'PPP') : 'No interactions'}</p>
+									<label className="text-sm font-medium text-gray-500">{t('clientDetails.performance.lastInteraction')}</label>
+									<p className="text-sm">
+										{client.lastInteractionDate
+											? format(new Date(client.lastInteractionDate), 'PPP')
+											: t('clientDetails.performance.noInteractions')}
+									</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -297,17 +323,17 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 {/* Visits Tab */}
                 <TabsContent value="visits" className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold">Client Visits</h3>
+						<h3 className="text-lg font-semibold">{t('clientDetails.visits.title')}</h3>
                         <Button onClick={() => setShowTaskProgressForm(true)}>
                             <PlusIcon className="h-4 w-4 mr-2" />
-                            Add Progress
+							{t('clientDetails.visits.addProgress')}
                         </Button>
                     </div>
 
                     {visitsLoading ? (
-                        <div className="text-center py-4">Loading visits...</div>
+						<div className="text-center py-4">{t('clientDetails.visits.loading')}</div>
                     ) : clientVisits.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No visits recorded yet</div>
+						<div className="text-center py-8 text-gray-500">{t('clientDetails.visits.empty')}</div>
                     ) : (
                         <div className="space-y-4">
                             {clientVisits.map((visit) => (
@@ -320,7 +346,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                 <p className="text-sm text-gray-600 mt-2">{visit.notes}</p>
                                                 {visit.visitResult && (
                                                     <Badge className="mt-2">
-                                                        Result: {visit.visitResult}
+														{`${t('clientDetails.visits.resultPrefix')} ${visit.visitResult}`}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -339,37 +365,70 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 {/* Deals Tab */}
                 <TabsContent value="deals" className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold">Deals</h3>
+						<h3 className="text-lg font-semibold">{t('clientDetails.deals.title')}</h3>
                         <Button onClick={() => setShowDealForm(true)}>
                             <PlusIcon className="h-4 w-4 mr-2" />
-                            Create Deal
+							{t('clientDetails.deals.createButton')}
                         </Button>
                     </div>
 
                     {dealsLoading ? (
-                        <div className="text-center py-4">Loading deals...</div>
+						<div className="text-center py-4">{t('clientDetails.deals.loading')}</div>
                     ) : deals.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No deals created yet</div>
+						<div className="text-center py-8 text-gray-500">{t('clientDetails.deals.empty')}</div>
                     ) : (
                         <div className="space-y-4">
                             {deals.map((deal) => (
                                 <Card key={deal.id} className="cursor-pointer hover:shadow-md transition-shadow">
                                     <CardContent className="pt-4">
                                         <div className="flex justify-between items-start">
-                                            <div>
-                                                <h4 className="font-medium">EGP {deal.dealValue.toLocaleString()}</h4>
-                                                <p className="text-sm text-gray-600 mt-1">{deal.dealDescription}</p>
-                                                <p className="text-sm text-gray-500 mt-2">
-                                                    Expected close: {format(new Date(deal.expectedCloseDate), 'PPP')}
-                                                </p>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-lg">
+                                                    EGP {(deal.totalValue || deal.dealValue || 0).toLocaleString()}
+                                                </h4>
+                                                {deal.clientName && (
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        Client: {deal.clientName}
+                                                    </p>
+                                                )}
+                                                {deal.salesmanName && (
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        Salesman: {deal.salesmanName}
+                                                    </p>
+                                                )}
+                                                {(deal.completionNotes || deal.failureNotes) && (
+                                                    <p className="text-sm text-gray-600 mt-2">
+                                                        {deal.completionNotes || deal.failureNotes}
+                                                    </p>
+                                                )}
+                                                {deal.expectedDeliveryDate && (
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        Expected Delivery: {format(new Date(deal.expectedDeliveryDate), 'PPP')}
+                                                    </p>
+                                                )}
+                                                {deal.closedDate && (
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        Closed: {format(new Date(deal.closedDate), 'PPP')}
+                                                    </p>
+                                                )}
                                             </div>
-                                            <div className="text-right">
+                                            <div className="text-right ml-4">
                                                 <Badge className={getDealStatusColor(deal.status)}>
                                                     {deal.status.replace(/([A-Z])/g, ' $1').trim()}
                                                 </Badge>
                                                 <p className="text-sm text-gray-500 mt-2">
                                                     {format(new Date(deal.createdAt), 'PPP')}
                                                 </p>
+                                                {deal.managerApprovedAt && (
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Manager: {format(new Date(deal.managerApprovedAt), 'MMM dd')}
+                                                    </p>
+                                                )}
+                                                {deal.superAdminApprovedAt && (
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Admin: {format(new Date(deal.superAdminApprovedAt), 'MMM dd')}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </CardContent>
@@ -382,31 +441,43 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 {/* Offers Tab */}
                 <TabsContent value="offers" className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold">Offer Requests</h3>
+						<h3 className="text-lg font-semibold">{t('clientDetails.offers.title')}</h3>
                         <Button onClick={() => setShowOfferRequestForm(true)}>
                             <PlusIcon className="h-4 w-4 mr-2" />
-                            Create Request
+							{t('clientDetails.offers.createButton')}
                         </Button>
                     </div>
 
-                    {offerRequestsLoading ? (
-                        <div className="text-center py-4">Loading offers...</div>
-                    ) : offerRequests.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No offer requests yet</div>
+                    {offersLoading ? (
+						<div className="text-center py-4">{t('clientDetails.offers.loading')}</div>
+                    ) : (!offersByClient[clientId] || offersByClient[clientId].length === 0) ? (
+						<div className="text-center py-8 text-gray-500">{t('clientDetails.offers.empty')}</div>
                     ) : (
                         <div className="space-y-4">
-                            {offerRequests.map((offer) => (
+                            {(offersByClient[clientId] || []).map((offer: any) => (
                                 <Card key={offer.id} className="cursor-pointer hover:shadow-md transition-shadow">
                                     <CardContent className="pt-4">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <h4 className="font-medium">{offer.requestedProducts}</h4>
-                                                <p className="text-sm text-gray-500 mt-1">
-                                                    Requested by: {offer.requestedByName}
-                                                </p>
+                                                <h4 className="font-medium">
+                                                    {offer.products || 
+                                                     offer.equipment?.map((e: any) => e.name).join(', ') || 
+                                                     'N/A'}
+                                                </h4>
+                                                {offer.totalAmount && (
+                                                    <p className="text-sm font-semibold text-gray-700 mt-1">
+                                                        EGP {offer.totalAmount.toLocaleString()}
+                                                    </p>
+                                                )}
                                                 {offer.assignedToName && (
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        {t('clientDetails.offers.assignedTo')
+                                                            .replace('{{name}}', offer.assignedToName)}
+                                                    </p>
+                                                )}
+                                                {offer.createdByName && (
                                                     <p className="text-sm text-gray-500">
-                                                        Assigned to: {offer.assignedToName}
+                                                        Created by: {offer.createdByName}
                                                     </p>
                                                 )}
                                             </div>
@@ -414,9 +485,13 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                 <Badge className={getOfferStatusColor(offer.status)}>
                                                     {offer.status}
                                                 </Badge>
-                                                <Badge className={getPriorityColor(offer.priority || 'Medium')}>
-                                                    {offer.priority || 'Medium'}
-                                                </Badge>
+                                                {offer.validUntil && (
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        Valid until: {Array.isArray(offer.validUntil) 
+                                                            ? offer.validUntil[0] 
+                                                            : offer.validUntil}
+                                                    </p>
+                                                )}
                                                 <p className="text-sm text-gray-500 mt-2">
                                                     {offer.createdAt ? format(new Date(offer.createdAt), 'PPP') : 'N/A'}
                                                 </p>
@@ -432,17 +507,17 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 {/* Progress Tab */}
                 <TabsContent value="progress" className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-semibold">Task Progress</h3>
+						<h3 className="text-lg font-semibold">{t('clientDetails.progress.title')}</h3>
                         <Button onClick={() => setShowTaskProgressForm(true)}>
                             <PlusIcon className="h-4 w-4 mr-2" />
-                            Add Progress
+							{t('clientDetails.progress.addButton')}
                         </Button>
                     </div>
 
                     {taskProgressLoading ? (
-                        <div className="text-center py-4">Loading progress...</div>
+						<div className="text-center py-4">{t('clientDetails.progress.loading')}</div>
                     ) : taskProgress.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No progress recorded yet</div>
+						<div className="text-center py-8 text-gray-500">{t('clientDetails.progress.empty')}</div>
                     ) : (
                         <div className="space-y-4">
                             {taskProgress.map((progress) => (
@@ -453,17 +528,20 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                 <h4 className="font-medium">{progress.progressType} - {progress.description}</h4>
                                                 {progress.visitResult && (
                                                     <Badge className="mt-2">
-                                                        Result: {progress.visitResult}
+														{`${t('clientDetails.progress.resultPrefix')} ${progress.visitResult}`}
                                                     </Badge>
                                                 )}
                                                 {progress.nextStep && (
                                                     <Badge className="mt-2 ml-2">
-                                                        Next: {progress.nextStep}
+														{`${t('clientDetails.progress.nextPrefix')} ${progress.nextStep}`}
                                                     </Badge>
                                                 )}
                                                 {progress.satisfactionRating && (
                                                     <p className="text-sm text-gray-500 mt-2">
-                                                        Satisfaction: {progress.satisfactionRating}/5
+														{t('clientDetails.progress.satisfactionPrefix').replace(
+															'{{value}}',
+															progress.satisfactionRating.toString()
+														)}
                                                     </p>
                                                 )}
                                             </div>

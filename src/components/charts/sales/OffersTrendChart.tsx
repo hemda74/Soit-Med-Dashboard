@@ -3,6 +3,7 @@ import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalesmanStatisticsDTO } from "@/types/sales.types";
 import { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface OffersTrendChartProps {
 	data: SalesmanStatisticsDTO[];
@@ -12,6 +13,8 @@ interface OffersTrendChartProps {
 }
 
 export default function OffersTrendChart({ data, year, quarter, className }: OffersTrendChartProps) {
+	const { t, language } = useTranslation();
+
 	const offersData = useMemo(() => {
 		return data
 			.map((stat) => ({
@@ -24,7 +27,7 @@ export default function OffersTrendChart({ data, year, quarter, className }: Off
 			.slice(0, 10);
 	}, [data]);
 
-	const options: ApexOptions = {
+	const options: ApexOptions = useMemo(() => ({
 		colors: ["#8b5cf6", "#10b981", "#ef4444"],
 		chart: {
 			fontFamily: "Inter, sans-serif",
@@ -77,7 +80,7 @@ export default function OffersTrendChart({ data, year, quarter, className }: Off
 		},
 		yaxis: {
 			title: {
-				text: "Number of Offers",
+				text: t('numberOfOffers'),
 				style: {
 					fontSize: "14px",
 					color: "#374151",
@@ -95,7 +98,7 @@ export default function OffersTrendChart({ data, year, quarter, className }: Off
 		},
 		tooltip: {
 			y: {
-				formatter: (val: number) => `${val} offers`,
+				formatter: (val: number) => `${val} ${t('offers')}`,
 			},
 		},
 		legend: {
@@ -115,39 +118,39 @@ export default function OffersTrendChart({ data, year, quarter, className }: Off
 				},
 			},
 		},
-	};
+	}), [offersData, language, t]);
 
-	const series = [
+	const series = useMemo(() => [
 		{
-			name: "Total Offers",
+			name: t('totalOffers'),
 			data: offersData.map((item) => item.total),
 		},
 		{
-			name: "Accepted",
+			name: t('accepted'),
 			data: offersData.map((item) => item.accepted),
 		},
 		{
-			name: "Rejected",
+			name: t('rejected'),
 			data: offersData.map((item) => item.rejected),
 		},
-	];
+	], [offersData, language, t]);
 
-	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : "All Time";
+	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : t('allTime');
 	const totalOffers = data.reduce((sum, stat) => sum + stat.totalOffers, 0);
 	const totalAccepted = data.reduce((sum, stat) => sum + stat.acceptedOffers, 0);
 
 	return (
 		<Card className={className}>
 			<CardHeader>
-				<CardTitle>Offers Trend</CardTitle>
+				<CardTitle>{t('offersTrend')}</CardTitle>
 				<CardDescription>
-					Offer performance by salesman for {periodLabel} • Total: {totalOffers} offers ({totalAccepted} accepted)
+					{t('offersTrendDescription')} {periodLabel} • {t('total')}: {totalOffers} {t('offers')} ({totalAccepted} {t('accepted')})
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				{offersData.length === 0 ? (
 					<div className="flex items-center justify-center h-[300px] text-muted-foreground">
-						No offers data available
+						{t('noOffersData')}
 					</div>
 				) : (
 					<div className="w-full">

@@ -743,7 +743,7 @@ const SalesSupportDashboard: React.FC = () => {
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 							<Card className="lg:col-span-1 shadow-md">
 								<CardHeader>
-									<CardTitle>{t('clientSearch')}</CardTitle>
+									<CardTitle>{t('clientSearchTitle')}</CardTitle>
 									<CardDescription>{t('findAndManageClients')}</CardDescription>
 								</CardHeader>
 								<CardContent>

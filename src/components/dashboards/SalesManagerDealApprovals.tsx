@@ -46,14 +46,10 @@ const SalesManagerDealApprovals: React.FC = () => {
 
 		try {
 			setLoading(true);
-			const response = await salesApi.getPendingApprovals();
-			if (response.success && response.data) {
-				// Filter only pending manager approvals
-				const managerApprovals = response.data.filter(
-					(deal: any) => deal.status === 'PendingManagerApproval'
-				);
-				setPendingDeals(managerApprovals);
-			}
+			// Note: SalesManager approval for deals has been removed
+			// Deals now go directly to SuperAdmin approval
+			// This component is kept for backward compatibility but will show empty
+			setPendingDeals([]);
 		} catch (error: any) {
 			console.error('Failed to load pending approvals:', error);
 			toast.error('Failed to load pending approvals');

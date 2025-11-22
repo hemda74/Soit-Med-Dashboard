@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ interface Deal {
 	notes?: string;
 }
 
-const SuperAdminDealApprovals: React.FC = () => {
+const SuperAdminDealApprovals: React.FC = React.memo(() => {
 	usePerformance('SuperAdminDealApprovals');
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
@@ -40,11 +40,7 @@ const SuperAdminDealApprovals: React.FC = () => {
 	const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 	const [showApprovalDialog, setShowApprovalDialog] = useState(false);
 
-	useEffect(() => {
-		loadPendingApprovals();
-	}, []);
-
-	const loadPendingApprovals = async () => {
+	const loadPendingApprovals = useCallback(async () => {
 		if (!user?.token) return;
 
 		try {
@@ -63,9 +59,9 @@ const SuperAdminDealApprovals: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [user?.token]);
 
-	const handleViewDeal = async (dealId: string) => {
+	const handleViewDeal = useCallback(async (dealId: string) => {
 		try {
 			const response = await salesApi.getDeal(dealId);
 			if (response.success && response.data) {
@@ -75,14 +71,18 @@ const SuperAdminDealApprovals: React.FC = () => {
 		} catch (error: any) {
 			toast.error('Failed to load deal details');
 		}
-	};
+	}, []);
 
-	const handleApprovalSuccess = () => {
+	const handleApprovalSuccess = useCallback(() => {
 		setShowApprovalDialog(false);
 		setSelectedDeal(null);
 		loadPendingApprovals();
 		toast.success('Deal approval processed successfully');
-	};
+	}, [loadPendingApprovals]);
+
+	useEffect(() => {
+		loadPendingApprovals();
+	}, [loadPendingApprovals]);
 
 	if (loading) {
 		return (
@@ -201,7 +201,9 @@ const SuperAdminDealApprovals: React.FC = () => {
 			</Dialog>
 		</>
 	);
-};
+});
+
+SuperAdminDealApprovals.displayName = 'SuperAdminDealApprovals';
 
 export default SuperAdminDealApprovals;
 

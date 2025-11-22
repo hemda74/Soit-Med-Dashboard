@@ -1,6 +1,6 @@
 // Task Progress Form Component - Create task progress with offer request integration
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,28 +19,38 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { CreateTaskProgressDto } from '@/types/sales.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
-// Validation schema for task progress creation
-const taskProgressSchema = z.object({
-    clientId: z.string().min(1, 'Client is required'),
-    taskId: z.string().min(1, 'Task is required'),
-    progressType: z.enum(['Visit', 'Call', 'Email', 'Meeting'], {
-        message: 'Progress type is required',
-    }),
-    description: z.string().min(5, 'Description must be at least 5 characters').max(200, 'Description must be less than 200 characters'),
-    progressDate: z.date({
-        message: 'Progress date is required',
-    }),
-    visitResult: z.enum(['Interested', 'NotInterested']).optional(),
-    nextStep: z.enum(['NeedsOffer', 'NeedsDeal']).optional(),
-    followUpDate: z.date().optional(),
-    satisfactionRating: z.number().min(1).max(5).optional(),
-    createOfferRequest: z.boolean().optional(),
-    requestedProducts: z.string().optional(),
-    priority: z.enum(['Low', 'Medium', 'High']).optional(),
-});
+const createTaskProgressSchema = (t: (key: string) => string) =>
+	z.object({
+		clientId: z.string().min(1, t('taskProgressForm.validation.clientRequired')),
+		taskId: z.string().min(1, t('taskProgressForm.validation.taskRequired')),
+		progressType: z.enum(['Visit', 'Call', 'Email', 'Meeting'], {
+			message: t('taskProgressForm.validation.progressTypeRequired'),
+		}),
+		description: z
+			.string()
+			.min(5, t('taskProgressForm.validation.descriptionMin'))
+			.max(200, t('taskProgressForm.validation.descriptionMax')),
+		progressDate: z.date({
+			errorMap: () => ({ message: t('taskProgressForm.validation.progressDateRequired') }),
+		}),
+		visitResult: z.enum(['Interested', 'NotInterested']).optional(),
+		nextStep: z.enum(['NeedsOffer', 'NeedsDeal']).optional(),
+		followUpDate: z.date().optional(),
+		satisfactionRating: z
+			.number({
+				errorMap: () => ({ message: t('taskProgressForm.validation.satisfactionInvalid') }),
+			})
+			.min(1)
+			.max(5)
+			.optional(),
+		createOfferRequest: z.boolean().optional(),
+		requestedProducts: z.string().optional(),
+		priority: z.enum(['Low', 'Medium', 'High']).optional(),
+	});
 
-type TaskProgressFormValues = z.infer<typeof taskProgressSchema>;
+type TaskProgressFormValues = z.infer<ReturnType<typeof createTaskProgressSchema>>;
 
 interface TaskProgressFormProps {
     onSuccess?: () => void;
@@ -50,23 +60,26 @@ interface TaskProgressFormProps {
 }
 
 export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId }: TaskProgressFormProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [createOfferRequest, setCreateOfferRequest] = useState(false);
-    const { user } = useAuthStore();
-    const { clients, createTaskProgress, getMyClients } = useSalesStore();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [createOfferRequest, setCreateOfferRequest] = useState(false);
+	const { user } = useAuthStore();
+	const { clients, createTaskProgress, getMyClients } = useSalesStore();
+	const { t } = useTranslation();
 
-    const form = useForm<TaskProgressFormValues>({
-        resolver: zodResolver(taskProgressSchema),
-        defaultValues: {
-            clientId: clientId || '',
-            taskId: taskId || '',
-            progressType: 'Visit',
-            description: '',
-            progressDate: new Date(),
-            createOfferRequest: false,
-            priority: 'Medium',
-        },
-    });
+	const taskProgressSchema = useMemo(() => createTaskProgressSchema(t), [t]);
+
+	const form = useForm<TaskProgressFormValues>({
+		resolver: zodResolver(taskProgressSchema),
+		defaultValues: {
+			clientId: clientId || '',
+			taskId: taskId || '',
+			progressType: 'Visit',
+			description: '',
+			progressDate: new Date(),
+			createOfferRequest: false,
+			priority: 'Medium',
+		},
+	});
 
     // Load clients if not already loaded
     React.useEffect(() => {
@@ -96,7 +109,7 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
             await createTaskProgress(progressData);
             onSuccess?.();
         } catch (error) {
-            console.error('Error creating task progress:', error);
+            console.error(t('taskProgressForm.errors.createFailed'), error);
         } finally {
             setIsSubmitting(false);
         }
@@ -109,17 +122,40 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
             return clients;
         }
         // For SalesManager and Salesman, only show their assigned clients
-        return clients.filter(client => client.assignedSalesmanId === user?.id);
+        return clients.filter(client => client.assignedTo === user?.id || client.assignedSalesmanName === user?.userName);
     };
 
-    // Mock tasks - in real implementation, this would come from an API
-    const mockTasks = [
-        { id: '1', title: 'Initial Client Visit', description: 'First visit to establish relationship' },
-        { id: '2', title: 'Product Presentation', description: 'Present product catalog and capabilities' },
-        { id: '3', title: 'Follow-up Call', description: 'Follow up on previous meeting' },
-        { id: '4', title: 'Proposal Discussion', description: 'Discuss proposal details and pricing' },
-        { id: '5', title: 'Contract Negotiation', description: 'Negotiate terms and conditions' },
-    ];
+	// Mock tasks - in real implementation, this would come from an API
+	const mockTasks = useMemo(
+		() => [
+			{
+				id: '1',
+				title: t('taskProgressForm.mockTasks.initialVisitTitle'),
+				description: t('taskProgressForm.mockTasks.initialVisitDescription'),
+			},
+			{
+				id: '2',
+				title: t('taskProgressForm.mockTasks.productPresentationTitle'),
+				description: t('taskProgressForm.mockTasks.productPresentationDescription'),
+			},
+			{
+				id: '3',
+				title: t('taskProgressForm.mockTasks.followUpCallTitle'),
+				description: t('taskProgressForm.mockTasks.followUpCallDescription'),
+			},
+			{
+				id: '4',
+				title: t('taskProgressForm.mockTasks.proposalDiscussionTitle'),
+				description: t('taskProgressForm.mockTasks.proposalDiscussionDescription'),
+			},
+			{
+				id: '5',
+				title: t('taskProgressForm.mockTasks.contractNegotiationTitle'),
+				description: t('taskProgressForm.mockTasks.contractNegotiationDescription'),
+			},
+		],
+		[t]
+	);
 
     const handleProgressTypeChange = (value: string) => {
         form.setValue('progressType', value as any);
@@ -131,23 +167,27 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
         }
     };
 
-    const handleVisitResultChange = (value: string) => {
-        form.setValue('visitResult', value as any);
+	const handleVisitResultChange = (value: string) => {
+		form.setValue('visitResult', value as any);
 
-        // Auto-suggest next step based on visit result
-        if (value === 'Interested') {
-            form.setValue('nextStep', 'NeedsOffer');
-            setCreateOfferRequest(true);
-        } else if (value === 'NotInterested') {
-            // No auto-suggest for not interested - let user choose
-            form.setValue('nextStep', undefined);
-        }
-    };
+		// Auto-suggest next step based on visit result
+		if (value === 'Interested') {
+			form.setValue('nextStep', 'NeedsOffer');
+			setCreateOfferRequest(true);
+			form.setValue('createOfferRequest', true);
+		} else if (value === 'NotInterested') {
+			// No auto-suggest for not interested - let user choose
+			form.setValue('nextStep', undefined);
+		}
+	};
+
+	const watchProgressType = form.watch('progressType');
+	const watchFollowUpDate = form.watch('followUpDate');
 
     return (
         <Card className="w-full max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>Create Task Progress</CardTitle>
+                <CardTitle>{t('taskProgressForm.title')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -157,17 +197,18 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                             name="clientId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Client *</FormLabel>
+                                    <FormLabel>{t('taskProgressForm.fields.client')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!clientId}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a client" />
+                                                <SelectValue placeholder={t('taskProgressForm.placeholders.client')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
                                             {getAvailableClients().map((client) => (
                                                 <SelectItem key={client.id} value={client.id}>
-                                                    {client.name} {client.classification ? `(${client.classification})` : ''} {client.organizationName ? `- ${client.organizationName}` : ''}
+                                                    {client.name} {client.classification ? `(${client.classification})` : ''}{' '}
+                                                    {client.organizationName ? `- ${client.organizationName}` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -182,11 +223,11 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                             name="taskId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Task *</FormLabel>
+                                    <FormLabel>{t('taskProgressForm.fields.task')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!taskId}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a task" />
+                                                <SelectValue placeholder={t('taskProgressForm.placeholders.task')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -207,18 +248,18 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                             name="progressType"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Progress Type *</FormLabel>
+                                    <FormLabel>{t('taskProgressForm.fields.progressType')}</FormLabel>
                                     <Select onValueChange={handleProgressTypeChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select progress type" />
+                                                <SelectValue placeholder={t('taskProgressForm.placeholders.progressType')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="Visit">Visit</SelectItem>
-                                            <SelectItem value="Call">Call</SelectItem>
-                                            <SelectItem value="Email">Email</SelectItem>
-                                            <SelectItem value="Meeting">Meeting</SelectItem>
+                                            <SelectItem value="Visit">{t('taskProgressForm.progressTypes.visit')}</SelectItem>
+                                            <SelectItem value="Call">{t('taskProgressForm.progressTypes.call')}</SelectItem>
+                                            <SelectItem value="Email">{t('taskProgressForm.progressTypes.email')}</SelectItem>
+                                            <SelectItem value="Meeting">{t('taskProgressForm.progressTypes.meeting')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -231,10 +272,10 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description *</FormLabel>
+                                    <FormLabel>{t('taskProgressForm.fields.description')}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Describe what happened during this progress..."
+                                            placeholder={t('taskProgressForm.placeholders.description')}
                                             className="min-h-[100px]"
                                             {...field}
                                         />
@@ -249,7 +290,7 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                             name="progressDate"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Progress Date *</FormLabel>
+                                    <FormLabel>{t('taskProgressForm.fields.progressDate')}</FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <FormControl>
@@ -263,7 +304,7 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                                     {field.value ? (
                                                         format(field.value, "PPP")
                                                     ) : (
-                                                        <span>Pick a date</span>
+                                                        <span>{t('taskProgressForm.placeholders.date')}</span>
                                                     )}
                                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                 </Button>
@@ -285,23 +326,27 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                         />
 
                         {/* Visit-specific fields */}
-                        {form.watch('progressType') === 'Visit' && (
+                        {watchProgressType === 'Visit' && (
                             <>
                                 <FormField
                                     control={form.control}
                                     name="visitResult"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Visit Result</FormLabel>
+                                            <FormLabel>{t('taskProgressForm.fields.visitResult')}</FormLabel>
                                             <Select onValueChange={handleVisitResultChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select visit result" />
+                                                        <SelectValue placeholder={t('taskProgressForm.placeholders.visitResult')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="Interested">Interested</SelectItem>
-                                                    <SelectItem value="NotInterested">Not Interested</SelectItem>
+                                                    <SelectItem value="Interested">
+                                                        {t('taskProgressForm.visitResults.interested')}
+                                                    </SelectItem>
+                                                    <SelectItem value="NotInterested">
+                                                        {t('taskProgressForm.visitResults.notInterested')}
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -314,16 +359,20 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                     name="nextStep"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Next Step</FormLabel>
+                                            <FormLabel>{t('taskProgressForm.fields.nextStep')}</FormLabel>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select next step" />
+                                                        <SelectValue placeholder={t('taskProgressForm.placeholders.nextStep')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="NeedsOffer">Needs Offer</SelectItem>
-                                                    <SelectItem value="NeedsDeal">Needs Deal</SelectItem>
+                                                    <SelectItem value="NeedsOffer">
+                                                        {t('taskProgressForm.nextSteps.needsOffer')}
+                                                    </SelectItem>
+                                                    <SelectItem value="NeedsDeal">
+                                                        {t('taskProgressForm.nextSteps.needsDeal')}
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -336,13 +385,13 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                     name="satisfactionRating"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Satisfaction Rating (1-5)</FormLabel>
+                                            <FormLabel>{t('taskProgressForm.fields.satisfactionRating')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
                                                     min="1"
                                                     max="5"
-                                                    placeholder="Rate client satisfaction"
+                                                    placeholder={t('taskProgressForm.placeholders.satisfactionRating')}
                                                     {...field}
                                                     onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
                                                 />
@@ -355,13 +404,13 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                         )}
 
                         {/* Follow-up date */}
-                        {form.watch('followUpDate') && (
+                        {watchFollowUpDate && (
                             <FormField
                                 control={form.control}
                                 name="followUpDate"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
-                                        <FormLabel>Follow-up Date</FormLabel>
+                                        <FormLabel>{t('taskProgressForm.fields.followUpDate')}</FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
@@ -375,7 +424,7 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                                         {field.value ? (
                                                             format(field.value, "PPP")
                                                         ) : (
-                                                            <span>Pick a follow-up date</span>
+                                                            <span>{t('taskProgressForm.placeholders.followUpDate')}</span>
                                                         )}
                                                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                     </Button>
@@ -413,9 +462,9 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                         />
                                     </FormControl>
                                     <div className="space-y-1 leading-none">
-                                        <FormLabel>Create Offer Request</FormLabel>
+                                        <FormLabel>{t('taskProgressForm.createOfferRequest.label')}</FormLabel>
                                         <p className="text-sm text-muted-foreground">
-                                            Automatically create an offer request for this client
+                                            {t('taskProgressForm.createOfferRequest.description')}
                                         </p>
                                     </div>
                                 </FormItem>
@@ -429,10 +478,10 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                     name="requestedProducts"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Requested Products *</FormLabel>
+                                            <FormLabel>{t('taskProgressForm.fields.requestedProducts')}</FormLabel>
                                             <FormControl>
                                                 <Textarea
-                                                    placeholder="Describe the products the client is interested in..."
+                                                    placeholder={t('taskProgressForm.placeholders.requestedProducts')}
                                                     className="min-h-[80px]"
                                                     {...field}
                                                 />
@@ -447,17 +496,17 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                     name="priority"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Priority</FormLabel>
+                                            <FormLabel>{t('taskProgressForm.priority.label')}</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select priority" />
+                                                        <SelectValue placeholder={t('taskProgressForm.priority.placeholder')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="Low">Low</SelectItem>
-                                                    <SelectItem value="Medium">Medium</SelectItem>
-                                                    <SelectItem value="High">High</SelectItem>
+                                                    <SelectItem value="Low">{t('taskProgressForm.priority.low')}</SelectItem>
+                                                    <SelectItem value="Medium">{t('taskProgressForm.priority.medium')}</SelectItem>
+                                                    <SelectItem value="High">{t('taskProgressForm.priority.high')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -470,11 +519,11 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                         <div className="flex justify-end space-x-2">
                             {onCancel && (
                                 <Button type="button" variant="outline" onClick={onCancel}>
-                                    Cancel
+                                    {t('cancel')}
                                 </Button>
                             )}
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? 'Creating...' : 'Create Progress'}
+                                {isSubmitting ? t('creating') : t('taskProgressForm.submitButton')}
                             </Button>
                         </div>
                     </form>

@@ -1,6 +1,6 @@
 // Deal Form Component - Create and edit deals according to new business logic
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,19 +18,15 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Deal, CreateDealDto, UpdateDealDto } from '@/types/sales.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
-// Validation schema for deal creation
-const dealSchema = z.object({
-    clientId: z.string().min(1, 'Client is required'),
-    dealValue: z.number().min(0.01, 'Deal value must be greater than 0'),
-    dealDescription: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description must be less than 500 characters'),
-    expectedCloseDate: z.date({
-        message: 'Expected close date is required',
-    }),
-    offerId: z.string().optional(),
-});
-
-type DealFormValues = z.infer<typeof dealSchema>;
+type DealFormValues = {
+    clientId: string;
+    dealValue: number;
+    dealDescription: string;
+    expectedCloseDate: Date;
+    offerId?: string;
+};
 
 interface DealFormProps {
     deal?: Deal;
@@ -44,6 +40,30 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useAuthStore();
     const { clients, createDeal, updateDeal, getMyClients } = useSalesStore();
+    const { t } = useTranslation();
+
+    const dealSchema = useMemo(
+        () =>
+            z.object({
+                clientId: z.string().min(1, t('dealForm.validation.clientRequired')),
+                dealValue: z
+                    .number({
+                        required_error: t('dealForm.validation.dealValueRequired'),
+                        invalid_type_error: t('dealForm.validation.dealValueInvalid'),
+                    })
+                    .min(0.01, t('dealForm.validation.dealValueMin')),
+                dealDescription: z
+                    .string()
+                    .min(10, t('dealForm.validation.descriptionMin'))
+                    .max(500, t('dealForm.validation.descriptionMax')),
+                expectedCloseDate: z.date({
+                    required_error: t('dealForm.validation.expectedCloseDateRequired'),
+                    invalid_type_error: t('dealForm.validation.expectedCloseDateRequired'),
+                }),
+                offerId: z.string().optional(),
+            }),
+        [t]
+    );
 
     const form = useForm<DealFormValues>({
         resolver: zodResolver(dealSchema),
@@ -82,7 +102,7 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
 
             onSuccess?.();
         } catch (error) {
-            console.error('Error saving deal:', error);
+            console.error(t('dealForm.errors.saveDeal'), error);
         } finally {
             setIsSubmitting(false);
         }
@@ -101,7 +121,7 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
     return (
         <Card className="w-full max-w-2xl mx-auto">
             <CardHeader>
-                <CardTitle>{deal ? 'Edit Deal' : 'Create New Deal'}</CardTitle>
+                <CardTitle>{deal ? t('dealForm.editTitle') : t('dealForm.createTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -111,17 +131,19 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                             name="clientId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Client *</FormLabel>
+                                    <FormLabel>{t('dealForm.clientLabel')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!clientId}>
                                         <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a client" />
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('dealForm.clientPlaceholder')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
                                             {getAvailableClients().map((client) => (
                                                 <SelectItem key={client.id} value={client.id}>
-                                                    {client.name} {client.classification ? `(${client.classification})` : ''} {client.organizationName ? `- ${client.organizationName}` : ''}
+                                                    {client.name}{' '}
+                                                    {client.classification ? `(${client.classification})` : ''}
+                                                    {client.organizationName ? ` - ${client.organizationName}` : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -136,12 +158,12 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                             name="dealValue"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Deal Value (EGP) *</FormLabel>
+                                    <FormLabel>{t('dealForm.dealValueLabel')}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="number"
                                             step="0.01"
-                                            placeholder="Enter deal value"
+                                            placeholder={t('dealForm.dealValuePlaceholder')}
                                             {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                         />
@@ -156,10 +178,10 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                             name="dealDescription"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description *</FormLabel>
+                                    <FormLabel>{t('dealForm.descriptionLabel')}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Describe the deal details..."
+                                            placeholder={t('dealForm.descriptionPlaceholder')}
                                             className="min-h-[100px]"
                                             {...field}
                                         />
@@ -174,7 +196,7 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                             name="expectedCloseDate"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Expected Close Date *</FormLabel>
+                                    <FormLabel>{t('dealForm.expectedCloseDateLabel')}</FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <FormControl>
@@ -185,11 +207,7 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                                                         !field.value && "text-muted-foreground"
                                                     )}
                                                 >
-                                                    {field.value ? (
-                                                        format(field.value, "PPP")
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
+                                                    {field.value ? format(field.value, "PPP") : <span>{t('dealForm.datePlaceholder')}</span>}
                                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                 </Button>
                                             </FormControl>
@@ -212,11 +230,15 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                         <div className="flex justify-end space-x-2">
                             {onCancel && (
                                 <Button type="button" variant="outline" onClick={onCancel}>
-                                    Cancel
+                                    {t('cancel')}
                                 </Button>
                             )}
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? 'Saving...' : deal ? 'Update Deal' : 'Create Deal'}
+                                {isSubmitting
+                                    ? t('saving')
+                                    : deal
+                                    ? t('dealForm.updateButton')
+                                    : t('dealForm.createButton')}
                             </Button>
                         </div>
                     </form>

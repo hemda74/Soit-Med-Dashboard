@@ -4,4 +4,6 @@ export { default as RoleDistributionChart } from './RoleDistributionChart';
 export { default as ActiveInactiveUsersChart } from './ActiveInactiveUsersChart';
 export { default as UnifiedAnalyticsCard } from './UnifiedAnalyticsCard';
 export { default as MonthlyActivityChart } from './MonthlyActivityChart';
-export { default as SystemHealthChart } from './SystemHealthChart';
+
+// Sales Statistics Charts
+export { TotalDealsChart, RevenueTrendChart } from './sales';
