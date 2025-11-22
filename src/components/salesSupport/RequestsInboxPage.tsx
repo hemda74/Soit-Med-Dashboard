@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -35,14 +35,22 @@ import {
     MagnifyingGlassIcon,
     FunnelIcon,
 } from '@heroicons/react/24/outline';
+import { Building, ClipboardList, CalendarClock, User, StickyNote } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { OfferRequest } from '@/types/sales.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type OfferRequestStatus = 'Requested' | 'Assigned' | 'InProgress' | 'Ready' | 'Sent' | 'Cancelled';
 
 export default function RequestsInboxPage() {
     usePerformance('RequestsInboxPage');
+    const { t } = useTranslation();
+    const translate = (key: string, fallback: string) => {
+        const value = t(key);
+        return value && value !== key ? value : fallback;
+    };
     const { user } = useAuthStore();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [offerRequests, setOfferRequests] = useState<OfferRequest[]>([]);
     const [filteredRequests, setFilteredRequests] = useState<OfferRequest[]>([]);
@@ -73,8 +81,9 @@ export default function RequestsInboxPage() {
             });
             setOfferRequests(response.data || []);
         } catch (err: any) {
-            setError(err.message || 'Failed to load offer requests');
-            toast.error(err.message || 'Failed to load offer requests');
+            const fallback = translate('offerRequests.errors.loadFailed', 'Failed to load offer requests');
+            setError(err.message || fallback);
+            toast.error(err.message || fallback);
         } finally {
             setLoading(false);
         }
@@ -91,8 +100,9 @@ export default function RequestsInboxPage() {
             });
             setOfferRequests(response.data || []);
         } catch (err: any) {
-            setError(err.message || 'Failed to load assigned requests');
-            toast.error(err.message || 'Failed to load assigned requests');
+            const fallback = translate('offerRequests.errors.loadAssignedFailed', 'Failed to load assigned requests');
+            setError(err.message || fallback);
+            toast.error(err.message || fallback);
         } finally {
             setLoading(false);
         }
@@ -115,7 +125,7 @@ export default function RequestsInboxPage() {
                 // Clear the URL parameter after opening the dialog
                 searchParams.delete('requestId');
                 setSearchParams(searchParams);
-                toast.success('Opening request from notification');
+                toast.success(translate('offerRequests.messages.openFromNotification', 'Opening request from notification'));
             }
         }
     }, [searchParams, offerRequests, setSearchParams]);
@@ -141,7 +151,7 @@ export default function RequestsInboxPage() {
     // Assign to myself
     const handleAssignToMyself = async (request: OfferRequest) => {
         if (!user?.id) {
-            toast.error('User ID not found');
+            toast.error(translate('common.errors.userIdMissing', 'User ID not found'));
             return;
         }
 
@@ -149,10 +159,11 @@ export default function RequestsInboxPage() {
             await salesApi.assignOfferRequest(request.id, {
                 assignedTo: user.id,
             });
-            toast.success('Request assigned to you successfully');
+            toast.success(translate('offerRequests.messages.assignedToYou', 'Request assigned to you successfully'));
             loadOfferRequests();
         } catch (err: any) {
-            toast.error(err.message || 'Failed to assign request');
+            const fallback = translate('offerRequests.errors.assignFailed', 'Failed to assign request');
+            toast.error(err.message || fallback);
         }
     };
 
@@ -165,14 +176,15 @@ export default function RequestsInboxPage() {
                 status: newStatus,
                 notes: statusNotes || undefined,
             });
-            toast.success('Status updated successfully');
+            toast.success(translate('offerRequests.messages.statusUpdated', 'Status updated successfully'));
             setShowStatusDialog(false);
             setNewStatus('Requested');
             setStatusNotes('');
             loadOfferRequests();
             setSelectedRequest(null);
         } catch (err: any) {
-            toast.error(err.message || 'Failed to update status');
+            const fallback = translate('offerRequests.errors.statusUpdateFailed', 'Failed to update status');
+            toast.error(err.message || fallback);
         }
     };
 
@@ -235,9 +247,11 @@ export default function RequestsInboxPage() {
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-xl shadow-lg p-8 text-white">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h1 className="text-3xl font-bold mb-2 text-white">Offer Requests Management</h1>
+                            <h1 className="text-3xl font-bold mb-2 text-white">
+                                {translate('offerRequests.headerTitle', 'Offer Requests Management')}
+                            </h1>
                             <p className="text-blue-100 dark:text-blue-200 text-lg">
-                                Manage and track offer requests from salesmen
+                                {translate('offerRequests.headerSubtitle', 'Manage and track offer requests from salesmen')}
                             </p>
                         </div>
                         <Button
@@ -246,7 +260,7 @@ export default function RequestsInboxPage() {
                             className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700"
                         >
                             <ArrowPathIcon className="h-5 w-5 mr-2" />
-                            Refresh
+                            {translate('common.refresh', 'Refresh')}
                         </Button>
                     </div>
                 </div>
@@ -257,7 +271,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {translate('offerRequests.stats.total', 'Total')}
+                                    </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {stats.total}
                                     </p>
@@ -271,7 +287,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Requested</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {translate('offerRequests.stats.requested', 'Requested')}
+                                    </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {stats.requested}
                                     </p>
@@ -285,7 +303,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Assigned</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {translate('offerRequests.stats.assigned', 'Assigned')}
+                                    </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {stats.assigned}
                                     </p>
@@ -299,7 +319,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {translate('offerRequests.stats.inProgress', 'In Progress')}
+                                    </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {stats.inProgress}
                                     </p>
@@ -313,7 +335,9 @@ export default function RequestsInboxPage() {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ready</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {translate('offerRequests.stats.ready', 'Ready')}
+                                    </p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {stats.ready}
                                     </p>
@@ -331,7 +355,7 @@ export default function RequestsInboxPage() {
                             <div className="flex-1 relative">
                                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                 <Input
-                                    placeholder="Search by client, salesman, products, or ID..."
+                                    placeholder={translate('offerRequests.searchPlaceholder', 'Search by client, salesman, products, or ID...')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-10"
@@ -341,16 +365,16 @@ export default function RequestsInboxPage() {
                                 <FunnelIcon className="h-5 w-5 text-gray-400" />
                                 <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
                                     <SelectTrigger className="w-48">
-                                        <SelectValue placeholder="Filter by status" />
+                                        <SelectValue placeholder={translate('offerRequests.filters.statusPlaceholder', 'Filter by status')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Statuses</SelectItem>
-                                        <SelectItem value="Requested">Requested</SelectItem>
-                                        <SelectItem value="Assigned">Assigned</SelectItem>
-                                        <SelectItem value="InProgress">In Progress</SelectItem>
-                                        <SelectItem value="Ready">Ready</SelectItem>
-                                        <SelectItem value="Sent">Sent</SelectItem>
-                                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                        <SelectItem value="all">{translate('offerRequests.status.all', 'All Statuses')}</SelectItem>
+                                        <SelectItem value="Requested">{translate('offerRequests.status.requested', 'Requested')}</SelectItem>
+                                        <SelectItem value="Assigned">{translate('offerRequests.status.assigned', 'Assigned')}</SelectItem>
+                                        <SelectItem value="InProgress">{translate('offerRequests.status.inProgress', 'In Progress')}</SelectItem>
+                                        <SelectItem value="Ready">{translate('offerRequests.status.ready', 'Ready')}</SelectItem>
+                                        <SelectItem value="Sent">{translate('offerRequests.status.sent', 'Sent')}</SelectItem>
+                                        <SelectItem value="Cancelled">{translate('offerRequests.status.cancelled', 'Cancelled')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -359,7 +383,7 @@ export default function RequestsInboxPage() {
                                 onClick={loadAssignedRequests}
                                 className="whitespace-nowrap"
                             >
-                                My Assigned Requests
+                                {translate('offerRequests.actions.myAssigned', 'My Assigned Requests')}
                             </Button>
                         </div>
                     </CardContent>
@@ -368,120 +392,163 @@ export default function RequestsInboxPage() {
                 {/* Requests List */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Offer Requests</CardTitle>
+                        <CardTitle>{translate('offerRequests.list.title', 'Offer Requests')}</CardTitle>
                         <CardDescription>
-                            {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} found
+                            {translate('offerRequests.list.count', '{{count}} requests found').replace('{{count}}', filteredRequests.length.toString())}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {loading ? (
                             <div className="text-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                                <p className="text-gray-500 dark:text-gray-400 mt-4">Loading requests...</p>
+                                <p className="text-gray-500 dark:text-gray-400 mt-4">
+                                    {translate('offerRequests.list.loading', 'Loading requests...')}
+                                </p>
                             </div>
                         ) : error ? (
                             <div className="text-center py-12 text-red-500 dark:text-red-400">
                                 <XCircleIcon className="h-12 w-12 mx-auto mb-4" />
                                 <p>{error}</p>
                                 <Button onClick={loadOfferRequests} className="mt-4">
-                                    Retry
+                                    {translate('common.retry', 'Retry')}
                                 </Button>
                             </div>
                         ) : filteredRequests.length === 0 ? (
                             <div className="text-center py-12">
                                 <InboxIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                                <p className="text-gray-500 dark:text-gray-400 text-lg">No requests found</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                                    {translate('offerRequests.list.empty', 'No requests found')}
+                                </p>
                                 {searchQuery && (
                                     <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-                                        Try adjusting your search or filters
+                                        {translate('offerRequests.list.adjustFilters', 'Try adjusting your search or filters')}
                                     </p>
                                 )}
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {filteredRequests.map((request) => (
-                                    <div
+                                    <Card
                                         key={request.id}
-                                        className="border-2 dark:border-gray-700 rounded-xl p-5 hover:shadow-lg transition-all bg-white dark:bg-gray-800"
+                                        className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.02] hover:shadow-xl transition-all duration-200"
                                     >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                                                        Request #{request.id}
+                                        <CardContent className="p-5 md:p-6 space-y-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                        {`${translate('offerRequests.card.requestLabel', 'Request #')}${request.id}`}
+                                                    </p>
+                                                    <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                                                        <Building className="h-4 w-4 text-primary" />
+                                                        {request.clientName}
                                                     </h3>
-                                                    <Badge className={getStatusColor(request.status)}>
-                                                        {request.status}
-                                                    </Badge>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
                                                     {request.priority && (
                                                         <Badge className={getPriorityColor(request.priority)} variant="outline">
                                                             {request.priority}
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                                    <strong>Client:</strong> {request.clientName}
+                                            </div>
+
+                                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-4 border border-slate-100 dark:border-slate-800">
+                                                <p className="text-xs font-medium text-muted-foreground uppercase mb-1 flex items-center gap-2">
+                                                    <ClipboardList className="h-4 w-4 text-primary" />
+                                                    {translate('offerRequests.card.requestedProducts', 'Requested Products')}
                                                 </p>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                                    <strong>Requested Products:</strong> {request.requestedProducts}
-                                                </p>
-                                                {request.specialNotes && (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 italic">
-                                                        <strong>Notes:</strong> {request.specialNotes}
+                                                <p className="text-sm text-foreground">{request.requestedProducts || 'N/A'}</p>
+                                            </div>
+
+                                            {request.specialNotes && (
+                                                <div className="rounded-xl bg-amber-50 dark:bg-amber-900/10 p-4 border border-amber-100 dark:border-amber-900/40">
+                                                    <p className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase mb-1 flex items-center gap-2">
+                                                        <StickyNote className="h-4 w-4" />
+                                                        {translate('offerRequests.card.notes', 'Notes')}
                                                     </p>
-                                                )}
-                                                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500 mt-3">
+                                                    <p className="text-sm text-amber-900 dark:text-amber-100">{request.specialNotes}</p>
+                                                </div>
+                                            )}
+
+                                            <div className="flex flex-wrap gap-3 text-xs">
+                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                                                    <User className="h-4 w-4" />
                                                     <span>
-                                                        <strong>Requested by:</strong> {request.requestedByName}
+                                                        {translate('offerRequests.card.requestedBy', 'Requested by')}{' '}
+                                                        <strong>{request.requestedByName}</strong>
                                                     </span>
-                                                    {request.requestDate && (
+                                                </div>
+                                                {request.requestDate && (
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                                                        <CalendarClock className="h-4 w-4" />
                                                         <span>
-                                                            <strong>Date:</strong>{' '}
                                                             {format(new Date(request.requestDate), 'MMM dd, yyyy HH:mm')}
                                                         </span>
-                                                    )}
-                                                    {request.assignedToName && (
+                                                    </div>
+                                                )}
+                                                {request.assignedToName && (
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                                                        <UserPlusIcon className="h-4 w-4" />
                                                         <span>
-                                                            <strong>Assigned to:</strong> {request.assignedToName}
+                                                            {translate('offerRequests.card.assignedTo', 'Assigned to')}{' '}
+                                                            <strong>{request.assignedToName}</strong>
                                                         </span>
-                                                    )}
-                                                </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        <div className="flex justify-end gap-2 mt-4 pt-4 border-t dark:border-gray-700">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setSelectedRequest(request);
-                                                    setShowDetailsDialog(true);
-                                                }}
-                                            >
-                                                View Details
-                                            </Button>
-                                            {request.status === 'Requested' && (
+                                            <div className="flex justify-end gap-2 pt-4 border-t border-dashed dark:border-gray-800">
                                                 <Button
+                                                    variant="ghost"
                                                     size="sm"
-                                                    className="bg-purple-600 hover:bg-purple-700"
-                                                    onClick={() => handleAssignToMyself(request)}
+                                                    onClick={() => {
+                                                        setSelectedRequest(request);
+                                                        setShowDetailsDialog(true);
+                                                    }}
+                                                    className="text-primary hover:text-primary/80 gap-2"
                                                 >
-                                                    <UserPlusIcon className="h-4 w-4 mr-2" />
-                                                    Assign to Me
+                                                    {translate('offerRequests.actions.viewDetails', 'View Details')}
                                                 </Button>
-                                            )}
-                                            {request.status !== 'Ready' && request.status !== 'Sent' && request.status !== 'Cancelled' && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => openStatusDialog(request)}
-                                                >
-                                                    <ArrowPathIcon className="h-4 w-4 mr-2" />
-                                                    Update Status
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
+                                                {request.status === 'Requested' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-purple-600 hover:bg-purple-700"
+                                                        onClick={() => handleAssignToMyself(request)}
+                                                    >
+                                                        <UserPlusIcon className="h-4 w-4 mr-2" />
+                                                        {translate('offerRequests.actions.assignToMe', 'Assign to Me')}
+                                                    </Button>
+                                                )}
+                                                {!request.createdOfferId && 
+                                                    request.status !== 'Cancelled' && (
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                        onClick={() => {
+                                                            navigate(`/sales-support/offer?requestId=${request.id}`);
+                                                        }}
+                                                    >
+                                                        <ClipboardList className="h-4 w-4 mr-2" />
+                                                        {translate('offerRequests.actions.createOffer', 'Create Offer')}
+                                                    </Button>
+                                                )}
+                                                {request.status !== 'Ready' &&
+                                                    request.status !== 'Sent' &&
+                                                    request.status !== 'Cancelled' && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => openStatusDialog(request)}
+                                                            className="gap-2"
+                                                        >
+                                                            <ArrowPathIcon className="h-4 w-4" />
+                                                            {translate('offerRequests.actions.updateStatus', 'Update Status')}
+                                                        </Button>
+                                                    )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 ))}
                             </div>
                         )}
@@ -492,93 +559,158 @@ export default function RequestsInboxPage() {
                 <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>Offer Request Details #{selectedRequest?.id}</DialogTitle>
-                            <DialogDescription>Complete information about this offer request</DialogDescription>
+                            <DialogTitle>
+                                {`${translate('offerRequests.details.title', 'Offer Request Details')} #${selectedRequest?.id ?? ''}`}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {translate('offerRequests.details.subtitle', 'Complete information about this offer request')}
+                            </DialogDescription>
                         </DialogHeader>
                         {selectedRequest && (
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Status</Label>
-                                        <Badge className={getStatusColor(selectedRequest.status)}>
-                                            {selectedRequest.status}
-                                        </Badge>
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+                                        <p className="text-xs uppercase font-semibold text-muted-foreground mb-1">
+                                            {translate('offerRequests.details.status', 'Status')}
+                                        </p>
+                                        <Badge className={getStatusColor(selectedRequest.status)}>{selectedRequest.status}</Badge>
                                     </div>
-                                    <div>
-                                        <Label>Priority</Label>
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+                                        <p className="text-xs uppercase font-semibold text-muted-foreground mb-1">
+                                            {translate('offerRequests.details.priority', 'Priority')}
+                                        </p>
                                         {selectedRequest.priority ? (
                                             <Badge className={getPriorityColor(selectedRequest.priority)}>
                                                 {selectedRequest.priority}
                                             </Badge>
                                         ) : (
-                                            <span className="text-sm text-gray-500">N/A</span>
+                                            <span className="text-sm text-muted-foreground">N/A</span>
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    <Label>Client</Label>
-                                    <p className="text-sm text-gray-900 dark:text-gray-100">{selectedRequest.clientName}</p>
-                                </div>
-                                <div>
-                                    <Label>Requested Products</Label>
-                                    <p className="text-sm text-gray-900 dark:text-gray-100">
-                                        {selectedRequest.requestedProducts}
+
+                                <div className="space-y-3">
+                                    <p className="text-sm font-semibold text-muted-foreground">
+                                        {translate('offerRequests.details.client', 'Client')}
                                     </p>
+                                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-transparent">
+                                        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                            <Building className="h-4 w-4 text-primary" />
+                                            {selectedRequest.clientName}
+                                        </h3>
+                                    </div>
                                 </div>
-                                {selectedRequest.specialNotes && (
-                                    <div>
-                                        <Label>Special Notes</Label>
-                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                            {selectedRequest.specialNotes}
+
+                                <div className="space-y-3">
+                                    <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                        <ClipboardList className="h-4 w-4 text-primary" />
+                                        {translate('offerRequests.card.requestedProducts', 'Requested Products')}
+                                    </p>
+                                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-900/40">
+                                        <p className="text-sm text-foreground whitespace-pre-line">
+                                            {selectedRequest.requestedProducts || 'N/A'}
                                         </p>
                                     </div>
+                                </div>
+
+                                {(selectedRequest.specialNotes || selectedRequest.followUpNotes) && (
+                                    <div className="space-y-3">
+                                        <p className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                                            <StickyNote className="h-4 w-4 text-amber-500" />
+                                            {translate('offerRequests.card.notes', 'Notes')}
+                                        </p>
+                                        {selectedRequest.specialNotes && (
+                                            <div className="rounded-xl border border-amber-100 dark:border-amber-900/40 p-4 bg-amber-50 dark:bg-amber-900/10">
+                                                <p className="text-xs uppercase text-amber-700 dark:text-amber-200 font-semibold mb-1">
+                                                    {translate('offerRequests.details.specialNotes', 'Special Notes')}
+                                                </p>
+                                                <p className="text-sm text-amber-900 dark:text-amber-100">
+                                                    {selectedRequest.specialNotes}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {selectedRequest.followUpNotes && (
+                                            <div className="rounded-xl border border-blue-100 dark:border-blue-900/40 p-4 bg-blue-50 dark:bg-blue-900/10">
+                                                <p className="text-xs uppercase text-blue-700 dark:text-blue-200 font-semibold mb-1">
+                                                    {translate('offerRequests.details.followUpNotes', 'Follow-up Notes')}
+                                                </p>
+                                                <p className="text-sm text-blue-900 dark:text-blue-100">
+                                                    {selectedRequest.followUpNotes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Requested By</Label>
-                                        <p className="text-sm text-gray-900 dark:text-gray-100">
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent">
+                                        <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                            {translate('offerRequests.details.requestedBy', 'Requested By')}
+                                        </p>
+                                        <p className="text-base font-semibold text-foreground flex items-center gap-2 mt-1">
+                                            <User className="h-4 w-4 text-primary" />
                                             {selectedRequest.requestedByName}
                                         </p>
                                     </div>
-                                    <div>
-                                        <Label>Request Date</Label>
-                                        <p className="text-sm text-gray-900 dark:text-gray-100">
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-transparent">
+                                        <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                            {translate('offerRequests.details.requestDate', 'Request Date')}
+                                        </p>
+                                        <p className="text-sm text-foreground mt-1 flex items-center gap-2">
+                                            <CalendarClock className="h-4 w-4 text-primary" />
                                             {selectedRequest.requestDate
                                                 ? format(new Date(selectedRequest.requestDate), 'MMM dd, yyyy HH:mm')
                                                 : 'N/A'}
                                         </p>
                                     </div>
                                 </div>
+
                                 {selectedRequest.assignedToName && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Assigned To</Label>
-                                            <p className="text-sm text-gray-900 dark:text-gray-100">
-                                                {selectedRequest.assignedToName}
-                                            </p>
-                                        </div>
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+                                        <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                            {translate('offerRequests.details.assignedTo', 'Assigned To')}
+                                        </p>
+                                        <p className="text-sm text-foreground mt-1 flex items-center gap-2">
+                                            <User className="h-4 w-4 text-primary" />
+                                            {selectedRequest.assignedToName}
+                                        </p>
                                     </div>
                                 )}
+
                                 {selectedRequest.createdOfferId && (
-                                    <div>
-                                        <Label>Created Offer ID</Label>
-                                        <p className="text-sm text-gray-900 dark:text-gray-100">
-                                            {selectedRequest.createdOfferId}
+                                    <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
+                                        <p className="text-xs uppercase text-muted-foreground font-semibold">
+                                            {translate('offerRequests.details.createdOfferId', 'Created Offer ID')}
                                         </p>
+                                        <p className="text-sm text-foreground mt-1">#{selectedRequest.createdOfferId}</p>
                                     </div>
                                 )}
                             </div>
                         )}
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
-                                Close
+                                {translate('common.close', 'Close')}
                             </Button>
                             {selectedRequest?.status === 'Requested' && (
                                 <Button onClick={() => {
                                     setShowDetailsDialog(false);
                                     handleAssignToMyself(selectedRequest);
                                 }}>
-                                    Assign to Me
+                                    {translate('offerRequests.actions.assignToMe', 'Assign to Me')}
+                                </Button>
+                            )}
+                            {selectedRequest && 
+                                !selectedRequest.createdOfferId && 
+                                selectedRequest.status !== 'Cancelled' && (
+                                <Button 
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    onClick={() => {
+                                        setShowDetailsDialog(false);
+                                        navigate(`/sales-support/offer?requestId=${selectedRequest.id}`);
+                                    }}
+                                >
+                                    <ClipboardList className="h-4 w-4 mr-2" />
+                                    {translate('offerRequests.actions.createOffer', 'Create Offer')}
                                 </Button>
                             )}
                         </DialogFooter>
@@ -589,14 +721,14 @@ export default function RequestsInboxPage() {
                 <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Update Request Status</DialogTitle>
+                            <DialogTitle>{translate('offerRequests.statusDialog.title', 'Update Request Status')}</DialogTitle>
                             <DialogDescription>
-                                Update the status of request #{selectedRequest?.id}
+                                {`${translate('offerRequests.statusDialog.description', 'Update the status of request')} #${selectedRequest?.id ?? ''}`}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                             <div>
-                                <Label>New Status</Label>
+                                <Label>{translate('offerRequests.statusDialog.newStatus', 'New Status')}</Label>
                                 <Select
                                     value={newStatus}
                                     onValueChange={(value) => setNewStatus(value as OfferRequestStatus)}
@@ -615,20 +747,22 @@ export default function RequestsInboxPage() {
                                 </Select>
                             </div>
                             <div>
-                                <Label>Notes (Optional)</Label>
+                                <Label>{translate('offerRequests.statusDialog.notesLabel', 'Notes (Optional)')}</Label>
                                 <Textarea
                                     value={statusNotes}
                                     onChange={(e) => setStatusNotes(e.target.value)}
-                                    placeholder="Add notes about this status update..."
+                                    placeholder={translate('offerRequests.statusDialog.notesPlaceholder', 'Add notes about this status update...')}
                                     rows={3}
                                 />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
-                                Cancel
+                                {translate('common.cancel', 'Cancel')}
                             </Button>
-                            <Button onClick={handleUpdateStatus}>Update Status</Button>
+                            <Button onClick={handleUpdateStatus}>
+                                {translate('offerRequests.actions.updateStatus', 'Update Status')}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
