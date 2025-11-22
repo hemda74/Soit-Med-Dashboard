@@ -4,6 +4,7 @@ import type { NotificationData } from '@/types/signalR.types';
 import { useAuthStore } from '@/stores/authStore';
 import { API_ENDPOINTS } from './shared/endpoints';
 import { getAuthToken } from '@/utils/authUtils';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 export interface NotificationFilter {
 	roles?: string[];
@@ -66,9 +67,7 @@ class NotificationService {
 				return;
 			}
 
-			const baseUrl =
-				import.meta.env.VITE_API_BASE_URL ||
-				'http://localhost:5117';
+			const baseUrl = getApiBaseUrl();
 			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.BASE}?page=1&pageSize=50&unreadOnly=false`;
 
 			const response = await fetch(endpoint, {
@@ -182,9 +181,7 @@ class NotificationService {
 			const token = getAuthToken();
 			if (!token) return;
 
-			const baseUrl =
-				import.meta.env.VITE_API_BASE_URL ||
-				'http://localhost:5117';
+			const baseUrl = getApiBaseUrl();
 			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.UNREAD_COUNT}`;
 
 			const response = await fetch(endpoint, {
@@ -262,9 +259,7 @@ class NotificationService {
 			const token = getAuthToken();
 			if (!token) return;
 
-			const baseUrl =
-				import.meta.env.VITE_API_BASE_URL ||
-				'http://localhost:5117';
+			const baseUrl = getApiBaseUrl();
 			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.MARK_READ(
 				Number(notificationId)
 			)}`;
@@ -294,9 +289,7 @@ class NotificationService {
 			const token = getAuthToken();
 			if (!token) return;
 
-			const baseUrl =
-				import.meta.env.VITE_API_BASE_URL ||
-				'http://localhost:5117';
+			const baseUrl = getApiBaseUrl();
 			const endpoint = `${baseUrl}${API_ENDPOINTS.SALES.NOTIFICATION.MARK_ALL_READ}`;
 
 			const response = await fetch(endpoint, {

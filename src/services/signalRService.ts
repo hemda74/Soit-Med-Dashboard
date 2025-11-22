@@ -4,6 +4,7 @@ import {
 	HubConnection,
 } from '@microsoft/signalr';
 import type { NotificationData, ConnectionStatus } from '@/types/signalR.types';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 export type { NotificationData, ConnectionStatus };
 
@@ -38,11 +39,9 @@ class SignalRService {
 				);
 			}
 
-			// Build SignalR URL - use environment variable or default to localhost:5117
-			// Format: http://localhost:5117/notificationHub
-			const baseUrl =
-				import.meta.env.VITE_SIGNALR_URL ||
-				'http://localhost:5117';
+			// Build SignalR URL - uses VITE_SIGNALR_URL or falls back to VITE_API_BASE_URL
+			// Format: http://localhost:5117/notificationHub or http://192.168.1.182:5117/notificationHub
+			const baseUrl = import.meta.env.VITE_SIGNALR_URL || getApiBaseUrl();
 			const hubUrl = `${baseUrl}/notificationHub`;
 
 			// Build connection with token in both accessTokenFactory and headers (as per guide)

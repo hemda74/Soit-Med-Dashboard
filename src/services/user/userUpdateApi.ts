@@ -1,5 +1,4 @@
-const API_BASE_URL =
-	import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 import type {
 	UpdateUserResponse,
 	UpdateUserParams,
@@ -13,7 +12,9 @@ import { VALID_ROLES } from '@/types/userUpdate.types';
  * Handles user updates with proper error handling and type safety
  */
 class UserUpdateApiService {
-	private baseUrl = API_BASE_URL;
+	private get baseUrl() {
+		return getApiBaseUrl();
+	}
 
 	/**
 	 * Update a user by their ID

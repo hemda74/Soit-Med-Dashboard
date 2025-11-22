@@ -1,6 +1,6 @@
 // User management API services
 
-import { API_BASE_URL } from '@/utils/constants';
+import { getApiBaseUrlForConstants } from '@/utils/constants';
 import type {
 	UserListResponse,
 	UserStatusRequest,
@@ -99,7 +99,7 @@ class UserApiClient {
 	}
 }
 
-export const userApiClient = new UserApiClient(API_BASE_URL);
+export const userApiClient = new UserApiClient(getApiBaseUrlForConstants());
 
 // Function to fetch all users with loading state and pagination
 export const fetchUsers = async (
