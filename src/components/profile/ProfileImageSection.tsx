@@ -3,6 +3,7 @@ import { User, Camera, Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 interface ProfileImageSectionProps {
     user: any;
@@ -30,10 +31,11 @@ export default function ProfileImageSection({
         if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
             return filePath;
         }
+        const baseUrl = getApiBaseUrl();
         if (filePath.startsWith('/')) {
-            return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117'}${filePath}`;
+            return `${baseUrl}${filePath}`;
         }
-        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117'}/${filePath}`;
+        return `${baseUrl}/${filePath}`;
     };
 
     return (

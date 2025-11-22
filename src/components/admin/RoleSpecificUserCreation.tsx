@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat, HeadphonesIcon, Package, Warehouse } from 'lucide-react';
+import { AlertCircle, UserPlus, Shield, Stethoscope, Wrench, Settings, DollarSign, Scale, ShoppingCart, UserCheck, Cog, HardHat, HeadphonesIcon, Package, Warehouse } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -33,7 +33,6 @@ import type {
 } from '@/types/roleSpecificUser.types';
 import UserCreationForm from './UserCreationForm';
 import { useUserCreationForm } from '@/hooks/useUserCreationForm';
-import Logo from '@/components/Logo';
 
 // Governorate interface
 interface GovernorateInfo {
@@ -514,7 +513,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                                     onClick={handleBack}
                                     className="h-11 px-4 hover:bg-primary/10 hover:text-primary transition-all duration-200 rounded-xl"
                                 >
-                                    <ArrowLeft className={`h-5 w-5 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                                     <span className="font-medium">{t('back')}</span>
                                 </Button>
 
@@ -560,12 +558,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                         <div className="space-y-12">
                             {/* Enhanced Header Section */}
                             <div className="text-center space-y-6">
-                                <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary/10 via-primary/15 to-primary/10 rounded-full border border-primary/20 shadow-sm">
-                                    <div className="p-1.5 bg-primary/20 rounded-lg">
-                                        <UserPlus className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <span className="text-primary font-semibold text-base">User Creation Portal</span>
-                                </div>
+
                                 <div className="space-y-4">
                                     <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                                         Choose User Role

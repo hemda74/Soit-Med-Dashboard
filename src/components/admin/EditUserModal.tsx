@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import UserStatusToggle from '../UserStatusToggle';
 import type { UserListResponse } from '@/types/user.types';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
 // Department mapping (same as in UsersList.tsx)
 const DEPARTMENT_MAP: { [key: number]: string } = {
@@ -110,10 +111,11 @@ export default function EditUserModal({
         if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
             return filePath;
         }
+        const baseUrl = getApiBaseUrl();
         if (filePath.startsWith('/')) {
-            return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117'}${filePath}`;
+            return `${baseUrl}${filePath}`;
         }
-        return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117'}/${filePath}`;
+        return `${baseUrl}/${filePath}`;
     };
 
     if (!user) return null;

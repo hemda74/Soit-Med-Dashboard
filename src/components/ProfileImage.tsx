@@ -1,5 +1,6 @@
 import React from 'react';
 import { User } from 'lucide-react';
+import { getStaticFileUrl } from '@/utils/apiConfig';
 
 interface ProfileImageData {
     id: number;
@@ -47,7 +48,7 @@ export const ProfileImage: React.FC<ProfileImageProps> = ({
         }
 
         if (typeof src === 'object' && 'filePath' in src) {
-            return `http://localhost:5117/${src.filePath}`;
+            return getStaticFileUrl(src.filePath);
         }
 
         return null;
