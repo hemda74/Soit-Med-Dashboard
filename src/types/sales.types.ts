@@ -26,6 +26,7 @@ export interface Client {
 	averageSatisfaction: number;
 	lastInteractionDate?: string;
 	conversionRate?: number;
+	interestedEquipmentCategories?: string[]; // Equipment categories the client is interested in
 }
 
 export interface CreateClientDto {
@@ -34,6 +35,7 @@ export interface CreateClientDto {
 	organizationName?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
 	assignedTo?: string;
+	interestedEquipmentCategories?: string[]; // Equipment categories the client is interested in
 }
 
 export interface UpdateClientDto {
@@ -42,6 +44,7 @@ export interface UpdateClientDto {
 	organizationName?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
 	assignedTo?: string;
+	interestedEquipmentCategories?: string[]; // Equipment categories the client is interested in
 }
 
 export interface ClientSearchFilters {
@@ -50,7 +53,7 @@ export interface ClientSearchFilters {
 	assignedSalesmanId?: string;
 	city?: string;
 	governorateId?: number;
-	equipmentCategory?: string; // Filter by equipment category (e.g., "X-Ray", "Ultrasound")
+	equipmentCategories?: string[]; // Filter by multiple equipment categories (e.g., ["Mobile X Ray", "Ultrasound"])
 	createdFrom?: string;
 	createdTo?: string;
 	sortBy?: string;
@@ -67,6 +70,22 @@ export interface ClientSearchResult {
 	totalPages: number;
 	hasNextPage: boolean;
 	hasPreviousPage: boolean;
+}
+
+export interface Salesman {
+	id: string;
+	firstName?: string;
+	lastName?: string;
+	userName?: string;
+	email?: string;
+	phoneNumber?: string;
+	isActive?: boolean;
+}
+
+export interface Governorate {
+	governorateId?: number;
+	id?: number;
+	name: string;
 }
 
 // ==================== DEAL MANAGEMENT ====================
@@ -217,6 +236,7 @@ export interface TaskProgress {
 	satisfactionRating?: number; // 1-5 scale
 	feedback?: string;
 	attachments?: string; // JSON array of file paths
+	voiceDescriptionUrl?: string; // URL to voice recording file
 	createdAt: string;
 	updatedAt: string;
 	createdBy: string;
@@ -860,6 +880,11 @@ export interface Offer {
 	finalPrice?: number;
 	offerDuration?: string;
 	notes?: string;
+	// SalesManager Approval/Rejection fields
+	salesManagerApprovedBy?: string;
+	salesManagerApprovedAt?: string;
+	salesManagerComments?: string;
+	salesManagerRejectionReason?: string;
 }
 
 // ==================== ENHANCED OFFER FEATURES ====================
@@ -959,6 +984,7 @@ export interface WeeklyPlanTask {
 	plannedDate: string;
 	completedAt?: string;
 	notes?: string;
+	equipmentCategories?: string[]; // Equipment categories relevant to this task
 }
 
 export interface CreateOfferDto {
@@ -1014,6 +1040,7 @@ export interface ClientResponseDTO {
 	classification?: string; // A, B, C, or D
 	createdBy: string;
 	assignedTo?: string;
+	interestedEquipmentCategories?: string[]; // Equipment categories the client is interested in
 	createdAt: string;
 	updatedAt: string;
 }
