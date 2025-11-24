@@ -887,31 +887,59 @@ const SalesSupportDashboard: React.FC = () => {
 
 							<div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
 								{/* Offer Info Section */}
-								<div className="grid grid-cols-2 gap-4">
-									<div>
-										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-											{t('status') || 'Status'}
-										</label>
-										<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
-											{selectedOffer.status}
-										</Badge>
-									</div>
-									<div>
-										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-											Value
-										</label>
-										<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-											{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
-										</p>
-										{selectedOffer.discountAmount && selectedOffer.discountAmount > 0 && (
-											<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-												{t('discount') || 'Discount'}: EGP {selectedOffer.discountAmount.toLocaleString()}
-											</p>
-										)}
-									</div>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+										{t('status') || 'Status'}
+									</label>
+									<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
+										{selectedOffer.status}
+									</Badge>
 								</div>
+								<div>
+									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+										Value
+									</label>
+									<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+										{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
+									</p>
+									{selectedOffer.discountAmount && selectedOffer.discountAmount > 0 && (
+										<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+											{t('discount') || 'Discount'}: EGP {selectedOffer.discountAmount.toLocaleString()}
+										</p>
+									)}
+								</div>
+							</div>
 
-								<Separator />
+							{/* Rejection Reason Section */}
+							{selectedOffer.status === 'Rejected' && (selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse) && (
+								<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+									<label className="block text-sm font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
+										<ExclamationTriangleIcon className="h-4 w-4" />
+										{t('rejectionReason') || 'Rejection Reason'}
+									</label>
+									<p className="text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap">
+										{selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse || 'No reason provided'}
+									</p>
+									{selectedOffer.salesManagerComments && (
+										<div className="mt-2 pt-2 border-t border-red-200 dark:border-red-700">
+											<label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+												{t('comments') || 'Comments'}
+											</label>
+											<p className="text-sm text-red-800 dark:text-red-200">
+												{selectedOffer.salesManagerComments}
+											</p>
+										</div>
+									)}
+									{selectedOffer.salesManagerApprovedAt && (
+										<p className="text-xs text-red-600 dark:text-red-400 mt-2">
+											{t('rejectedAt') || 'Rejected at'}: {format(new Date(selectedOffer.salesManagerApprovedAt), 'MMM dd, yyyy HH:mm')}
+										</p>
+									)}
+								</div>
+							)}
+
+							<Separator />
 
 								{/* Products Section */}
 								<div>

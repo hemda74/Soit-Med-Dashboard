@@ -79,13 +79,30 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
             };
 
             await salesApi.salesManagerApproval(offer.id, approvalData);
-            toast.success(action === 'approve' ? 'Offer approved successfully' : 'Offer rejected');
+            toast.success(action === 'approve' ? 'Offer approved successfully' : 'Offer rejected successfully');
             onSuccess?.();
         } catch (error: any) {
             console.error('Failed to process offer approval:', error);
             toast.error(error.message || 'Failed to process offer approval');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleRejectClick = async () => {
+        // If action is already set to reject, try to submit
+        if (action === 'reject') {
+            const values = form.getValues();
+            if (!values.rejectionReason?.trim()) {
+                toast.error('Please provide a rejection reason before submitting');
+                form.setFocus('rejectionReason');
+                return;
+            }
+            // Submit the form
+            form.handleSubmit(onSubmit)();
+        } else {
+            // First click: just set action to show rejection reason field
+            setAction('reject');
         }
     };
 
@@ -224,12 +241,16 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
                             <Button
                                 type="button"
                                 variant="destructive"
-                                onClick={() => setAction('reject')}
+                                onClick={handleRejectClick}
                                 disabled={isSubmitting || action === 'approve'}
                                 className={action === 'reject' ? 'bg-red-600 hover:bg-red-700' : ''}
                             >
                                 <XCircle className="h-4 w-4 mr-2" />
-                                Reject
+                                {isSubmitting && action === 'reject' 
+                                    ? 'Rejecting...' 
+                                    : action === 'reject' 
+                                        ? 'Confirm Rejection' 
+                                        : 'Reject'}
                             </Button>
                             <Button
                                 type="submit"
@@ -238,7 +259,7 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
                                 className={action === 'approve' ? 'bg-green-600 hover:bg-green-700' : ''}
                             >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                {isSubmitting ? 'Processing...' : 'Approve'}
+                                {isSubmitting && action === 'approve' ? 'Processing...' : 'Approve'}
                             </Button>
                         </div>
                     </form>

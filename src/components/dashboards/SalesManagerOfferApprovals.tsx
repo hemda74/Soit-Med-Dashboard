@@ -106,7 +106,7 @@ const SalesManagerOfferApprovals: React.FC = () => {
 						<EmptyState
 							title="No Pending Approvals"
 							description="All offers have been reviewed. Check back later for new approvals."
-							icon={CheckCircle2}
+							icon={<CheckCircle2 className="h-12 w-12 text-gray-400" />}
 						/>
 					) : (
 						<div className="space-y-4">

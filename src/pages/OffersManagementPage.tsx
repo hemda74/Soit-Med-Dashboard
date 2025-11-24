@@ -1001,6 +1001,34 @@ const OffersManagementPage: React.FC = () => {
 								</div>
 							</div>
 
+							{/* Rejection Reason Section */}
+							{selectedOffer.status === 'Rejected' && ((selectedOffer as any).salesManagerRejectionReason || (selectedOffer as any).clientResponse) && (
+								<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+									<label className="block text-sm font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
+										<AlertCircle className="h-4 w-4" />
+										{t('rejectionReason') || 'Rejection Reason'}
+									</label>
+									<p className="text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap">
+										{(selectedOffer as any).salesManagerRejectionReason || (selectedOffer as any).clientResponse || 'No reason provided'}
+									</p>
+									{(selectedOffer as any).salesManagerComments && (
+										<div className="mt-2 pt-2 border-t border-red-200 dark:border-red-700">
+											<label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+												{t('comments') || 'Comments'}
+											</label>
+											<p className="text-sm text-red-800 dark:text-red-200">
+												{(selectedOffer as any).salesManagerComments}
+											</p>
+										</div>
+									)}
+									{(selectedOffer as any).salesManagerApprovedAt && (
+										<p className="text-xs text-red-600 dark:text-red-400 mt-2">
+											{t('rejectedAt') || 'Rejected at'}: {format(new Date((selectedOffer as any).salesManagerApprovedAt), 'MMM dd, yyyy HH:mm')}
+										</p>
+									)}
+								</div>
+							)}
+
 							<Separator />
 
 							{/* Products Section */}
