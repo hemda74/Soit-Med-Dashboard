@@ -51,6 +51,7 @@ export interface PDFExportOptions {
 	showCountry?: boolean; // Show country column
 	showDescription?: boolean; // Show description column
 	showImage?: boolean; // Show product image
+	showPrice?: boolean; // Show price column
 	// Custom descriptions per product (keyed by product id)
 	customDescriptions?: Record<number, string>;
 }
@@ -68,6 +69,7 @@ const translations: Record<PDFLanguage, Record<string, string>> = {
 		model: 'Model',
 		provider: 'Provider',
 		country: 'Country',
+		price: 'Price',
 		financialSummary: 'Financial Summary',
 		subtotal: 'Subtotal',
 		discount: 'Discount',
@@ -91,6 +93,7 @@ const translations: Record<PDFLanguage, Record<string, string>> = {
 		model: 'الموديل',
 		provider: 'المورد',
 		country: 'البلد',
+		price: 'السعر',
 		financialSummary: 'الملخص المالي',
 		subtotal: 'المجموع الفرعي',
 		discount: 'الخصم',
@@ -330,6 +333,7 @@ export const generateOfferPDF = async (
 		showCountry: options.showCountry !== false, // Default true
 		showDescription: options.showDescription !== false, // Default true
 		showImage: options.showImage !== false, // Default true
+		showPrice: options.showPrice !== false, // Default true
 		customDescriptions: options.customDescriptions || {},
 	};
 
@@ -632,14 +636,26 @@ export const generateOfferPDF = async (
 						eq.Country ||
 						undefined,
 					year: eq.year ?? eq.Year ?? undefined,
-					price:
-						eq.price ??
-						eq.Price ??
-						eq.totalPrice ??
-						eq.TotalPrice ??
-						eq.unitPrice ??
-						eq.UnitPrice ??
-						0,
+					price: (() => {
+						const rawPrice =
+							eq.price ??
+							eq.Price ??
+							eq.totalPrice ??
+							eq.TotalPrice ??
+							eq.unitPrice ??
+							eq.UnitPrice ??
+							0;
+						if (
+							typeof rawPrice ===
+							'number'
+						) {
+							return rawPrice;
+						}
+						const parsed = Number(rawPrice);
+						return Number.isFinite(parsed)
+							? parsed
+							: 0;
+					})(),
 					description:
 						eq.description ||
 						eq.Description ||
@@ -674,35 +690,44 @@ export const generateOfferPDF = async (
 			}
 		});
 
-		// New layout: 3 columns per row, 2 products per page
-		// For LTR: Column 1 (Name/Desc) | Column 2 (Image/Model) | Column 3 (Provider/Country)
-		// For RTL: Column 3 (Provider/Country) | Column 2 (Image/Model) | Column 1 (Name/Desc)
-		// Columns are mirrored horizontally for RTL
+		// Layout: up to 4 columns per row, 2 products per page
+		// For LTR: Column 1 (Name/Desc/Model) | Column 2 (Image) | Column 3 (Provider/Country) | Column 4 (Price)
+		// For RTL: Columns are mirrored horizontally
 
 		const totalDataWidth = pageWidth - margin * 2;
-		const colSpacing = 5; // Space between columns (2 spaces for 3 columns)
+		const colSpacing = 5; // Space between columns
 		const colPadding = 5; // Padding inside each column
-		const colWidth = (totalDataWidth - colSpacing * 2) / 3; // Equal width for 3 columns
+		const columnCount = opts.showPrice ? 4 : 3;
+		const totalSpacing = colSpacing * (columnCount - 1);
+		const colWidth = (totalDataWidth - totalSpacing) / columnCount;
 
-		const imgWidth = colWidth - 5; // Image width (larger, closer to column width)
-		const imgHeight = 60; // Increased image height for better visibility
+		const imgWidth = colWidth - 10; // Image width (smaller to fit in cell)
+		const imgHeight = 40; // Reduced image height to fit in cell
 
-		// Calculate column X positions - mirrored for RTL
-		// For RTL: columns are positioned from right to left
-		const col1X = isRTL
-			? margins.left - colWidth + colPadding // Rightmost column
-			: margins.left + colPadding; // Leftmost column
-		const col2X = isRTL
-			? margins.left - colWidth * 2 - colSpacing + colPadding // Middle column
-			: margins.left + colWidth + colSpacing + colPadding; // Middle column
-		const col3X = isRTL
-			? margins.left -
-			  colWidth * 3 -
-			  colSpacing * 2 +
-			  colPadding // Leftmost column
-			: margins.left +
-			  (colWidth + colSpacing) * 2 +
-			  colPadding; // Rightmost column
+		const getColumnX = (logicalIndex: number): number => {
+			const index = isRTL
+				? columnCount - 1 - logicalIndex
+				: logicalIndex;
+			return isRTL
+				? margins.left -
+						colWidth * (index + 1) -
+						colSpacing * index +
+						colPadding
+				: margins.left +
+						(colWidth + colSpacing) *
+							index +
+						colPadding;
+		};
+
+		const getHeaderX = (logicalIndex: number): number => {
+			const base = getColumnX(logicalIndex);
+			return isRTL ? base + colWidth - colPadding : base;
+		};
+
+		const col1X = getColumnX(0);
+		const col2X = getColumnX(1);
+		const col3X = getColumnX(2);
+		const col4X = opts.showPrice ? getColumnX(3) : 0;
 
 		// Add column headers if enabled
 		if (opts.showProductHeaders) {
@@ -744,15 +769,9 @@ export const generateOfferPDF = async (
 
 			// Calculate header text positions - for RTL, align from right edge of column
 			// For LTR, align from left edge of column
-			const col1HeaderX = isRTL
-				? col1X + colWidth - colPadding // Right edge for RTL
-				: col1X; // Left edge for LTR
-			const col2HeaderX = isRTL
-				? col2X + colWidth - colPadding // Right edge for RTL
-				: col2X; // Left edge for LTR
-			const col3HeaderX = isRTL
-				? col3X + colWidth - colPadding // Right edge for RTL
-				: col3X; // Left edge for LTR
+			const col1HeaderX = getHeaderX(0);
+			const col3HeaderX = getHeaderX(2);
+			const col4HeaderX = opts.showPrice ? getHeaderX(3) : 0;
 
 			// Column 1 header (Name/Description) - rightmost for RTL, leftmost for LTR
 			let col1Header = t.productName;
@@ -762,26 +781,8 @@ export const generateOfferPDF = async (
 				maxWidth: colWidth - colPadding * 2,
 			});
 
-			// Column 2 header (Image/Model) - middle column
-			if (opts.showImage && opts.showModel) {
-				let col2Header = t.model;
-				if (isRTL)
-					col2Header =
-						prepareArabicText(col2Header);
-				doc.text(col2Header, col2HeaderX, yPos + 6, {
-					align: textAlign,
-					maxWidth: colWidth - colPadding * 2,
-				});
-			} else if (opts.showModel) {
-				let col2Header = t.model;
-				if (isRTL)
-					col2Header =
-						prepareArabicText(col2Header);
-				doc.text(col2Header, col2HeaderX, yPos + 6, {
-					align: textAlign,
-					maxWidth: colWidth - colPadding * 2,
-				});
-			}
+			// Column 2 header (Image only) - middle column
+			// No header text needed since column 2 is image only
 
 			// Column 3 header (Provider/Country) - leftmost for RTL, rightmost for LTR
 			if (opts.showProvider && opts.showCountry) {
@@ -813,13 +814,23 @@ export const generateOfferPDF = async (
 				});
 			}
 
+			// Column 4 header (Price) - only if price column is enabled
+			if (opts.showPrice) {
+				let col4Header = t.price;
+				if (isRTL)
+					col4Header =
+						prepareArabicText(col4Header);
+				doc.text(col4Header, col4HeaderX, yPos + 6, {
+					align: textAlign,
+					maxWidth: colWidth - colPadding * 2,
+				});
+			}
+
 			yPos += 10; // Space after headers
 		}
 
-		// Calculate row height - need space for 2 products per page
-		const availableHeight = contentEndY - contentStartY - 15; // 10mm padding
-		const productsPerPage = 2; // 2 products per page
-		const calculatedRowHeight = availableHeight / productsPerPage; // Half height per product
+		// Calculate row height - 20% of page height per product
+		const calculatedRowHeight = pageHeight * 0.2; // 20% of page height per product
 
 		for (let i = 0; i < equipmentWithImages.length; i++) {
 			const eq = equipmentWithImages[i];
@@ -843,8 +854,8 @@ export const generateOfferPDF = async (
 				colWidth - colPadding * 2
 			);
 
-			// Calculate required height: image + model + name + description + spacing
-			const imageSectionHeight = imgHeight + 30; // Image + spacing below (reduced for 2 per page)
+			// Calculate required height: image + name + description + spacing
+			const imageSectionHeight = imgHeight + 10; // Image + spacing (reduced since model moved to col1)
 			const textSectionHeight = Math.max(
 				nameLines.length * 4 +
 					descLines.length * 3 +
@@ -897,28 +908,27 @@ export const generateOfferPDF = async (
 			// Draw vertical dividers between columns - use calculated column positions
 			doc.setDrawColor(200, 200, 200);
 			doc.setLineWidth(0.2);
-			// First divider (between col1 and col2)
-			const divider1X = isRTL
-				? margins.left - colWidth // Between col1 and col2 for RTL
-				: margins.left + colWidth; // Between col1 and col2 for LTR
-			doc.line(
-				divider1X,
-				yPos,
-				divider1X,
-				yPos + actualRowHeight
-			);
-			// Second divider (between col2 and col3)
-			const divider2X = isRTL
-				? margins.left - colWidth * 2 - colSpacing // Between col2 and col3 for RTL
-				: margins.left + colWidth * 2 + colSpacing; // Between col2 and col3 for LTR
-			doc.line(
-				divider2X,
-				yPos,
-				divider2X,
-				yPos + actualRowHeight
-			);
+			for (
+				let dividerIndex = 0;
+				dividerIndex < columnCount - 1;
+				dividerIndex++
+			) {
+				const dividerX = isRTL
+					? margins.left -
+					  colWidth * (dividerIndex + 1) -
+					  colSpacing * dividerIndex
+					: margins.left +
+					  colWidth * (dividerIndex + 1) +
+					  colSpacing * dividerIndex;
+				doc.line(
+					dividerX,
+					yPos,
+					dividerX,
+					yPos + actualRowHeight
+				);
+			}
 
-			// COLUMN 1: Product Name (top) + Description (below)
+			// COLUMN 1: Product Name (top) + Description (below) + Model
 			// In Arabic, start from left edge (not right) for name and description
 			const col1DataX = col1X; // Always start from left edge, even in RTL
 			let col1Y = yPos + 6; // Reduced top padding
@@ -962,108 +972,13 @@ export const generateOfferPDF = async (
 					maxWidth: colWidth - colPadding * 2,
 					align: descAlign,
 				});
+				col1Y += descLines.length * 3 + 5; // Spacing after description
 			}
 
-			// COLUMN 2: Image (top) + Model (below)
-			// Use pre-calculated col2X position
-			let col2Y = yPos + 6; // Reduced top padding
-
-			// Image (centered in column) - only if enabled
-			if (opts.showImage) {
-				const imageX =
-					col2X +
-					(colWidth - colPadding * 2 - imgWidth) /
-						2;
-				if (eq.imageBase64) {
-					try {
-						// Ensure image is a valid data URL
-						let imageData = eq.imageBase64;
-						if (
-							!imageData.startsWith(
-								'data:'
-							)
-						) {
-							imageData = `data:image/png;base64,${imageData}`;
-						}
-
-						// Add image
-						doc.addImage(
-							imageData,
-							'PNG',
-							imageX,
-							col2Y,
-							imgWidth,
-							imgHeight,
-							undefined,
-							'SLOW'
-						);
-						col2Y += imgHeight + 10; // Spacing after image
-					} catch (error) {
-						console.error(
-							'Error adding product image:',
-							error,
-							eq.name,
-							eq.imagePath
-						);
-						// Draw placeholder
-						doc.setDrawColor(200, 200, 200);
-						doc.setLineWidth(0.5);
-						doc.rect(
-							imageX,
-							col2Y,
-							imgWidth,
-							imgHeight,
-							'S'
-						);
-						doc.setFontSize(6);
-						doc.setTextColor(150, 150, 150);
-						doc.text(
-							t.noImage,
-							imageX + imgWidth / 2,
-							col2Y + imgHeight / 2,
-							{
-								align: 'center',
-							}
-						);
-						col2Y += imgHeight + 10; // Spacing after placeholder
-					}
-				} else {
-					// Draw placeholder if no image
-					doc.setDrawColor(200, 200, 200);
-					doc.setLineWidth(0.5);
-					doc.rect(
-						imageX,
-						col2Y,
-						imgWidth,
-						imgHeight,
-						'S'
-					);
-					doc.setFontSize(6);
-					doc.setTextColor(150, 150, 150);
-					doc.text(
-						t.noImage,
-						imageX + imgWidth / 2,
-						col2Y + imgHeight / 2,
-						{
-							align: 'center',
-						}
-					);
-					col2Y += imgHeight + 10; // Spacing after placeholder
-				}
-			} else {
-				// If image is disabled, start model from top
-				col2Y = yPos + 6;
-			}
-
-			// Model (below image, bigger font size) - only if enabled
+			// Model (below description) - only if enabled
 			if (opts.showModel) {
 				const modelText = eq.model || 'N/A';
 				const isModelArabic = hasArabic(modelText);
-				// English text starts from left even in RTL documents
-				const col2DataX =
-					isRTL && isModelArabic
-						? col2X + colWidth - colPadding // Right edge for RTL Arabic
-						: col2X; // Left edge for LTR or English text
 				doc.setFontSize(10);
 				setFontForLanguage(doc, lang, 'normal');
 				doc.setTextColor(50, 50, 50);
@@ -1091,8 +1006,8 @@ export const generateOfferPDF = async (
 						: modelLines;
 				doc.text(
 					processedModelLines,
-					col2DataX,
-					col2Y,
+					col1DataX,
+					col1Y,
 					{
 						maxWidth:
 							colWidth -
@@ -1103,6 +1018,103 @@ export const generateOfferPDF = async (
 						),
 					}
 				);
+			}
+
+			// COLUMN 2: Image only (no model)
+			// Use pre-calculated col2X position
+
+			// Image (centered in column) - only if enabled
+			if (opts.showImage) {
+				const imageX =
+					col2X +
+					(colWidth - colPadding * 2 - imgWidth) /
+						2;
+				if (eq.imageBase64) {
+					try {
+						// Ensure image is a valid data URL
+						let imageData = eq.imageBase64;
+						if (
+							!imageData.startsWith(
+								'data:'
+							)
+						) {
+							imageData = `data:image/png;base64,${imageData}`;
+						}
+
+						// Add image - centered vertically in cell
+						const cellCenterY =
+							yPos +
+							actualRowHeight / 2 -
+							imgHeight / 2;
+						doc.addImage(
+							imageData,
+							'PNG',
+							imageX,
+							cellCenterY,
+							imgWidth,
+							imgHeight,
+							undefined,
+							'SLOW'
+						);
+					} catch (error) {
+						console.error(
+							'Error adding product image:',
+							error,
+							eq.name,
+							eq.imagePath
+						);
+						// Draw placeholder - centered vertically in cell
+						const cellCenterY =
+							yPos +
+							actualRowHeight / 2 -
+							imgHeight / 2;
+						doc.setDrawColor(200, 200, 200);
+						doc.setLineWidth(0.5);
+						doc.rect(
+							imageX,
+							cellCenterY,
+							imgWidth,
+							imgHeight,
+							'S'
+						);
+						doc.setFontSize(6);
+						doc.setTextColor(150, 150, 150);
+						doc.text(
+							t.noImage,
+							imageX + imgWidth / 2,
+							cellCenterY +
+								imgHeight / 2,
+							{
+								align: 'center',
+							}
+						);
+					}
+				} else {
+					// Draw placeholder if no image - centered vertically in cell
+					const cellCenterY =
+						yPos +
+						actualRowHeight / 2 -
+						imgHeight / 2;
+					doc.setDrawColor(200, 200, 200);
+					doc.setLineWidth(0.5);
+					doc.rect(
+						imageX,
+						cellCenterY,
+						imgWidth,
+						imgHeight,
+						'S'
+					);
+					doc.setFontSize(6);
+					doc.setTextColor(150, 150, 150);
+					doc.text(
+						t.noImage,
+						imageX + imgWidth / 2,
+						cellCenterY + imgHeight / 2,
+						{
+							align: 'center',
+						}
+					);
+				}
 			}
 
 			// COLUMN 3: Provider (top) + Country (below)
@@ -1208,6 +1220,36 @@ export const generateOfferPDF = async (
 						),
 					}
 				);
+			}
+
+			// COLUMN 4: Price (numeric)
+			if (opts.showPrice) {
+				const rawPrice = eq.price ?? 0;
+				const priceNumber =
+					typeof rawPrice === 'number'
+						? rawPrice
+						: Number(rawPrice) || 0;
+				const safePrice = Number.isFinite(priceNumber)
+					? priceNumber
+					: 0;
+				const currencyLabel =
+					lang === 'ar'
+						? prepareArabicText('جنيه')
+						: 'EGP';
+				const priceText = `${safePrice.toLocaleString(
+					'en-US'
+				)} ${currencyLabel}`;
+				const col4PriceX = isRTL
+					? col4X + colWidth - colPadding
+					: col4X;
+
+				doc.setFontSize(10);
+				setFontForLanguage(doc, lang, 'bold');
+				doc.setTextColor(30, 30, 30);
+				doc.text(priceText, col4PriceX, yPos + 12, {
+					align: isRTL ? 'right' : 'left',
+					maxWidth: colWidth - colPadding * 2,
+				});
 			}
 
 			yPos += actualRowHeight + 15; // Spacing between products (reduced)
@@ -1355,13 +1397,16 @@ export const generateOfferPDF = async (
 		startY: yPos,
 		head: [],
 		body: financialData,
-		theme: 'plain',
+		theme: 'grid',
 		styles: {
 			fontSize: 9,
-			cellPadding: 2,
+			cellPadding: 4,
 			overflow: 'linebreak',
 			font: lang === 'ar' ? arabicFont : 'helvetica',
 			fontStyle: 'normal',
+			lineColor: [200, 200, 200],
+			lineWidth: 0.3,
+			fillColor: false,
 		},
 		columnStyles: {
 			0: {
@@ -1468,16 +1513,19 @@ export const generateOfferPDF = async (
 				startY: yPos,
 				head: [],
 				body: termsData,
-				theme: 'plain',
+				theme: 'grid',
 				styles: {
 					fontSize: 8,
-					cellPadding: 2,
+					cellPadding: 4,
 					overflow: 'linebreak',
 					font:
 						lang === 'ar'
 							? arabicFont
 							: 'helvetica',
 					fontStyle: 'normal',
+					lineColor: [200, 200, 200],
+					lineWidth: 0.3,
+					fillColor: false,
 				},
 				columnStyles: {
 					0: {
@@ -1513,6 +1561,26 @@ export const generateOfferPDF = async (
 					if (lang === 'ar') {
 						data.cell.styles.font =
 							arabicFont;
+					}
+					// Keep terms on one line - truncate if too long
+					if (
+						data.column.index === 1 &&
+						data.cell.text &&
+						data.cell.text.length > 0
+					) {
+						const maxLength = 80; // Approximate characters per line
+						if (
+							data.cell.text[0]
+								.length >
+							maxLength
+						) {
+							data.cell.text[0] =
+								data.cell.text[0].substring(
+									0,
+									maxLength -
+										3
+								) + '...';
+						}
 					}
 				},
 			});
@@ -1648,7 +1716,7 @@ async function generateOfferHTML(
 		const letterheadImg = await convertPdfToImage(letterheadPdfUrl);
 		if (letterheadImg) {
 			letterheadBase64 = letterheadImg;
-			console.log('✅ Letterhead loaded for HTML PDF');
+			console.log(' Letterhead loaded for HTML PDF');
 		} else {
 			console.warn('⚠️ Letterhead conversion returned null');
 		}
@@ -1717,7 +1785,29 @@ async function generateOfferHTML(
 						}
 					}
 
-					return { ...eq, imageBase64 };
+					const rawPrice =
+						eq.price ??
+						eq.Price ??
+						eq.totalPrice ??
+						eq.TotalPrice ??
+						eq.unitPrice ??
+						eq.UnitPrice ??
+						0;
+					const priceNumber =
+						typeof rawPrice === 'number'
+							? rawPrice
+							: Number(rawPrice) || 0;
+					const priceValue = Number.isFinite(
+						priceNumber
+					)
+						? priceNumber
+						: 0;
+
+					return {
+						...eq,
+						imageBase64,
+						priceValue,
+					};
 				})
 		  )
 		: [];
@@ -1853,7 +1943,7 @@ async function generateOfferHTML(
 		/* Product table header - exact match to English */
 		.product-header {
 			display: grid;
-			grid-template-columns: 1fr 1fr 1fr;
+			grid-template-columns: repeat(4, 1fr);
 			background-color: rgb(240, 240, 240);
 			border: 0.3px solid rgb(200, 200, 200);
 			margin: 0;
@@ -1869,7 +1959,7 @@ async function generateOfferHTML(
 		.product-header-cell:last-child {
 			border: none;
 		}
-		/* Product rows - Match English: calculated row height, 2 per page */
+		/* Product rows - Match English: 20% of page height per product, 2 per page */
 		.product-grid {
 			margin: 0;
 			margin-top: 8px; /* Match English: yPos += 8 after title */
@@ -1881,8 +1971,8 @@ async function generateOfferHTML(
 			padding: 0;
 			page-break-inside: avoid;
 			display: grid;
-			grid-template-columns: 1fr 1fr 1fr;
-			/* Match English: calculated row height based on content */
+			grid-template-columns: repeat(4, 1fr);
+			/* Match English: 20% of page height (297mm * 0.20 = 59.4mm) */
 			min-height: auto;
 			height: auto;
 			margin-bottom: 15px; /* Match English: yPos += actualRowHeight + 15 */
@@ -1903,7 +1993,9 @@ async function generateOfferHTML(
 		/* Page break handling - letterhead will be added via letterhead-page divs */
 		.product-col {
 			padding: 6px 5px; /* Match English: yPos + 6 for top, colPadding = 5 */
-			border-${isRTL ? 'left' : 'right'}: 0.2px solid rgb(200, 200, 200); /* Match English: doc.setDrawColor(200, 200, 200) */
+			border-${
+				isRTL ? 'left' : 'right'
+			}: 0.2px solid rgb(200, 200, 200); /* Match English: doc.setDrawColor(200, 200, 200) */
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-start;
@@ -1917,7 +2009,7 @@ async function generateOfferHTML(
 			text-align: left;
 		}
 		.product-col2 {
-			/* Image and Model column */
+			/* Image column */
 			align-items: center;
 			text-align: center;
 			justify-content: flex-start;
@@ -1925,7 +2017,7 @@ async function generateOfferHTML(
 		}
 		.product-col3 {
 			/* Provider and Country column */
-			text-align: ${isRTL ? 'left' : 'left'}; /* English text starts from left */
+			text-align: left; /* English text starts from left */
 		}
 		.product-name {
 			font-size: 11px; /* Match English: doc.setFontSize(11) */
@@ -1945,18 +2037,18 @@ async function generateOfferHTML(
 		}
 		.product-image {
 			width: 100% !important;
-			height: 60mm !important; /* Match English: imgHeight = 60 */
-			min-height: 60mm !important;
-			max-height: 60mm !important;
+			height: 40mm !important; /* Match English: imgHeight = 40 */
+			min-height: 40mm !important;
+			max-height: 40mm !important;
 			object-fit: contain;
 			object-position: center;
-			margin-bottom: 10px; /* Match English: col2Y += imgHeight + 10 */
 			display: block;
 		}
 		.product-model {
 			font-size: 10px; /* Match English: doc.setFontSize(10) */
 			color: rgb(50, 50, 50); /* Match English: doc.setTextColor(50, 50, 50) */
 			text-align: left;
+			margin-top: 5px; /* Spacing after description */
 		}
 		.product-provider {
 			font-size: 10px; /* Match English: doc.setFontSize(10) */
@@ -1970,15 +2062,43 @@ async function generateOfferHTML(
 			color: rgb(80, 80, 80); /* Match English: doc.setTextColor(80, 80, 80) */
 			text-align: left;
 		}
+		.product-col4 {
+			/* Price column */
+			text-align: ${isRTL ? 'right' : 'left'};
+			align-items: ${isRTL ? 'flex-end' : 'flex-start'};
+			justify-content: center;
+		}
+		.product-price {
+			font-size: 10px; /* Match English: doc.setFontSize(10) */
+			font-weight: bold;
+			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
+			width: 100%;
+			text-align: ${isRTL ? 'right' : 'left'};
+		}
+		.product-col4 {
+			text-align: ${isRTL ? 'right' : 'left'};
+			align-items: ${isRTL ? 'flex-end' : 'flex-start'};
+			justify-content: center;
+		}
+		.product-price {
+			font-size: 10px;
+			font-weight: bold;
+			color: rgb(30, 30, 30);
+			width: 100%;
+			text-align: ${isRTL ? 'right' : 'left'};
+		}
 		.financial-table {
 			width: 100%;
 			border-collapse: collapse;
 			margin: 4px 0; /* Match English: yPos += 4 after title */
 			font-size: 9px; /* Match English: fontSize: 9 */
+			border: 0.3px solid rgb(200, 200, 200);
+			background: transparent;
 		}
 		.financial-table td {
-			padding: 2px; /* Match English: cellPadding: 2 */
-			border: none;
+			padding: 4px; /* Match English: cellPadding: 4 */
+			border: 0.3px solid rgb(200, 200, 200);
+			background: transparent;
 		}
 		.financial-table .label-col {
 			font-weight: bold;
@@ -1989,16 +2109,29 @@ async function generateOfferHTML(
 			text-align: ${isRTL ? 'left' : 'right'};
 			font-weight: bold;
 		}
-		.terms-section {
+		.terms-table {
+			width: 100%;
+			border-collapse: collapse;
 			margin: 4px 0; /* Match English: yPos += 4 after title */
 			font-size: 8px; /* Match English: doc.setFontSize(8) */
+			border: 0.3px solid rgb(200, 200, 200);
+			background: transparent;
 		}
-		.term-row {
-			margin: 2px 0; /* Match English: cellPadding: 2 */
+		.terms-table td {
+			padding: 4px; /* Match English: cellPadding: 4 */
+			border: 0.3px solid rgb(200, 200, 200);
+			background: transparent;
+			white-space: nowrap; /* Keep terms on one line */
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
-		.term-label {
+		.terms-table .term-label-col {
 			font-weight: bold;
-			display: inline;
+			text-align: ${isRTL ? 'right' : 'left'};
+			width: 50mm;
+		}
+		.terms-table .term-value-col {
+			text-align: ${isRTL ? 'right' : 'left'};
 		}
 		.footer-info {
 			margin-top: 0; /* Match English: spacing handled by yPos */
@@ -2065,8 +2198,9 @@ async function generateOfferHTML(
 			<!-- Product table header -->
 			<div class="product-header">
 				<div class="product-header-cell">${t.productName}</div>
-				<div class="product-header-cell">${t.model}</div>
+				<div class="product-header-cell"></div>
 				<div class="product-header-cell">${t.provider} / ${t.country}</div>
+				<div class="product-header-cell">${t.price}</div>
 			</div>
 			<!-- Product rows -->
 			<div class="product-grid">
@@ -2074,19 +2208,19 @@ async function generateOfferHTML(
 					.map(
 						(eq: any) => `
 					<div class="product-card">
-						<!-- Column 1: Name & Description -->
+						<!-- Column 1: Name, Description & Model -->
 						<div class="product-col product-col1">
 							<div class="product-name">${eq.name || eq.Name || 'N/A'}</div>
 							<div class="product-desc">${eq.description || eq.Description || ''}</div>
+							<div class="product-model">${eq.model || eq.Model || 'N/A'}</div>
 						</div>
-						<!-- Column 2: Image & Model -->
+						<!-- Column 2: Image only -->
 						<div class="product-col product-col2">
 							${
 								eq.imageBase64
 									? `<img src="${eq.imageBase64}" class="product-image" alt="Product" />`
-									: `<div style="width: 100%; height: 60mm; border: 0.5px solid rgb(200, 200, 200); display: flex; align-items: center; justify-content: center; color: rgb(150, 150, 150); font-size: 6px;">${t.noImage}</div>`
+									: `<div style="width: 100%; height: 40mm; border: 0.5px solid rgb(200, 200, 200); display: flex; align-items: center; justify-content: center; color: rgb(150, 150, 150); font-size: 6px;">${t.noImage}</div>`
 							}
-							<div class="product-model">${eq.model || eq.Model || 'N/A'}</div>
 						</div>
 						<!-- Column 3: Provider & Country -->
 						<div class="product-col product-col3">
@@ -2098,6 +2232,13 @@ async function generateOfferHTML(
 								'N/A'
 							}</div>
 							<div class="product-country">${eq.country || eq.Country || 'N/A'}</div>
+						</div>
+						<div class="product-col product-col4">
+							<div class="product-price">${(eq.priceValue || 0).toLocaleString('en-US')} ${
+							lang === 'ar'
+								? 'جنيه'
+								: 'EGP'
+						}</div>
 						</div>
 					</div>
 				`
@@ -2141,35 +2282,38 @@ async function generateOfferHTML(
 			offer.warrantyTerms
 				? `
 		<div class="section-title">${t.termsConditions}</div>
-		<div class="terms-section">
+		<table class="terms-table">
 			${
 				offer.paymentTerms
 					? `
-			<div class="term-row">
-				<span class="term-label">${t.paymentTerms}:</span> ${offer.paymentTerms}
-			</div>
+			<tr>
+				<td class="term-label-col">${t.paymentTerms}</td>
+				<td class="term-value-col">${offer.paymentTerms}</td>
+			</tr>
 			`
 					: ''
 			}
 			${
 				offer.deliveryTerms
 					? `
-			<div class="term-row">
-				<span class="term-label">${t.deliveryTerms}:</span> ${offer.deliveryTerms}
-			</div>
+			<tr>
+				<td class="term-label-col">${t.deliveryTerms}</td>
+				<td class="term-value-col">${offer.deliveryTerms}</td>
+			</tr>
 			`
 					: ''
 			}
 			${
 				offer.warrantyTerms
 					? `
-			<div class="term-row">
-				<span class="term-label">${t.warranty}:</span> ${offer.warrantyTerms}
-			</div>
+			<tr>
+				<td class="term-label-col">${t.warranty}</td>
+				<td class="term-value-col">${offer.warrantyTerms}</td>
+			</tr>
 			`
 					: ''
 			}
-		</div>
+		</table>
 		`
 				: ''
 		}
