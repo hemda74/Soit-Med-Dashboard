@@ -18,6 +18,19 @@ import {
 	ArchiveBoxIcon,
 	CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
+import {
+	HeadphonesIcon,
+	Users,
+	BarChart3,
+	Activity as ActivityIcon,
+	Clock as ClockOutlineIcon,
+	CheckCircle2,
+	XCircle,
+	Send,
+	User as UserIcon,
+	Building2,
+	FileText,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +42,9 @@ import { downloadOfferPDF } from '@/utils/pdfGenerator';
 import toast from 'react-hot-toast';
 import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
 import { usePerformance } from '@/hooks/usePerformance';
+
+type SalesSupportTab = 'overview' | 'my-offers' | 'requests' | 'clients';
+const SALES_SUPPORT_TABS: readonly SalesSupportTab[] = ['overview', 'my-offers', 'requests', 'clients'];
 
 const SalesSupportDashboard: React.FC = () => {
 	usePerformance('SalesSupportDashboard');
@@ -61,14 +77,43 @@ const SalesSupportDashboard: React.FC = () => {
 	const [loadingEquipment, setLoadingEquipment] = useState(false);
 	const [equipmentImageUrls, setEquipmentImageUrls] = useState<Record<number, string>>({});
 	const [showOfferForm, setShowOfferForm] = useState(false);
-	const [activeTab, setActiveTab] = useState('overview');
+	const [activeTab, setActiveTab] = useState<SalesSupportTab>('overview');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [currentPage, setCurrentPage] = useState(1);
+	const [recentActivity, setRecentActivity] = useState<any[]>([]);
+	const [activityLoading, setActivityLoading] = useState(false);
 
 	useEffect(() => {
 		getAssignedRequests();
 		getMyOffers();
 	}, [getAssignedRequests, getMyOffers]);
+
+	const loadRecentActivity = async () => {
+		setActivityLoading(true);
+		try {
+			const response = await salesApi.getRecentActivity(20);
+			if (response.success && response.data) {
+				setRecentActivity(response.data);
+			}
+		} catch (error) {
+			// Ignore activity load errors – non blocking
+		} finally {
+			setActivityLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		loadRecentActivity();
+	}, []);
+
+	// Sync active tab with query parameter
+	useEffect(() => {
+		const tabFromUrl = searchParams.get('tab');
+		const normalizedTab = tabFromUrl === 'sales-support' ? 'overview' : tabFromUrl;
+		if (normalizedTab && SALES_SUPPORT_TABS.includes(normalizedTab as SalesSupportTab)) {
+			setActiveTab(normalizedTab as SalesSupportTab);
+		}
+	}, [searchParams]);
 
 	// Handle offerId from URL parameter (for navigation from notifications)
 	useEffect(() => {
@@ -78,13 +123,49 @@ const SalesSupportDashboard: React.FC = () => {
 			if (offer) {
 				setSelectedOffer(offer);
 				// Switch to offers tab to show the offer
-				setActiveTab('offers');
+				setActiveTab('my-offers');
 				// Clear the URL parameter after opening the offer
-				searchParams.delete('offerId');
-				setSearchParams(searchParams, { replace: true });
+				const params = new URLSearchParams(searchParams);
+				params.delete('offerId');
+				setSearchParams(params, { replace: true });
 			}
 		}
 	}, [searchParams, offers, setSearchParams]);
+
+	// Handle requestId from URL parameter
+	useEffect(() => {
+		const requestIdFromUrl = searchParams.get('requestId');
+		if (requestIdFromUrl && assignedRequests.length > 0) {
+			const request = assignedRequests.find((req: any) => req.id.toString() === requestIdFromUrl);
+			if (request) {
+				setSelectedRequest(request);
+				setActiveTab('requests');
+				const params = new URLSearchParams(searchParams);
+				params.delete('requestId');
+				setSearchParams(params, { replace: true });
+			}
+		}
+	}, [searchParams, assignedRequests, setSearchParams]);
+
+	// Handle clientId from URL parameter
+	useEffect(() => {
+		const clientIdFromUrl = searchParams.get('clientId');
+		if (!clientIdFromUrl) return;
+
+		const matchedClient = clients?.find((client: any) => client.id?.toString() === clientIdFromUrl);
+		if (matchedClient) {
+			setSelectedClient(matchedClient);
+			setActiveTab('clients');
+			const params = new URLSearchParams(searchParams);
+			params.delete('clientId');
+			setSearchParams(params, { replace: true });
+			return;
+		}
+
+		if (!clientsLoading) {
+			searchClients({ query: clientIdFromUrl, page: 1, pageSize: 1 });
+		}
+	}, [searchParams, clients, clientsLoading, searchClients, setSearchParams]);
 
 	// Load all clients when clients tab is opened
 	useEffect(() => {
@@ -220,6 +301,7 @@ const SalesSupportDashboard: React.FC = () => {
 						description: eq.description || eq.Description || eq.specifications,
 						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
 						imagePath: eq.imagePath || eq.ImagePath,
+						providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
 					}));
 				}
 			} catch (e) {
@@ -320,6 +402,28 @@ const SalesSupportDashboard: React.FC = () => {
 		offer.products?.toLowerCase().includes(searchQuery.toLowerCase())
 	) || [];
 
+	const totalOffersCount = offers?.length || 0;
+	const offersSentCount = offers?.filter((offer) => offer.status === 'Sent')?.length || 0;
+	const offersAcceptedCount = offers?.filter((offer) => offer.status === 'Accepted')?.length || 0;
+	const offersDraftCount = offers?.filter((offer) => offer.status === 'Draft')?.length || 0;
+	const activeRequestsCount = assignedRequests?.filter(request => request.status !== 'Completed')?.length || 0;
+	const assignedRequestsTotal = assignedRequests?.length || 0;
+	const totalClientsTracked = clients?.length || 0;
+
+	const getActivityIcon = (type: string) => {
+		switch (type) {
+			case 'Accepted':
+			case 'Completed':
+				return <CheckCircle2 className="h-4 w-4 text-primary" />;
+			case 'Rejected':
+				return <XCircle className="h-4 w-4 text-destructive" />;
+			case 'Sent':
+				return <Send className="h-4 w-4 text-primary" />;
+			default:
+				return <ActivityIcon className="h-4 w-4 text-muted-foreground" />;
+		}
+	};
+
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
 			<div className="max-w-7xl mx-auto space-y-6">
@@ -346,6 +450,75 @@ const SalesSupportDashboard: React.FC = () => {
 							</Button>
 						</div>
 					</div>
+				</div>
+
+				{/* Unified Quick Actions */}
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<button
+						type="button"
+						onClick={() => setActiveTab('requests')}
+						className="text-left bg-white dark:bg-gray-900 rounded-xl p-6 border-2 border-blue-100 dark:border-blue-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+					>
+						<div className="flex items-center justify-between mb-4">
+							<div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-xl flex items-center justify-center shadow-md">
+								<HeadphonesIcon className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+							</div>
+							<div className="text-right">
+								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{activeRequestsCount}</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">{t('activeRequests') || 'Active Requests'}</p>
+							</div>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							{t('salesSupportDashboard')}
+						</h3>
+						<p className="text-sm text-gray-600 dark:text-gray-400">
+							{t('salesSupportDashboardDescription')}
+						</p>
+					</button>
+
+					<button
+						type="button"
+						onClick={() => setActiveTab('my-offers')}
+						className="text-left bg-white dark:bg-gray-900 rounded-xl p-6 border-2 border-purple-100 dark:border-purple-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+					>
+						<div className="flex items-center justify-between mb-4">
+							<div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-xl flex items-center justify-center shadow-md">
+								<BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-300" />
+							</div>
+							<div className="text-right">
+								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalOffersCount}</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">{t('myOffers')}</p>
+							</div>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							{t('salesSupportManagement')}
+						</h3>
+						<p className="text-sm text-gray-600 dark:text-gray-400">
+							{t('salesSupportManagementDescription')}
+						</p>
+					</button>
+
+					<button
+						type="button"
+						onClick={() => setActiveTab('clients')}
+						className="text-left bg-white dark:bg-gray-900 rounded-xl p-6 border-2 border-green-100 dark:border-green-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+					>
+						<div className="flex items-center justify-between mb-4">
+							<div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center shadow-md">
+								<Users className="w-6 h-6 text-green-600 dark:text-green-300" />
+							</div>
+							<div className="text-right">
+								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalClientsTracked}</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">{t('clients')}</p>
+							</div>
+						</div>
+						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							{t('clientSearchTitle')}
+						</h3>
+						<p className="text-sm text-gray-600 dark:text-gray-400">
+							{t('findAndManageClients')}
+						</p>
+					</button>
 				</div>
 
 				{/* Quick Stats Cards */}
@@ -440,7 +613,159 @@ const SalesSupportDashboard: React.FC = () => {
 
 					{/* Overview Tab */}
 					<TabsContent value="overview" className="space-y-6">
-						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+							{/* Recent Activity */}
+							<Card className="shadow-lg border-2 border-border">
+								<CardHeader>
+									<div className="flex items-center gap-3">
+										<BarChart3 className="w-6 h-6 text-primary" />
+										<div>
+											<CardTitle>{t('recentActivity') || 'Recent Activity'}</CardTitle>
+											<CardDescription>{t('latestOfferEvents') || 'Latest offer lifecycle events'}</CardDescription>
+										</div>
+									</div>
+								</CardHeader>
+								<CardContent>
+									{activityLoading ? (
+										<div className="flex flex-col items-center justify-center py-10">
+											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+											<p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+												{t('loadingActivity') || 'Loading recent activity...'}
+											</p>
+										</div>
+									) : recentActivity && recentActivity.length > 0 ? (
+										<div className="space-y-3">
+											{recentActivity.slice(0, 5).map((activity, index) => (
+												<div
+													key={`${activity.id || activity.offerId || index}-${index}`}
+													className="group border border-border rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
+												>
+													<div className="flex items-start gap-3">
+														<div className="flex-shrink-0 mt-0.5">
+															<div className="p-2 bg-muted rounded-md">
+																{getActivityIcon(activity.type || activity.status)}
+															</div>
+														</div>
+														<div className="flex-1 min-w-0">
+															<div className="flex items-start justify-between gap-3 mb-2">
+																<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+																	{activity.description || activity.message}
+																</p>
+																<Badge variant="outline" className="text-xs">
+																	{activity.type || activity.status}
+																</Badge>
+															</div>
+															<div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-2">
+																{activity.clientName && (
+																	<div className="flex items-center gap-1.5">
+																		<Building2 className="h-3 w-3" />
+																		<span>{activity.clientName}</span>
+																	</div>
+																)}
+																{activity.salesmanName && (
+																	<div className="flex items-center gap-1.5">
+																		<UserIcon className="h-3 w-3" />
+																		<span>{activity.salesmanName}</span>
+																	</div>
+																)}
+																{activity.offerId && (
+																	<div className="flex items-center gap-1.5">
+																		<FileText className="h-3 w-3" />
+																		<span>{t('offer') || 'Offer'} #{activity.offerId}</span>
+																	</div>
+																)}
+																{activity.timestamp && (
+																	<div className="flex items-center gap-1.5 ml-auto">
+																		<ClockOutlineIcon className="h-3 w-3" />
+																		<span>{format(new Date(activity.timestamp), 'MMM dd, yyyy HH:mm')}</span>
+																	</div>
+																)}
+															</div>
+														</div>
+													</div>
+												</div>
+											))}
+										</div>
+									) : (
+										<div className="flex flex-col items-center justify-center py-10">
+											<ActivityIcon className="h-8 w-8 text-muted-foreground mb-3" />
+											<p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+												{t('noRecentActivity') || 'No recent activity'}
+											</p>
+											<p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+												{t('activityEmptyState') || 'Activity will appear as offers and requests are processed'}
+											</p>
+										</div>
+									)}
+								</CardContent>
+							</Card>
+
+							{/* My Offers Snapshot */}
+							<Card className="shadow-lg border-2 border-border">
+								<CardHeader>
+									<CardTitle>{t('myOffersSnapshot') || 'My Offers'}</CardTitle>
+									<CardDescription>{t('myOffersSnapshotDescription') || 'Monitor your pipeline at a glance'}</CardDescription>
+								</CardHeader>
+								<CardContent className="space-y-4">
+									<div className="grid grid-cols-2 gap-4">
+										<div className="rounded-2xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40 p-4">
+											<p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">
+												{t('totalOffers') || 'Total Offers'}
+											</p>
+											<p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{totalOffersCount}</p>
+										</div>
+										<div className="rounded-2xl border border-indigo-200 dark:border-indigo-900 bg-white dark:bg-gray-900 p-4">
+											<p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+												{t('sent')}
+											</p>
+											<p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{offersSentCount}</p>
+										</div>
+									</div>
+									<div className="grid grid-cols-2 gap-4">
+										<div className="rounded-2xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/30 p-4">
+											<p className="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-200">
+												{t('completed') || 'Completed'}
+											</p>
+											<p className="text-2xl font-semibold text-green-900 dark:text-green-100">{offersAcceptedCount}</p>
+											<p className="text-xs text-green-700 dark:text-green-300">{t('accepted') || 'Accepted'}</p>
+										</div>
+										<div className="rounded-2xl border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/30 p-4">
+											<p className="text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-200">
+												{t('inProgress') || 'In Progress'}
+											</p>
+											<p className="text-2xl font-semibold text-yellow-900 dark:text-yellow-100">{offersDraftCount}</p>
+											<p className="text-xs text-yellow-700 dark:text-yellow-300">{t('draft')}</p>
+										</div>
+									</div>
+									<Separator />
+									<div className="rounded-2xl border border-purple-200 dark.border-purple-900 bg-purple-50 dark:bg-purple-950/30 p-4 flex items-center justify-between gap-4">
+										<div>
+											<p className="text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-200">
+												{t('assignedRequests')}
+											</p>
+											<p className="text-3xl font-bold text-purple-900 dark:text-purple-100">{assignedRequestsTotal}</p>
+											<p className="text-xs text-purple-700 dark:text-purple-300">
+												{t('requests')} • {activeRequestsCount} {t('active') || 'Active'}
+											</p>
+										</div>
+										<Button
+											variant="outline"
+											className="border-purple-500 text-purple-600 dark:border-purple-700 dark:text-purple-200"
+											onClick={() => setActiveTab('requests')}
+										>
+											{t('viewDetails') || 'View'}
+										</Button>
+									</div>
+									<Button
+										variant="secondary"
+										className="w-full"
+										onClick={() => setActiveTab('my-offers')}
+									>
+										{t('viewMyOffers') || 'Go to My Offers'}
+									</Button>
+								</CardContent>
+							</Card>
+
 							{/* Recent Offers */}
 							<Card className="shadow-md">
 								<CardHeader>

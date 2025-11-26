@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,8 @@ import {
 	CheckCircle,
 	FileText,
 	DollarSign,
+	Play,
+	Info,
 } from 'lucide-react';
 import { LoadingSpinner, EmptyState, ErrorDisplay } from '@/components/shared';
 import { useAuthStore } from '@/stores/authStore';
@@ -29,6 +32,7 @@ import { getStaticFileUrl } from '@/utils/apiConfig';
 import { downloadOfferPDF } from '@/utils/pdfGenerator';
 import toast from 'react-hot-toast';
 import { usePerformance } from '@/hooks/usePerformance';
+import ProviderLogo from '@/components/sales/ProviderLogo';
 
 interface Offer {
 	id: number;
@@ -60,6 +64,7 @@ interface Salesman {
 
 const OffersManagementPage: React.FC = () => {
 	usePerformance('OffersManagementPage');
+	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [offers, setOffers] = useState<Offer[]>([]);
@@ -439,6 +444,31 @@ const OffersManagementPage: React.FC = () => {
 		}
 	};
 
+	const handleResumeFromUnderReview = async () => {
+		if (!selectedOffer) return;
+		if (selectedOffer.status !== 'UnderReview') {
+			toast.error(t('onlyUnderReviewOffersCanBeResumed') || 'Only offers under review can be resumed');
+			return;
+		}
+
+		try {
+			setProcessingAction('resumeFromReview');
+			const response = await salesApi.resumeFromUnderReview(selectedOffer.id.toString());
+			if (response.success) {
+				toast.success(t('offerResumedFromUnderReview') || 'Offer resumed from under review successfully');
+				loadOffers();
+				setSelectedOffer(null);
+			} else {
+				toast.error(response.message || 'Failed to resume offer from under review');
+			}
+		} catch (error: any) {
+			console.error('Error resuming offer from under review:', error);
+			toast.error(error.message || 'Failed to resume offer from under review');
+		} finally {
+			setProcessingAction(null);
+		}
+	};
+
 	const handleOpenNeedsModificationModal = () => {
 		if (!selectedOffer) return;
 		if (selectedOffer.status !== 'Draft' && selectedOffer.status !== 'Sent') {
@@ -514,6 +544,7 @@ const OffersManagementPage: React.FC = () => {
 						description: eq.description || eq.Description || eq.specifications,
 						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
 						imagePath: eq.imagePath || eq.ImagePath,
+						providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
 					}));
 				}
 			} catch (e) {
@@ -846,6 +877,20 @@ const OffersManagementPage: React.FC = () => {
 												<Eye className="h-4 w-4 mr-2" />
 												{t('view')}
 											</Button>
+											{/* Edit button for Sales Manager - can edit any offer regardless of status */}
+											{(isSalesManager || isSuperAdmin) && (
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => {
+														navigate(`/sales-manager/offers/${offer.id}/edit`);
+													}}
+													className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
+												>
+													<Edit className="h-4 w-4 mr-2" />
+													{t('edit') || 'Edit'}
+												</Button>
+											)}
 											{/* Quick action buttons based on status */}
 											{offer.status === 'Draft' && (
 												<Button
@@ -1085,13 +1130,19 @@ const OffersManagementPage: React.FC = () => {
 															{equipment.name}
 														</h4>
 														{(equipment.model || (equipment as any).provider || (equipment as any).Provider) && (
-															<p className="text-sm text-gray-600 dark:text-gray-400">
-																{((equipment as any).provider || (equipment as any).Provider) && (
-																	<span className="font-medium">{(equipment as any).provider || (equipment as any).Provider}</span>
-																)}
-																{((equipment as any).provider || (equipment as any).Provider) && equipment.model && ' - '}
-																{equipment.model && <span>{equipment.model}</span>}
-															</p>
+															<div className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+																<ProviderLogo
+																	providerName={(equipment as any).provider || (equipment as any).Provider || (equipment as any).manufacturer || (equipment as any).Manufacturer || null}
+																	logoPath={
+																		(equipment as any).providerImagePath ||
+																		(equipment as any).ProviderImagePath ||
+																		null
+																	}
+																	size="sm"
+																	showName={true}
+																/>
+																{equipment.model && <span className="text-gray-500">- {equipment.model}</span>}
+															</div>
 														)}
 													</div>
 													<div className="text-right ml-4">
@@ -1125,9 +1176,16 @@ const OffersManagementPage: React.FC = () => {
 														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
 															{t('provider')}
 														</label>
-														<p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-															{(equipment as any).provider || (equipment as any).Provider || (equipment as any).manufacturer || (equipment as any).Manufacturer || 'N/A'}
-														</p>
+														<ProviderLogo
+															providerName={(equipment as any).provider || (equipment as any).Provider || (equipment as any).manufacturer || (equipment as any).Manufacturer || null}
+															logoPath={
+																(equipment as any).providerImagePath ||
+																(equipment as any).ProviderImagePath ||
+																null
+															}
+															size="sm"
+															showName={true}
+														/>
 													</div>
 													<div>
 														<label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
@@ -1281,6 +1339,19 @@ const OffersManagementPage: React.FC = () => {
 							{/* Action Buttons */}
 							<Separator className="my-4" />
 							<div className="flex flex-wrap justify-end gap-3 pt-4">
+								{/* Edit button for Sales Manager - can edit any offer regardless of status */}
+								{(isSalesManager || isSuperAdmin) && (
+									<Button
+										variant="outline"
+										onClick={() => {
+											navigate(`/sales-manager/offers/${selectedOffer.id}/edit`);
+										}}
+										className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
+									>
+										<Edit className="h-4 w-4 mr-2" />
+										{t('edit') || 'Edit Offer'}
+									</Button>
+								)}
 								{/* Status-based action buttons */}
 								{selectedOffer.status === 'Draft' && (
 									<>
@@ -1293,37 +1364,151 @@ const OffersManagementPage: React.FC = () => {
 											<CheckCircle className="h-4 w-4 mr-2" />
 											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesman') || 'Send to Salesman'}
 										</Button>
-										<Button
-											variant="outline"
-											onClick={handleOpenNeedsModificationModal}
-											disabled={processingAction !== null}
-											className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
-										>
-											<Edit className="h-4 w-4 mr-2" />
-											{t('markAsNeedsModification') || 'Mark as Needs Modification'}
-										</Button>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleOpenNeedsModificationModal}
+														disabled={processingAction !== null}
+														className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+													>
+														<Edit className="h-4 w-4 mr-2" />
+														{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('needsModificationTooltipTitle') || 'Needs Modification'}</p>
+													<p className="text-sm">{t('needsModificationTooltipDescription') || 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
 									</>
 								)}
 								{selectedOffer.status === 'Sent' && (
 									<>
-										<Button
-											variant="outline"
-											onClick={handleMarkAsUnderReview}
-											disabled={processingAction !== null}
-											className="border-yellow-600 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900"
-										>
-											<Clock className="h-4 w-4 mr-2" />
-											{processingAction === 'underReview' ? t('processing') || 'Processing...' : t('markAsUnderReview') || 'Mark as Under Review'}
-										</Button>
-										<Button
-											variant="outline"
-											onClick={handleOpenNeedsModificationModal}
-											disabled={processingAction !== null}
-											className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
-										>
-											<Edit className="h-4 w-4 mr-2" />
-											{t('markAsNeedsModification') || 'Mark as Needs Modification'}
-										</Button>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleMarkAsUnderReview}
+														disabled={processingAction !== null}
+														className="border-yellow-600 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900"
+													>
+														<Clock className="h-4 w-4 mr-2" />
+														{processingAction === 'underReview' ? t('processing') || 'Processing...' : t('markAsUnderReview') || 'Mark as Under Review'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('underReviewTooltipTitle') || 'Under Review'}</p>
+													<p className="text-sm">{t('underReviewTooltipDescription') || 'Pause the offer for internal review. Does not return to SalesSupport. You can resume it later.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleOpenNeedsModificationModal}
+														disabled={processingAction !== null}
+														className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+													>
+														<Edit className="h-4 w-4 mr-2" />
+														{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('needsModificationTooltipTitle') || 'Needs Modification'}</p>
+													<p className="text-sm">{t('needsModificationTooltipDescription') || 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									</>
+								)}
+								{selectedOffer.status === 'UnderReview' && (
+									<>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleResumeFromUnderReview}
+														disabled={processingAction !== null}
+														className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
+													>
+														<Play className="h-4 w-4 mr-2" />
+														{processingAction === 'resumeFromReview' ? t('processing') || 'Processing...' : t('resumeFromUnderReview') || 'Resume to Sent'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('resumeFromReviewTooltipTitle') || 'Resume from Review'}</p>
+													<p className="text-sm">{t('resumeFromReviewTooltipDescription') || 'Resume the offer from under review back to Sent status. The offer will be available for client response again.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleOpenNeedsModificationModal}
+														disabled={processingAction !== null}
+														className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+													>
+														<Edit className="h-4 w-4 mr-2" />
+														{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('needsModificationTooltipTitle') || 'Needs Modification'}</p>
+													<p className="text-sm">{t('needsModificationTooltipDescription') || 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+									</>
+								)}
+								{selectedOffer.status === 'UnderReview' && (
+									<>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleResumeFromUnderReview}
+														disabled={processingAction !== null}
+														className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
+													>
+														<Play className="h-4 w-4 mr-2" />
+														{processingAction === 'resumeFromReview' ? t('processing') || 'Processing...' : t('resumeFromUnderReview') || 'Resume to Sent'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('resumeFromReviewTooltipTitle') || 'Resume from Review'}</p>
+													<p className="text-sm">{t('resumeFromReviewTooltipDescription') || 'Resume the offer from under review back to Sent status. The offer will be available for client response again.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
+										<TooltipProvider>
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button
+														variant="outline"
+														onClick={handleOpenNeedsModificationModal}
+														disabled={processingAction !== null}
+														className="border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900"
+													>
+														<Edit className="h-4 w-4 mr-2" />
+														{t('markAsNeedsModification') || 'Mark as Needs Modification'}
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent className="max-w-xs">
+													<p className="font-semibold mb-1">{t('needsModificationTooltipTitle') || 'Needs Modification'}</p>
+													<p className="text-sm">{t('needsModificationTooltipDescription') || 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.'}</p>
+												</TooltipContent>
+											</Tooltip>
+										</TooltipProvider>
 									</>
 								)}
 								<Button

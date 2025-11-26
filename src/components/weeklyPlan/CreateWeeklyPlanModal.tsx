@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import {
     Dialog,
     DialogContent,
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
     Calendar,
     ListChecks,
@@ -20,8 +22,9 @@ import {
     Plus,
     Trash2,
     GripVertical,
+    ChevronDown,
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import type { CreateWeeklyPlanDto } from '@/types/weeklyPlan.types';
 
 const taskSchema = z.object({
@@ -35,6 +38,7 @@ const taskSchema = z.object({
     clientLocation: z.string().optional(),
     plannedDate: z.string().min(1, 'Planned date is required'),
     notes: z.string().optional(),
+    equipmentCategories: z.array(z.string()).optional(),
 });
 
 const createPlanSchema = z.object({
@@ -47,7 +51,7 @@ const createPlanSchema = z.object({
         .min(1, 'Description is required')
         .max(1000, 'Description must be less than 1000 characters'),
     weekStartDate: z.string().min(1, 'Start date is required'),
-    weekEndDate: z.string().min(1, 'End date is required'),
+    // weekEndDate is auto-calculated, no longer required in form
     tasks: z.array(taskSchema).optional(),
 });
 
@@ -73,6 +77,8 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
         register,
         handleSubmit,
         control,
+        watch,
+        setValue,
         formState: { errors },
     } = useForm<CreatePlanFormData>({
         resolver: zodResolver(createPlanSchema),
@@ -80,10 +86,17 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
             title: '',
             description: '',
             weekStartDate: format(weekStart, 'yyyy-MM-dd'),
-            weekEndDate: format(weekEnd, 'yyyy-MM-dd'),
             tasks: [],
         },
     });
+
+    // Watch start date to auto-calculate end date
+    const weekStartDateValue = watch('weekStartDate');
+
+    // Calculate end date: 7 days from start (start day + 6 more days)
+    const calculatedEndDate = weekStartDateValue
+        ? format(addDays(new Date(weekStartDateValue), 6), 'yyyy-MM-dd')
+        : '';
 
     const { fields, append, remove } = useFieldArray({
         control,
@@ -93,7 +106,12 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
     const handleFormSubmit = async (data: CreatePlanFormData) => {
         setIsSubmitting(true);
         try {
-            const success = await onSubmit(data);
+            // Calculate end date and add to submission data
+            const submitData: CreateWeeklyPlanDto = {
+                ...data,
+                weekEndDate: calculatedEndDate, // Auto-calculated: 7 days from start
+            };
+            const success = await onSubmit(submitData);
             if (success) {
                 onClose();
             }
@@ -110,6 +128,7 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
             plannedDate: '',
             priority: 'Medium' as const,
             status: 'Planned' as const,
+            equipmentCategories: [],
         });
     };
 
@@ -174,60 +193,35 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="weekStartDate">
-                                    Week Start Date *
-                                </Label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        id="weekStartDate"
-                                        type="date"
-                                        {...register(
-                                            'weekStartDate'
-                                        )}
-                                        className={`pl-10 ${errors.weekStartDate
-                                            ? 'border-red-500'
-                                            : ''
-                                            }`}
-                                    />
-                                </div>
-                                {errors.weekStartDate && (
-                                    <p className="text-sm text-red-500">
-                                        {
-                                            errors.weekStartDate
-                                                .message
-                                        }
-                                    </p>
-                                )}
+                        <div className="space-y-2">
+                            <Label htmlFor="weekStartDate">
+                                Week Start Date *
+                            </Label>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input
+                                    id="weekStartDate"
+                                    type="date"
+                                    {...register(
+                                        'weekStartDate'
+                                    )}
+                                    className={`pl-10 ${errors.weekStartDate
+                                        ? 'border-red-500'
+                                        : ''
+                                        }`}
+                                />
                             </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="weekEndDate">
-                                    Week End Date *
-                                </Label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        id="weekEndDate"
-                                        type="date"
-                                        {...register('weekEndDate')}
-                                        className={`pl-10 ${errors.weekEndDate
-                                            ? 'border-red-500'
-                                            : ''
-                                            }`}
-                                    />
-                                </div>
-                                {errors.weekEndDate && (
-                                    <p className="text-sm text-red-500">
-                                        {
-                                            errors.weekEndDate
-                                                .message
-                                        }
-                                    </p>
-                                )}
-                            </div>
+                            {errors.weekStartDate && (
+                                <p className="text-sm text-red-500">
+                                    {
+                                        errors.weekStartDate
+                                            .message
+                                    }
+                                </p>
+                            )}
+                            <p className="text-xs text-gray-500 italic">
+                                End date will be automatically calculated as 7 days from start date
+                            </p>
                         </div>
                     </div>
 
@@ -320,6 +314,84 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                                     placeholder="Purpose (optional)"
                                                     rows={2}
                                                 />
+                                                {/* Equipment Categories */}
+                                                <div className="space-y-2">
+                                                    <Label>Equipment Categories (optional)</Label>
+                                                    <div className="relative">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => setOpenCategoryDropdowns(prev => ({
+                                                                ...prev,
+                                                                [index]: !prev[index]
+                                                            }))}
+                                                            className="w-full justify-between"
+                                                        >
+                                                            <span className="truncate">
+                                                                {(() => {
+                                                                    const taskCategories = watch(`tasks.${index}.equipmentCategories`) || [];
+                                                                    return taskCategories.length === 0
+                                                                        ? 'Select equipment categories'
+                                                                        : `${taskCategories.length} categories selected`;
+                                                                })()}
+                                                            </span>
+                                                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                        </Button>
+                                                        {openCategoryDropdowns[index] && (
+                                                            <div className="absolute z-50 mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-auto">
+                                                                <div className="p-2">
+                                                                    {availableCategories.map((category: string) => {
+                                                                        const taskCategories = watch(`tasks.${index}.equipmentCategories`) || [];
+                                                                        const isSelected = taskCategories.includes(category);
+                                                                        return (
+                                                                            <label
+                                                                                key={category}
+                                                                                className="flex items-center space-x-2 p-2 hover:bg-accent rounded cursor-pointer"
+                                                                            >
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={isSelected}
+                                                                                    onChange={(e) => {
+                                                                                        const currentCategories = watch(`tasks.${index}.equipmentCategories`) || [];
+                                                                                        const newCategories = e.target.checked
+                                                                                            ? [...currentCategories, category]
+                                                                                            : currentCategories.filter((c: string) => c !== category);
+                                                                                        setValue(`tasks.${index}.equipmentCategories`, newCategories);
+                                                                                    }}
+                                                                                    className="rounded border-gray-300"
+                                                                                />
+                                                                                <span className="text-sm">{category}</span>
+                                                                            </label>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {(() => {
+                                                        const taskCategories = watch(`tasks.${index}.equipmentCategories`) || [];
+                                                        return taskCategories.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                {taskCategories.map((category: string, catIndex: number) => (
+                                                                    <Badge key={catIndex} variant="secondary" className="flex items-center gap-1">
+                                                                        {category}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                const currentCategories = watch(`tasks.${index}.equipmentCategories`) || [];
+                                                                                const newCategories = currentCategories.filter((c: string) => c !== category);
+                                                                                setValue(`tasks.${index}.equipmentCategories`, newCategories);
+                                                                            }}
+                                                                            className="ml-1 hover:text-destructive"
+                                                                        >
+                                                                            <X className="h-3 w-3" />
+                                                                        </button>
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                             <Button
                                                 type="button"

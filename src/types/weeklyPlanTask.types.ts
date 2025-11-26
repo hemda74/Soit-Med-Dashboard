@@ -15,6 +15,7 @@ export interface WeeklyPlanTask {
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
 	plannedDate: string;
 	notes?: string; // Description
+	equipmentCategories?: string[]; // Equipment categories relevant to this task
 	isActive?: boolean;
 	createdAt: string;
 	updatedAt: string;
@@ -41,6 +42,7 @@ export interface CreateWeeklyPlanTaskDto {
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
 	plannedDate: string;
 	notes?: string; // Description
+	equipmentCategories?: string[]; // Equipment categories relevant to this task
 }
 
 export interface UpdateWeeklyPlanTaskDto {
@@ -52,14 +54,17 @@ export interface UpdateWeeklyPlanTaskDto {
 	clientClassification?: string;
 	plannedDate?: string;
 	notes?: string; // Description
+	equipmentCategories?: string[]; // Equipment categories relevant to this task
 }
 
 export interface TaskProgressSummary {
 	id: number;
 	progressDate: string;
 	progressType: string;
+	description?: string;
 	visitResult?: string;
 	nextStep?: string;
+	voiceDescriptionUrl?: string;
 }
 
 // ==================== CONSTANTS ====================
@@ -158,4 +163,5 @@ export interface WeeklyPlanTaskFormData {
 	clientClassification?: 'A' | 'B' | 'C' | 'D';
 	plannedDate: string;
 	notes?: string; // Description
+	equipmentCategories?: string[]; // Equipment categories relevant to this task
 }

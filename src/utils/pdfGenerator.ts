@@ -17,6 +17,7 @@ interface OfferEquipment {
 	description?: string;
 	inStock?: boolean;
 	imagePath?: string | null;
+	providerImagePath?: string | null; // Provider logo/image path
 	// Custom fields for PDF (not saved to DB)
 	customDescription?: string; // Override description for PDF only
 }
@@ -616,6 +617,56 @@ export const generateOfferPDF = async (
 					);
 				}
 
+				// Get providerImagePath from multiple possible field names
+				const providerImagePath =
+					eq.providerImagePath ||
+					eq.ProviderImagePath ||
+					eq.providerLogoPath ||
+					eq.ProviderLogoPath ||
+					undefined;
+				let providerImageBase64 = null;
+
+				// Try to load provider logo if path exists and is not a placeholder
+				if (
+					providerImagePath &&
+					typeof providerImagePath === 'string' &&
+					providerImagePath.trim() !== '' &&
+					!providerImagePath.includes('placeholder')
+				) {
+					try {
+						const providerImageUrl = getImageUrl(providerImagePath);
+						console.log(
+							`Loading provider logo for ${
+								eq.name || 'product'
+							}: ${providerImageUrl}`
+						);
+						providerImageBase64 = await loadImageAsBase64(providerImageUrl);
+
+						if (!providerImageBase64) {
+							console.warn(
+								`Failed to load provider logo for ${
+									eq.name || 'product'
+								}: ${providerImagePath}`
+							);
+						} else {
+							console.log(
+								`Successfully loaded provider logo for ${
+									eq.name || 'product'
+								}`
+							);
+						}
+					} catch (error) {
+						console.error(
+							`Error loading provider logo for ${
+								eq.name || 'product'
+							}:`,
+							error,
+							providerImagePath
+						);
+						providerImageBase64 = null;
+					}
+				}
+
 				// Normalize equipment data - handle both new and legacy field names
 				// Backend returns: Name, Model, Provider, Country, Year, Price, Description, InStock, ImagePath
 				const normalized = {
@@ -676,6 +727,13 @@ export const generateOfferPDF = async (
 						eq.ImageUrl ||
 						undefined,
 					imageBase64,
+					providerImagePath:
+						eq.providerImagePath ||
+						eq.ProviderImagePath ||
+						eq.providerLogoPath ||
+						eq.ProviderLogoPath ||
+						undefined,
+					providerImageBase64,
 				};
 
 				return normalized;
@@ -1125,51 +1183,173 @@ export const generateOfferPDF = async (
 				const providerText = eq.provider || 'N/A';
 				const isProviderArabic =
 					hasArabic(providerText);
+				
+				// Provider logo size (smaller than product image)
+				const providerLogoSize = 15; // Height in mm
+				const providerLogoWidth = 20; // Width in mm
+				const logoTextSpacing = 3; // Space between logo and text
+				
+				// Calculate provider text width (accounting for logo if present)
+				const textMaxWidth = eq.providerImageBase64
+					? colWidth - colPadding * 2 - providerLogoWidth - logoTextSpacing
+					: colWidth - colPadding * 2;
+				
 				// English text starts from left even in RTL documents
 				const col3ProviderX =
 					isRTL && isProviderArabic
 						? col3X + colWidth - colPadding // Right edge for RTL Arabic
 						: col3X; // Left edge for LTR or English text
-				doc.setFontSize(10);
-				setFontForLanguage(doc, lang, 'bold');
-				doc.setTextColor(30, 30, 30);
-				let processedProviderText = providerText;
-				if (isRTL && isProviderArabic) {
-					processedProviderText =
-						prepareArabicText(
-							processedProviderText
+				
+				// Draw provider logo if available
+				if (eq.providerImageBase64) {
+					try {
+						let providerImageData = eq.providerImageBase64;
+						
+						// Detect image format from data URL
+						let imageFormat = 'PNG';
+						if (providerImageData.startsWith('data:')) {
+							const formatMatch = providerImageData.match(/data:image\/([^;]+)/);
+							if (formatMatch) {
+								const format = formatMatch[1].toUpperCase();
+								if (format === 'JPEG' || format === 'JPG') {
+									imageFormat = 'JPEG';
+								} else if (format === 'PNG') {
+									imageFormat = 'PNG';
+								} else if (format === 'GIF') {
+									imageFormat = 'GIF';
+								}
+							}
+						} else {
+							// If not a data URL, assume PNG
+							providerImageData = `data:image/png;base64,${providerImageData}`;
+						}
+						
+						const logoX = isRTL && isProviderArabic
+							? col3X + colWidth - colPadding - providerLogoWidth
+							: col3X;
+						const logoY = col3Y;
+						
+						console.log(`Adding provider logo for ${eq.name}:`, {
+							logoX,
+							logoY,
+							width: providerLogoWidth,
+							height: providerLogoSize,
+							format: imageFormat,
+							hasData: !!providerImageData
+						});
+						
+						doc.addImage(
+							providerImageData,
+							imageFormat,
+							logoX,
+							logoY,
+							providerLogoWidth,
+							providerLogoSize,
+							undefined,
+							'SLOW'
 						);
-				}
-				const providerLines = doc.splitTextToSize(
-					processedProviderText,
-					colWidth - colPadding * 2
-				);
-				const processedProviderLines =
-					isRTL && isProviderArabic
-						? providerLines.map(
-								(
-									line: string
-								) =>
-									prepareArabicText(
-										line
-									)
-						  )
-						: providerLines;
-				doc.text(
-					processedProviderLines,
-					col3ProviderX,
-					col3Y,
-					{
-						maxWidth:
-							colWidth -
-							colPadding * 2,
-						align: getTextAlignmentForContent(
-							providerText,
-							isRTL
-						),
+						
+						// Adjust text position to account for logo
+						const textX = isRTL && isProviderArabic
+							? col3ProviderX - providerLogoWidth - logoTextSpacing
+							: col3X + providerLogoWidth + logoTextSpacing;
+						
+						doc.setFontSize(10);
+						setFontForLanguage(doc, lang, 'bold');
+						doc.setTextColor(30, 30, 30);
+						let processedProviderText = providerText;
+						if (isRTL && isProviderArabic) {
+							processedProviderText =
+								prepareArabicText(
+									processedProviderText
+								);
+						}
+						const providerLines = doc.splitTextToSize(
+							processedProviderText,
+							textMaxWidth
+						);
+						const processedProviderLines =
+							isRTL && isProviderArabic
+								? providerLines.map(
+										(
+											line: string
+										) =>
+											prepareArabicText(
+												line
+											)
+								  )
+								: providerLines;
+						doc.text(
+							processedProviderLines,
+							textX,
+							col3Y + providerLogoSize / 2 - (providerLines.length * 5) / 2,
+							{
+								maxWidth: textMaxWidth,
+								align: getTextAlignmentForContent(
+									providerText,
+									isRTL
+								),
+							}
+						);
+						col3Y += Math.max(providerLogoSize, providerLines.length * 5) + 8;
+						console.log(`Successfully added provider logo for ${eq.name}`);
+					} catch (error) {
+						console.error(
+							'Error adding provider logo:',
+							error,
+							eq.name,
+							eq.providerImagePath,
+							'Image data length:',
+							eq.providerImageBase64?.length
+						);
+						// Set providerImageBase64 to null so text-only rendering happens
+						eq.providerImageBase64 = null;
 					}
-				);
-				col3Y += providerLines.length * 5 + 8; // Increased spacing for bigger font
+				}
+				
+				// If no logo or logo failed, render text only
+				if (!eq.providerImageBase64) {
+					doc.setFontSize(10);
+					setFontForLanguage(doc, lang, 'bold');
+					doc.setTextColor(30, 30, 30);
+					let processedProviderText = providerText;
+					if (isRTL && isProviderArabic) {
+						processedProviderText =
+							prepareArabicText(
+								processedProviderText
+							);
+					}
+					const providerLines = doc.splitTextToSize(
+						processedProviderText,
+						colWidth - colPadding * 2
+					);
+					const processedProviderLines =
+						isRTL && isProviderArabic
+							? providerLines.map(
+									(
+										line: string
+									) =>
+										prepareArabicText(
+											line
+										)
+							  )
+							: providerLines;
+					doc.text(
+						processedProviderLines,
+						col3ProviderX,
+						col3Y,
+						{
+							maxWidth:
+								colWidth -
+								colPadding * 2,
+							align: getTextAlignmentForContent(
+								providerText,
+								isRTL
+							),
+						}
+					);
+					col3Y += providerLines.length * 5 + 8; // Increased spacing for bigger font
+				}
 			}
 
 			// Country (below provider, bigger font size) - only if enabled
@@ -1724,7 +1904,7 @@ async function generateOfferHTML(
 		console.warn('❌ Could not load letterhead for HTML PDF:', e);
 	}
 
-	// Load equipment images
+	// Load equipment images and provider logos
 	const equipmentWithImages = offer.equipment
 		? await Promise.all(
 				offer.equipment.map(async (eq: any) => {
@@ -1785,6 +1965,68 @@ async function generateOfferHTML(
 						}
 					}
 
+					// Load provider logo
+					const providerImagePath =
+						eq.providerImagePath ||
+						eq.ProviderImagePath ||
+						eq.providerLogoPath ||
+						eq.ProviderLogoPath;
+					let providerImageBase64 = '';
+
+					if (
+						providerImagePath &&
+						typeof providerImagePath === 'string' &&
+						providerImagePath.trim() !== '' &&
+						!providerImagePath.includes('placeholder')
+					) {
+						try {
+							const providerImageUrl =
+								getStaticFileUrl(
+									providerImagePath
+								);
+							const providerResponse =
+								await fetch(
+									providerImageUrl,
+									{
+										mode: 'cors',
+										credentials:
+											'omit',
+									}
+								);
+							if (providerResponse.ok) {
+								const providerBlob =
+									await providerResponse.blob();
+								providerImageBase64 =
+									await new Promise<string>(
+										(
+											resolve
+										) => {
+											const reader =
+												new FileReader();
+											reader.onloadend =
+												() =>
+													resolve(
+														reader.result as string
+													);
+											reader.onerror =
+												() =>
+													resolve(
+														''
+													);
+											reader.readAsDataURL(
+												providerBlob
+											);
+										}
+									);
+							}
+						} catch (error) {
+							console.warn(
+								'Error loading provider logo:',
+								error
+							);
+						}
+					}
+
 					const rawPrice =
 						eq.price ??
 						eq.Price ??
@@ -1806,6 +2048,7 @@ async function generateOfferHTML(
 					return {
 						...eq,
 						imageBase64,
+						providerImageBase64,
 						priceValue,
 					};
 				})
@@ -2224,13 +2467,20 @@ async function generateOfferHTML(
 						</div>
 						<!-- Column 3: Provider & Country -->
 						<div class="product-col product-col3">
-							<div class="product-provider">${
-								eq.provider ||
-								eq.Provider ||
-								eq.manufacturer ||
-								eq.Manufacturer ||
-								'N/A'
-							}</div>
+							<div class="product-provider" style="display: flex; align-items: center; gap: 5px;">
+								${
+									eq.providerImageBase64
+										? `<img src="${eq.providerImageBase64}" style="width: 20px; height: 20px; object-fit: contain;" alt="Provider logo" />`
+										: ''
+								}
+								<span>${
+									eq.provider ||
+									eq.Provider ||
+									eq.manufacturer ||
+									eq.Manufacturer ||
+									'N/A'
+								}</span>
+							</div>
 							<div class="product-country">${eq.country || eq.Country || 'N/A'}</div>
 						</div>
 						<div class="product-col product-col4">

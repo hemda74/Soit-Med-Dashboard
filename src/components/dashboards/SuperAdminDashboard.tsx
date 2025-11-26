@@ -260,7 +260,7 @@ const SuperAdminDashboard: React.FC = () => {
                 t('salesSupportDashboardDescription') ||
                 'Oversee sales support pipelines, requests, and resource allocation.',
             primaryLabel: t('openDashboard') || 'Open Dashboard',
-            path: '/sales-support',
+            path: '/dashboard?tab=sales-support',
             colorScheme: {
                 iconBg: 'bg-cyan-500/10 dark:bg-cyan-500/20',
                 iconColor: 'text-cyan-600 dark:text-cyan-400',

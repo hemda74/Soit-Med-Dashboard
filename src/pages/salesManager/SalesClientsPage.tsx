@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '@/services/sales/salesApi';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePerformance } from '@/hooks/usePerformance';
+import { useDebounce } from '@/hooks/useDebounce';
+import { STALE_TIME, DEBOUNCE_DELAY } from '@/constants/time';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,27 +24,58 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table';
-import { MagnifyingGlassIcon, BuildingOfficeIcon, PhoneIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, BuildingOfficeIcon, PhoneIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import Pagination from '@/components/Pagination';
-import type { ClientSearchFilters, Client } from '@/types/sales.types';
+import type { ClientSearchFilters, Salesman, Governorate } from '@/types/sales.types';
 import ClientDetails from '@/components/sales/ClientDetails';
+import { getGovernorates } from '@/services/roleSpecific/baseRoleSpecificApi';
+import { getAuthToken } from '@/utils/authUtils';
+import { productApi } from '@/services/sales/productApi';
+import { toast } from 'react-hot-toast';
 
 const SalesClientsPage: React.FC = () => {
 	usePerformance('SalesClientsPage');
-	const { t } = useTranslation();
+	const { t, language } = useTranslation();
+	const isArabic = language === 'ar';
+	const headerAlignmentClass = isArabic ? 'text-right' : 'text-left';
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [classification, setClassification] = useState<string>('all');
 	const [assignedSalesmanId, setAssignedSalesmanId] = useState<string>('all');
 	const [city, setCity] = useState<string>('');
 	const [governorateId, setGovernorateId] = useState<string>('all');
-	const [equipmentCategory, setEquipmentCategory] = useState<string>('all');
+	const [equipmentCategories, setEquipmentCategories] = useState<string[]>([]);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(20);
-	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 	const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 	const [showClientDetails, setShowClientDetails] = useState(false);
+	const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
+
+	// Use debounce hook
+	const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY.SEARCH);
+
+	// Reset page when debounced search term changes
+	useEffect(() => {
+		if (debouncedSearchTerm !== searchTerm) {
+			setPage(1);
+		}
+	}, [debouncedSearchTerm, searchTerm]);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			if (!target.closest('.relative')) {
+				setIsEquipmentDropdownOpen(false);
+			}
+		};
+		if (isEquipmentDropdownOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+			return () => document.removeEventListener('mousedown', handleClickOutside);
+		}
+	}, [isEquipmentDropdownOpen]);
 
 	// Fetch salesmen for filter
 	const { data: salesmenData } = useQuery({
@@ -51,49 +84,54 @@ const SalesClientsPage: React.FC = () => {
 			try {
 				const response = await salesApi.getOfferSalesmen();
 				return response.data || [];
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Failed to fetch salesmen:', error);
-				// Return empty array on error to prevent breaking the UI
+				if (error instanceof Error) {
+					toast.error(`فشل تحميل بيانات المندوبين: ${error.message}`);
+				} else {
+					toast.error('حدث خطأ غير متوقع أثناء تحميل بيانات المندوبين');
+				}
 				return [];
 			}
 		},
-		staleTime: 5 * 60 * 1000, // 5 minutes
-		retry: 2, // Retry twice on failure
+		staleTime: STALE_TIME.SHORT,
+		retry: 2,
 	});
 
-	const salesmen = salesmenData || [];
+	const salesmen: Salesman[] = salesmenData || [];
 
 	// Fetch governorates
 	const { data: governoratesData } = useQuery({
 		queryKey: ['governorates'],
 		queryFn: async () => {
 			try {
-				const { getGovernorates } = await import('@/services/roleSpecific/baseRoleSpecificApi');
-				const { getAuthToken } = await import('@/utils/authUtils');
 				const token = getAuthToken();
 				if (!token) {
 					console.error('No auth token available');
 					return [];
 				}
 				const response = await getGovernorates(token);
-				// getGovernorates returns the array directly, not wrapped in response.data
 				return Array.isArray(response) ? response : [];
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Failed to fetch governorates:', error);
+				if (error instanceof Error) {
+					toast.error(`فشل تحميل المحافظات: ${error.message}`);
+				} else {
+					toast.error('حدث خطأ غير متوقع أثناء تحميل المحافظات');
+				}
 				return [];
 			}
 		},
-		staleTime: 10 * 60 * 1000, // 10 minutes
+		staleTime: STALE_TIME.MEDIUM,
 	});
 
-	const governorates = governoratesData || [];
+	const governorates: Governorate[] = governoratesData || [];
 
 	// Fetch equipment categories from products
 	const { data: categoriesData } = useQuery({
 		queryKey: ['equipmentCategories'],
 		queryFn: async () => {
 			try {
-				const { productApi } = await import('@/services/sales/productApi');
 				const response = await productApi.getAllProducts();
 				const products = response.data || [];
 				// Extract unique categories
@@ -105,37 +143,32 @@ const SalesClientsPage: React.FC = () => {
 					)
 				).sort();
 				return categories;
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error('Failed to fetch equipment categories:', error);
+				if (error instanceof Error) {
+					toast.error(`فشل تحميل تصنيفات المعدات: ${error.message}`);
+				} else {
+					toast.error('حدث خطأ غير متوقع أثناء تحميل تصنيفات المعدات');
+				}
 				return [];
 			}
 		},
-		staleTime: 10 * 60 * 1000, // 10 minutes
+		staleTime: STALE_TIME.MEDIUM,
 	});
 
-	const equipmentCategories = categoriesData || [];
+	const availableEquipmentCategories = categoriesData || [];
 
-	// Debounce search term
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedSearchTerm(searchTerm);
-			setPage(1); // Reset to first page on new search
-		}, 500);
-
-		return () => clearTimeout(timer);
-	}, [searchTerm]);
-
-	// Build filters
-	const filters: ClientSearchFilters = {
+	// Build filters with useMemo
+	const filters: ClientSearchFilters = useMemo(() => ({
 		query: debouncedSearchTerm || undefined,
 		classification: classification && classification !== 'all' ? (classification as 'A' | 'B' | 'C' | 'D') : undefined,
 		assignedSalesmanId: assignedSalesmanId && assignedSalesmanId !== 'all' ? assignedSalesmanId : undefined,
 		city: city || undefined,
 		governorateId: governorateId && governorateId !== 'all' ? Number(governorateId) : undefined,
-		equipmentCategory: equipmentCategory && equipmentCategory !== 'all' ? equipmentCategory : undefined,
+		equipmentCategories: equipmentCategories.length > 0 ? equipmentCategories : undefined,
 		page,
 		pageSize,
-	};
+	}), [debouncedSearchTerm, classification, assignedSalesmanId, city, governorateId, equipmentCategories, page, pageSize]);
 
 	// Fetch clients
 	const {
@@ -151,65 +184,90 @@ const SalesClientsPage: React.FC = () => {
 			return response;
 		},
 		enabled: true,
-		staleTime: 30000, // 30 seconds
+		staleTime: STALE_TIME.VERY_SHORT,
 	});
 
+	// Backend now returns { success: true, data: { clients: [...], totalCount, page, pageSize, ... } }
 	const clients = clientsData?.data?.clients || [];
-	const pagination = clientsData?.data || {
+	const pagination = clientsData?.data && typeof clientsData.data === 'object' && 'clients' in clientsData.data
+		? clientsData.data
+		: {
 		totalCount: 0,
-		page: 1,
-		pageSize: 20,
+			page: filters.page || 1,
+			pageSize: filters.pageSize || 20,
 		totalPages: 0,
 		hasNextPage: false,
 		hasPreviousPage: false,
 	};
 
-	const handleSearch = (value: string) => {
-		setSearchTerm(value);
-	};
+	// Helper functions
+	const getSalesmanDisplayName = useCallback((salesman: Salesman): string => {
+		const fullName = `${salesman.firstName || ''} ${salesman.lastName || ''}`.trim();
+		return fullName || salesman.userName || salesman.email || 'Unknown';
+	}, []);
 
-	const handleClassificationChange = (value: string) => {
+	const getGovernorateId = useCallback((gov: Governorate): string => {
+		return (gov.governorateId || gov.id || '').toString();
+	}, []);
+
+	// Handlers with useCallback
+	const handleSearch = useCallback((value: string) => {
+		setSearchTerm(value);
+	}, []);
+
+	const handleClassificationChange = useCallback((value: string) => {
 		setClassification(value);
 		setPage(1);
-	};
+	}, []);
 
-	const handleSalesmanChange = (value: string) => {
+	const handleSalesmanChange = useCallback((value: string) => {
 		setAssignedSalesmanId(value);
 		setPage(1);
-	};
+	}, []);
 
-	const handleCityChange = (value: string) => {
+	const handleCityChange = useCallback((value: string) => {
 		setCity(value);
 		setPage(1);
-	};
+	}, []);
 
-	const handleGovernorateChange = (value: string) => {
+	const handleGovernorateChange = useCallback((value: string) => {
 		setGovernorateId(value);
 		setPage(1);
-	};
+	}, []);
 
-	const handleEquipmentCategoryChange = (value: string) => {
-		setEquipmentCategory(value);
+	const handleEquipmentCategoryToggle = useCallback((category: string) => {
+		setEquipmentCategories((prev) => {
+			if (prev.includes(category)) {
+				return prev.filter((c) => c !== category);
+			} else {
+				return [...prev, category];
+			}
+		});
 		setPage(1);
-	};
+	}, []);
 
-	const handlePageChange = (newPage: number) => {
+	const handleClearEquipmentCategories = useCallback(() => {
+		setEquipmentCategories([]);
+		setPage(1);
+	}, []);
+
+	const handlePageChange = useCallback((newPage: number) => {
 		setPage(newPage);
 		window.scrollTo({ top: 0, behavior: 'smooth' });
-	};
+	}, []);
 
-	const handlePageSizeChange = (newPageSize: number) => {
+	const handlePageSizeChange = useCallback((newPageSize: number) => {
 		setPageSize(newPageSize);
 		setPage(1);
-	};
+	}, []);
 
-	const formatDate = (dateString: string) => {
+	const formatDate = useCallback((dateString: string) => {
 		try {
 			return format(new Date(dateString), 'MMM dd, yyyy');
 		} catch {
 			return dateString;
 		}
-	};
+	}, []);
 
 	return (
 		<div className="space-y-6">
@@ -293,14 +351,11 @@ const SalesClientsPage: React.FC = () => {
 									{t('salesClients.allSalesmen') ||
 										'All Salesmen'}
 								</SelectItem>
-								{salesmen.map((salesman: any) => {
-									const fullName = `${salesman.firstName || ''} ${salesman.lastName || ''}`.trim() || salesman.userName || salesman.email || '';
-									return (
-										<SelectItem key={salesman.id} value={salesman.id}>
-											{fullName}
-										</SelectItem>
-									);
-								})}
+								{salesmen.map((salesman) => (
+									<SelectItem key={salesman.id} value={salesman.id}>
+										{getSalesmanDisplayName(salesman)}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 
@@ -330,39 +385,81 @@ const SalesClientsPage: React.FC = () => {
 									{t('salesClients.allGovernorates') ||
 										'All Governorates'}
 								</SelectItem>
-								{governorates.map((gov: any) => (
-									<SelectItem key={gov.governorateId || gov.id} value={(gov.governorateId || gov.id).toString()}>
+								{governorates.map((gov) => (
+									<SelectItem key={getGovernorateId(gov)} value={getGovernorateId(gov)}>
 										{gov.name}
 									</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
 
-						{/* Equipment Category Filter */}
-						<Select
-							value={equipmentCategory}
-							onValueChange={handleEquipmentCategoryChange}
-						>
-							<SelectTrigger>
-								<SelectValue
-									placeholder={
-										t('salesClients.allCategories') ||
-										'All Equipment Categories'
-									}
+						{/* Equipment Category Filter - Multi-select */}
+						<div className="relative">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsEquipmentDropdownOpen(!isEquipmentDropdownOpen)}
+								className="w-full justify-between"
+							>
+								<span className="truncate">
+									{equipmentCategories.length === 0
+										? t('salesClients.allCategories') || 'All Equipment Categories'
+										: equipmentCategories.length === 1
+											? equipmentCategories[0]
+											: `${equipmentCategories.length} categories selected`}
+								</span>
+								<ChevronDownIcon
+									className={cn(
+										"ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform",
+										isEquipmentDropdownOpen && "rotate-180"
+									)}
 								/>
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">
-									{t('salesClients.allCategories') ||
-										'All Equipment Categories'}
-								</SelectItem>
-								{equipmentCategories.map((category: string) => (
-									<SelectItem key={category} value={category}>
-										{category}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+							</Button>
+							{equipmentCategories.length > 0 && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={handleClearEquipmentCategories}
+									className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+								>
+									<XMarkIcon className="h-4 w-4" />
+								</Button>
+							)}
+							{isEquipmentDropdownOpen && (
+								<div className="absolute z-50 mt-1 w-full bg-popover border rounded-md shadow-md max-h-60 overflow-auto">
+									<div className="p-2">
+										{equipmentCategories.length > 0 && (
+											<div className="mb-2 pb-2 border-b">
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													onClick={handleClearEquipmentCategories}
+													className="w-full text-xs"
+												>
+													Clear all
+												</Button>
+											</div>
+										)}
+										{availableEquipmentCategories.map((category) => (
+											<label
+												key={category}
+												className="flex items-center space-x-2 p-2 hover:bg-accent rounded cursor-pointer"
+											>
+												<input
+													type="checkbox"
+													checked={equipmentCategories.includes(category)}
+													onChange={() => handleEquipmentCategoryToggle(category)}
+													className="rounded border-gray-300"
+												/>
+												<span className="text-sm">{category}</span>
+											</label>
+										))}
+									</div>
+								</div>
+							)}
+						</div>
 
 						{/* Page Size */}
 						<Select
@@ -418,7 +515,9 @@ const SalesClientsPage: React.FC = () => {
 								<p className="text-sm text-muted-foreground mb-4">
 									{error instanceof Error
 										? error.message
-										: 'Unknown error'}
+										: typeof error === 'object' && error !== null && 'message' in error
+											? String((error as { message: unknown }).message)
+											: 'Unknown error'}
 								</p>
 								<Button onClick={() => refetch()}>
 									{t('salesClients.retry') || 'Retry'}
@@ -438,35 +537,38 @@ const SalesClientsPage: React.FC = () => {
 					) : (
 						<>
 							<div className="rounded-md border">
-								<Table>
+								<Table className="border-collapse">
 									<TableHeader>
-										<TableRow>
-											<TableHead>
+										<TableRow
+											className={`divide-x divide-border ${isArabic ? 'border-r border-border' : 'border-l border-border'
+												}`}
+										>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.name') || 'Name'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.organization') ||
 													'Organization'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.phone') || 'Phone'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.classification') ||
 													'Classification'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.city') || 'City'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.governorate') ||
 													'Governorate'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.assignedTo') ||
 													'Assigned To'}
 											</TableHead>
-											<TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.createdAt') ||
 													'Created At'}
 											</TableHead>
@@ -474,9 +576,10 @@ const SalesClientsPage: React.FC = () => {
 									</TableHeader>
 									<TableBody>
 										{clients.map((client) => (
-											<TableRow 
+											<TableRow
 												key={client.id}
-												className="cursor-pointer hover:bg-muted/50 transition-colors"
+												className={`cursor-pointer hover:bg-muted/50 transition-colors divide-x divide-border ${isArabic ? 'border-r border-border' : 'border-l border-border'
+													}`}
 												onClick={() => {
 													setSelectedClientId(client.id.toString());
 													setShowClientDetails(true);
@@ -559,9 +662,11 @@ const SalesClientsPage: React.FC = () => {
 									<Pagination
 										currentPage={pagination.page}
 										totalPages={pagination.totalPages}
+										hasPreviousPage={pagination.hasPreviousPage}
+										hasNextPage={pagination.hasNextPage}
 										onPageChange={handlePageChange}
 										pageSize={pagination.pageSize}
-										totalItems={pagination.totalCount}
+										totalCount={pagination.totalCount}
 									/>
 								</div>
 							)}
@@ -572,8 +677,17 @@ const SalesClientsPage: React.FC = () => {
 
 			{/* Client Details Modal */}
 			{showClientDetails && selectedClientId && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-					<div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+				<div
+					className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+					onClick={() => {
+						setShowClientDetails(false);
+						setSelectedClientId(null);
+					}}
+				>
+					<div
+						className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+						onClick={(e) => e.stopPropagation()}
+					>
 						<div className="flex items-center justify-between p-4 border-b">
 							<h2 className="text-xl font-semibold">
 								{t('salesClients.title') || 'Client Details'}
@@ -585,6 +699,7 @@ const SalesClientsPage: React.FC = () => {
 									setShowClientDetails(false);
 									setSelectedClientId(null);
 								}}
+								aria-label="Close modal"
 							>
 								<XMarkIcon className="h-5 w-5" />
 							</Button>

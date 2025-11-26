@@ -31,6 +31,8 @@ import type { Deal } from '@/types/sales.types';
 import { format } from 'date-fns';
 import SalesManagerDealApprovals from '@/components/dashboards/SalesManagerDealApprovals';
 import SalesManagerOfferApprovals from '@/components/dashboards/SalesManagerOfferApprovals';
+import { Volume2 } from 'lucide-react';
+import { getStaticFileUrl } from '@/utils/apiConfig';
 
 interface SalesmanStatistics {
     salesmanId: string;
@@ -93,6 +95,8 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [currentQuarter, setCurrentQuarter] = useState(Math.floor((new Date().getMonth()) / 3) + 1);
+    const [pendingOffersCount, setPendingOffersCount] = useState<number>(0);
+    const [pendingOffersLoading, setPendingOffersLoading] = useState(false);
 
     // Fetch all salesmen statistics
     const fetchSalesmenStatistics = useCallback(async () => {
@@ -190,6 +194,22 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
         }
     }, []);
 
+    // Load pending offer approvals count
+    const loadPendingOfferApprovals = useCallback(async () => {
+        if (!user?.token) return;
+        try {
+            setPendingOffersLoading(true);
+            const response = await salesApi.getPendingSalesManagerApprovals();
+            if (response.success && response.data) {
+                setPendingOffersCount(response.data.length || 0);
+            }
+        } catch (error) {
+            console.error('Failed to load pending offer approvals:', error);
+        } finally {
+            setPendingOffersLoading(false);
+        }
+    }, [user?.token]);
+
     // Initial data fetch
     useEffect(() => {
         getSalesManagerDashboard(currentYear, currentQuarter);
@@ -201,6 +221,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
         fetchMoneyTargets();
         fetchTotalClientsCount();
         fetchAllDeals();
+        loadPendingOfferApprovals();
     }, [
         currentYear,
         currentQuarter,
@@ -212,7 +233,8 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
         fetchSalesmenStatistics,
         fetchMoneyTargets,
         fetchTotalClientsCount,
-        fetchAllDeals
+        fetchAllDeals,
+        loadPendingOfferApprovals
     ]);
 
     // Memoized calculations
@@ -417,6 +439,27 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                             </div>
                             <h3 className="text-lg font-semibold text-foreground mb-2">Deal Approvals</h3>
                             <p className="text-muted-foreground text-sm">Review and approve pending deals</p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                {/* Pending Offer Approvals Card */}
+                <Link to="/sales-manager/offer-approvals" className="block">
+                    <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                                    <Clock className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-2xl font-bold text-foreground">
+                                        {pendingOffersLoading ? '-' : pendingOffersCount}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">Pending Offers</p>
+                                </div>
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">Offer Approvals</h3>
+                            <p className="text-muted-foreground text-sm">Review and approve pending offers</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -969,8 +1012,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                                             <p className="text-xs text-gray-600 dark:text-gray-400">{task.description}</p>
                                                         </div>
                                                         <span
-                                                            className={`px-2 py-1 rounded-full text-xs ${
-                                                                task.priority === 'High'
+                                                            className={`px-2 py-1 rounded-full text-xs ${task.priority === 'High'
                                                                     ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                                                                     : task.priority === 'Medium'
                                                                     ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
@@ -983,6 +1025,32 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                         Due: {task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'N/A'}
                                                     </p>
+                                                    {task.progresses && task.progresses.length > 0 && (
+                                                        <div className="mt-2 space-y-1">
+                                                            {task.progresses.map((progress: any, pIndex: number) => (
+                                                                <div key={pIndex} className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                                                    <span className="mr-1">{format(new Date(progress.progressDate), 'MMM dd')} - {progress.progressType}:</span>
+                                                                    {progress.description && <span className="mr-1">{progress.description}</span>}
+                                                                    {progress.voiceDescriptionUrl && (
+                                                                        <div className="flex items-center space-x-1 ml-1">
+                                                                            <Volume2 className="h-3 w-3" />
+                                                                            <audio 
+                                                                                controls 
+                                                                                className="h-6 max-w-[200px]"
+                                                                                preload="metadata"
+                                                                            >
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mp4" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mpeg" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/wav" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/m4a" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/ogg" />
+                                                                            </audio>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

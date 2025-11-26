@@ -9,6 +9,7 @@ export interface TaskProgress {
 	visitResult?: string;
 	nextStep?: string;
 	offerRequestId?: number | null;
+	voiceDescriptionUrl?: string;
 }
 
 export interface TaskOfferRequest {
@@ -146,7 +147,7 @@ export interface CreateWeeklyPlanDto {
 	title: string; // Required
 	description: string; // Required
 	weekStartDate: string; // Required, ISO 8601 format
-	weekEndDate: string; // Required, ISO 8601 format
+	weekEndDate?: string; // Optional, auto-calculated as 7 days from start date (backend will calculate if not provided)
 	tasks?: CreateTaskDto[]; // Optional, array of tasks to create with the plan
 }
 

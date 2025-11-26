@@ -204,6 +204,25 @@ class ProductApiService {
 	}
 
 	/**
+	 * Upload provider logo/image for a product
+	 */
+	async uploadProviderImage(
+		id: number,
+		file: File
+	): Promise<ApiResponse<Product>> {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		return this.makeRequest<Product>(
+			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(id)}/upload-provider-image`,
+			{
+				method: 'POST',
+				body: formData,
+			}
+		);
+	}
+
+	/**
 	 * Get image URL helper
 	 * Constructs full URL to backend-served images
 	 */

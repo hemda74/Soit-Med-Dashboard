@@ -97,6 +97,13 @@ export default defineConfig({
 				changeOrigin: true,
 				secure: false,
 			},
+			'/uploads': {
+				target:
+					process.env.VITE_API_BASE_URL ||
+					'http://localhost:5117',
+				changeOrigin: true,
+				secure: false,
+			},
 		},
 	},
 });
