@@ -4,6 +4,7 @@ import letterheadPdfUrl from '@/assets/Letterhead.pdf?url';
 import { getStaticFileUrl } from '@/utils/apiConfig';
 // @ts-ignore - arabic-reshaper doesn't have type definitions
 import arabicReshaper from 'arabic-reshaper';
+import html2pdf from 'html2pdf.js';
 
 interface OfferEquipment {
 	id: number;
@@ -2339,15 +2340,64 @@ export const downloadOfferPDF = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ) => {
-	// Use jsPDF for both Arabic and English (identical implementation)
+	// Use HTML2PDF for Arabic (proper Arabic rendering) but with identical layout to English
+	if (options.language === 'ar') {
+		const htmlContent = await generateOfferHTML(offer, 'ar');
+		const opt = {
+			margin: [0, 0, 0, 0] as [
+				number,
+				number,
+				number,
+				number
+			],
+			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
+			image: { type: 'jpeg' as const, quality: 0.98 },
+			html2canvas: {
+				scale: 2,
+				useCORS: true,
+				letterRendering: true,
+				logging: false,
+				backgroundColor: null,
+				allowTaint: true,
+			},
+			jsPDF: {
+				unit: 'mm',
+				format: 'a4',
+				orientation: 'portrait' as const,
+			},
+			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+		};
+		await html2pdf().set(opt).from(htmlContent).save();
+		return;
+	}
+
+	// Use jsPDF for English
 	if (options.generateBothLanguages) {
 		// Generate both Arabic and English versions
-		const docAr = await generateOfferPDF(offer, {
-			...options,
-			language: 'ar',
-			generateBothLanguages: false,
-		});
-		docAr.save(`Offer_${offer.id}_${offer.clientName}_AR.pdf`);
+		const htmlContentAr = await generateOfferHTML(offer, 'ar');
+		const optAr = {
+			margin: [0, 0, 0, 0] as [
+				number,
+				number,
+				number,
+				number
+			],
+			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
+			image: { type: 'jpeg' as const, quality: 0.98 },
+			html2canvas: {
+				scale: 2,
+				useCORS: true,
+				letterRendering: true,
+				logging: false,
+			},
+			jsPDF: {
+				unit: 'mm',
+				format: 'a4',
+				orientation: 'portrait' as const,
+			},
+			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+		};
+		await html2pdf().set(optAr).from(htmlContentAr).save();
 
 		// Small delay before generating English version
 		setTimeout(async () => {
@@ -2361,11 +2411,9 @@ export const downloadOfferPDF = async (
 			);
 		}, 1000);
 	} else {
-		// Single language export
-		const lang = options.language || 'en';
+		// Single language export (English)
 		const doc = await generateOfferPDF(offer, options);
-		const langSuffix = lang === 'ar' ? 'AR' : 'EN';
-		doc.save(`Offer_${offer.id}_${offer.clientName}_${langSuffix}.pdf`);
+		doc.save(`Offer_${offer.id}_${offer.clientName}_EN.pdf`);
 	}
 };
 
