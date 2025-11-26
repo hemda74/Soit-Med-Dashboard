@@ -4,7 +4,6 @@ import letterheadPdfUrl from '@/assets/Letterhead.pdf?url';
 import { getStaticFileUrl } from '@/utils/apiConfig';
 // @ts-ignore - arabic-reshaper doesn't have type definitions
 import arabicReshaper from 'arabic-reshaper';
-import html2pdf from 'html2pdf.js';
 
 interface OfferEquipment {
 	id: number;
@@ -2340,85 +2339,15 @@ export const downloadOfferPDF = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ) => {
-	// Use HTML2PDF for Arabic (perfect Arabic rendering)
-	if (options.language === 'ar') {
-		console.log('🔵 Generating Arabic PDF with HTML2PDF');
-		const htmlContent = await generateOfferHTML(offer, 'ar');
-		console.log(
-			'🔵 HTML content generated, length:',
-			htmlContent.length
-		);
-		console.log('🔵 Font sizes check:', {
-			body12px: htmlContent.includes('font-size: 12px'),
-			title18px: htmlContent.includes('font-size: 18px'),
-			name14px: htmlContent.includes('font-size: 14px'),
-			letterhead: htmlContent.includes('background: url'),
-			letterheadPages:
-				htmlContent.includes('letterhead-page'),
-			letterheadCount: (
-				htmlContent.match(/letterhead-page/g) || []
-			).length,
-			hasAtPageRule: htmlContent.includes('@page'),
-			hasBodyBackground:
-				htmlContent.includes('body') &&
-				htmlContent.includes('background'),
-		});
-		const opt = {
-			margin: [0, 0, 0, 0] as [
-				number,
-				number,
-				number,
-				number
-			],
-			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
-			image: { type: 'jpeg' as const, quality: 0.98 },
-			html2canvas: {
-				scale: 2,
-				useCORS: true,
-				letterRendering: true,
-				logging: false,
-				backgroundColor: null, // Transparent to show letterhead background
-				allowTaint: true,
-			},
-			jsPDF: {
-				unit: 'mm',
-				format: 'a4',
-				orientation: 'portrait' as const,
-			},
-			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-		};
-		await html2pdf().set(opt).from(htmlContent).save();
-		return;
-	}
-
-	// Use jsPDF for English (original implementation)
+	// Use jsPDF for both Arabic and English (identical implementation)
 	if (options.generateBothLanguages) {
 		// Generate both Arabic and English versions
-		// Arabic: Use HTML2PDF
-		const htmlContentAr = await generateOfferHTML(offer, 'ar');
-		const optAr = {
-			margin: [0, 0, 0, 0] as [
-				number,
-				number,
-				number,
-				number
-			],
-			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
-			image: { type: 'jpeg' as const, quality: 0.98 },
-			html2canvas: {
-				scale: 2,
-				useCORS: true,
-				letterRendering: true,
-				logging: false,
-			},
-			jsPDF: {
-				unit: 'mm',
-				format: 'a4',
-				orientation: 'portrait' as const,
-			},
-			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-		};
-		await html2pdf().set(optAr).from(htmlContentAr).save();
+		const docAr = await generateOfferPDF(offer, {
+			...options,
+			language: 'ar',
+			generateBothLanguages: false,
+		});
+		docAr.save(`Offer_${offer.id}_${offer.clientName}_AR.pdf`);
 
 		// Small delay before generating English version
 		setTimeout(async () => {
@@ -2432,9 +2361,11 @@ export const downloadOfferPDF = async (
 			);
 		}, 1000);
 	} else {
-		// Single language export (always English at this point since Arabic returns early)
+		// Single language export
+		const lang = options.language || 'en';
 		const doc = await generateOfferPDF(offer, options);
-		doc.save(`Offer_${offer.id}_${offer.clientName}_EN.pdf`);
+		const langSuffix = lang === 'ar' ? 'AR' : 'EN';
+		doc.save(`Offer_${offer.id}_${offer.clientName}_${langSuffix}.pdf`);
 	}
 };
 
