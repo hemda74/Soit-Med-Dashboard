@@ -17,6 +17,7 @@ import {
   Package,
   DollarSign,
   Warehouse,
+  Building2,
 } from 'lucide-react';
 
 /**
@@ -113,6 +114,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
+    icon: <Clock className={ICON_SIZE} />,
+    name: t('pendingOfferApprovals') || 'Pending Offer Approvals',
+    path: '/sales-manager/offer-approvals',
+    roles: ['SalesManager', 'SuperAdmin'] as const,
+  },
+  {
     icon: <FileText />,
     name: t('offers'),
     path: '/sales-manager/offers',
@@ -126,12 +133,6 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     roles: ['SalesManager', 'SalesSupport', 'SuperAdmin'] as const,
   },
   // Sales Support section
-  {
-    icon: <HeadphonesIcon />,
-    name: t('salesSupportDashboard'),
-    path: '/sales-support',
-    roles: ['SalesSupport', 'SuperAdmin'] as const,
-  },
   {
     icon: <HeadphonesIcon />,
     name: t('offerCreation'),

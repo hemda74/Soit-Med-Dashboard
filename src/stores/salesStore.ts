@@ -486,7 +486,10 @@ export interface SalesActions {
 	// Reports actions
 	generateSalesReport: (data: CreateSalesReportDto) => Promise<void>;
 	getSalesReports: (filters?: any) => Promise<void>;
-	getSalesManagerDashboard: (year?: number, quarter?: number) => Promise<void>;
+	getSalesManagerDashboard: (
+		year?: number,
+		quarter?: number
+	) => Promise<void>;
 	getSalesmanPerformance: (
 		salesmanId: string,
 		period?: string
@@ -1036,14 +1039,20 @@ export const useSalesStore = create<SalesStore>()(
 							await salesApi.getDeals(
 								filters
 							);
-						
+
 						// Backend returns ApiResponse<List<DealResponseDTO>> - simple array, not paginated
-						const dealsData = Array.isArray(response.data) ? response.data : [];
-						
+						const dealsData = Array.isArray(
+							response.data
+						)
+							? response.data
+							: [];
+
 						// Set pagination metadata (backend doesn't provide pagination, so we calculate it)
 						const paginationData = {
 							page: 1,
-							pageSize: dealsData.length || 20,
+							pageSize:
+								dealsData.length ||
+								20,
 							totalCount: dealsData.length,
 							totalPages: 1,
 							hasNextPage: false,
@@ -1056,19 +1065,28 @@ export const useSalesStore = create<SalesStore>()(
 							dealsLoading: false,
 						});
 					} catch (error: any) {
-						console.error('Error fetching deals:', error);
-						const is404 = error.status === 404 || error.response?.status === 404;
+						console.error(
+							'Error fetching deals:',
+							error
+						);
+						const is404 =
+							error.status === 404 ||
+							error.response
+								?.status ===
+								404;
 						set({
 							dealsError: is404
 								? null
-								: error.message || 'Failed to fetch deals',
+								: error.message ||
+								  'Failed to fetch deals',
 							deals: [], // Set empty array on error
 							dealsLoading: false,
 						});
 						// Only show toast for non-404 errors
 						if (!is404) {
 							toast.error(
-								error.message || 'Failed to fetch deals'
+								error.message ||
+									'Failed to fetch deals'
 							);
 						}
 					}
@@ -1606,13 +1624,24 @@ export const useSalesStore = create<SalesStore>()(
 						set((state) => ({
 							offersByClient: {
 								...state.offersByClient,
-								[clientId]: Array.isArray(response.data) ? response.data : [],
+								[clientId]: Array.isArray(
+									response.data
+								)
+									? response.data
+									: [],
 							},
 							offersLoading: false,
 						}));
 					} catch (error: any) {
-						console.error('Error fetching offers by client:', error);
-						const is404 = error.status === 404 || error.response?.status === 404;
+						console.error(
+							'Error fetching offers by client:',
+							error
+						);
+						const is404 =
+							error.status === 404 ||
+							error.response
+								?.status ===
+								404;
 						set((state) => ({
 							offersByClient: {
 								...state.offersByClient,
@@ -1620,13 +1649,15 @@ export const useSalesStore = create<SalesStore>()(
 							},
 							offersError: is404
 								? null
-								: error.message || 'Failed to fetch offers by client',
+								: error.message ||
+								  'Failed to fetch offers by client',
 							offersLoading: false,
 						}));
 						// Only show toast for non-404 errors
 						if (!is404) {
 							toast.error(
-								error.message || 'Failed to fetch offers by client'
+								error.message ||
+									'Failed to fetch offers by client'
 							);
 						}
 					}
@@ -1746,12 +1777,21 @@ export const useSalesStore = create<SalesStore>()(
 								false,
 						});
 					} catch (error: any) {
-						console.error('Error fetching offer requests:', error);
-						const is404 = error.status === 404 || error.response?.status === 404;
+						console.error(
+							'Error fetching offer requests:',
+							error
+						);
+						const is404 =
+							error.status === 404 ||
+							error.response
+								?.status ===
+								404;
 						set({
-							offerRequestsError: is404
-								? null
-								: error.message || 'Failed to fetch offer requests',
+							offerRequestsError:
+								is404
+									? null
+									: error.message ||
+									  'Failed to fetch offer requests',
 							offerRequests: [], // Set empty array on error
 							offerRequestsLoading:
 								false,
@@ -1759,7 +1799,8 @@ export const useSalesStore = create<SalesStore>()(
 						// Only show toast for non-404 errors
 						if (!is404) {
 							toast.error(
-								error.message || 'Failed to fetch offer requests'
+								error.message ||
+									'Failed to fetch offer requests'
 							);
 						}
 					}
@@ -2144,8 +2185,15 @@ export const useSalesStore = create<SalesStore>()(
 						});
 					} catch (error: any) {
 						// Handle 404 and other errors gracefully
-						console.error('Error fetching client task progress:', error);
-						const is404 = error.status === 404 || error.response?.status === 404;
+						console.error(
+							'Error fetching client task progress:',
+							error
+						);
+						const is404 =
+							error.status === 404 ||
+							error.response
+								?.status ===
+								404;
 						set({
 							taskProgressError: is404
 								? null // Don't show error for 404
@@ -2302,13 +2350,21 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							clientVisits:
-								response.data || [],
+								response.data ||
+								[],
 							visitsLoading: false,
 						});
 					} catch (error: any) {
 						// Handle 404 and other errors gracefully
-						console.error('Error fetching client visits:', error);
-						const is404 = error.status === 404 || error.response?.status === 404;
+						console.error(
+							'Error fetching client visits:',
+							error
+						);
+						const is404 =
+							error.status === 404 ||
+							error.response
+								?.status ===
+								404;
 						set({
 							visitsError: is404
 								? null // Don't show error for 404, just empty array
@@ -3904,29 +3960,48 @@ export const useSalesStore = create<SalesStore>()(
 								quarter
 							);
 						// Response structure: { success, data: { year, quarter, teamStatistics: {...}, salesmen: [...] } }
-						const teamStats = response.data?.teamStatistics || {};
-						const salesmenList = response.data?.salesmen || [];
-						
+						const teamStats =
+							response.data
+								?.teamStatistics ||
+							{};
+						const salesmenList =
+							response.data
+								?.salesmen ||
+							[];
+
 						const dashboardData = {
 							// Spread team statistics
 							...teamStats,
 							// Salesmen list
 							salesmen: salesmenList,
 							// Team performance array (same as salesmen for now)
-							teamPerformance: salesmenList,
+							teamPerformance:
+								salesmenList,
 							// Overview metrics
 							overview: {
 								totalClients: 0, // Calculate from clients if needed
 								activeClients: 0,
 								potentialClients: 0,
 								newClientsThisMonth: 0,
-								totalVisitsThisMonth: teamStats.totalVisits || 0,
-								totalOffersThisMonth: teamStats.totalOffers || 0,
-								totalDealsThisMonth: teamStats.totalDeals || 0,
-								revenueThisMonth: teamStats.totalRevenue || 0,
-								conversionRate: teamStats.averageSuccessRate || 0,
+								totalVisitsThisMonth:
+									teamStats.totalVisits ||
+									0,
+								totalOffersThisMonth:
+									teamStats.totalOffers ||
+									0,
+								totalDealsThisMonth:
+									teamStats.totalDeals ||
+									0,
+								revenueThisMonth:
+									teamStats.totalRevenue ||
+									0,
+								conversionRate:
+									teamStats.averageSuccessRate ||
+									0,
 								// Team performance percentage (average success rate)
-								teamPerformance: teamStats.averageSuccessRate || 0,
+								teamPerformance:
+									teamStats.averageSuccessRate ||
+									0,
 							},
 							// Recent activity (empty for now, can be populated from other endpoints)
 							recentActivity: [],

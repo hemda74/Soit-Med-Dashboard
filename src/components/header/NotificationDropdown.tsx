@@ -86,20 +86,20 @@ const NotificationDropdown: React.FC = () => {
             // Handle offer notifications - navigate to offer details page
             if (notification.data.offerId) {
                 const offerId = notification.data.offerId;
-                navigate(`/sales-support?offerId=${offerId}`);
+                navigate(`/dashboard?tab=my-offers&offerId=${offerId}`);
                 return;
             }
 
             // Handle offer request notifications - navigate directly to the request
             if (notification.data.offerRequestId || notification.data.requestWorkflowId) {
                 const requestId = notification.data.offerRequestId || notification.data.requestWorkflowId;
-                navigate(`/sales-support/requests?requestId=${requestId}`);
+                navigate(`/dashboard?tab=requests&requestId=${requestId}`);
                 return;
             }
 
             // Handle client-related notifications
             if (notification.data.clientId) {
-                navigate(`/sales-support?clientId=${notification.data.clientId}`);
+                navigate(`/dashboard?tab=clients&clientId=${notification.data.clientId}`);
                 return;
             }
 

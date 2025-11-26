@@ -236,11 +236,18 @@ class SalesApiService {
 				'governorateId',
 				filters.governorateId.toString()
 			);
-		if (filters.equipmentCategory)
-			queryParams.append(
-				'equipmentCategory',
-				filters.equipmentCategory
-			);
+		// Handle multiple equipment categories
+		if (
+			filters.equipmentCategories &&
+			filters.equipmentCategories.length > 0
+		) {
+			filters.equipmentCategories.forEach((category) => {
+				queryParams.append(
+					'equipmentCategories',
+					category
+				);
+			});
+		}
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
 		if (filters.createdTo)
@@ -370,11 +377,18 @@ class SalesApiService {
 				'governorateId',
 				filters.governorateId.toString()
 			);
-		if (filters.equipmentCategory)
-			queryParams.append(
-				'equipmentCategory',
-				filters.equipmentCategory
-			);
+		// Handle multiple equipment categories
+		if (
+			filters.equipmentCategories &&
+			filters.equipmentCategories.length > 0
+		) {
+			filters.equipmentCategories.forEach((category) => {
+				queryParams.append(
+					'equipmentCategories',
+					category
+				);
+			});
+		}
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
 		if (filters.createdTo)
@@ -1719,6 +1733,35 @@ class SalesApiService {
 		);
 	}
 
+	/**
+	 * Update offer by SalesManager (PATCH) - allows partial updates regardless of status
+	 */
+	async updateOfferBySalesManager(
+		offerId: string,
+		data: Partial<{
+			clientId?: number;
+			assignedTo?: string;
+			products?: string;
+			totalAmount?: number;
+			paymentTerms?: string[];
+			deliveryTerms?: string[];
+			warrantyTerms?: string[];
+			validUntil?: string[];
+			notes?: string;
+			paymentType?: string;
+			finalPrice?: number;
+			offerDuration?: string;
+		}>
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.OFFERS.BY_ID(offerId),
+			{
+				method: 'PATCH',
+				body: JSON.stringify(data),
+			}
+		);
+	}
+
 	async sendOfferToSalesman(offerId: string): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.SEND_TO_SALESMAN(offerId),
@@ -1805,6 +1848,19 @@ class SalesApiService {
 			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(
 				offerId
 			)}/under-review`,
+			{
+				method: 'POST',
+			}
+		);
+	}
+
+	async resumeFromUnderReview(
+		offerId: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.OFFERS.BY_ID(
+				offerId
+			)}/resume-from-review`,
 			{
 				method: 'POST',
 			}

@@ -1,6 +1,6 @@
 // Products Catalog Management Page - Full CRUD for SalesSupport
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { productApi } from '@/services/sales/productApi'
 import type { Product, CreateProductDto, UpdateProductDto } from '@/types/sales.types'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -22,11 +22,12 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import toast from 'react-hot-toast'
 import { usePerformance } from '@/hooks/usePerformance'
 import { useTranslation } from '@/hooks/useTranslation'
+import ProviderLogo from '@/components/sales/ProviderLogo'
+import { getStaticFileUrl } from '@/utils/apiConfig'
 
 const CATEGORIES = ['X-Ray', 'Ultrasound', 'CT Scanner', 'MRI', 'Other']
 
@@ -61,6 +62,8 @@ export default function ProductsCatalogPage() {
     })
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [providerImageFile, setProviderImageFile] = useState<File | null>(null)
+    const [providerImagePreview, setProviderImagePreview] = useState<string | null>(null)
 
     // Load products
     useEffect(() => {
@@ -138,6 +141,8 @@ export default function ProductsCatalogPage() {
         })
         setSelectedImage(null)
         setImagePreview(null)
+        setProviderImageFile(null)
+        setProviderImagePreview(null)
         setDialogOpen(true)
     }
 
@@ -156,6 +161,12 @@ export default function ProductsCatalogPage() {
         })
         setSelectedImage(null)
         setImagePreview(product.imagePath ? productApi.getImageUrl(product.imagePath) : null)
+        setProviderImageFile(null)
+        setProviderImagePreview(
+            product.providerImagePath
+                ? getStaticFileUrl(product.providerImagePath)
+                : null
+        )
         setDialogOpen(true)
     }
 
@@ -186,6 +197,32 @@ export default function ProductsCatalogPage() {
         reader.readAsDataURL(file)
     }
 
+    const handleProviderImageSelect = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml']
+        if (!allowedTypes.includes(file.type)) {
+            toast.error(t('invalidFileType'))
+            return
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(t('fileSizeMustBeLessThan5MB'))
+            return
+        }
+
+        setProviderImageFile(file)
+
+        const reader = new FileReader()
+        reader.onload = (event) => {
+            setProviderImagePreview(event.target?.result as string)
+        }
+        reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
@@ -208,6 +245,10 @@ export default function ProductsCatalogPage() {
                     await productApi.uploadProductImage(editingProduct.id, selectedImage)
                 }
 
+                if (providerImageFile) {
+                    await productApi.uploadProviderImage(editingProduct.id, providerImageFile)
+                }
+
                 toast.success(t('productUpdatedSuccessfully'))
             } else {
                 // Create
@@ -217,6 +258,10 @@ export default function ProductsCatalogPage() {
                 // Upload image if selected
                 if (selectedImage && newProduct) {
                     await productApi.uploadProductImage(newProduct.id, selectedImage)
+                }
+
+                if (providerImageFile && newProduct) {
+                    await productApi.uploadProviderImage(newProduct.id, providerImageFile)
                 }
 
                 toast.success(t('productCreatedSuccessfully'))
@@ -387,10 +432,18 @@ export default function ProductsCatalogPage() {
                                             </Badge>
                                         </div>
 
-                                        {product.provider && (
-                                            <p className="text-sm text-muted-foreground mb-1">
-                                                {t('provider')}: {product.provider}
-                                            </p>
+                                        {(product.providerImagePath ||
+                                            product.provider) && (
+                                            <div className="mb-2">
+                                                <ProviderLogo
+                                                    providerName={product.provider}
+                                                    logoPath={
+                                                        product.providerImagePath || null
+                                                    }
+                                                    size="sm"
+                                                    showName
+                                                />
+                                            </div>
                                         )}
                                         {product.category && (
                                             <Badge variant="outline" className="mr-2 mb-2">
@@ -586,6 +639,36 @@ export default function ProductsCatalogPage() {
                                         />
                                     </div>
                                 )}
+                            </div>
+
+                            <div className="col-span-2">
+                                <Label>{t('providerLogo') || 'Provider Logo'}</Label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleProviderImageSelect}
+                                />
+                                <div className="mt-2">
+                                    {providerImagePreview ? (
+                                        <div className="relative">
+                                            <img
+                                                src={providerImagePreview}
+                                                alt={t('preview') || 'Provider logo preview'}
+                                                className="w-32 h-32 object-cover rounded bg-white p-1 border"
+                                                onError={(e) => {
+                                                    console.error('Failed to load provider logo preview');
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-32 h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                {t('preview') || 'Preview'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

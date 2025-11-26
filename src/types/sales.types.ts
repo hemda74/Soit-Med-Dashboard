@@ -895,6 +895,7 @@ export interface OfferEquipment {
 	name: string;
 	model?: string;
 	provider?: string; // Backend uses "Provider" instead of "manufacturer"
+	providerImagePath?: string | null;
 	country?: string;
 	year?: number;
 	price?: number; // Backend uses "Price" (single price, not unitPrice/totalPrice)
@@ -1232,6 +1233,7 @@ export interface Product {
 	name: string;
 	model?: string;
 	provider?: string;
+	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
 	basePrice: number;
@@ -1250,6 +1252,7 @@ export interface CreateProductDto {
 	name: string;
 	model?: string;
 	provider?: string;
+	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
 	basePrice: number;
@@ -1262,6 +1265,7 @@ export interface UpdateProductDto {
 	name?: string;
 	model?: string;
 	provider?: string;
+	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
 	basePrice?: number;

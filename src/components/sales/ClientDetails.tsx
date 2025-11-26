@@ -11,6 +11,7 @@ import {
     PlusIcon,
     ChartBarIcon
 } from '@heroicons/react/24/outline';
+import { Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ import DealForm from './DealForm';
 import TaskProgressForm from './TaskProgressForm';
 import OfferRequestForm from './OfferRequestForm';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getStaticFileUrl } from '@/utils/apiConfig';
 
 interface ClientDetailsProps {
     clientId: string;
@@ -211,6 +213,23 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 <p className="font-medium">{client.classification}</p>
                             </div>
                         )}
+                        {client.interestedEquipmentCategories && client.interestedEquipmentCategories.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <ChartBarIcon className="h-4 w-4 text-gray-400" />
+                                    <span className="text-sm text-gray-500">
+                                        {t('clientDetails.interestedEquipmentCategories') || 'Interested Categories'}
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {client.interestedEquipmentCategories.map((category: string, index: number) => (
+                                        <Badge key={index} variant="outline" className="text-xs">
+                                            {category}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -275,6 +294,20 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
 									<label className="text-sm font-medium text-gray-500">{t('classification')}</label>
 									<p className="text-sm">{client.classification || t('clientDetails.notSpecified')}</p>
 								</div>
+                                {client.interestedEquipmentCategories && client.interestedEquipmentCategories.length > 0 && (
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-500">
+                                            {t('clientDetails.interestedEquipmentCategories') || 'Interested Equipment Categories'}
+                                        </label>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            {client.interestedEquipmentCategories.map((category: string, index: number) => (
+                                                <Badge key={index} variant="secondary">
+                                                    {category}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 								<div>
 									<label className="text-sm font-medium text-gray-500">{t('assignedTo')}</label>
 									<p className="text-sm">
@@ -543,6 +576,26 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
 															progress.satisfactionRating.toString()
 														)}
                                                     </p>
+                                                )}
+                                                {progress.voiceDescriptionUrl && (
+                                                    <div className="mt-2">
+                                                        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
+                                                            <Volume2 className="h-4 w-4" />
+                                                            <span>{t('clientDetails.progress.voiceDescription') || 'Voice Description'}</span>
+                                                        </div>
+                                                        <audio 
+                                                            controls 
+                                                            className="w-full max-w-md"
+                                                            preload="metadata"
+                                                        >
+                                                            <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mp4" />
+                                                            <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mpeg" />
+                                                            <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/wav" />
+                                                            <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/m4a" />
+                                                            <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/ogg" />
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
                                                 )}
                                             </div>
                                             <div className="text-right text-sm text-gray-500">

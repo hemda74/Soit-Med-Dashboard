@@ -13,7 +13,9 @@ import {
     CheckCircle2,
     Circle,
     MessageSquare,
+    Volume2,
 } from 'lucide-react';
+import { getStaticFileUrl } from '@/utils/apiConfig';
 import { format } from 'date-fns';
 import type { WeeklyPlan } from '@/types/weeklyPlan.types';
 import { weeklyPlanApi } from '@/services/weeklyPlan/weeklyPlanApi';
@@ -254,6 +256,26 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                                                         <p className="text-gray-600 dark:text-gray-400 mt-1">
                                                                             {progress.description}
                                                                         </p>
+                                                                    )}
+                                                                    {progress.voiceDescriptionUrl && (
+                                                                        <div className="mt-2">
+                                                                            <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                                                <Volume2 className="h-3 w-3" />
+                                                                                <span>Voice Description</span>
+                                                                            </div>
+                                                                            <audio 
+                                                                                controls 
+                                                                                className="w-full max-w-md h-8"
+                                                                                preload="metadata"
+                                                                            >
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mp4" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/mpeg" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/wav" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/m4a" />
+                                                                                <source src={getStaticFileUrl(progress.voiceDescriptionUrl)} type="audio/ogg" />
+                                                                                Your browser does not support the audio element.
+                                                                            </audio>
+                                                                        </div>
                                                                     )}
                                                                     {progress.visitResult && (
                                                                         <p className="text-gray-600 dark:text-gray-400 mt-1">

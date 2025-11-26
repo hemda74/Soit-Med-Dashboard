@@ -10,7 +10,7 @@ import { LoadingSpinner } from '@/components/shared'
 // Lazy load dashboard components for code splitting
 const SuperAdminDashboard = lazy(() => import('@/components/dashboards/SuperAdminDashboard'))
 const UnifiedSalesManagerDashboard = lazy(() => import('@/components/dashboards/UnifiedSalesManagerDashboard'))
-const SalesSupportDashboardOverview = lazy(() => import('@/components/dashboards/SalesSupportDashboardOverview'))
+const SalesSupportDashboard = lazy(() => import('@/components/sales/SalesSupportDashboard'))
 const MaintenanceSupportDashboard = lazy(() => import('@/components/dashboards/MaintenanceSupportDashboard'))
 
 // Loading fallback component
@@ -64,7 +64,7 @@ export default function Dashboard() {
             {/* Sales Support Specific Content */}
             {roles.isSalesSupport && !roles.isSuperAdmin && (
                 <Suspense fallback={<DashboardSuspenseFallback />}>
-                <SalesSupportDashboardOverview />
+                    <SalesSupportDashboard />
                 </Suspense>
             )}
 

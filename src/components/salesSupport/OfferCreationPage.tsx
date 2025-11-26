@@ -29,6 +29,8 @@ import type { Product } from '@/types/sales.types'
 import { downloadOfferPDF } from '@/utils/pdfGenerator'
 import { usePerformance } from '@/hooks/usePerformance'
 import { useTranslation } from '@/hooks/useTranslation'
+import ProviderLogo from '@/components/sales/ProviderLogo'
+import { getStaticFileUrl } from '@/utils/apiConfig'
 
 function useQuery() {
     const { search } = useLocation()
@@ -62,8 +64,8 @@ export default function OfferCreationPage() {
     const [assignedToSalesmanId, setAssignedToSalesmanId] = useState<string>('')
     const [assignedToSalesmanName, setAssignedToSalesmanName] = useState<string>('')
     const [products, setProducts] = useState<string>('')
-    const [productItems, setProductItems] = useState<Array<{ name: string; model?: string; factory?: string; country?: string; year?: number | string; price: number | string; imageUrl?: string; description?: string; inStock?: boolean }>>([])
-    const emptyProduct = { name: '', model: '', factory: '', country: '', year: '', price: '', imageUrl: '', description: '', inStock: true as boolean }
+    const [productItems, setProductItems] = useState<Array<{ name: string; model?: string; factory?: string; country?: string; year?: number | string; price: number | string; imageUrl?: string; providerImagePath?: string; description?: string; inStock?: boolean }>>([])
+    const emptyProduct = { name: '', model: '', factory: '', country: '', year: '', price: '', imageUrl: '', providerImagePath: '', description: '', inStock: true as boolean }
     const [newProduct, setNewProduct] = useState<typeof emptyProduct>({ ...emptyProduct })
     const [showManualProductForm, setShowManualProductForm] = useState(false)
     const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null)
@@ -102,16 +104,7 @@ export default function OfferCreationPage() {
             if (catalogSelectedCategory && catalogSelectedCategory !== 'all') params.category = catalogSelectedCategory
             params.inStock = true // Only show in-stock products
 
-            console.log('Loading products with params:', params)
             const response = await productApi.getAllProducts(params)
-            console.log('Products loaded:', response.data?.length || 0, 'products')
-
-            if (response.data && response.data.length > 0) {
-                // Log image paths for debugging
-                response.data.forEach((product, index) => {
-                    console.log(`Product ${index + 1}: ${product.name}, imagePath: ${product.imagePath || 'none'}`)
-                })
-            }
 
             setCatalogProducts(response.data || [])
 		} catch (err: any) {
@@ -150,6 +143,7 @@ export default function OfferCreationPage() {
             year: product.year || '',
             price: product.basePrice.toString(),
             imageUrl: product.imagePath || '',
+            providerImagePath: product.providerImagePath || '',
             description: product.description || '',
             inStock: product.inStock,
         }
@@ -365,6 +359,7 @@ export default function OfferCreationPage() {
                         year: p.year ? Number(p.year) : undefined,
                         price: Number(p.price) || 0,
                         imageUrl: p.imageUrl || '',
+                        providerImagePath: p.providerImagePath || '',
                         description: p.description || '',
                         inStock: p.inStock !== false,
                     })),
@@ -461,6 +456,7 @@ export default function OfferCreationPage() {
                         description: eq.description || eq.Description || eq.specifications,
                         inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
                         imagePath: eq.imagePath || eq.ImagePath,
+                        providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
                     }));
                 }
             } catch (e) {
@@ -919,6 +915,19 @@ export default function OfferCreationPage() {
                                         <Label>Image URL</Label>
                                         <Input value={newProduct.imageUrl} onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })} placeholder="https://..." />
                                     </div>
+                                    <div className="md:col-span-2">
+                                        <Label>Provider Logo URL</Label>
+                                        <Input value={newProduct.providerImagePath || ''} onChange={(e) => setNewProduct({ ...newProduct, providerImagePath: e.target.value })} placeholder="https://... or path" />
+                                        {newProduct.providerImagePath && (
+                                            <div className="mt-2">
+                                                <ProviderLogo
+                                                    providerName={newProduct.factory}
+                                                    logoPath={newProduct.providerImagePath}
+                                                    size="sm"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="md:col-span-3">
                                         <Label>Description</Label>
                                         <Textarea rows={2} value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="Product description..." />
@@ -1057,6 +1066,23 @@ export default function OfferCreationPage() {
                                                             placeholder="https://..." 
                                                         />
                                                     </div>
+                                                    <div className="md:col-span-2">
+                                                        <Label>Provider Logo URL</Label>
+                                                        <Input 
+                                                            value={editingProduct.providerImagePath || ''} 
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, providerImagePath: e.target.value })} 
+                                                            placeholder="https://... or path" 
+                                                        />
+                                                        {editingProduct.providerImagePath && (
+                                                            <div className="mt-2">
+                                                                <ProviderLogo
+                                                                    providerName={editingProduct.factory}
+                                                                    logoPath={editingProduct.providerImagePath}
+                                                                    size="sm"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <div className="md:col-span-3">
                                                         <Label>Description</Label>
                                                         <Textarea 
@@ -1092,9 +1118,18 @@ export default function OfferCreationPage() {
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                                                         {p.factory && (
-                                                            <p className="text-muted-foreground">
-                                                                <span className="font-medium">Factory:</span> {p.factory}
-                                                            </p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-muted-foreground">
+                                                                    <span className="font-medium">Factory:</span> {p.factory}
+                                                                </p>
+                                                                {p.providerImagePath && (
+                                                                    <ProviderLogo
+                                                                        providerName={p.factory}
+                                                                        logoPath={p.providerImagePath}
+                                                                        size="xs"
+                                                                    />
+                                                                )}
+                                                            </div>
                                                         )}
                                                         {p.country && (
                                                             <p className="text-muted-foreground">
@@ -1237,7 +1272,7 @@ export default function OfferCreationPage() {
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF
                                 </Button>
-                                <Button variant="ghost" onClick={() => navigate('/sales-support')}>
+                                <Button variant="ghost" onClick={() => navigate('/dashboard?tab=my-offers')}>
                                     Back to Dashboard
                                 </Button>
                             </div>
@@ -1319,7 +1354,6 @@ export default function OfferCreationPage() {
                                                         loading="lazy"
                                                         referrerPolicy="no-referrer"
                                                         onLoad={() => {
-                                                            console.log(`Image loaded successfully for: ${product.name}`)
                                                         }}
                                                         onError={(e) => {
                                                             console.error(`Failed to load image for: ${product.name}`, product.imagePath)
