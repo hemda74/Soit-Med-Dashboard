@@ -5,10 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner, EmptyState } from '@/components/shared';
 import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
-import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 import { usePerformance } from '@/hooks/usePerformance';
-import { Clock, DollarSign, Building2, User, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Clock, DollarSign, Building2, User, Eye, Calendar, FileText } from 'lucide-react';
 import DealApprovalForm from '@/components/sales/DealApprovalForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,18 +18,22 @@ interface Deal {
 	clientId: string;
 	clientName: string;
 	dealValue: number;
+	dealDescription: string;
+	expectedCloseDate: string;
 	status: 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected';
 	createdAt: string;
+	updatedAt: string;
 	createdBy: string;
 	createdByName: string;
 	paymentTerms?: string;
 	deliveryTerms?: string;
 	notes?: string;
+	salesmanName?: string;
+	[key: string]: any;
 }
 
 const SalesManagerDealApprovals: React.FC = () => {
 	usePerformance('SalesManagerDealApprovals');
-	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [pendingDeals, setPendingDeals] = useState<Deal[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -46,26 +49,68 @@ const SalesManagerDealApprovals: React.FC = () => {
 
 		try {
 			setLoading(true);
-			// Note: SalesManager approval for deals has been removed
-			// Deals now go directly to SuperAdmin approval
-			// This component is kept for backward compatibility but will show empty
-			setPendingDeals([]);
+			const response = await salesApi.getPendingManagerApprovals();
+
+			if (response.success && response.data) {
+				const normalizedDeals = response.data.map((deal: any) => {
+					const dealStatus = deal.status || deal.Status || 'PendingManagerApproval';
+					return {
+						...deal,
+						id: String(deal.id || deal.Id),
+						offerId: String(deal.offerId || deal.OfferId || ''),
+						clientId: String(deal.clientId || deal.ClientId || ''),
+						dealValue: deal.dealValue || deal.DealValue || deal.totalValue || deal.TotalValue || 0,
+						dealDescription: deal.dealDescription || deal.Notes || deal.notes || 'No description available',
+						expectedCloseDate: deal.expectedCloseDate || deal.ExpectedDeliveryDate || deal.expectedDeliveryDate || new Date().toISOString(),
+						clientName: deal.clientName || deal.ClientName || 'Unknown Client',
+						createdBy: deal.createdBy || deal.CreatedBy || deal.salesmanId || deal.SalesmanId || '',
+						createdByName: deal.createdByName || deal.CreatedByName || deal.salesmanName || deal.SalesmanName || 'Unknown',
+						createdAt: deal.createdAt || deal.CreatedAt || new Date().toISOString(),
+						updatedAt: deal.updatedAt || deal.UpdatedAt || deal.createdAt || deal.CreatedAt || new Date().toISOString(),
+						status: dealStatus as 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected',
+					};
+				});
+
+				setPendingDeals(normalizedDeals);
+			} else {
+				setPendingDeals([]);
+			}
 		} catch (error: any) {
 			console.error('Failed to load pending approvals:', error);
 			toast.error('Failed to load pending approvals');
+			setPendingDeals([]);
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const handleViewDeal = async (dealId: string) => {
+	const handleViewDeal = async (dealId: string | number) => {
 		try {
-			const response = await salesApi.getDeal(dealId);
+			const response = await salesApi.getDeal(String(dealId));
 			if (response.success && response.data) {
-				setSelectedDeal(response.data);
+				const dealData = response.data;
+				const dealStatus = dealData.status || dealData.Status || 'PendingManagerApproval';
+
+				const normalizedDeal: Deal = {
+					...dealData,
+					id: String(dealData.id || dealData.Id),
+					offerId: String(dealData.offerId || dealData.OfferId || ''),
+					clientId: String(dealData.clientId || dealData.ClientId || ''),
+					dealValue: dealData.dealValue || dealData.DealValue || dealData.totalValue || dealData.TotalValue || 0,
+					dealDescription: dealData.dealDescription || dealData.Notes || dealData.notes || 'No description available',
+					expectedCloseDate: dealData.expectedCloseDate || dealData.ExpectedDeliveryDate || dealData.expectedDeliveryDate || new Date().toISOString(),
+					clientName: dealData.clientName || dealData.ClientName || 'Unknown Client',
+					createdBy: dealData.createdBy || dealData.CreatedBy || dealData.salesmanId || dealData.SalesmanId || '',
+					createdByName: dealData.createdByName || dealData.CreatedByName || dealData.salesmanName || dealData.SalesmanName || 'Unknown',
+					createdAt: dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
+					updatedAt: dealData.updatedAt || dealData.UpdatedAt || dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
+					status: dealStatus as 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected',
+				};
+				setSelectedDeal(normalizedDeal);
 				setShowApprovalDialog(true);
 			}
 		} catch (error: any) {
+			console.error('Failed to load deal details:', error);
 			toast.error('Failed to load deal details');
 		}
 	};
@@ -81,7 +126,10 @@ const SalesManagerDealApprovals: React.FC = () => {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Pending Deal Approvals</CardTitle>
+					<CardTitle className="flex items-center gap-2">
+						<Clock className="h-5 w-5 text-yellow-600" />
+						Pending Deal Approvals
+					</CardTitle>
 					<CardDescription>Review and approve deals awaiting your approval</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -95,13 +143,17 @@ const SalesManagerDealApprovals: React.FC = () => {
 		<>
 			<Card>
 				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<Clock className="h-5 w-5 text-yellow-600" />
-						Pending Deal Approvals
-					</CardTitle>
-					<CardDescription>
-						{pendingDeals.length} {pendingDeals.length === 1 ? 'deal' : 'deals'} awaiting your approval
-					</CardDescription>
+					<div className="flex items-center justify-between">
+						<div>
+							<CardTitle className="flex items-center gap-2 text-2xl">
+								<Clock className="h-6 w-6 text-yellow-600" />
+								Pending Deal Approvals
+							</CardTitle>
+							<CardDescription className="mt-2 text-base">
+								{pendingDeals.length} {pendingDeals.length === 1 ? 'deal' : 'deals'} awaiting your approval
+							</CardDescription>
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent>
 					{pendingDeals.length === 0 ? (
@@ -110,52 +162,111 @@ const SalesManagerDealApprovals: React.FC = () => {
 							description="All deals have been reviewed. Check back later for new approvals."
 						/>
 					) : (
-						<div className="space-y-4">
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 							{pendingDeals.map((deal) => (
-								<Card key={deal.id} className="border-l-4 border-l-yellow-500">
+								<Card
+									key={String(deal.id)}
+									className="border-l-4 border-l-yellow-500 hover:shadow-lg transition-all duration-200 bg-white dark:bg-white/[0.03]"
+								>
 									<CardContent className="pt-6">
-										<div className="flex items-start justify-between">
-											<div className="flex-1">
-												<div className="flex items-center gap-3 mb-3">
-													<Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+										{/* Header with Badge */}
+										<div className="flex items-start justify-between mb-4">
+											<div>
+												<div className="flex items-center gap-2 mb-2">
+													<Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 border">
 														Pending Approval
 													</Badge>
-													<span className="text-sm text-muted-foreground">
-														#{deal.id}
+													<span className="text-sm text-muted-foreground font-medium">
+														Deal #{deal.id}
 													</span>
 												</div>
-												<div className="space-y-2">
-													<div className="flex items-center gap-2">
-														<Building2 className="h-4 w-4 text-muted-foreground" />
-														<span className="font-medium">{deal.clientName}</span>
-													</div>
-													<div className="flex items-center gap-2">
-														<DollarSign className="h-4 w-4 text-muted-foreground" />
-														<span className="text-lg font-bold text-green-600">
-															{deal.dealValue.toLocaleString()} EGP
-														</span>
-													</div>
-													<div className="flex items-center gap-2">
-														<User className="h-4 w-4 text-muted-foreground" />
-														<span className="text-sm text-muted-foreground">
-															Created by: {deal.createdByName}
-														</span>
-													</div>
-													<div className="text-sm text-muted-foreground">
-														Created: {format(new Date(deal.createdAt), 'MMM dd, yyyy HH:mm')}
-													</div>
+											</div>
+										</div>
+
+										{/* Deal Information Grid */}
+										<div className="space-y-4 mb-6">
+											{/* Client */}
+											<div className="flex items-start gap-3">
+												<div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
+													<Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-xs font-medium text-muted-foreground mb-1">Client</p>
+													<p className="text-base font-semibold text-gray-900 dark:text-white truncate">
+														{deal.clientName}
+													</p>
 												</div>
 											</div>
-											<Button
-												onClick={() => handleViewDeal(deal.id)}
-												variant="outline"
-												size="sm"
-												className="ml-4"
-											>
-												<Eye className="h-4 w-4 mr-2" />
-												Review
-											</Button>
+
+											{/* Deal Value */}
+											<div className="flex items-start gap-3">
+												<div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg flex-shrink-0">
+													<DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-xs font-medium text-muted-foreground mb-1">Deal Value</p>
+													<p className="text-lg font-bold text-green-600 dark:text-green-400">
+														EGP {deal.dealValue.toLocaleString()}
+													</p>
+												</div>
+											</div>
+
+											{/* Expected Close Date */}
+											{deal.expectedCloseDate && (
+												<div className="flex items-start gap-3">
+													<div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex-shrink-0">
+														<Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+													</div>
+													<div className="flex-1 min-w-0">
+														<p className="text-xs font-medium text-muted-foreground mb-1">Expected Close Date</p>
+														<p className="text-sm text-gray-900 dark:text-white">
+															{format(new Date(deal.expectedCloseDate), 'MMM dd, yyyy')}
+														</p>
+													</div>
+												</div>
+											)}
+
+											{/* Created By */}
+											<div className="flex items-start gap-3">
+												<div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0">
+													<User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-xs font-medium text-muted-foreground mb-1">Created By</p>
+													<p className="text-sm text-gray-900 dark:text-white">
+														{deal.createdByName}
+													</p>
+													<p className="text-xs text-muted-foreground mt-1">
+														{format(new Date(deal.createdAt), 'MMM dd, yyyy HH:mm')}
+													</p>
+												</div>
+											</div>
+
+											{/* Description Preview */}
+											{deal.dealDescription && (
+												<div className="flex items-start gap-3">
+													<div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0">
+														<FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+													</div>
+													<div className="flex-1 min-w-0">
+														<p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
+														<p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+															{deal.dealDescription}
+														</p>
+													</div>
+												</div>
+											)}
 										</div>
+
+										{/* Action Button */}
+										<Button
+											onClick={() => handleViewDeal(deal.id)}
+											className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+											size="lg"
+										>
+											<Eye className="h-4 w-4 mr-2" />
+											Review & Approve
+										</Button>
 									</CardContent>
 								</Card>
 							))}
@@ -166,9 +277,9 @@ const SalesManagerDealApprovals: React.FC = () => {
 
 			{/* Approval Dialog */}
 			<Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
-				<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
-						<DialogTitle>Review Deal Approval</DialogTitle>
+						<DialogTitle className="text-xl">Review Deal Approval</DialogTitle>
 					</DialogHeader>
 					{selectedDeal && (
 						<DealApprovalForm
@@ -184,4 +295,3 @@ const SalesManagerDealApprovals: React.FC = () => {
 };
 
 export default SalesManagerDealApprovals;
-

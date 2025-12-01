@@ -29,8 +29,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DealApprovalForm from '@/components/sales/DealApprovalForm';
 import type { Deal } from '@/types/sales.types';
 import { format } from 'date-fns';
-import SalesManagerDealApprovals from '@/components/dashboards/SalesManagerDealApprovals';
-import SalesManagerOfferApprovals from '@/components/dashboards/SalesManagerOfferApprovals';
 import { Volume2 } from 'lucide-react';
 import { getStaticFileUrl } from '@/utils/apiConfig';
 
@@ -62,19 +60,15 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const {
         getSalesManagerDashboard,
         getWeeklyPlans,
-        getSalesReports,
         reviewWeeklyPlan,
         getDeals,
         getPendingApprovals,
         salesDashboard,
-        salesReports,
         weeklyPlans,
         deals,
         analyticsLoading,
-        reportsLoading,
         weeklyPlansLoading,
         dealsLoading,
-        reportsError,
         weeklyPlansError,
         dealsError
     } = useSalesStore();
@@ -92,7 +86,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const [reviewComment, setReviewComment] = useState('');
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [showDealApproval, setShowDealApproval] = useState(false);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('team');
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [currentQuarter, setCurrentQuarter] = useState(Math.floor((new Date().getMonth()) / 3) + 1);
     const [pendingOffersCount, setPendingOffersCount] = useState<number>(0);
@@ -214,7 +208,6 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     useEffect(() => {
         getSalesManagerDashboard(currentYear, currentQuarter);
         getWeeklyPlans({ page: 1, pageSize: 100 });
-        getSalesReports({ page: 1, pageSize: 100 });
         getDeals({ status: 'PendingManagerApproval' });
         getPendingApprovals();
         fetchSalesmenStatistics();
@@ -227,7 +220,6 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
         currentQuarter,
         getSalesManagerDashboard,
         getWeeklyPlans,
-        getSalesReports,
         getDeals,
         getPendingApprovals,
         fetchSalesmenStatistics,
@@ -370,7 +362,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
         }
     };
 
-    if (analyticsLoading && reportsLoading && weeklyPlansLoading && salesmenLoading && clientsLoading && allDealsLoading) {
+    if (analyticsLoading && weeklyPlansLoading && salesmenLoading && clientsLoading && allDealsLoading) {
         return (
             <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -525,27 +517,6 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                     </Card>
                 </Link>
 
-                {/* Sales Reports Card */}
-                <Link to="/sales-reports" className="block">
-                    <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                                    <History className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-bold text-foreground">
-                                        {reportsLoading ? '-' : completedPlans.length}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">Completed</p>
-                                </div>
-                            </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Sales Reports</h3>
-                            <p className="text-muted-foreground text-sm">Review past sales performance</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
                 {/* Sales Targets Card */}
                 <Link to="/sales-manager/targets" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
@@ -591,98 +562,12 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
 
             {/* Main Content Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="overview">{t('overview') || 'Overview'}</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="team">{t('teamPerformance') || 'Team Performance'}</TabsTrigger>
                     <TabsTrigger value="deals">{t('pendingDealApprovals') || 'Deal Approvals'}</TabsTrigger>
                     <TabsTrigger value="plans">{t('weeklyPlans') || 'Weekly Plans'}</TabsTrigger>
                     <TabsTrigger value="reports">{t('reports') || 'Reports'}</TabsTrigger>
                 </TabsList>
-
-                {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-6">
-                    {/* Key Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <ChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <h3 className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                            Total Clients
-                                        </h3>
-                                        <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                                            {clientsLoading ? '-' : totalClients.toLocaleString()}
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <HandshakeIconOutline className="h-8 w-8 text-green-600 dark:text-green-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <h3 className="text-sm font-medium text-green-600 dark:text-green-400">
-                                            Pending Deals
-                                        </h3>
-                                        <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                                            {pendingDealsCount}
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <DollarSign className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <h3 className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                                            Total Revenue
-                                        </h3>
-                                        <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                                            {allDealsLoading ? '-' : `EGP ${totalRevenue.toLocaleString()}`}
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-6">
-                                <div className="flex items-center">
-                                    <div className="flex-shrink-0">
-                                        <UserGroupIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
-                                    </div>
-                                    <div className="ml-4">
-                                        <h3 className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                                            Team Performance
-                                        </h3>
-                                        <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                                            {teamPerformancePercentage}%
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Offer Approvals Section */}
-                    <div className="mt-8">
-                        <SalesManagerOfferApprovals />
-                    </div>
-
-                    {/* Deal Approvals Section - Note: SalesManager approval removed, deals go directly to SuperAdmin */}
-                    <div className="mt-8">
-                        <SalesManagerDealApprovals />
-                    </div>
-                </TabsContent>
 
                 {/* Team Performance Tab */}
                 <TabsContent value="team" className="space-y-6">
@@ -891,64 +776,6 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                 {/* Reports Tab */}
                 <TabsContent value="reports" className="space-y-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center">
-                                <ChartBarIcon className="h-5 w-5 mr-2" />
-                                {t('salesReports') || 'Sales Reports'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {reportsLoading ? (
-                                <div className="text-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                                </div>
-                            ) : reportsError ? (
-                                <div className="text-center py-8 text-red-500 dark:text-red-400">
-                                    {reportsError}
-                                </div>
-                            ) : salesReports.length > 0 ? (
-                                <div className="space-y-4">
-                                    {salesReports.map((report) => (
-                                        <div
-                                            key={report.id}
-                                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {report.title}
-                                                    </h3>
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                        {report.reportType} Report
-                                                    </p>
-                                                    {report.description && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            {report.description}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                                    Completed
-                                                </Badge>
-                                            </div>
-
-                                            <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                                                <span>
-                                                    Generated: {safeFormatDate(report.generatedAt)}
-                                                </span>
-                                                <span>
-                                                    By: {report.generatedByName}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                    {t('noReportsAvailable') || 'No reports available'}
-                                </div>
-                            )}
-                        </CardContent>
                     </Card>
                 </TabsContent>
             </Tabs>
