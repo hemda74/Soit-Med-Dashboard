@@ -405,15 +405,18 @@ export default function OfferCreationPage() {
         }
     }
 
+    const canSendCurrentOffer = offer?.canSendToSalesman ?? offer?.status === 'Sent'
+    const awaitingSalesManagerApproval = offer?.status === 'PendingSalesManagerApproval'
+
     // Send and Export
     const sendToSalesman = async () => {
         if (!offer) return
+        if (!canSendCurrentOffer) {
+            toast.error('SalesManager must approve the offer before it can be sent to the assigned salesman.')
+            return
+        }
+
         try {
-            // Check if offer has been approved by SalesManager
-            if (offer.status !== 'Sent') {
-                toast.error('Offer must be approved by SalesManager before it can be sent to salesman')
-                return
-            }
             await salesApi.sendOfferToSalesman(offer.id)
             const { data } = await salesApi.getOffer(offer.id)
             setOffer(data)
@@ -444,20 +447,48 @@ export default function OfferCreationPage() {
             try {
                 const equipmentResponse = await salesApi.getOfferEquipment(offer.id);
                 if (equipmentResponse.success && equipmentResponse.data) {
+                    // VERIFICATION: Log raw API response
+                    console.log('=== OFFER CREATION: Raw Equipment API Response ===');
+                    if (equipmentResponse.data.length > 0) {
+                        console.log('First equipment item:', equipmentResponse.data[0]);
+                        console.log('All keys:', Object.keys(equipmentResponse.data[0]));
+                        // Check specifically for providerImagePath
+                        const firstItem = equipmentResponse.data[0] as any;
+                        console.log('Provider Image Path Check:', {
+                            providerImagePath: firstItem.providerImagePath,
+                            ProviderImagePath: firstItem.ProviderImagePath,
+                            providerLogoPath: firstItem.providerLogoPath,
+                            ProviderLogoPath: firstItem.ProviderLogoPath,
+                            hasProviderImagePath: !!firstItem.providerImagePath,
+                        });
+                    }
+                    
                     // Normalize equipment data to match PDF generator interface
-                    equipmentData = equipmentResponse.data.map((eq: any) => ({
-                        id: eq.id,
-                        name: eq.name || 'N/A',
-                        model: eq.model,
-                        provider: eq.provider || eq.Provider || eq.manufacturer,
-                        country: eq.country || eq.Country,
-                        year: eq.year ?? eq.Year,
-                        price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-                        description: eq.description || eq.Description || eq.specifications,
-                        inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-                        imagePath: eq.imagePath || eq.ImagePath,
-                        providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-                    }));
+                    equipmentData = equipmentResponse.data.map((eq: any) => {
+                        const mapped = {
+                            id: eq.id,
+                            name: eq.name || 'N/A',
+                            model: eq.model,
+                            provider: eq.provider || eq.Provider || eq.manufacturer,
+                            country: eq.country || eq.Country,
+                            year: eq.year ?? eq.Year,
+                            price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
+                            description: eq.description || eq.Description || eq.specifications,
+                            inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
+                            imagePath: eq.imagePath || eq.ImagePath,
+                            providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
+                        };
+                        
+                        // Log providerImagePath status for each item
+                        console.log(`[OFFER CREATION] Equipment: ${mapped.name}`, {
+                            hasProviderImagePath: !!mapped.providerImagePath,
+                            providerImagePath: mapped.providerImagePath || 'NOT SET',
+                            rawProviderImagePath: eq.providerImagePath,
+                            rawProviderImagePathPascal: eq.ProviderImagePath,
+                        });
+                        
+                        return mapped;
+                    });
                 }
             } catch (e) {
                 // Equipment data not available for PDF
@@ -1256,19 +1287,13 @@ export default function OfferCreationPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-2">
-                                {offer.status === 'Sent' && (
-                                    <Button onClick={sendToSalesman}>
-                                        Send to Salesman
-                                    </Button>
-                                )}
-                                {offer.status === 'PendingSalesManagerApproval' && (
-                                    <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <span className="text-sm font-medium">Awaiting SalesManager Approval</span>
-                                    </div>
-                                )}
+                                <Button
+                                    onClick={sendToSalesman}
+                                    disabled={!canSendCurrentOffer}
+                                    title={!canSendCurrentOffer ? 'SalesManager has not approved this offer yet' : undefined}
+                                >
+                                    Send to Salesman
+                                </Button>
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF
                                 </Button>
@@ -1276,6 +1301,18 @@ export default function OfferCreationPage() {
                                     Back to Dashboard
                                 </Button>
                             </div>
+                            {!canSendCurrentOffer && (
+                                <div className="mt-3 flex items-center gap-2 text-yellow-600 dark:text-yellow-400 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    <span>
+                                        {awaitingSalesManagerApproval
+                                            ? 'Awaiting SalesManager approval before you can send this offer.'
+                                            : 'You can send the offer after SalesManager has approved it.'}
+                                    </span>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </>

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
 	Eye,
 	ChevronLeft,
@@ -39,6 +40,7 @@ interface Offer {
 	clientName: string;
 	assignedToName: string;
 	createdByName: string;
+	products?: string;
 	totalAmount: number;
 	status: string;
 	createdAt: string;
@@ -102,6 +104,18 @@ const OffersManagementPage: React.FC = () => {
 	const isSalesManager = userRoles.includes('SalesManager');
 	const canAccessPage = isSuperAdmin || isSalesManager;
 
+	// Helper function to check if error is a connection error
+	const isConnectionError = (error: any): boolean => {
+		if (!error) return false;
+		const errorMessage = error?.message || error?.toString() || '';
+		return (
+			errorMessage.includes('Failed to fetch') ||
+			errorMessage.includes('ERR_CONNECTION_REFUSED') ||
+			errorMessage.includes('NetworkError') ||
+			errorMessage.includes('Network request failed')
+		);
+	};
+
 	const loadSalesmen = useCallback(async () => {
 		if (!user?.token || !canAccessPage) return;
 
@@ -112,9 +126,13 @@ const OffersManagementPage: React.FC = () => {
 				: await salesApi.getOfferSalesmen();
 
 			if (response.success && response.data) {
-				const rawSalesmen = Array.isArray(response.data)
-					? response.data
-					: response.data?.items || response.data?.salesmen || [];
+				const data: any = response.data;
+				let rawSalesmen: any[] = [];
+				if (Array.isArray(data)) {
+					rawSalesmen = data;
+				} else if (data && typeof data === 'object') {
+					rawSalesmen = data.items || data.salesmen || [];
+				}
 
 				const normalizedSalesmen = (rawSalesmen || [])
 					.map((salesman: any) => ({
@@ -223,9 +241,14 @@ const OffersManagementPage: React.FC = () => {
 			} else {
 				setError(response.message || 'Failed to load offers');
 			}
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Error loading offers:', err);
-			setError(err instanceof Error ? err.message : 'Failed to load offers');
+			if (isConnectionError(err)) {
+				setError(t('connectionError') || 'Cannot connect to server. Please check your connection and try again.');
+				toast.error(t('connectionError') || 'Cannot connect to server. Please check your connection.');
+			} else {
+				setError(err instanceof Error ? err.message : 'Failed to load offers');
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -325,10 +348,18 @@ const OffersManagementPage: React.FC = () => {
 			const response = await salesApi.getOffer(offer.id.toString());
 			if (response.success && response.data) {
 				setSelectedOffer(response.data);
+			} else {
+				// If API call succeeded but no data, keep the basic offer info
+				console.warn('Offer details not available, using basic offer info');
 			}
 		} catch (error) {
 			console.error('Error loading offer details:', error);
-			toast.error('Failed to load offer details');
+			if (isConnectionError(error)) {
+				toast.error(t('connectionError') || 'Cannot connect to server. Please check your connection and try again.');
+			} else {
+				toast.error(t('failedToLoadOfferDetails') || 'Failed to load offer details');
+			}
+			// Keep the basic offer info so user can still see something
 		}
 	};
 
@@ -347,6 +378,10 @@ const OffersManagementPage: React.FC = () => {
 				} catch (error) {
 					console.error('Error loading offer equipment:', error);
 					setOfferEquipment([]);
+					// Only show toast for connection errors, not for other errors (to avoid spam)
+					if (isConnectionError(error)) {
+						toast.error(t('connectionError') || 'Cannot connect to server. Equipment details may be unavailable.');
+					}
 				} finally {
 					setLoadingEquipment(false);
 				}
@@ -356,7 +391,7 @@ const OffersManagementPage: React.FC = () => {
 		};
 
 		loadOfferEquipment();
-	}, [selectedOffer]);
+	}, [selectedOffer, t]);
 
 	// Load equipment images
 	useEffect(() => {
@@ -533,19 +568,66 @@ const OffersManagementPage: React.FC = () => {
 				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
 				if (equipmentResponse.success && equipmentResponse.data) {
 					// Normalize equipment data to match PDF generator interface
-					equipmentData = equipmentResponse.data.map((eq: any) => ({
-						id: eq.id,
-						name: eq.name || 'N/A',
-						model: eq.model,
-						provider: eq.provider || eq.Provider || eq.manufacturer,
-						country: eq.country || eq.Country,
-						year: eq.year ?? eq.Year,
-						price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-						description: eq.description || eq.Description || eq.specifications,
-						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-						imagePath: eq.imagePath || eq.ImagePath,
-						providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-					}));
+					// VERIFICATION: Log raw API response first
+					console.log('=== PDF EXPORT: Raw API Response ===');
+					if (equipmentResponse.data && equipmentResponse.data.length > 0) {
+						const firstItem: any = equipmentResponse.data[0];
+						console.log('First equipment item from API:', firstItem);
+						console.log('All keys in first equipment item:', Object.keys(firstItem));
+						console.log('Provider-related fields:', {
+							providerImagePath: firstItem.providerImagePath,
+							ProviderImagePath: firstItem.ProviderImagePath,
+							providerLogoPath: firstItem.providerLogoPath,
+							ProviderLogoPath: firstItem.ProviderLogoPath,
+							provider: firstItem.provider,
+							Provider: firstItem.Provider,
+						});
+					}
+
+					equipmentData = equipmentResponse.data.map((eq: any) => {
+						const mapped = {
+							id: eq.id,
+							name: eq.name || 'N/A',
+							model: eq.model,
+							provider: eq.provider || eq.Provider || eq.manufacturer,
+							country: eq.country || eq.Country,
+							year: eq.year ?? eq.Year,
+							price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
+							description: eq.description || eq.Description || eq.specifications,
+							inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
+							imagePath: eq.imagePath || eq.ImagePath,
+							providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
+						};
+
+						// Log mapping for each item
+						if (!mapped.providerImagePath) {
+							console.warn(`[PDF EXPORT] No providerImagePath found for ${mapped.name}:`, {
+								allKeys: Object.keys(eq),
+								providerFields: {
+									providerImagePath: eq.providerImagePath,
+									ProviderImagePath: eq.ProviderImagePath,
+									providerLogoPath: eq.providerLogoPath,
+									ProviderLogoPath: eq.ProviderLogoPath,
+								}
+							});
+						}
+
+						return mapped;
+					});
+
+					// VERIFICATION: Log equipment data before PDF generation
+					console.log('=== PDF EXPORT: Equipment Data Verification ===');
+					console.log('Equipment count:', equipmentData.length);
+					equipmentData.forEach((eq: any, idx: number) => {
+						console.log(`Equipment ${idx + 1}:`, {
+							name: eq.name,
+							provider: eq.provider,
+							providerImagePath: eq.providerImagePath || 'NOT FOUND',
+							imagePath: eq.imagePath || 'NOT FOUND',
+							allFields: Object.keys(eq)
+						});
+					});
+					console.log('=== END VERIFICATION ===');
 				}
 			} catch (e) {
 				console.warn('Equipment data not available for PDF:', e);
