@@ -44,8 +44,12 @@ class ProductApiService {
 			});
 
 			// Check if response is actually JSON before parsing
-			const contentType = response.headers.get('content-type');
-			if (!contentType || !contentType.includes('application/json')) {
+			const contentType =
+				response.headers.get('content-type');
+			if (
+				!contentType ||
+				!contentType.includes('application/json')
+			) {
 				const text = await response.text();
 				console.error(
 					'Non-JSON response:',
@@ -214,7 +218,9 @@ class ProductApiService {
 		formData.append('file', file);
 
 		return this.makeRequest<Product>(
-			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(id)}/upload-provider-image`,
+			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(
+				id
+			)}/upload-provider-image`,
 			{
 				method: 'POST',
 				body: formData,
@@ -229,6 +235,17 @@ class ProductApiService {
 	getImageUrl(imagePath: string | null | undefined): string {
 		// Use centralized utility for consistent URL construction
 		return getStaticFileUrl(imagePath);
+	}
+
+	/**
+	 * Get provider image URL helper
+	 * Constructs full URL to backend-served provider images
+	 */
+	getProviderImageUrl(
+		providerImagePath: string | null | undefined
+	): string {
+		// Use centralized utility for consistent URL construction
+		return getStaticFileUrl(providerImagePath);
 	}
 }
 

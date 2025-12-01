@@ -567,42 +567,6 @@ class NotificationService {
 		toast.success('Weekly plan has been updated');
 	}
 
-	// Intentionally unused - for future use
-	// @ts-ignore TS6133
-	private _handleSalesReportUpdate(report: any): void {
-		const currentUser = this.getCurrentUser();
-		if (!currentUser) return;
-
-		// Show to sales team and managers
-		const userRoles = Array.isArray(currentUser.roles)
-			? currentUser.roles
-			: [];
-		const isSalesTeam =
-			userRoles.length > 0 &&
-			userRoles.some((role: any) =>
-				[
-					'Salesman',
-					'SalesManager',
-					'SuperAdmin',
-				].includes(role)
-			);
-
-		if (!isSalesTeam) return;
-
-		const notification: NotificationData = {
-			id: `sales-report-${Date.now()}`,
-			type: 'success',
-			title: 'Sales Report Updated',
-			message: `New sales report has been generated for ${report.period}`,
-			data: report,
-			timestamp: Date.now(),
-			isRead: false,
-			roles: ['Salesman', 'SalesManager', 'SuperAdmin'],
-		};
-
-		this.addNotification(notification);
-		toast.success('New sales report available');
-	}
 
 	// Intentionally unused - for future use
 	// @ts-ignore TS6133
