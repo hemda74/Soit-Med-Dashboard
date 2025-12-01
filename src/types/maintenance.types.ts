@@ -207,6 +207,17 @@ export interface AssignMaintenanceRequestDTO {
 	engineerId: string;
 }
 
+// Status Update Types
+export interface UpdateMaintenanceRequestStatusDTO {
+	status: MaintenanceRequestStatus;
+	notes?: string;
+}
+
+// Cancel Request Types
+export interface CancelMaintenanceRequestDTO {
+	reason?: string;
+}
+
 // Filters
 export interface MaintenanceRequestFilters {
 	status?: MaintenanceRequestStatus;

@@ -10,6 +10,8 @@ import type {
 	UpdateSparePartPriceDTO,
 	CustomerSparePartDecisionDTO,
 	AssignMaintenanceRequestDTO,
+	UpdateMaintenanceRequestStatusDTO,
+	CancelMaintenanceRequestDTO,
 	MaintenanceRequestAttachmentResponseDTO,
 	CreateMaintenanceRequestAttachmentDTO,
 	ApiResponse,
@@ -182,6 +184,36 @@ class MaintenanceApiService {
 			ApiResponse<MaintenanceRequestResponseDTO>
 		>(API_ENDPOINTS.MAINTENANCE.REQUEST.ASSIGN(requestId), {
 			method: 'PUT',
+			body: JSON.stringify(data),
+		});
+	}
+
+	/**
+	 * Update maintenance request status
+	 */
+	async updateStatus(
+		requestId: number,
+		data: UpdateMaintenanceRequestStatusDTO
+	): Promise<ApiResponse<MaintenanceRequestResponseDTO>> {
+		return this.makeRequest<
+			ApiResponse<MaintenanceRequestResponseDTO>
+		>(API_ENDPOINTS.MAINTENANCE.REQUEST.UPDATE_STATUS(requestId), {
+			method: 'PUT',
+			body: JSON.stringify(data),
+		});
+	}
+
+	/**
+	 * Cancel maintenance request
+	 */
+	async cancelRequest(
+		requestId: number,
+		data: CancelMaintenanceRequestDTO
+	): Promise<ApiResponse<MaintenanceRequestResponseDTO>> {
+		return this.makeRequest<
+			ApiResponse<MaintenanceRequestResponseDTO>
+		>(API_ENDPOINTS.MAINTENANCE.REQUEST.CANCEL(requestId), {
+			method: 'POST',
 			body: JSON.stringify(data),
 		});
 	}
