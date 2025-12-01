@@ -257,8 +257,20 @@ const SalesSupportDashboard: React.FC = () => {
 		}
 	};
 
+	const canSendSelectedOffer =
+		selectedOffer?.canSendToSalesman ?? selectedOffer?.status === 'Sent';
+	const awaitingSelectedOfferApproval =
+		selectedOffer?.status === 'PendingSalesManagerApproval';
+
 	const handleSendToSalesman = async () => {
 		if (!selectedOffer) return;
+		if (!canSendSelectedOffer) {
+			toast.error(
+				t('salesManagerApprovalRequired') ||
+					'SalesManager must approve the offer before you can send it to the salesman.'
+			);
+			return;
+		}
 		try {
 			await salesApi.sendOfferToSalesman(selectedOffer.id);
 			// Refresh offer data
@@ -289,20 +301,48 @@ const SalesSupportDashboard: React.FC = () => {
 			try {
 				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
 				if (equipmentResponse.success && equipmentResponse.data) {
+					// VERIFICATION: Log raw API response
+					console.log('=== SALES SUPPORT DASHBOARD: Raw Equipment API Response ===');
+					if (equipmentResponse.data.length > 0) {
+						console.log('First equipment item:', equipmentResponse.data[0]);
+						console.log('All keys:', Object.keys(equipmentResponse.data[0]));
+						// Check specifically for providerImagePath
+						const firstItem = equipmentResponse.data[0] as any;
+						console.log('Provider Image Path Check:', {
+							providerImagePath: firstItem.providerImagePath,
+							ProviderImagePath: firstItem.ProviderImagePath,
+							providerLogoPath: firstItem.providerLogoPath,
+							ProviderLogoPath: firstItem.ProviderLogoPath,
+							hasProviderImagePath: !!firstItem.providerImagePath,
+						});
+					}
+					
 					// Normalize equipment data to match PDF generator interface
-					equipmentData = equipmentResponse.data.map((eq: any) => ({
-						id: eq.id,
-						name: eq.name || 'N/A',
-						model: eq.model,
-						provider: eq.provider || eq.Provider || eq.manufacturer,
-						country: eq.country || eq.Country,
-						year: eq.year ?? eq.Year,
-						price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-						description: eq.description || eq.Description || eq.specifications,
-						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-						imagePath: eq.imagePath || eq.ImagePath,
-						providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-					}));
+					equipmentData = equipmentResponse.data.map((eq: any) => {
+						const mapped = {
+							id: eq.id,
+							name: eq.name || 'N/A',
+							model: eq.model,
+							provider: eq.provider || eq.Provider || eq.manufacturer,
+							country: eq.country || eq.Country,
+							year: eq.year ?? eq.Year,
+							price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
+							description: eq.description || eq.Description || eq.specifications,
+							inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
+							imagePath: eq.imagePath || eq.ImagePath,
+							providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
+						};
+						
+						// Log providerImagePath status for each item
+						console.log(`[SALES SUPPORT DASHBOARD] Equipment: ${mapped.name}`, {
+							hasProviderImagePath: !!mapped.providerImagePath,
+							providerImagePath: mapped.providerImagePath || 'NOT SET',
+							rawProviderImagePath: eq.providerImagePath,
+							rawProviderImagePathPascal: eq.ProviderImagePath,
+						});
+						
+						return mapped;
+					});
 				}
 			} catch (e) {
 				// Equipment data not available for PDF
@@ -1600,7 +1640,14 @@ const SalesSupportDashboard: React.FC = () => {
 								<div className="flex justify-end gap-3 pt-4">
 									<Button
 										onClick={handleSendToSalesman}
+										disabled={!canSendSelectedOffer}
 										className="bg-blue-600 hover:bg-blue-700 text-white"
+										title={
+											!canSendSelectedOffer
+												? t('awaitingSalesManagerApproval') ||
+												  'Awaiting SalesManager approval'
+												: undefined
+										}
 									>
 										{t('sendToSalesman') || 'Send to Salesman'}
 									</Button>
@@ -1612,6 +1659,15 @@ const SalesSupportDashboard: React.FC = () => {
 										{t('exportPdf')}
 									</Button>
 								</div>
+								{!canSendSelectedOffer && (
+									<p className="text-sm text-yellow-600 dark:text-yellow-400 text-right mt-2">
+										{awaitingSelectedOfferApproval
+											? t('offerAwaitingApproval') ||
+											  'SalesManager has not approved this offer yet.'
+											: t('offerCannotBeSentYet') ||
+											  'You can send the offer once SalesManager approval is completed.'}
+									</p>
+								)}
 							</div>
 						</div>
 					</div>

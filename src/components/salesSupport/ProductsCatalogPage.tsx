@@ -27,7 +27,7 @@ import toast from 'react-hot-toast'
 import { usePerformance } from '@/hooks/usePerformance'
 import { useTranslation } from '@/hooks/useTranslation'
 import ProviderLogo from '@/components/sales/ProviderLogo'
-import { getStaticFileUrl } from '@/utils/apiConfig'
+import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig'
 
 const CATEGORIES = ['X-Ray', 'Ultrasound', 'CT Scanner', 'MRI', 'Other']
 
@@ -164,7 +164,7 @@ export default function ProductsCatalogPage() {
         setProviderImageFile(null)
         setProviderImagePreview(
             product.providerImagePath
-                ? getStaticFileUrl(product.providerImagePath)
+                ? productApi.getProviderImageUrl(product.providerImagePath)
                 : null
         )
         setDialogOpen(true)
@@ -334,11 +334,11 @@ export default function ProductsCatalogPage() {
                                     <SelectItem value="all">{t('allCategories')}</SelectItem>
                                     {CATEGORIES.map((cat) => (
                                         <SelectItem key={cat} value={cat}>
-                                            {cat === 'X-Ray' ? t('xRay') : 
-                                             cat === 'Ultrasound' ? t('ultrasound') :
-                                             cat === 'CT Scanner' ? t('ctScanner') :
-                                             cat === 'MRI' ? t('mri') :
-                                             t('other')}
+                                            {cat === 'X-Ray' ? t('xRay') :
+                                                cat === 'Ultrasound' ? t('ultrasound') :
+                                                    cat === 'CT Scanner' ? t('ctScanner') :
+                                                        cat === 'MRI' ? t('mri') :
+                                                            t('other')}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -434,17 +434,18 @@ export default function ProductsCatalogPage() {
 
                                         {(product.providerImagePath ||
                                             product.provider) && (
-                                            <div className="mb-2">
-                                                <ProviderLogo
-                                                    providerName={product.provider}
-                                                    logoPath={
-                                                        product.providerImagePath || null
-                                                    }
-                                                    size="sm"
-                                                    showName
-                                                />
-                                            </div>
-                                        )}
+                                                <div className="mb-2">
+                                                    <ProviderLogo
+                                                        providerName={product.provider}
+                                                        logoPath={
+                                                            product.providerImagePath || null
+                                                        }
+                                                        productId={product.id}
+                                                        size="sm"
+                                                        showName
+                                                    />
+                                                </div>
+                                            )}
                                         {product.category && (
                                             <Badge variant="outline" className="mr-2 mb-2">
                                                 {product.category}
@@ -654,10 +655,44 @@ export default function ProductsCatalogPage() {
                                             <img
                                                 src={providerImagePreview}
                                                 alt={t('preview') || 'Provider logo preview'}
-                                                className="w-32 h-32 object-cover rounded bg-white p-1 border"
+                                                className="w-32 h-32 object-contain rounded bg-white p-1 border"
                                                 onError={(e) => {
-                                                    console.error('Failed to load provider logo preview');
-                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                    const target = e.target as HTMLImageElement;
+                                                    const currentSrc = target.src;
+
+                                                    // Try alternative URL formats
+                                                    if (editingProduct?.providerImagePath) {
+                                                        const path = editingProduct.providerImagePath;
+
+                                                        // First retry: Try with leading slash if it doesn't have one
+                                                        if (!path.startsWith('/') && !path.startsWith('http') && !currentSrc.includes(`/${path}`)) {
+                                                            const alternativeUrl = productApi.getProviderImageUrl(`/${path}`);
+                                                            target.src = alternativeUrl;
+                                                            return;
+                                                        }
+
+                                                        // Second retry: Try direct static file URL
+                                                        if (!path.startsWith('http') && !currentSrc.includes(path.replace(/^\/+/, ''))) {
+                                                            const baseUrl = getApiBaseUrl();
+                                                            const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                                                            const staticBaseUrl = baseUrl.replace(/\/api\/?$/, '');
+                                                            const apiUrl = `${staticBaseUrl}${cleanPath}`;
+                                                            target.src = apiUrl;
+                                                            return;
+                                                        }
+
+                                                        // Third retry: Use API endpoint if we have product ID
+                                                        if (editingProduct.id && !currentSrc.includes('/api/Product/')) {
+                                                            const baseUrl = getApiBaseUrl();
+                                                            const apiUrl = `${baseUrl}/api/Product/${editingProduct.id}/provider-image-file`;
+                                                            target.src = apiUrl;
+                                                            return;
+                                                        }
+                                                    }
+
+                                                    // If all retries failed, show placeholder
+                                                    console.error('Failed to load provider logo preview after retries');
+                                                    target.style.display = 'none';
                                                 }}
                                             />
                                         </div>
