@@ -1,6 +1,2 @@
-// Components
-export { SalesReportsScreen } from './components/SalesReportsScreen';
-export { SalesReportsScreenUI } from './components/SalesReportsScreenUI';
-
-// Hooks
-export { useSalesReportsScreen } from './hooks/useSalesReportsScreen';
+// Sales features exports
+// (Sales reports module has been removed - replaced with Weekly Plans)

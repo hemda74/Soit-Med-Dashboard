@@ -64,12 +64,6 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/weekly-plans',
     roles: ['Salesman', 'SalesManager', 'SuperAdmin'] as const,
   },
-  {
-    icon: <BarChart3 />,
-    name: t('salesReports'),
-    path: '/sales-reports',
-    roles: ['Salesman', 'SalesManager', 'SuperAdmin'] as const,
-  },
   // Sales Manager section
   {
     icon: <Users />,
