@@ -35,8 +35,6 @@ import type {
 	SalesAnalytics,
 	SalesPerformanceMetrics,
 	SalesDashboardData,
-	SalesReport,
-	CreateSalesReportDto,
 } from '@/types/sales.types';
 import toast from 'react-hot-toast';
 
@@ -260,10 +258,6 @@ export interface SalesState {
 	analyticsLoading: boolean;
 	analyticsError: string | null;
 
-	// Reports state
-	salesReports: SalesReport[];
-	reportsLoading: boolean;
-	reportsError: string | null;
 
 	// Pagination state
 	pagination: {
@@ -484,19 +478,11 @@ export interface SalesActions {
 	getSalesTrends: (period?: string) => Promise<void>;
 
 	// Reports actions
-	generateSalesReport: (data: CreateSalesReportDto) => Promise<void>;
-	getSalesReports: (filters?: any) => Promise<void>;
 	getSalesManagerDashboard: (
 		year?: number,
 		quarter?: number
 	) => Promise<void>;
-	getSalesmanPerformance: (
-		salesmanId: string,
-		period?: string
-	) => Promise<void>;
-	getTopPerformers: (limit?: number) => Promise<void>;
 	exportSalesData: (options: any) => Promise<void>;
-	exportSalesReport: (reportId: string, format?: string) => Promise<void>;
 
 	// UI actions
 	setSelectedTab: (
@@ -617,11 +603,6 @@ const initialState: SalesState = {
 	salesDashboard: null,
 	analyticsLoading: false,
 	analyticsError: null,
-
-	// Reports state
-	salesReports: [],
-	reportsLoading: false,
-	reportsError: null,
 
 	// Pagination state
 	pagination: {
@@ -1035,10 +1016,12 @@ export const useSalesStore = create<SalesStore>()(
 						dealsError: null,
 					});
 					try {
+						console.log('getDeals called with filters:', filters);
 						const response =
 							await salesApi.getDeals(
 								filters
 							);
+						console.log('getDeals response:', response);
 
 						// Backend returns ApiResponse<List<DealResponseDTO>> - simple array, not paginated
 						const dealsData = Array.isArray(
@@ -1046,6 +1029,7 @@ export const useSalesStore = create<SalesStore>()(
 						)
 							? response.data
 							: [];
+						console.log('Setting deals:', dealsData);
 
 						// Set pagination metadata (backend doesn't provide pagination, so we calculate it)
 						const paginationData = {
@@ -1617,18 +1601,18 @@ export const useSalesStore = create<SalesStore>()(
 						offersError: null,
 					});
 					try {
+						console.log('getOffersByClient called with clientId:', clientId);
 						const response =
 							await salesApi.getOffersByClient(
 								clientId
 							);
+						console.log('getOffersByClient response:', response);
+						const offersData = Array.isArray(response.data) ? response.data : [];
+						console.log('Setting offersByClient for clientId:', clientId, offersData);
 						set((state) => ({
 							offersByClient: {
 								...state.offersByClient,
-								[clientId]: Array.isArray(
-									response.data
-								)
-									? response.data
-									: [],
+								[clientId]: offersData,
 							},
 							offersLoading: false,
 						}));
@@ -2348,10 +2332,11 @@ export const useSalesStore = create<SalesStore>()(
 								clientId,
 								filters
 							);
+						console.log('getClientVisits response:', response);
+						const visitsData = Array.isArray(response.data) ? response.data : [];
+						console.log('Setting clientVisits:', visitsData);
 						set({
-							clientVisits:
-								response.data ||
-								[],
+							clientVisits: visitsData,
 							visitsLoading: false,
 						});
 					} catch (error: any) {
@@ -3848,103 +3833,6 @@ export const useSalesStore = create<SalesStore>()(
 
 				// ==================== REPORTS ACTIONS ====================
 
-				generateSalesReport: async (data) => {
-					set({
-						reportsLoading: true,
-						reportsError: null,
-					});
-					try {
-						const response =
-							await salesApi.generateSalesReport(
-								data
-							);
-						set((state) => ({
-							salesReports: [
-								response.data,
-								...state.salesReports,
-							],
-							reportsLoading: false,
-						}));
-						toast.success(
-							'Sales report generated successfully'
-						);
-					} catch (error: any) {
-						set({
-							reportsError:
-								error.message ||
-								'Failed to generate sales report',
-							reportsLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to generate sales report'
-						);
-					}
-				},
-
-				getSalesReports: async (filters = {}) => {
-					set({
-						reportsLoading: true,
-						reportsError: null,
-					});
-					try {
-						const response =
-							await salesApi.getSalesReports(
-								filters
-							);
-						set({
-							salesReports:
-								response.data
-									.data ||
-								[],
-							pagination: {
-								page:
-									response
-										.data
-										.page ||
-									1,
-								pageSize:
-									response
-										.data
-										.pageSize ||
-									20,
-								totalCount:
-									response
-										.data
-										.totalCount ||
-									0,
-								totalPages:
-									response
-										.data
-										.totalPages ||
-									0,
-								hasNextPage:
-									response
-										.data
-										.hasNextPage ||
-									false,
-								hasPreviousPage:
-									response
-										.data
-										.hasPreviousPage ||
-									false,
-							},
-							reportsLoading: false,
-						});
-					} catch (error: any) {
-						set({
-							reportsError:
-								error.message ||
-								'Failed to fetch sales reports',
-							reportsLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to fetch sales reports'
-						);
-					}
-				},
-
 				getSalesManagerDashboard: async (
 					year?: number,
 					quarter?: number
@@ -4035,71 +3923,10 @@ export const useSalesStore = create<SalesStore>()(
 					}
 				},
 
-				getSalesmanPerformance: async (
-					salesmanId,
-					period = 'monthly'
-				) => {
-					set({
-						analyticsLoading: true,
-						analyticsError: null,
-					});
-					try {
-						const response =
-							await salesApi.getSalesmanPerformance(
-								salesmanId,
-								period
-							);
-						set({
-							salesPerformance: [
-								response.data,
-							],
-							analyticsLoading: false,
-						});
-					} catch (error: any) {
-						set({
-							analyticsError:
-								error.message ||
-								'Failed to fetch salesman performance',
-							analyticsLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to fetch salesman performance'
-						);
-					}
-				},
-
-				getTopPerformers: async (limit = 10) => {
-					set({
-						analyticsLoading: true,
-						analyticsError: null,
-					});
-					try {
-						await salesApi.getTopPerformers(
-							limit
-						);
-						set({
-							analyticsLoading: false,
-						});
-						// Handle top performers data as needed
-					} catch (error: any) {
-						set({
-							analyticsError:
-								error.message ||
-								'Failed to fetch top performers',
-							analyticsLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to fetch top performers'
-						);
-					}
-				},
-
 				exportSalesData: async (options) => {
 					set({
-						reportsLoading: true,
-						reportsError: null,
+						analyticsLoading: true,
+						analyticsError: null,
 					});
 					try {
 						await salesApi.exportSalesData(
@@ -4107,73 +3934,21 @@ export const useSalesStore = create<SalesStore>()(
 						);
 						// Handle export result
 						set({
-							reportsLoading: false,
+							analyticsLoading: false,
 						});
 						toast.success(
 							'Sales data exported successfully'
 						);
 					} catch (error: any) {
 						set({
-							reportsError:
+							analyticsError:
 								error.message ||
 								'Failed to export sales data',
-							reportsLoading: false,
+							analyticsLoading: false,
 						});
 						toast.error(
 							error.message ||
 								'Failed to export sales data'
-						);
-					}
-				},
-
-				exportSalesReport: async (
-					reportId,
-					format = 'pdf'
-				) => {
-					set({
-						reportsLoading: true,
-						reportsError: null,
-					});
-					try {
-						const blob =
-							await salesApi.exportSalesReport(
-								reportId,
-								format as
-									| 'pdf'
-									| 'excel'
-									| 'csv'
-							);
-						// Create download link
-						const url =
-							window.URL.createObjectURL(
-								blob
-							);
-						const a =
-							document.createElement(
-								'a'
-							);
-						a.href = url;
-						a.download = `sales-report-${reportId}.${format}`;
-						document.body.appendChild(a);
-						a.click();
-						window.URL.revokeObjectURL(url);
-						document.body.removeChild(a);
-						set({
-							reportsLoading: false,
-						});
-						toast.success(
-							'Sales report exported successfully'
-						);
-					} catch (error: any) {
-						set({
-							reportsError:
-								error.message ||
-								'Failed to export sales report',
-							reportsLoading: false,
-						});
-						toast.error(
-							error.message ||
-								'Failed to export sales report'
 						);
 					}
 				},
@@ -4337,14 +4112,6 @@ export const useAnalyticsLoading = () =>
 	useSalesStore((state) => state.analyticsLoading);
 export const useAnalyticsError = () =>
 	useSalesStore((state) => state.analyticsError);
-
-// Reports selectors
-export const useSalesReports = () =>
-	useSalesStore((state) => state.salesReports);
-export const useReportsLoading = () =>
-	useSalesStore((state) => state.reportsLoading);
-export const useReportsError = () =>
-	useSalesStore((state) => state.reportsError);
 
 // UI selectors
 export const useSelectedTab = () => useSalesStore((state) => state.selectedTab);

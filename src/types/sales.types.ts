@@ -146,6 +146,7 @@ export interface DealApprovalDto {
 	approved: boolean;
 	notes?: string;
 	superAdminRequired?: boolean;
+	rejectionReason?: string; // Required when rejecting: "Money", "CashFlow", "OtherNeeds"
 }
 
 export interface DealCompletionDto {
@@ -644,65 +645,6 @@ export interface SalesDashboardData {
 	}>;
 }
 
-// ==================== SALES REPORTS ====================
-
-export interface SalesReport {
-	id: string;
-	title: string;
-	description: string;
-	reportType:
-		| 'Daily'
-		| 'Weekly'
-		| 'Monthly'
-		| 'Quarterly'
-		| 'Yearly'
-		| 'Custom';
-	period: {
-		startDate: string;
-		endDate: string;
-	};
-	generatedAt: string;
-	generatedBy: string;
-	generatedByName: string;
-	// Report data
-	data: {
-		summary: SalesAnalytics;
-		performance: SalesPerformanceMetrics[];
-		clients: Client[];
-		visits: ClientVisit[];
-		interactions: ClientInteraction[];
-	};
-	// Report settings
-	settings: {
-		includeCharts: boolean;
-		includeDetails: boolean;
-		groupBy: 'salesman' | 'client' | 'date' | 'type';
-		filters: ClientSearchFilters;
-	};
-}
-
-export interface CreateSalesReportDto {
-	title: string;
-	description?: string;
-	reportType:
-		| 'Daily'
-		| 'Weekly'
-		| 'Monthly'
-		| 'Quarterly'
-		| 'Yearly'
-		| 'Custom';
-	period: {
-		startDate: string;
-		endDate: string;
-	};
-	settings: {
-		includeCharts: boolean;
-		includeDetails: boolean;
-		groupBy: 'salesman' | 'client' | 'date' | 'type';
-		filters?: ClientSearchFilters;
-	};
-}
-
 // ==================== API RESPONSES ====================
 
 export interface ApiResponse<T> {
@@ -866,6 +808,7 @@ export interface Offer {
 	validUntil?: string[]; // Array of date strings (ISO format: "YYYY-MM-DD")
 	status:
 		| 'Draft'
+		| 'PendingSalesManagerApproval'
 		| 'Sent'
 		| 'Accepted'
 		| 'Rejected'
@@ -885,6 +828,8 @@ export interface Offer {
 	salesManagerApprovedAt?: string;
 	salesManagerComments?: string;
 	salesManagerRejectionReason?: string;
+	isSalesManagerApproved?: boolean;
+	canSendToSalesman?: boolean;
 }
 
 // ==================== ENHANCED OFFER FEATURES ====================
@@ -1047,12 +992,18 @@ export interface ClientResponseDTO {
 }
 
 export interface ClientStatisticsDTO {
+	TotalVisits: number;
 	totalVisits: number;
 	totalOffers: number;
 	successfulDeals: number;
 	failedDeals: number;
-	totalRevenue?: number;
-	averageSatisfaction?: number;
+	totalRevenue: number;
+	averageSatisfaction: number;
+	TotalOffers: number;
+	SuccessfulDeals: number;
+	FailedDeals: number;
+	TotalRevenue: number;
+	AverageSatisfaction: number;
 }
 
 export interface TaskProgressSummaryDTO {
