@@ -1,10 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import letterheadPdfUrl from '@/assets/Letterhead.pdf?url';
+import letterheadPngUrl from '@/assets/Letterhead.png?url';
 import { getStaticFileUrl } from '@/utils/apiConfig';
 // @ts-ignore - arabic-reshaper doesn't have type definitions
 import arabicReshaper from 'arabic-reshaper';
-import html2pdf from 'html2pdf.js';
 
 interface OfferEquipment {
 	id: number;
@@ -172,6 +172,22 @@ async function convertPdfToImage(pdfUrl: string): Promise<string | null> {
 	}
 }
 
+let cachedLetterheadImage: string | null | undefined;
+async function getLetterheadImage(): Promise<string | null> {
+	if (cachedLetterheadImage !== undefined) {
+		return cachedLetterheadImage;
+	}
+	let base64: string | null = null;
+	if (letterheadPngUrl) {
+		base64 = await loadImageAsBase64(letterheadPngUrl);
+	}
+	if (!base64) {
+		base64 = await convertPdfToImage(letterheadPdfUrl);
+	}
+	cachedLetterheadImage = base64;
+	return base64;
+}
+
 // Helper function to get image URL
 // Uses centralized utility for consistent URL construction
 function getImageUrl(imagePath: string | null | undefined): string {
@@ -200,15 +216,64 @@ async function loadImageAsBase64(imageUrl: string): Promise<string | null> {
 		}
 
 		const blob = await response.blob();
+
+		// Validate blob type
+		if (!blob.type || !blob.type.startsWith('image/')) {
+			console.warn(
+				'Invalid image blob type:',
+				blob.type,
+				'for URL:',
+				imageUrl
+			);
+			// Still try to process it, might be a valid image with wrong MIME type
+		}
+
 		return new Promise((resolve) => {
 			const reader = new FileReader();
-			reader.onloadend = () =>
-				resolve(reader.result as string);
-			reader.onerror = () => resolve(null);
+			reader.onloadend = () => {
+				const result = reader.result as string;
+				// Validate the result is a proper data URL
+				if (
+					result &&
+					result.startsWith('data:image/') &&
+					result.includes('base64,')
+				) {
+					// Verify base64 data is not empty
+					const base64Part = result.split(',')[1];
+					if (
+						base64Part &&
+						base64Part.length > 0
+					) {
+						resolve(result);
+					} else {
+						console.warn(
+							'Empty base64 data in image result for:',
+							imageUrl
+						);
+						resolve(null);
+					}
+				} else {
+					console.warn(
+						'Invalid data URL format for:',
+						imageUrl,
+						'Result:',
+						result?.substring(0, 50)
+					);
+					resolve(null);
+				}
+			};
+			reader.onerror = (error) => {
+				console.warn(
+					'FileReader error loading image:',
+					imageUrl,
+					error
+				);
+				resolve(null);
+			};
 			reader.readAsDataURL(blob);
 		});
 	} catch (error) {
-		console.warn('Error loading image:', error);
+		console.warn('Error loading image:', error, 'URL:', imageUrl);
 		return null;
 	}
 }
@@ -375,7 +440,7 @@ export const generateOfferPDF = async (
 	// Try to load letterhead FIRST - this is critical for it to be a background
 	let letterheadImage: string | null = null;
 	try {
-		letterheadImage = await convertPdfToImage(letterheadPdfUrl);
+		letterheadImage = await getLetterheadImage();
 	} catch (error) {
 		// Silently handle letterhead loading errors, will use default styling
 	}
@@ -426,14 +491,14 @@ export const generateOfferPDF = async (
 	// Format: DD/MM/YYYY
 	let dateText = new Date(offer.createdAt).toLocaleDateString('en-GB');
 
-	doc.setFontSize(10);
+	doc.setFontSize(12); // Increased font size for date section
 	setFontForLanguage(doc, lang, 'normal');
 	doc.setTextColor(...secondaryColor);
 
 	if (isRTL) {
 		// Arabic: value first, then label
-		const dateValueX = margins.left - 60;
-		const dateLabelX = margins.left - 40;
+		const dateValueX = margins.left - 30;
+		const dateLabelX = margins.left - 30;
 		doc.text(dateText, dateValueX, yPos, {
 			align: 'left',
 		});
@@ -446,7 +511,7 @@ export const generateOfferPDF = async (
 	} else {
 		// English: label first, then value
 		const dateLabelX = margins.left;
-		const dateValueX = margins.left + 10;
+		const dateValueX = margins.left + 13;
 		setFontForLanguage(doc, lang, 'bold');
 		doc.text(`${t.date}:`, dateLabelX, yPos, {
 			align: 'left',
@@ -544,6 +609,44 @@ export const generateOfferPDF = async (
 		});
 		yPos += 8; // Spacing after title
 
+		// VERIFICATION: Log equipment data before processing
+		console.log(
+			'=== PDF GENERATOR: Equipment Data Verification ==='
+		);
+		console.log(
+			'Total equipment items:',
+			offer.equipment?.length || 0
+		);
+		if (offer.equipment && offer.equipment.length > 0) {
+			offer.equipment.forEach((eq: any, index: number) => {
+				const allKeys = Object.keys(eq);
+				const allValues = allKeys.reduce(
+					(acc: any, key: string) => {
+						acc[key] = eq[key];
+						return acc;
+					},
+					{}
+				);
+				console.log(`Equipment ${index + 1}:`, {
+					name: eq.name || eq.Name,
+					provider: eq.provider || eq.Provider,
+					providerImagePath:
+						eq.providerImagePath ||
+						eq.ProviderImagePath ||
+						eq.providerLogoPath ||
+						eq.ProviderLogoPath ||
+						'NOT FOUND',
+					imagePath:
+						eq.imagePath ||
+						eq.ImagePath ||
+						'NOT FOUND',
+					allKeys: allKeys,
+					allValues: allValues,
+				});
+			});
+		}
+		console.log('=== END VERIFICATION ===');
+
 		// Load all equipment images first and normalize data structure
 		const equipmentWithImages = await Promise.all(
 			offer.equipment.map(async (eq: any) => {
@@ -624,6 +727,32 @@ export const generateOfferPDF = async (
 					eq.providerLogoPath ||
 					eq.ProviderLogoPath ||
 					undefined;
+
+				console.log(
+					`[${
+						eq.name || 'Unknown'
+					}] Provider image path check:`,
+					{
+						providerImagePath:
+							providerImagePath ||
+							'NOT FOUND',
+						hasProviderImagePath:
+							!!providerImagePath,
+						providerImagePathType:
+							typeof providerImagePath,
+						allProviderFields: {
+							providerImagePath:
+								eq.providerImagePath,
+							ProviderImagePath:
+								eq.ProviderImagePath,
+							providerLogoPath:
+								eq.providerLogoPath,
+							ProviderLogoPath:
+								eq.ProviderLogoPath,
+						},
+					}
+				);
+
 				let providerImageBase64 = null;
 
 				// Try to load provider logo if path exists and is not a placeholder
@@ -631,40 +760,81 @@ export const generateOfferPDF = async (
 					providerImagePath &&
 					typeof providerImagePath === 'string' &&
 					providerImagePath.trim() !== '' &&
-					!providerImagePath.includes('placeholder')
+					!providerImagePath.includes(
+						'placeholder'
+					)
 				) {
-					try {
-						const providerImageUrl = getImageUrl(providerImagePath);
-						console.log(
-							`Loading provider logo for ${
-								eq.name || 'product'
-							}: ${providerImageUrl}`
-						);
-						providerImageBase64 = await loadImageAsBase64(providerImageUrl);
-
-						if (!providerImageBase64) {
-							console.warn(
-								`Failed to load provider logo for ${
-									eq.name || 'product'
-								}: ${providerImagePath}`
-							);
-						} else {
-							console.log(
-								`Successfully loaded provider logo for ${
-									eq.name || 'product'
-								}`
-							);
-						}
-					} catch (error) {
-						console.error(
-							`Error loading provider logo for ${
-								eq.name || 'product'
-							}:`,
-							error,
-							providerImagePath
+					// Skip SVG files as jsPDF doesn't support them directly
+					if (
+						providerImagePath
+							.toLowerCase()
+							.endsWith('.svg')
+					) {
+						console.warn(
+							`Skipping SVG provider logo for ${
+								eq.name ||
+								'product'
+							}: SVG format not supported in jsPDF`
 						);
 						providerImageBase64 = null;
+					} else {
+						try {
+							const providerImageUrl =
+								getImageUrl(
+									providerImagePath
+								);
+							console.log(
+								`Loading provider logo for ${
+									eq.name ||
+									'product'
+								}: ${providerImageUrl} (from path: ${providerImagePath})`
+							);
+							providerImageBase64 =
+								await loadImageAsBase64(
+									providerImageUrl
+								);
+
+							if (
+								!providerImageBase64
+							) {
+								console.warn(
+									`Failed to load provider logo for ${
+										eq.name ||
+										'product'
+									}: ${providerImagePath} (URL: ${providerImageUrl})`
+								);
+							} else {
+								console.log(
+									`Successfully loaded provider logo for ${
+										eq.name ||
+										'product'
+									} (${providerImageBase64.substring(
+										0,
+										50
+									)}...)`
+								);
+							}
+						} catch (error) {
+							console.error(
+								`Error loading provider logo for ${
+									eq.name ||
+									'product'
+								}:`,
+								error,
+								providerImagePath
+							);
+							providerImageBase64 =
+								null;
+						}
 					}
+				} else {
+					console.log(
+						`No provider logo path for ${
+							eq.name || 'product'
+						}:`,
+						providerImagePath ||
+							'null/undefined'
+					);
 				}
 
 				// Normalize equipment data - handle both new and legacy field names
@@ -739,6 +909,72 @@ export const generateOfferPDF = async (
 				return normalized;
 			})
 		);
+
+		// VERIFICATION: Log after image loading
+		console.log('=== PDF GENERATOR: After Image Loading ===');
+		equipmentWithImages.forEach((eq: any, index: number) => {
+			console.log(`Equipment ${index + 1} (${eq.name}):`, {
+				hasProductImage: !!eq.imageBase64,
+				hasProviderLogo: !!eq.providerImageBase64,
+				providerImagePath:
+					eq.providerImagePath || 'NOT SET',
+				providerImageBase64Length:
+					eq.providerImageBase64?.length || 0,
+			});
+		});
+
+		// PROVIDER IMAGE VERIFICATION SUMMARY
+		console.log('=== PROVIDER IMAGE VERIFICATION SUMMARY ===');
+		const providerImageStatus = equipmentWithImages.map(
+			(eq: any) => {
+				const status = {
+					productName: eq.name || 'Unknown',
+					provider: eq.provider || 'N/A',
+					hasProviderImagePath:
+						!!eq.providerImagePath,
+					providerImagePath:
+						eq.providerImagePath ||
+						'NOT SET',
+					hasProviderImageBase64:
+						!!eq.providerImageBase64,
+					providerImageBase64Length:
+						eq.providerImageBase64
+							?.length || 0,
+					status: eq.providerImageBase64
+						? '✅ LOADED'
+						: eq.providerImagePath
+						? '❌ FAILED TO LOAD'
+						: '⚠️ NO PATH PROVIDED',
+				};
+				return status;
+			}
+		);
+
+		console.table(providerImageStatus);
+
+		const loadedCount = providerImageStatus.filter(
+			(s) => s.hasProviderImageBase64
+		).length;
+		const failedCount = providerImageStatus.filter(
+			(s) =>
+				s.hasProviderImagePath &&
+				!s.hasProviderImageBase64
+		).length;
+		const noPathCount = providerImageStatus.filter(
+			(s) => !s.hasProviderImagePath
+		).length;
+
+		console.log(`📊 Provider Image Summary:`);
+		console.log(
+			`   ✅ Successfully loaded: ${loadedCount}/${equipmentWithImages.length}`
+		);
+		console.log(
+			`   ❌ Failed to load: ${failedCount}/${equipmentWithImages.length}`
+		);
+		console.log(
+			`   ⚠️  No path provided: ${noPathCount}/${equipmentWithImages.length}`
+		);
+		console.log('=== END VERIFICATION ===');
 
 		// Apply custom descriptions if provided (after loading images)
 		equipmentWithImages.forEach((eq: any) => {
@@ -1183,93 +1419,358 @@ export const generateOfferPDF = async (
 				const providerText = eq.provider || 'N/A';
 				const isProviderArabic =
 					hasArabic(providerText);
-				
+
+				// VERIFICATION: Log before rendering provider section
+				console.log(
+					`[PDF RENDER] Equipment: ${eq.name}`,
+					{
+						provider: providerText,
+						hasProviderImageBase64:
+							!!eq.providerImageBase64,
+						providerImagePath:
+							eq.providerImagePath ||
+							'NOT SET',
+						providerImageBase64Type:
+							typeof eq.providerImageBase64,
+						providerImageBase64Length:
+							eq.providerImageBase64
+								?.length || 0,
+						providerImageBase64Preview:
+							eq.providerImageBase64
+								? eq.providerImageBase64.substring(
+										0,
+										100
+								  )
+								: 'NONE',
+					}
+				);
+
 				// Provider logo size (smaller than product image)
-				const providerLogoSize = 15; // Height in mm
-				const providerLogoWidth = 20; // Width in mm
-				const logoTextSpacing = 3; // Space between logo and text
-				
+				const providerLogoSize = 12; // Height in mm (reduced for better fit)
+				const providerLogoWidth = 15; // Width in mm (reduced for better fit)
+				const logoTextSpacing = 4; // Space between logo and text
+
 				// Calculate provider text width (accounting for logo if present)
 				const textMaxWidth = eq.providerImageBase64
-					? colWidth - colPadding * 2 - providerLogoWidth - logoTextSpacing
+					? colWidth -
+					  colPadding * 2 -
+					  providerLogoWidth -
+					  logoTextSpacing
 					: colWidth - colPadding * 2;
-				
+
 				// English text starts from left even in RTL documents
 				const col3ProviderX =
 					isRTL && isProviderArabic
 						? col3X + colWidth - colPadding // Right edge for RTL Arabic
 						: col3X; // Left edge for LTR or English text
-				
+
 				// Draw provider logo if available
 				if (eq.providerImageBase64) {
 					try {
-						let providerImageData = eq.providerImageBase64;
-						
-						// Detect image format from data URL
+						let providerImageData =
+							eq.providerImageBase64;
+
+						// Detect image format from data URL and extract base64
 						let imageFormat = 'PNG';
-						if (providerImageData.startsWith('data:')) {
-							const formatMatch = providerImageData.match(/data:image\/([^;]+)/);
+						let base64Data =
+							providerImageData;
+
+						if (
+							providerImageData.startsWith(
+								'data:'
+							)
+						) {
+							// Extract format from data URL
+							const formatMatch =
+								providerImageData.match(
+									/data:image\/([^;]+);base64,/
+								);
 							if (formatMatch) {
-								const format = formatMatch[1].toUpperCase();
-								if (format === 'JPEG' || format === 'JPG') {
-									imageFormat = 'JPEG';
-								} else if (format === 'PNG') {
-									imageFormat = 'PNG';
-								} else if (format === 'GIF') {
-									imageFormat = 'GIF';
+								const format =
+									formatMatch[1].toUpperCase();
+								if (
+									format ===
+										'JPEG' ||
+									format ===
+										'JPG'
+								) {
+									imageFormat =
+										'JPEG';
+								} else if (
+									format ===
+									'PNG'
+								) {
+									imageFormat =
+										'PNG';
+								} else if (
+									format ===
+									'GIF'
+								) {
+									imageFormat =
+										'GIF';
+								}
+								// Extract just the base64 part (after the comma)
+								base64Data =
+									providerImageData.split(
+										','
+									)[1];
+							} else {
+								// Try to extract base64 even if format is missing
+								const base64Match =
+									providerImageData.match(
+										/base64,(.+)/
+									);
+								if (
+									base64Match
+								) {
+									base64Data =
+										base64Match[1];
 								}
 							}
-						} else {
-							// If not a data URL, assume PNG
-							providerImageData = `data:image/png;base64,${providerImageData}`;
 						}
-						
-						const logoX = isRTL && isProviderArabic
-							? col3X + colWidth - colPadding - providerLogoWidth
-							: col3X;
+
+						// Validate base64 data
+						if (
+							!base64Data ||
+							base64Data.length < 100
+						) {
+							throw new Error(
+								'Invalid or too short base64 data'
+							);
+						}
+
+						// For jsPDF, we need to pass the data URL format, not just base64
+						// But ensure it's properly formatted
+						if (
+							!providerImageData.startsWith(
+								'data:'
+							)
+						) {
+							providerImageData = `data:image/${imageFormat.toLowerCase()};base64,${base64Data}`;
+						}
+
+						const logoX =
+							isRTL &&
+							isProviderArabic
+								? col3X +
+								  colWidth -
+								  colPadding -
+								  providerLogoWidth
+								: col3X;
 						const logoY = col3Y;
-						
-						console.log(`Adding provider logo for ${eq.name}:`, {
-							logoX,
-							logoY,
-							width: providerLogoWidth,
-							height: providerLogoSize,
-							format: imageFormat,
-							hasData: !!providerImageData
-						});
-						
-						doc.addImage(
-							providerImageData,
-							imageFormat,
+
+						console.log(
+							`[PDF RENDER] Adding provider logo for ${eq.name}:`,
+							{
+								logoX,
+								logoY,
+								width: providerLogoWidth,
+								height: providerLogoSize,
+								format: imageFormat,
+								hasData: !!providerImageData,
+								dataLength: providerImageData.length,
+								dataPreview:
+									providerImageData.substring(
+										0,
+										100
+									),
+								base64Length:
+									base64Data?.length ||
+									0,
+								isDataUrl: providerImageData.startsWith(
+									'data:'
+								),
+							}
+						);
+
+						// Validate the image data before adding
+						if (
+							!base64Data ||
+							base64Data.trim()
+								.length === 0
+						) {
+							throw new Error(
+								'Empty base64 data'
+							);
+						}
+
+						// Validate PNG signature if format is PNG (first 8 bytes of decoded base64 should be PNG signature)
+						if (imageFormat === 'PNG') {
+							try {
+								const decoded =
+									atob(
+										base64Data.substring(
+											0,
+											12
+										)
+									); // First 8 bytes of PNG signature
+								const pngSignature =
+									[
+										0x89,
+										0x50,
+										0x4e,
+										0x47,
+										0x0d,
+										0x0a,
+										0x1a,
+										0x0a,
+									];
+								const isValidPNG =
+									Array.from(
+										decoded.slice(
+											0,
+											8
+										)
+									).every(
+										(
+											byte,
+											i
+										) =>
+											byte.charCodeAt(
+												0
+											) ===
+											pngSignature[
+												i
+											]
+									);
+								if (
+									!isValidPNG
+								) {
+									console.warn(
+										`[PDF RENDER] PNG signature validation failed for ${eq.name}, but continuing...`
+									);
+									// Try to detect actual format from content
+									const firstBytes =
+										Array.from(
+											decoded.slice(
+												0,
+												4
+											)
+										).map(
+											(
+												b
+											) =>
+												b.charCodeAt(
+													0
+												)
+										);
+									if (
+										firstBytes[0] ===
+											0xff &&
+										firstBytes[1] ===
+											0xd8
+									) {
+										console.log(
+											`[PDF RENDER] Detected JPEG format instead of PNG for ${eq.name}`
+										);
+										imageFormat =
+											'JPEG';
+									}
+								}
+							} catch (sigError) {
+								console.warn(
+									`[PDF RENDER] Could not validate PNG signature for ${eq.name}:`,
+									sigError
+								);
+							}
+						}
+
+						// Draw a border around logo area for debugging (light gray)
+						doc.setDrawColor(200, 200, 200);
+						doc.setLineWidth(0.2);
+						doc.rect(
 							logoX,
 							logoY,
 							providerLogoWidth,
 							providerLogoSize,
-							undefined,
-							'SLOW'
+							'S'
 						);
-						
+
+						// jsPDF addImage works best with just the base64 string (without data URL prefix)
+						// and the format specified separately
+						try {
+							doc.addImage(
+								base64Data, // Use just the base64 string, not the full data URL
+								imageFormat,
+								logoX,
+								logoY,
+								providerLogoWidth,
+								providerLogoSize,
+								undefined,
+								'SLOW'
+							);
+						} catch (addImageError) {
+							// If base64-only fails, try with data URL as fallback
+							console.warn(
+								`[PDF RENDER] Failed with base64 only, trying data URL:`,
+								addImageError
+							);
+							try {
+								doc.addImage(
+									providerImageData, // Full data URL
+									imageFormat,
+									logoX,
+									logoY,
+									providerLogoWidth,
+									providerLogoSize,
+									undefined,
+									'SLOW'
+								);
+							} catch (dataUrlError) {
+								throw new Error(
+									`Both base64 and data URL formats failed. Base64 error: ${
+										addImageError instanceof
+										Error
+											? addImageError.message
+											: String(
+													addImageError
+											  )
+									}. Data URL error: ${
+										dataUrlError instanceof
+										Error
+											? dataUrlError.message
+											: String(
+													dataUrlError
+											  )
+									}`
+								);
+							}
+						}
+
 						// Adjust text position to account for logo
-						const textX = isRTL && isProviderArabic
-							? col3ProviderX - providerLogoWidth - logoTextSpacing
-							: col3X + providerLogoWidth + logoTextSpacing;
-						
+						const textX =
+							isRTL &&
+							isProviderArabic
+								? col3ProviderX -
+								  providerLogoWidth -
+								  logoTextSpacing
+								: col3X +
+								  providerLogoWidth +
+								  logoTextSpacing;
+
 						doc.setFontSize(10);
-						setFontForLanguage(doc, lang, 'bold');
+						setFontForLanguage(
+							doc,
+							lang,
+							'bold'
+						);
 						doc.setTextColor(30, 30, 30);
-						let processedProviderText = providerText;
+						let processedProviderText =
+							providerText;
 						if (isRTL && isProviderArabic) {
 							processedProviderText =
 								prepareArabicText(
 									processedProviderText
 								);
 						}
-						const providerLines = doc.splitTextToSize(
-							processedProviderText,
-							textMaxWidth
-						);
+						const providerLines =
+							doc.splitTextToSize(
+								processedProviderText,
+								textMaxWidth
+							);
 						const processedProviderLines =
-							isRTL && isProviderArabic
+							isRTL &&
+							isProviderArabic
 								? providerLines.map(
 										(
 											line: string
@@ -1282,7 +1783,12 @@ export const generateOfferPDF = async (
 						doc.text(
 							processedProviderLines,
 							textX,
-							col3Y + providerLogoSize / 2 - (providerLines.length * 5) / 2,
+							col3Y +
+								providerLogoSize /
+									2 -
+								(providerLines.length *
+									5) /
+									2,
 							{
 								maxWidth: textMaxWidth,
 								align: getTextAlignmentForContent(
@@ -1291,38 +1797,104 @@ export const generateOfferPDF = async (
 								),
 							}
 						);
-						col3Y += Math.max(providerLogoSize, providerLines.length * 5) + 8;
-						console.log(`Successfully added provider logo for ${eq.name}`);
+						col3Y +=
+							Math.max(
+								providerLogoSize,
+								providerLines.length *
+									5
+							) + 8;
+						console.log(
+							`[PDF RENDER] ✅ Successfully added provider logo for ${eq.name}`
+						);
 					} catch (error) {
 						console.error(
-							'Error adding provider logo:',
+							`[PDF RENDER] ❌ Error adding provider logo for ${eq.name}:`,
 							error,
-							eq.name,
-							eq.providerImagePath,
-							'Image data length:',
-							eq.providerImageBase64?.length
+							{
+								providerImagePath:
+									eq.providerImagePath,
+								imageDataLength:
+									eq
+										.providerImageBase64
+										?.length,
+								errorMessage:
+									error instanceof
+									Error
+										? error.message
+										: String(
+												error
+										  ),
+							}
+						);
+						// Draw placeholder rectangle to show where logo should be (for debugging)
+						const logoX =
+							isRTL &&
+							isProviderArabic
+								? col3X +
+								  colWidth -
+								  colPadding -
+								  providerLogoWidth
+								: col3X;
+						const logoY = col3Y;
+						doc.setDrawColor(255, 0, 0); // Red border for debugging
+						doc.setLineWidth(0.5);
+						doc.rect(
+							logoX,
+							logoY,
+							providerLogoWidth,
+							providerLogoSize,
+							'S'
+						);
+						doc.setFontSize(5);
+						doc.setTextColor(255, 0, 0);
+						doc.text(
+							'LOGO ERROR',
+							logoX +
+								providerLogoWidth /
+									2,
+							logoY +
+								providerLogoSize /
+									2,
+							{ align: 'center' }
 						);
 						// Set providerImageBase64 to null so text-only rendering happens
 						eq.providerImageBase64 = null;
 					}
+				} else {
+					console.log(
+						`[PDF RENDER] ⚠️ No provider logo base64 for ${eq.name}`,
+						{
+							hasProviderImagePath:
+								!!eq.providerImagePath,
+							providerImagePath:
+								eq.providerImagePath ||
+								'NOT SET',
+							providerImageBase64:
+								eq.providerImageBase64 ||
+								'NOT SET',
+						}
+					);
 				}
-				
+
 				// If no logo or logo failed, render text only
 				if (!eq.providerImageBase64) {
 					doc.setFontSize(10);
 					setFontForLanguage(doc, lang, 'bold');
 					doc.setTextColor(30, 30, 30);
-					let processedProviderText = providerText;
+					let processedProviderText =
+						providerText;
 					if (isRTL && isProviderArabic) {
 						processedProviderText =
 							prepareArabicText(
 								processedProviderText
 							);
 					}
-					const providerLines = doc.splitTextToSize(
-						processedProviderText,
-						colWidth - colPadding * 2
-					);
+					const providerLines =
+						doc.splitTextToSize(
+							processedProviderText,
+							colWidth -
+								colPadding * 2
+						);
 					const processedProviderLines =
 						isRTL && isProviderArabic
 							? providerLines.map(
@@ -1434,6 +2006,35 @@ export const generateOfferPDF = async (
 
 			yPos += actualRowHeight + 15; // Spacing between products (reduced)
 		}
+
+		// FINAL VERIFICATION: Provider images rendered in PDF
+		console.log(
+			'=== FINAL PROVIDER IMAGE RENDERING VERIFICATION ==='
+		);
+		const renderedStatus = equipmentWithImages.map((eq: any) => {
+			const wasRendered =
+				eq.providerImageBase64 !== null &&
+				eq.providerImageBase64 !== undefined;
+			return {
+				productName: eq.name || 'Unknown',
+				provider: eq.provider || 'N/A',
+				hadImageBase64: !!eq.providerImageBase64,
+				renderedInPDF: wasRendered ? '✅ YES' : '❌ NO',
+				reason: wasRendered
+					? 'Image was available and rendered'
+					: eq.providerImagePath
+					? 'Image path provided but failed to load'
+					: 'No image path provided',
+			};
+		});
+		console.table(renderedStatus);
+		const renderedCount = renderedStatus.filter(
+			(s) => s.hadImageBase64
+		).length;
+		console.log(
+			`📊 Final Summary: ${renderedCount}/${equipmentWithImages.length} provider images rendered in PDF`
+		);
+		console.log('=== END FINAL VERIFICATION ===');
 
 		yPos += 3; // Reduced bottom spacing after products
 	} else {
@@ -1769,10 +2370,12 @@ export const generateOfferPDF = async (
 		}
 	}
 
-	// Add Valid Until and Salesman directly under Terms & Conditions
+	// Footer - check if we need a new page respecting 20% bottom margin
+	// Add Valid Until and Salesman at the bottom of content (last content before page numbers)
 	// Check if we need a new page
-	if (yPos > contentEndY - 20) {
+	if (yPos > contentEndY - 30) {
 		doc.addPage();
+		// CRITICAL: Add letterhead FIRST on new page (before any content)
 		if (letterheadImage) {
 			doc.addImage(
 				letterheadImage,
@@ -1785,8 +2388,14 @@ export const generateOfferPDF = async (
 				'FAST'
 			);
 		}
+		// Start from content margin (20% from top)
 		yPos = contentStartY;
 	}
+
+	// Position Valid Until and Salesman at the bottom of content area
+	// Calculate position to be near the bottom but within content area
+	const bottomYPos = contentEndY - 20; // Position near bottom of content area
+	yPos = bottomYPos;
 
 	// Valid Until and Salesman - mirrored for RTL
 	const validUntilX = isRTL ? margins.left - 60 : margins.left;
@@ -1827,26 +2436,6 @@ export const generateOfferPDF = async (
 		align: textAlign,
 	});
 
-	// Footer - check if we need a new page respecting 20% bottom margin
-	if (yPos > contentEndY - 40) {
-		doc.addPage();
-		// CRITICAL: Add letterhead FIRST on new page (before any content)
-		if (letterheadImage) {
-			doc.addImage(
-				letterheadImage,
-				'PNG',
-				0,
-				0,
-				pageWidth,
-				pageHeight,
-				undefined,
-				'FAST'
-			);
-		}
-		// Start from content margin (20% from top)
-		yPos = contentStartY;
-	}
-
 	// Footer background - skip filled background if letterhead is present
 	if (!letterheadImage) {
 		doc.setFillColor(...lightGray);
@@ -1882,772 +2471,20 @@ export const generateOfferPDF = async (
 	return doc;
 };
 
-// Generate HTML content for Arabic PDF (matching the English PDF design)
-async function generateOfferHTML(
-	offer: OfferData,
-	lang: PDFLanguage = 'ar'
-): Promise<string> {
-	const isRTL = lang === 'ar';
-	const t = translations[lang];
-
-	// Convert letterhead PDF to image
-	let letterheadBase64 = '';
-	try {
-		const letterheadImg = await convertPdfToImage(letterheadPdfUrl);
-		if (letterheadImg) {
-			letterheadBase64 = letterheadImg;
-			console.log(' Letterhead loaded for HTML PDF');
-		} else {
-			console.warn('⚠️ Letterhead conversion returned null');
-		}
-	} catch (e) {
-		console.warn('❌ Could not load letterhead for HTML PDF:', e);
-	}
-
-	// Load equipment images and provider logos
-	const equipmentWithImages = offer.equipment
-		? await Promise.all(
-				offer.equipment.map(async (eq: any) => {
-					const imagePath =
-						eq.imagePath || eq.ImagePath;
-					let imageBase64 = '';
-
-					if (
-						imagePath &&
-						typeof imagePath === 'string' &&
-						imagePath.trim() !== ''
-					) {
-						try {
-							const imageUrl =
-								getStaticFileUrl(
-									imagePath
-								);
-							const response =
-								await fetch(
-									imageUrl,
-									{
-										mode: 'cors',
-										credentials:
-											'omit',
-									}
-								);
-							if (response.ok) {
-								const blob =
-									await response.blob();
-								imageBase64 =
-									await new Promise<string>(
-										(
-											resolve
-										) => {
-											const reader =
-												new FileReader();
-											reader.onloadend =
-												() =>
-													resolve(
-														reader.result as string
-													);
-											reader.onerror =
-												() =>
-													resolve(
-														''
-													);
-											reader.readAsDataURL(
-												blob
-											);
-										}
-									);
-							}
-						} catch (error) {
-							console.warn(
-								'Error loading image:',
-								error
-							);
-						}
-					}
-
-					// Load provider logo
-					const providerImagePath =
-						eq.providerImagePath ||
-						eq.ProviderImagePath ||
-						eq.providerLogoPath ||
-						eq.ProviderLogoPath;
-					let providerImageBase64 = '';
-
-					if (
-						providerImagePath &&
-						typeof providerImagePath === 'string' &&
-						providerImagePath.trim() !== '' &&
-						!providerImagePath.includes('placeholder')
-					) {
-						try {
-							const providerImageUrl =
-								getStaticFileUrl(
-									providerImagePath
-								);
-							const providerResponse =
-								await fetch(
-									providerImageUrl,
-									{
-										mode: 'cors',
-										credentials:
-											'omit',
-									}
-								);
-							if (providerResponse.ok) {
-								const providerBlob =
-									await providerResponse.blob();
-								providerImageBase64 =
-									await new Promise<string>(
-										(
-											resolve
-										) => {
-											const reader =
-												new FileReader();
-											reader.onloadend =
-												() =>
-													resolve(
-														reader.result as string
-													);
-											reader.onerror =
-												() =>
-													resolve(
-														''
-													);
-											reader.readAsDataURL(
-												providerBlob
-											);
-										}
-									);
-							}
-						} catch (error) {
-							console.warn(
-								'Error loading provider logo:',
-								error
-							);
-						}
-					}
-
-					const rawPrice =
-						eq.price ??
-						eq.Price ??
-						eq.totalPrice ??
-						eq.TotalPrice ??
-						eq.unitPrice ??
-						eq.UnitPrice ??
-						0;
-					const priceNumber =
-						typeof rawPrice === 'number'
-							? rawPrice
-							: Number(rawPrice) || 0;
-					const priceValue = Number.isFinite(
-						priceNumber
-					)
-						? priceNumber
-						: 0;
-
-					return {
-						...eq,
-						imageBase64,
-						providerImageBase64,
-						priceValue,
-					};
-				})
-		  )
-		: [];
-
-	return `
-<!DOCTYPE html>
-<html dir="${isRTL ? 'rtl' : 'ltr'}" lang="${lang}">
-<head>
-	<meta charset="UTF-8">
-	<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-	<style>
-		@page {
-			size: A4;
-			margin: 0;
-			${
-				letterheadBase64
-					? `background-image: url('${letterheadBase64}');
-			background-size: 210mm 297mm;
-			background-position: 0 0;
-			background-repeat: no-repeat;`
-					: ''
-			}
-		}
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-		html {
-			width: 210mm;
-			min-height: 100%;
-			/* Letterhead background on html - ensures coverage for all pages */
-			background: ${
-				letterheadBase64
-					? `url('${letterheadBase64}') repeat-y center top / 210mm 297mm`
-					: 'white'
-			};
-			background-size: 210mm 297mm;
-			background-repeat: repeat-y;
-		}
-		body {
-			font-family: 'Cairo', Arial, sans-serif;
-			direction: ${isRTL ? 'rtl' : 'ltr'};
-			font-size: 10px; /* Match English: 10px base */
-			line-height: 1.4;
-			color: #34495e; /* Match English: secondaryColor [52, 73, 94] */
-			position: relative;
-			width: 210mm;
-			margin: 0;
-			padding: 0;
-			/* Letterhead background on body - covers full page and repeats for all pages */
-			background: ${
-				letterheadBase64
-					? `url('${letterheadBase64}') repeat-y center top / 210mm 297mm`
-					: 'white'
-			};
-			background-size: 210mm 297mm;
-			background-repeat: repeat-y;
-			background-attachment: local;
-			/* Ensure body expands to contain all content for html2canvas */
-			min-height: 100%;
-		}
-		/* Page wrapper - contains all content, transparent to show body letterhead */
-		.page-wrapper {
-			position: relative;
-			width: 210mm;
-			min-height: 297mm;
-			/* Transparent so body letterhead shows through */
-			background: transparent;
-		}
-		/* Letterhead pages - Backup method: positioned divs for html2canvas */
-		/* These ensure letterhead is captured at page boundaries as backup */
-		.letterhead-page {
-			position: absolute;
-			left: 0;
-			width: 210mm;
-			height: 297mm;
-			z-index: -1;
-			pointer-events: none;
-			${letterheadBase64 ? '' : 'display: none;'}
-		}
-		.letterhead-page img {
-			width: 210mm;
-			height: 297mm;
-			object-fit: cover;
-			display: block;
-		}
-		/* Content area - Match English: 16% top margin, 15% bottom margin, 15mm side margins */
-		/* Padding applied to container - but we need margins on each page section */
-		.content {
-			padding: 0 15mm;
-			position: relative;
-			z-index: 1;
-			background: transparent;
-		}
-		/* Page section wrapper - ensures margins on each page when html2pdf splits */
-		.page-section {
-			padding-top: 16%;
-			padding-bottom: 15%;
-			min-height: 297mm;
-			page-break-after: always;
-		}
-		.page-section:last-child {
-			page-break-after: auto;
-		}
-		/* First element in content gets top margin */
-		.content > *:first-child {
-			margin-top: 16%;
-		}
-		/* Elements after page breaks get top margin */
-		.product-card:nth-child(2n) {
-			margin-top: 16%;
-		}
-		.info-section {
-			margin-bottom: 8px; /* Match English: yPos += 8 */
-		}
-		.info-row {
-			margin: 4px 0;
-			font-size: 10px; /* Match English: 10px for date */
-		}
-		.info-row:first-child {
-			font-size: 10px; /* Match English: 10px for date */
-		}
-		.info-row:nth-child(2) {
-			font-size: 11px; /* Match English: 11px for dear client */
-		}
-		.label {
-			font-weight: bold;
-			display: inline;
-		}
-		.section-title {
-			font-size: 14px; /* Match English: 14px section titles */
-			font-weight: bold;
-			color: #2980b9; /* Match English: primaryColor [41, 128, 185] */
-			margin: 8px 0; /* Match English: yPos += 8 after title */
-		}
-		/* Product table header - exact match to English */
-		.product-header {
-			display: grid;
-			grid-template-columns: repeat(4, 1fr);
-			background-color: rgb(240, 240, 240);
-			border: 0.3px solid rgb(200, 200, 200);
-			margin: 0;
-		}
-		.product-header-cell {
-			padding: 6px 5px; /* Match English: yPos + 6, colPadding = 5 */
-			font-size: 9px; /* Match English: 9px for headers */
-			font-weight: bold;
-			color: #2980b9; /* Match English: primaryColor */
-			text-align: ${isRTL ? 'right' : 'left'};
-			border-${isRTL ? 'left' : 'right'}: 0.2px solid rgb(200, 200, 200);
-		}
-		.product-header-cell:last-child {
-			border: none;
-		}
-		/* Product rows - Match English: 20% of page height per product, 2 per page */
-		.product-grid {
-			margin: 0;
-			margin-top: 8px; /* Match English: yPos += 8 after title */
-		}
-		.product-card {
-			border: 0.3px solid rgb(220, 220, 220); /* Match English: doc.setDrawColor(220, 220, 220) */
-			border-top: none;
-			background: transparent; /* Match English: transparent background */
-			padding: 0;
-			page-break-inside: avoid;
-			display: grid;
-			grid-template-columns: repeat(4, 1fr);
-			/* Match English: 20% of page height (297mm * 0.20 = 59.4mm) */
-			min-height: auto;
-			height: auto;
-			margin-bottom: 15px; /* Match English: yPos += actualRowHeight + 15 */
-		}
-		.product-card:first-of-type {
-			border-top: 0.3px solid rgb(220, 220, 220);
-		}
-		/* Force page break after every 2nd product */
-		.product-card:nth-child(2n) {
-			page-break-after: always;
-			margin-bottom: 0;
-			position: relative;
-		}
-		/* Add top margin after page breaks to maintain 16% top margin on each page */
-		.product-card:nth-child(2n+1):not(:first-child) {
-			margin-top: 16%;
-		}
-		/* Page break handling - letterhead will be added via letterhead-page divs */
-		.product-col {
-			padding: 6px 5px; /* Match English: yPos + 6 for top, colPadding = 5 */
-			border-${
-				isRTL ? 'left' : 'right'
-			}: 0.2px solid rgb(200, 200, 200); /* Match English: doc.setDrawColor(200, 200, 200) */
-			display: flex;
-			flex-direction: column;
-			justify-content: flex-start;
-			align-items: flex-start;
-		}
-		.product-col:last-child {
-			border: none;
-		}
-		.product-col1 {
-			/* Name and Description column - left aligned even in RTL */
-			text-align: left;
-		}
-		.product-col2 {
-			/* Image column */
-			align-items: center;
-			text-align: center;
-			justify-content: flex-start;
-			padding-top: 10px;
-		}
-		.product-col3 {
-			/* Provider and Country column */
-			text-align: left; /* English text starts from left */
-		}
-		.product-name {
-			font-size: 11px; /* Match English: doc.setFontSize(11) */
-			font-weight: bold; /* Match English: setFontForLanguage(doc, lang, 'bold') */
-			margin-bottom: 0;
-			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
-			line-height: 1.25;
-		}
-		.product-name + .product-desc {
-			margin-top: 8px; /* Match English: col1Y += nameLines.length * 5 + 8 */
-		}
-		.product-desc {
-			font-size: 9px; /* Match English: doc.setFontSize(9) */
-			color: rgb(80, 80, 80); /* Match English: doc.setTextColor(80, 80, 80) */
-			line-height: 1.3;
-			margin-top: 0;
-		}
-		.product-image {
-			width: 100% !important;
-			height: 40mm !important; /* Match English: imgHeight = 40 */
-			min-height: 40mm !important;
-			max-height: 40mm !important;
-			object-fit: contain;
-			object-position: center;
-			display: block;
-		}
-		.product-model {
-			font-size: 10px; /* Match English: doc.setFontSize(10) */
-			color: rgb(50, 50, 50); /* Match English: doc.setTextColor(50, 50, 50) */
-			text-align: left;
-			margin-top: 5px; /* Spacing after description */
-		}
-		.product-provider {
-			font-size: 10px; /* Match English: doc.setFontSize(10) */
-			font-weight: bold; /* Match English: setFontForLanguage(doc, lang, 'bold') */
-			margin-bottom: 8px; /* Match English: col3Y += providerLines.length * 5 + 8 */
-			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
-			text-align: left;
-		}
-		.product-country {
-			font-size: 9px; /* Match English: doc.setFontSize(9) */
-			color: rgb(80, 80, 80); /* Match English: doc.setTextColor(80, 80, 80) */
-			text-align: left;
-		}
-		.product-col4 {
-			/* Price column */
-			text-align: ${isRTL ? 'right' : 'left'};
-			align-items: ${isRTL ? 'flex-end' : 'flex-start'};
-			justify-content: center;
-		}
-		.product-price {
-			font-size: 10px; /* Match English: doc.setFontSize(10) */
-			font-weight: bold;
-			color: rgb(30, 30, 30); /* Match English: doc.setTextColor(30, 30, 30) */
-			width: 100%;
-			text-align: ${isRTL ? 'right' : 'left'};
-		}
-		.product-col4 {
-			text-align: ${isRTL ? 'right' : 'left'};
-			align-items: ${isRTL ? 'flex-end' : 'flex-start'};
-			justify-content: center;
-		}
-		.product-price {
-			font-size: 10px;
-			font-weight: bold;
-			color: rgb(30, 30, 30);
-			width: 100%;
-			text-align: ${isRTL ? 'right' : 'left'};
-		}
-		.financial-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin: 4px 0; /* Match English: yPos += 4 after title */
-			font-size: 9px; /* Match English: fontSize: 9 */
-			border: 0.3px solid rgb(200, 200, 200);
-			background: transparent;
-		}
-		.financial-table td {
-			padding: 4px; /* Match English: cellPadding: 4 */
-			border: 0.3px solid rgb(200, 200, 200);
-			background: transparent;
-		}
-		.financial-table .label-col {
-			font-weight: bold;
-			text-align: ${isRTL ? 'right' : 'left'};
-			width: 50%;
-		}
-		.financial-table .value-col {
-			text-align: ${isRTL ? 'left' : 'right'};
-			font-weight: bold;
-		}
-		.terms-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin: 4px 0; /* Match English: yPos += 4 after title */
-			font-size: 8px; /* Match English: doc.setFontSize(8) */
-			border: 0.3px solid rgb(200, 200, 200);
-			background: transparent;
-		}
-		.terms-table td {
-			padding: 4px; /* Match English: cellPadding: 4 */
-			border: 0.3px solid rgb(200, 200, 200);
-			background: transparent;
-			white-space: nowrap; /* Keep terms on one line */
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-		.terms-table .term-label-col {
-			font-weight: bold;
-			text-align: ${isRTL ? 'right' : 'left'};
-			width: 50mm;
-		}
-		.terms-table .term-value-col {
-			text-align: ${isRTL ? 'right' : 'left'};
-		}
-		.footer-info {
-			margin-top: 0; /* Match English: spacing handled by yPos */
-			font-size: 10px; /* Match English: doc.setFontSize(10) */
-		}
-		.footer-row {
-			margin: 4px 0; /* Match English: spacing between rows */
-		}
-	</style>
-</head>
-<body>
-	${
-		letterheadBase64
-			? `
-	<!-- Letterhead images covering FULL page at each page boundary - Match English: letterhead at (0, 0) full page -->
-	<!-- Positioned fixed to cover entire page background including margins -->
-	<div class="letterhead-page" style="top: 0mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 297mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 594mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 891mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 1188mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 1485mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 1782mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	<div class="letterhead-page" style="top: 2079mm;">
-		<img src="${letterheadBase64}" alt="Letterhead" />
-	</div>
-	`
-			: ''
-	}
-	<div class="page-wrapper">
-		<div class="content">
-		<div class="info-section">
-			<div class="info-row">
-				<span class="label">${t.date}:</span>
-				<span>${new Date(offer.createdAt).toLocaleDateString('en-GB')}</span>
-			</div>
-			<div class="info-row">
-				<span class="label">${t.dearClient},</span>
-				<span>${offer.clientName}</span>
-			</div>
-		</div>
-		
-		<div style="margin: 8px 0; font-size: 10px;">${t.documentTitle}</div>
-		
-		<div class="section-title">${t.productsEquipment}</div>
-		
-		${
-			equipmentWithImages.length > 0
-				? `
-			<!-- Product table header -->
-			<div class="product-header">
-				<div class="product-header-cell">${t.productName}</div>
-				<div class="product-header-cell"></div>
-				<div class="product-header-cell">${t.provider} / ${t.country}</div>
-				<div class="product-header-cell">${t.price}</div>
-			</div>
-			<!-- Product rows -->
-			<div class="product-grid">
-				${equipmentWithImages
-					.map(
-						(eq: any) => `
-					<div class="product-card">
-						<!-- Column 1: Name, Description & Model -->
-						<div class="product-col product-col1">
-							<div class="product-name">${eq.name || eq.Name || 'N/A'}</div>
-							<div class="product-desc">${eq.description || eq.Description || ''}</div>
-							<div class="product-model">${eq.model || eq.Model || 'N/A'}</div>
-						</div>
-						<!-- Column 2: Image only -->
-						<div class="product-col product-col2">
-							${
-								eq.imageBase64
-									? `<img src="${eq.imageBase64}" class="product-image" alt="Product" />`
-									: `<div style="width: 100%; height: 40mm; border: 0.5px solid rgb(200, 200, 200); display: flex; align-items: center; justify-content: center; color: rgb(150, 150, 150); font-size: 6px;">${t.noImage}</div>`
-							}
-						</div>
-						<!-- Column 3: Provider & Country -->
-						<div class="product-col product-col3">
-							<div class="product-provider" style="display: flex; align-items: center; gap: 5px;">
-								${
-									eq.providerImageBase64
-										? `<img src="${eq.providerImageBase64}" style="width: 20px; height: 20px; object-fit: contain;" alt="Provider logo" />`
-										: ''
-								}
-								<span>${
-									eq.provider ||
-									eq.Provider ||
-									eq.manufacturer ||
-									eq.Manufacturer ||
-									'N/A'
-								}</span>
-							</div>
-							<div class="product-country">${eq.country || eq.Country || 'N/A'}</div>
-						</div>
-						<div class="product-col product-col4">
-							<div class="product-price">${(eq.priceValue || 0).toLocaleString('en-US')} ${
-							lang === 'ar'
-								? 'جنيه'
-								: 'EGP'
-						}</div>
-						</div>
-					</div>
-				`
-					)
-					.join('')}
-			</div>
-		`
-				: `<p>${offer.products}</p>`
-		}
-		
-		<div class="section-title">${t.financialSummary}</div>
-		<table class="financial-table">
-			<tr>
-				<td class="label-col">${t.subtotal}</td>
-				<td class="value-col">${offer.totalAmount.toLocaleString('en-US')} جنيه</td>
-			</tr>
-			${
-				offer.discountAmount && offer.discountAmount > 0
-					? `
-			<tr>
-				<td class="label-col">${t.discount}</td>
-				<td class="value-col">- ${offer.discountAmount.toLocaleString(
-					'en-US'
-				)} جنيه</td>
-			</tr>
-			`
-					: ''
-			}
-			<tr>
-				<td class="label-col">${t.totalAmount}</td>
-				<td class="value-col">${(
-					offer.totalAmount -
-					(offer.discountAmount || 0)
-				).toLocaleString('en-US')} جنيه</td>
-			</tr>
-		</table>
-		
-		${
-			offer.paymentTerms ||
-			offer.deliveryTerms ||
-			offer.warrantyTerms
-				? `
-		<div class="section-title">${t.termsConditions}</div>
-		<table class="terms-table">
-			${
-				offer.paymentTerms
-					? `
-			<tr>
-				<td class="term-label-col">${t.paymentTerms}</td>
-				<td class="term-value-col">${offer.paymentTerms}</td>
-			</tr>
-			`
-					: ''
-			}
-			${
-				offer.deliveryTerms
-					? `
-			<tr>
-				<td class="term-label-col">${t.deliveryTerms}</td>
-				<td class="term-value-col">${offer.deliveryTerms}</td>
-			</tr>
-			`
-					: ''
-			}
-			${
-				offer.warrantyTerms
-					? `
-			<tr>
-				<td class="term-label-col">${t.warranty}</td>
-				<td class="term-value-col">${offer.warrantyTerms}</td>
-			</tr>
-			`
-					: ''
-			}
-		</table>
-		`
-				: ''
-		}
-		
-		<div class="footer-info">
-			<div class="footer-row">
-				<span class="label">${t.validUntil}:</span>
-				<span>${new Date(offer.validUntil).toLocaleDateString('en-GB')}</span>
-			</div>
-			<div class="footer-row">
-				<span class="label">${t.salesman}:</span>
-				<span>${offer.assignedToName || 'N/A'}</span>
-			</div>
-		</div>
-		</div>
-	</div>
-</body>
-</html>
-	`;
-}
-
 // Download PDF
 export const downloadOfferPDF = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ) => {
-	// Use HTML2PDF for Arabic (proper Arabic rendering) but with identical layout to English
-	if (options.language === 'ar') {
-		const htmlContent = await generateOfferHTML(offer, 'ar');
-		const opt = {
-			margin: [0, 0, 0, 0] as [
-				number,
-				number,
-				number,
-				number
-			],
-			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
-			image: { type: 'jpeg' as const, quality: 0.98 },
-			html2canvas: {
-				scale: 2,
-				useCORS: true,
-				letterRendering: true,
-				logging: false,
-				backgroundColor: null,
-				allowTaint: true,
-			},
-			jsPDF: {
-				unit: 'mm',
-				format: 'a4',
-				orientation: 'portrait' as const,
-			},
-			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-		};
-		await html2pdf().set(opt).from(htmlContent).save();
-		return;
-	}
-
-	// Use jsPDF for English
+	// Use jsPDF for both languages
 	if (options.generateBothLanguages) {
 		// Generate both Arabic and English versions
-		const htmlContentAr = await generateOfferHTML(offer, 'ar');
-		const optAr = {
-			margin: [0, 0, 0, 0] as [
-				number,
-				number,
-				number,
-				number
-			],
-			filename: `Offer_${offer.id}_${offer.clientName}_AR.pdf`,
-			image: { type: 'jpeg' as const, quality: 0.98 },
-			html2canvas: {
-				scale: 2,
-				useCORS: true,
-				letterRendering: true,
-				logging: false,
-			},
-			jsPDF: {
-				unit: 'mm',
-				format: 'a4',
-				orientation: 'portrait' as const,
-			},
-			pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-		};
-		await html2pdf().set(optAr).from(htmlContentAr).save();
+		const docAr = await generateOfferPDF(offer, {
+			...options,
+			language: 'ar',
+			generateBothLanguages: false,
+		});
+		docAr.save(`Offer_${offer.id}_${offer.clientName}_AR.pdf`);
 
 		// Small delay before generating English version
 		setTimeout(async () => {
@@ -2661,9 +2498,12 @@ export const downloadOfferPDF = async (
 			);
 		}, 1000);
 	} else {
-		// Single language export (English)
+		// Single language export
 		const doc = await generateOfferPDF(offer, options);
-		doc.save(`Offer_${offer.id}_${offer.clientName}_EN.pdf`);
+		const langSuffix = options.language === 'ar' ? 'AR' : 'EN';
+		doc.save(
+			`Offer_${offer.id}_${offer.clientName}_${langSuffix}.pdf`
+		);
 	}
 };
 
