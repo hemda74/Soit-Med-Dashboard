@@ -53,15 +53,14 @@ const SalesClientsPage: React.FC = () => {
 	const [showClientDetails, setShowClientDetails] = useState(false);
 	const [isEquipmentDropdownOpen, setIsEquipmentDropdownOpen] = useState(false);
 
-	// Use debounce hook
+	// Use debounce hooks
 	const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY.SEARCH);
+	const debouncedCity = useDebounce(city, DEBOUNCE_DELAY.SEARCH);
 
-	// Reset page when debounced search term changes
+	// Reset page when filters change
 	useEffect(() => {
-		if (debouncedSearchTerm !== searchTerm) {
-			setPage(1);
-		}
-	}, [debouncedSearchTerm, searchTerm]);
+		setPage(1);
+	}, [debouncedSearchTerm, classification, assignedSalesmanId, debouncedCity, governorateId, equipmentCategories.length]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -163,12 +162,12 @@ const SalesClientsPage: React.FC = () => {
 		query: debouncedSearchTerm || undefined,
 		classification: classification && classification !== 'all' ? (classification as 'A' | 'B' | 'C' | 'D') : undefined,
 		assignedSalesmanId: assignedSalesmanId && assignedSalesmanId !== 'all' ? assignedSalesmanId : undefined,
-		city: city || undefined,
+		city: debouncedCity || undefined,
 		governorateId: governorateId && governorateId !== 'all' ? Number(governorateId) : undefined,
 		equipmentCategories: equipmentCategories.length > 0 ? equipmentCategories : undefined,
 		page,
 		pageSize,
-	}), [debouncedSearchTerm, classification, assignedSalesmanId, city, governorateId, equipmentCategories, page, pageSize]);
+	}), [debouncedSearchTerm, classification, assignedSalesmanId, debouncedCity, governorateId, equipmentCategories, page, pageSize]);
 
 	// Fetch clients
 	const {
@@ -227,7 +226,7 @@ const SalesClientsPage: React.FC = () => {
 
 	const handleCityChange = useCallback((value: string) => {
 		setCity(value);
-		setPage(1);
+		// Page will be reset by useEffect when debouncedCity changes
 	}, []);
 
 	const handleGovernorateChange = useCallback((value: string) => {
