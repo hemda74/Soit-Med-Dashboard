@@ -70,13 +70,6 @@ export const API_ENDPOINTS = {
 		INVENTORY_MANAGER: '/RoleSpecificUser/inventory-manager',
 	},
 
-	// Sales Reports (Legacy - kept for backward compatibility)
-	SALES_REPORT: {
-		BASE: '/api/salesreport',
-		BY_ID: (id: number) => `/api/salesreport/${id}`,
-		RATE: (id: number) => `/api/salesreport/${id}/rate`,
-	},
-
 	// Weekly Plan (New To-Do List System)
 	WEEKLY_PLAN: {
 		BASE: '/api/WeeklyPlan',
@@ -149,16 +142,6 @@ export const API_ENDPOINTS = {
 			PERFORMANCE: '/api/SalesAnalytics/performance',
 			TRENDS: '/api/SalesAnalytics/trends',
 			EXPORT: '/api/SalesAnalytics/export',
-		},
-		// Sales Reports
-		SALES_REPORT: {
-			BASE: '/api/SalesReport',
-			BY_ID: (id: string) => `/api/SalesReport/${id}`,
-			GENERATE: '/api/SalesReport/generate',
-			EXPORT: (id: string) => `/api/SalesReport/${id}/export`,
-			DASHBOARD: '/api/SalesReport/dashboard',
-			TRENDS: '/api/SalesReport/trends',
-			TOP_PERFORMERS: '/api/SalesReport/top-performers',
 		},
 		// Request Workflows
 		REQUEST_WORKFLOWS: {
@@ -299,6 +282,10 @@ export const API_ENDPOINTS = {
 			PENDING: '/api/MaintenanceRequest/pending',
 			ASSIGN: (id: number) =>
 				`/api/MaintenanceRequest/${id}/assign`,
+			UPDATE_STATUS: (id: number) =>
+				`/api/MaintenanceRequest/${id}/status`,
+			CANCEL: (id: number) =>
+				`/api/MaintenanceRequest/${id}/cancel`,
 		},
 		// Maintenance Visits
 		VISIT: {

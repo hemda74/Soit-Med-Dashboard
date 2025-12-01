@@ -12,8 +12,6 @@ import type {
 	SalesAnalytics,
 	SalesPerformanceMetrics,
 	SalesDashboardData,
-	SalesReport,
-	CreateSalesReportDto,
 	ApiResponse,
 	PaginatedApiResponse,
 	PaginatedApiResponseWithMeta,
@@ -178,18 +176,21 @@ class SalesApiService {
 				);
 			}
 
-			const response = await fetch(
-				`${getApiBaseUrlForService()}${endpoint}`,
-				{
-					...options,
-					headers: {
-						Authorization: `Bearer ${token}`,
-						'Content-Type':
-							'application/json',
-						...options.headers,
-					},
-				}
+			const fullUrl = `${getApiBaseUrlForService()}${endpoint}`;
+			console.log(
+				`[API Call] ${
+					options.method || 'GET'
+				} ${fullUrl}`
 			);
+
+			const response = await fetch(fullUrl, {
+				...options,
+				headers: {
+					Authorization: `Bearer ${token}`,
+					'Content-Type': 'application/json',
+					...options.headers,
+				},
+			});
 
 			if (!response.ok) {
 				const errorData = await response
@@ -268,6 +269,14 @@ class SalesApiService {
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
 			: API_ENDPOINTS.SALES.CLIENT.SEARCH;
+
+		// Debug logging
+		console.log('[searchClients] Filters:', filters);
+		console.log('[searchClients] Query String:', queryString);
+		console.log(
+			'[searchClients] Full URL:',
+			`${getApiBaseUrl()}${endpoint}`
+		);
 
 		return this.makeRequest<
 			PaginatedApiResponse<ClientSearchResult>
@@ -502,11 +511,14 @@ class SalesApiService {
 				clientId
 			);
 
-			// Transform TaskProgress to ClientVisit format if needed
-			// For now, return empty array if no data or return task progress as visits
-			if (response.data && Array.isArray(response.data)) {
-				// Map task progress to visit format
-				const visits = response.data.map(
+			// Backend returns ApiResponse<List<TaskProgressResponseDTO>>, data is directly an array
+			const itemsArray = Array.isArray(response.data)
+				? response.data
+				: [];
+
+			// Transform TaskProgress to ClientVisit format
+			if (itemsArray.length > 0) {
+				const visits = itemsArray.map(
 					(progress: any) => ({
 						id:
 							progress.id?.toString() ||
@@ -1287,103 +1299,6 @@ class SalesApiService {
 	}
 
 	/**
-	 * Get sales reports
-	 */
-	async getSalesReports(
-		filters: {
-			page?: number;
-			pageSize?: number;
-			startDate?: string;
-			endDate?: string;
-			salesmanId?: string;
-		} = {}
-	): Promise<PaginatedApiResponseWithMeta<SalesReport[]>> {
-		const queryParams = new URLSearchParams();
-		if (filters.page)
-			queryParams.append('page', filters.page.toString());
-		if (filters.pageSize)
-			queryParams.append(
-				'pageSize',
-				filters.pageSize.toString()
-			);
-		if (filters.startDate)
-			queryParams.append('startDate', filters.startDate);
-		if (filters.endDate)
-			queryParams.append('endDate', filters.endDate);
-		if (filters.salesmanId)
-			queryParams.append('salesmanId', filters.salesmanId);
-
-		const queryString = queryParams.toString();
-		const endpoint = queryString
-			? `/api/SalesReport?${queryString}`
-			: '/api/SalesReport';
-
-		return this.makeRequest<
-			PaginatedApiResponseWithMeta<SalesReport[]>
-		>(endpoint, {
-			method: 'GET',
-		});
-	}
-
-	/**
-	 * Get salesman performance
-	 */
-	async getSalesmanPerformance(
-		salesmanId: string,
-		period: string = 'monthly'
-	): Promise<ApiResponse<SalesPerformanceMetrics>> {
-		return this.makeRequest<ApiResponse<SalesPerformanceMetrics>>(
-			`/api/SalesReport/salesman/${salesmanId}/performance?period=${period}`,
-			{
-				method: 'GET',
-			}
-		);
-	}
-
-	/**
-	 * Get top performers
-	 */
-	async getTopPerformers(
-		limit: number = 10
-	): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			`/api/SalesReport/top-performers?limit=${limit}`,
-			{
-				method: 'GET',
-			}
-		);
-	}
-
-	/**
-	 * Generate sales report
-	 */
-	async generateSalesReport(
-		data: CreateSalesReportDto
-	): Promise<ApiResponse<SalesReport>> {
-		return this.makeRequest<ApiResponse<SalesReport>>(
-			API_ENDPOINTS.SALES.SALES_REPORT.GENERATE,
-			{
-				method: 'POST',
-				body: JSON.stringify(data),
-			}
-		);
-	}
-
-	/**
-	 * Get sales report by ID
-	 */
-	async getSalesReport(
-		reportId: string
-	): Promise<ApiResponse<SalesReport>> {
-		return this.makeRequest<ApiResponse<SalesReport>>(
-			API_ENDPOINTS.SALES.SALES_REPORT.BY_ID(reportId),
-			{
-				method: 'GET',
-			}
-		);
-	}
-
-	/**
 	 * Export sales data
 	 */
 	async exportSalesData(
@@ -1396,41 +1311,6 @@ class SalesApiService {
 				body: JSON.stringify(options),
 			}
 		);
-	}
-
-	/**
-	 * Export sales report
-	 */
-	async exportSalesReport(
-		reportId: string,
-		format: 'pdf' | 'excel' | 'csv' = 'pdf'
-	): Promise<Blob> {
-		const token = getAuthToken();
-		if (!token) {
-			throw new Error(
-				'No authentication token found. Please log in again.'
-			);
-		}
-
-		const response = await fetch(
-			`${getApiBaseUrlForService()}${API_ENDPOINTS.SALES.SALES_REPORT.EXPORT(
-				reportId
-			)}?format=${format}`,
-			{
-				method: 'GET',
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			}
-		);
-
-		if (!response.ok) {
-			throw new Error(
-				`Export failed with status ${response.status}`
-			);
-		}
-
-		return response.blob();
 	}
 
 	// ==================== ADDITIONAL METHODS ====================
@@ -1490,10 +1370,12 @@ class SalesApiService {
 		clientId: string | number
 	): Promise<ApiResponse<any[]>> {
 		try {
+			const endpoint = API_ENDPOINTS.SALES.DEALS.BY_CLIENT(
+				`${clientId}`
+			);
+			console.log('getDealsByClient calling:', endpoint);
 			return await this.makeRequest<ApiResponse<any[]>>(
-				API_ENDPOINTS.SALES.DEALS.BY_CLIENT(
-					`${clientId}`
-				),
+				endpoint,
 				{ method: 'GET' }
 			);
 		} catch (error: any) {
@@ -1592,6 +1474,13 @@ class SalesApiService {
 
 	async getPendingApprovals(): Promise<ApiResponse<any[]>> {
 		// Use the correct endpoint according to backend API
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.DEALS.PENDING_MANAGER,
+			{ method: 'GET' }
+		);
+	}
+
+	async getPendingManagerApprovals(): Promise<ApiResponse<any[]>> {
 		return this.makeRequest<ApiResponse<any[]>>(
 			API_ENDPOINTS.SALES.DEALS.PENDING_MANAGER,
 			{ method: 'GET' }
@@ -1890,10 +1779,12 @@ class SalesApiService {
 	}
 
 	async getOffersByClient(clientId: string): Promise<ApiResponse<any[]>> {
-		return this.makeRequest<ApiResponse<any[]>>(
-			`${API_ENDPOINTS.SALES.OFFERS.BASE}/client/${clientId}`,
-			{ method: 'GET' }
-		);
+		// Backend uses query parameter, not path parameter
+		const endpoint = `${API_ENDPOINTS.SALES.OFFERS.BASE}?clientId=${clientId}`;
+		console.log('getOffersByClient calling:', endpoint);
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	/**
@@ -2177,11 +2068,14 @@ class SalesApiService {
 
 	async getClientTaskProgress(
 		clientId: string
-	): Promise<PaginatedApiResponseWithMeta<any[]>> {
-		return this.makeRequest<PaginatedApiResponseWithMeta<any[]>>(
-			API_ENDPOINTS.SALES.TASK_PROGRESS.BY_CLIENT(clientId),
-			{ method: 'GET' }
-		);
+	): Promise<ApiResponse<any[]>> {
+		// Backend returns ApiResponse<List<TaskProgressResponseDTO>>, not paginated
+		const endpoint =
+			API_ENDPOINTS.SALES.TASK_PROGRESS.BY_CLIENT(clientId);
+		console.log('getClientTaskProgress calling:', endpoint);
+		return this.makeRequest<ApiResponse<any[]>>(endpoint, {
+			method: 'GET',
+		});
 	}
 
 	/**
@@ -2268,6 +2162,7 @@ class SalesApiService {
 				name: string;
 				model?: string;
 				provider?: string; // Backend uses "Provider"
+				providerImagePath?: string | null; // Provider logo/image path
 				country?: string;
 				year?: number;
 				price: number; // Backend uses "Price" (decimal)
@@ -2292,6 +2187,7 @@ class SalesApiService {
 					name: string;
 					model?: string;
 					provider?: string;
+					providerImagePath?: string | null; // Provider logo/image path
 					country?: string;
 					year?: number;
 					price: number;

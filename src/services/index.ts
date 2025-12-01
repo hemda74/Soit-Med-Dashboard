@@ -26,9 +26,6 @@ export * from './roleSpecific/salesRoleApi';
 export * from './roleSpecific/salesSupportRoleApi';
 export * from './roleSpecific/maintenanceRoleApi';
 
-// Sales reports (Legacy)
-export * from './sales/salesReportApi';
-
 // Sales Module (New)
 export * from './sales/salesApi';
 
@@ -40,7 +37,6 @@ export * from './dashboard/dashboardApi';
 
 // Legacy exports for backward compatibility
 export { userApiClient } from './user/userApi';
-export { salesReportApi } from './sales/salesReportApi';
 export { salesApi } from './sales/salesApi';
 
 // User activation/deactivation
