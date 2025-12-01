@@ -1,7 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { fetchUsers } from '@/services/user/userApi';
-import type { UserOption } from '@/types/salesReport.types';
+
+export interface UserOption {
+	id: string;
+	name: string;
+	email: string;
+}
 
 export interface UseUsersForFilterReturn {
 	users: UserOption[];
