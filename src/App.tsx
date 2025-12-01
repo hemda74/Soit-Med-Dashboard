@@ -15,8 +15,6 @@ import SalesSupportUserCreation from '@/components/admin/SalesSupportUserCreatio
 import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
 import ReportsScreen from '@/components/finance/ReportsScreen'
-import SalesReportsScreen from '@/components/sales/SalesReportsScreen'
-import { SalesSupportDashboard } from '@/components/sales'
 import UnifiedSalesManagerDashboard from '@/components/dashboards/UnifiedSalesManagerDashboard'
 import SalesStatisticsPage from '@/components/sales/SalesStatisticsPage'
 import SalesAnalyticsPage from '@/components/sales/SalesAnalyticsPage'
@@ -29,7 +27,6 @@ import ProductsCatalogPage from '@/components/salesSupport/ProductsCatalogPage'
 import { WeeklyPlansScreen } from '@/components/weeklyPlan'
 import NotificationsPage from '@/pages/NotificationsPage'
 import OffersManagementPage from '@/pages/OffersManagementPage'
-import TestEquipmentImagePage from '@/pages/TestEquipmentImagePage'
 import ChatPage from '@/pages/ChatPage'
 import PerformancePage from '@/pages/PerformancePage'
 import DealsManagementPage from '@/pages/salesManager/DealsManagementPage'
@@ -53,7 +50,7 @@ import { useEffect } from 'react'
 import { PerformanceMonitor } from '@/components/PerformanceMonitor'
 
 function App() {
-  const { isAuthenticated, isAuthorizedToAccess, logout } = useAuthStore()
+  const { isAuthenticated, isAuthorizedToAccess, logout, user } = useAuthStore()
   const { initialize: initializeNotifications } = useNotificationStore()
 
   // Initialize notifications when user is authenticated
@@ -63,21 +60,16 @@ function App() {
     }
   }, [isAuthenticated, initializeNotifications])
 
-  // Check authorization on mount and when authentication changes
-  if (isAuthenticated && !isAuthorizedToAccess()) {
-    logout()
-    return (
-      <ThemeProvider>
-        <Router>
-          <div className="min-h-screen bg-background text-foreground">
-            <Routes>
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </div>
-        </Router>
-      </ThemeProvider>
-    )
-  }
+  // Check authorization only after user data is loaded
+  // This prevents premature logout when user data is still being loaded
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Only check authorization if we have user data
+      if (!isAuthorizedToAccess()) {
+        logout()
+      }
+    }
+  }, [isAuthenticated, user, isAuthorizedToAccess, logout])
 
   return (
     <ThemeProvider>
@@ -91,7 +83,6 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="reports" element={<ReportsScreen />} />
-                <Route path="sales-reports" element={<SalesReportsScreen />} />
                 <Route path="sales-manager" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><UnifiedSalesManagerDashboard /></RoleGuard>} />
                 <Route path="sales-manager/targets" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesTargetsPage /></RoleGuard>} />
                 <Route path="sales-manager/reports-review" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><ManagerReportsReviewPage /></RoleGuard>} />
@@ -105,8 +96,6 @@ function App() {
                 <Route path="sales-statistics" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesStatisticsPage /></RoleGuard>} />
                 <Route path="sales-analytics" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesAnalyticsPage /></RoleGuard>} />
                 <Route path="super-admin/deal-approvals" element={<RoleGuard requiredAnyRoles={["SuperAdmin"]}><SuperAdminDealApprovalsPage /></RoleGuard>} />
-
-
                 <Route path="sales-support/offer" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SuperAdmin"]}><OfferCreationPage /></RoleGuard>} />
                 <Route path="sales-support/requests" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SuperAdmin"]}><RequestsInboxPage /></RoleGuard>} />
                 <Route path="sales-support/products" element={<RoleGuard requiredAnyRoles={["SalesSupport", "SalesManager", "SuperAdmin"]}><ProductsCatalogPage /></RoleGuard>} />
@@ -115,7 +104,6 @@ function App() {
                 <Route path="admin/create-role-user" element={<RoleSpecificUserCreation />} />
                 <Route path="admin/create-sales-support" element={<SalesSupportUserCreation />} />
                 <Route path="admin/users" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><UsersList /></RoleGuard>} />
-                <Route path="admin/test-equipment-image" element={<RoleGuard requiredAnyRoles={["SuperAdmin", "SalesSupport", "SalesManager"]}><TestEquipmentImagePage /></RoleGuard>} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="maintenance-support" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "SuperAdmin"]}><MaintenanceSupportDashboard /></RoleGuard>} />
                 <Route path="maintenance/requests/:id" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><MaintenanceRequestDetails /></RoleGuard>} />
