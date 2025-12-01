@@ -4,7 +4,6 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PieChartIcon, BarChartIcon, TrendingUpIcon, FileTextIcon, BarChart3 } from 'lucide-react';
-import SalesReportsScreen from '@/components/sales/SalesReportsScreen';
 
 const ReportsScreen: React.FC = () => {
     const { user, hasAnyRole } = useAuthStore();
@@ -125,7 +124,9 @@ const ReportsScreen: React.FC = () => {
 
             {/* Tab Content */}
             {activeTab === 'sales' ? (
-                <SalesReportsScreen />
+                <div className="text-center py-8 text-muted-foreground">
+                    Sales Reports module has been replaced with Weekly Plans. Please use the Weekly Plans feature instead.
+                </div>
             ) : (
                 <div className="space-y-6">
 

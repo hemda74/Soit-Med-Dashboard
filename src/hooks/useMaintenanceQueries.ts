@@ -6,6 +6,8 @@ import type {
 	MaintenanceRequestResponseDTO,
 	CreateMaintenanceRequestDTO,
 	AssignMaintenanceRequestDTO,
+	UpdateMaintenanceRequestStatusDTO,
+	CancelMaintenanceRequestDTO,
 	MaintenanceVisitResponseDTO,
 	CreateMaintenanceVisitDTO,
 	SparePartRequestResponseDTO,
@@ -231,6 +233,50 @@ export const useCustomerSparePartDecision = () => {
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to process decision');
+		},
+	});
+};
+
+// Update maintenance request status mutation
+export const useUpdateMaintenanceRequestStatus = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ requestId, data }: { requestId: number; data: UpdateMaintenanceRequestStatusDTO }) => {
+			const response = await maintenanceApi.updateStatus(requestId, data);
+			return response.data;
+		},
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(variables.requestId) });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.pendingRequests() });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.engineerRequests() });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.customerRequests() });
+			toast.success('Status updated successfully');
+		},
+		onError: (error: any) => {
+			toast.error(error.message || 'Failed to update status');
+		},
+	});
+};
+
+// Cancel maintenance request mutation
+export const useCancelMaintenanceRequest = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({ requestId, data }: { requestId: number; data: CancelMaintenanceRequestDTO }) => {
+			const response = await maintenanceApi.cancelRequest(requestId, data);
+			return response.data;
+		},
+		onSuccess: (data, variables) => {
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(variables.requestId) });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.pendingRequests() });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.engineerRequests() });
+			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.customerRequests() });
+			toast.success('Request cancelled successfully');
+		},
+		onError: (error: any) => {
+			toast.error(error.message || 'Failed to cancel request');
 		},
 	});
 };
