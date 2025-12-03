@@ -1494,6 +1494,37 @@ class SalesApiService {
 		);
 	}
 
+	async markClientAccountCreated(dealId: string | number): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/${dealId}/mark-account-created`,
+			{ method: 'POST' }
+		);
+	}
+
+	async submitSalesmanReport(
+		dealId: string | number,
+		reportText: string,
+		reportAttachments?: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/${dealId}/submit-report`,
+			{
+				method: 'POST',
+				body: JSON.stringify({
+					reportText,
+					reportAttachments,
+				}),
+			}
+		);
+	}
+
+	async getDealsForLegal(): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/legal`,
+			{ method: 'GET' }
+		);
+	}
+
 	// ==================== OFFERS ====================
 
 	async createOffer(data: any): Promise<ApiResponse<any>> {
