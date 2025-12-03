@@ -24,7 +24,7 @@ const isPathActive = (currentPath: string, targetPath: string): boolean => {
 
 const AppSidebar: React.FC = () => {
   const location = useLocation();
-  const { hasAnyRole } = useAuthStore();
+  const { user } = useAuthStore();
   const { t, language } = useTranslation();
   const isRTL = language === 'ar';
 
@@ -34,14 +34,28 @@ const AppSidebar: React.FC = () => {
     [t]
   );
 
-  // Filter navigation items based on user roles
-  const allNavItems = useMemo(
-    () =>
-      navConfig.filter(
-        ({ roles }) => !roles || hasAnyRole(roles as string[])
-      ),
-    [navConfig, hasAnyRole]
-  );
+  // Filter navigation items based on user roles (case-insensitive)
+  const allNavItems = useMemo(() => {
+    // Case-insensitive role matching helper
+    const hasAnyRoleCaseInsensitive = (requiredRoles: readonly string[]): boolean => {
+      if (!user?.roles || !Array.isArray(user.roles)) return false;
+
+      const userRolesLower = user.roles.map(r => r.toLowerCase());
+      const requiredRolesLower = requiredRoles.map(r => r.toLowerCase());
+
+      return requiredRolesLower.some(role => userRolesLower.includes(role));
+    };
+
+    const filtered = navConfig.filter(({ roles }) => {
+      if (!roles) {
+        return true; // No role restriction, show to all
+      }
+
+      return hasAnyRoleCaseInsensitive(roles);
+    });
+
+    return filtered;
+  }, [navConfig, user]);
 
   // Check if a path is currently active
   const isActive = useCallback(
@@ -89,7 +103,6 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        <Logo asLink={false} />
       </div>
     </aside>
   );

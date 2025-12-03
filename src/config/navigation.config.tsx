@@ -18,6 +18,8 @@ import {
   DollarSign,
   Warehouse,
   Building2,
+  MessageCircle,
+  UserPlus,
 } from 'lucide-react';
 
 /**
@@ -42,13 +44,25 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     icon: <UserCircleIcon />,
     name: t('allUsers'),
     path: '/admin/users',
-    roles: ['Admin', 'SuperAdmin'] as const,
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
   },
   {
     icon: <UserCircleIcon />,
     name: t('createUser'),
     path: '/admin/create-role-user',
-    roles: ['Admin', 'SuperAdmin'] as const,
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: t('createSalesSupport') || 'Create Sales Support',
+    path: '/admin/create-sales-support',
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
+  },
+  {
+    icon: <UserPlus className={ICON_SIZE} />,
+    name: t('clientAccountCreation') || 'Client Account Creation',
+    path: '/admin/client-accounts',
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
   },
   // Super Admin specific
   {
@@ -62,7 +76,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     icon: <ListChecks />,
     name: t('weeklyPlans'),
     path: '/weekly-plans',
-    roles: ['Salesman', 'SalesManager', 'SuperAdmin'] as const,
+    roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   // Sales Manager section
   {
@@ -139,6 +153,13 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/sales-support/requests',
     roles: ['SalesSupport', 'SuperAdmin'] as const,
   },
+  // Chat section - Admin roles
+  {
+    icon: <MessageCircle className={ICON_SIZE} />,
+    name: t('chat') || 'Chat',
+    path: '/chat',
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin', 'SalesManager', 'SalesSupport'] as const,
+  },
   // Maintenance section
   {
     icon: <Wrench className={ICON_SIZE} />,
@@ -171,6 +192,13 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     name: t('accountingDashboard'),
     path: '/accounting',
     roles: ['FinanceManager', 'FinanceEmployee', 'SuperAdmin'] as const,
+  },
+  // Legal section
+  {
+    icon: <FileText className={ICON_SIZE} />,
+    name: t('legalDeals') || 'Legal Deals',
+    path: '/legal/deals',
+    roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
 ] as const;
 
