@@ -26,14 +26,22 @@ class UserApiClient {
 
 	private async request<T>(
 		endpoint: string,
-		options: RequestInit = {}
+		options: RequestInit = {},
+		token?: string
 	): Promise<T> {
 		const url = `${this.baseURL}${endpoint}`;
+		const headers: HeadersInit = {
+			'Content-Type': 'application/json',
+			...options.headers,
+		};
+		
+		// Add Authorization header if token is provided
+		if (token) {
+			headers.Authorization = `Bearer ${token}`;
+		}
+		
 		const config: RequestInit = {
-			headers: {
-				'Content-Type': 'application/json',
-				...options.headers,
-			},
+			headers,
 			...options,
 		};
 
@@ -53,10 +61,7 @@ class UserApiClient {
 	async get<T>(endpoint: string, token?: string): Promise<T> {
 		return this.request<T>(endpoint, {
 			method: 'GET',
-			headers: token
-				? { Authorization: `Bearer ${token}` }
-				: {},
-		});
+		}, token);
 	}
 
 	async post<T>(
@@ -67,35 +72,20 @@ class UserApiClient {
 		return this.request<T>(endpoint, {
 			method: 'POST',
 			body: data ? JSON.stringify(data) : undefined,
-			headers: token
-				? { Authorization: `Bearer ${token}` }
-				: {},
-		});
+		}, token);
 	}
 
 	async delete<T>(endpoint: string, token?: string): Promise<T> {
 		return this.request<T>(endpoint, {
 			method: 'DELETE',
-			headers: token
-				? { Authorization: `Bearer ${token}` }
-				: {},
-		});
+		}, token);
 	}
 
 	async put<T>(endpoint: string, data?: any, token?: string): Promise<T> {
-		const headers: HeadersInit = {
-			'Content-Type': 'application/json',
-		};
-
-		if (token) {
-			headers.Authorization = `Bearer ${token}`;
-		}
-
 		return this.request<T>(endpoint, {
 			method: 'PUT',
 			body: data ? JSON.stringify(data) : undefined,
-			headers,
-		});
+		}, token);
 	}
 }
 
