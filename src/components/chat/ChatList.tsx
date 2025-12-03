@@ -21,7 +21,12 @@ const ChatList: React.FC<ChatListProps> = ({
 	const { t, language } = useTranslation();
 	const isArabic = language === 'ar';
 
-	if (conversations.length === 0) {
+	// Ensure conversations is always an array
+	const safeConversations = conversations || [];
+	
+	console.log('ChatList - Conversations received:', safeConversations.length, safeConversations);
+
+	if (safeConversations.length === 0) {
 		return (
 			<div className="p-4 text-center text-muted-foreground">
 				<p>{t('chat.noConversations') || 'No conversations yet'}</p>
@@ -35,7 +40,7 @@ const ChatList: React.FC<ChatListProps> = ({
 				<h2 className="text-lg font-semibold">{t('chat.conversations') || 'Conversations'}</h2>
 			</div>
 			<div className="divide-y">
-				{conversations.map((conversation) => {
+				{safeConversations.map((conversation) => {
 					const isSelected = conversation.id === currentConversationId;
 					const displayName = isAdmin ? conversation.customerName || conversation.customerEmail : conversation.adminName || 'Admin';
 

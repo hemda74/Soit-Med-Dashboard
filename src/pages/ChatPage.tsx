@@ -3,6 +3,7 @@ import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
+import ChatInputArea from '@/components/chat/ChatInputArea';
 import { Card } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -25,8 +26,11 @@ const ChatPage: React.FC = () => {
 
 	useEffect(() => {
 		// Check if user is admin
-		const adminRoles = ['SuperAdmin', 'SalesManager', 'SalesSupport'];
-		setIsAdmin(user?.roles.some((role) => adminRoles.includes(role)) || false);
+		const adminRoles = ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport'];
+		const userIsAdmin = user?.roles.some((role) => adminRoles.includes(role)) || false;
+		setIsAdmin(userIsAdmin);
+
+		console.log('ChatPage - User:', user?.id, 'Roles:', user?.roles, 'IsAdmin:', userIsAdmin);
 
 		// Initialize chat
 		initialize();
@@ -47,7 +51,7 @@ const ChatPage: React.FC = () => {
 		return () => clearInterval(interval);
 	}, []);
 
-	if (loading && conversations.length === 0) {
+	if (loading && (!conversations || conversations.length === 0)) {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center">
@@ -59,10 +63,10 @@ const ChatPage: React.FC = () => {
 	}
 
 	return (
-		<div className="h-[calc(100vh-4rem)] flex flex-col">
-			<div className="flex-1 flex overflow-hidden">
+		<div className="flex flex-col h-full p-4 md:p-6">
+			<div className="flex-1 flex overflow-hidden min-h-0">
 				{/* Chat List Sidebar */}
-				<div className="w-80 border-r bg-background">
+				<div className="w-80 border-r bg-background flex-shrink-0">
 					<ChatList
 						conversations={conversations}
 						currentConversationId={currentConversation?.id}
@@ -72,7 +76,7 @@ const ChatPage: React.FC = () => {
 				</div>
 
 				{/* Chat Window */}
-				<div className="flex-1 flex flex-col">
+				<div className="flex-1 flex flex-col min-w-0">
 					{currentConversation ? (
 						<ChatWindow conversation={currentConversation} />
 					) : (
@@ -86,6 +90,13 @@ const ChatPage: React.FC = () => {
 					)}
 				</div>
 			</div>
+
+			{/* Input Area - Fixed at bottom */}
+			{currentConversation && (
+				<div className="w-full px-4 py-3 border border-border rounded-lg bg-background shadow-md flex-shrink-0 mt-4 z-10">
+					<ChatInputArea conversationId={currentConversation.id} />
+				</div>
+			)}
 
 			{/* Connection Status */}
 			{!isConnected && (

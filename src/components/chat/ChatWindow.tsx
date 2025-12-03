@@ -1,15 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { Send, Mic } from 'lucide-react';
 import type { ChatConversationResponseDTO } from '@/types/chat.types';
 import MessageBubble from './MessageBubble';
 import VoiceMessagePlayer from './VoiceMessagePlayer';
 import { useTranslation } from '@/hooks/useTranslation';
+import Logo from '@/components/Logo';
 
 interface ChatWindowProps {
 	conversation: ChatConversationResponseDTO;
@@ -29,23 +25,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 		setTypingUser,
 	} = useChatStore();
 
-	const [messageText, setMessageText] = useState('');
-	const [isTyping, setIsTyping] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
-	const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
 	const conversationMessages = messages.get(conversation.id) || [];
 	const isTypingInThisConversation = typingUsers.get(conversation.id)?.size > 0;
 
 	useEffect(() => {
+		console.log('ChatWindow - Loading messages for conversation:', conversation.id);
+		// Load messages immediately when conversation changes
 		loadMessages(conversation.id);
 		markMessagesAsRead(conversation.id);
+		
+		// Auto-scroll to bottom after messages load
+		setTimeout(() => {
+			messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+		}, 100);
 	}, [conversation.id]);
 
 	useEffect(() => {
-		// Scroll to bottom when new messages arrive
-		messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		console.log('ChatWindow - Conversation messages updated:', conversationMessages.length, conversationMessages);
+		// Auto-scroll to bottom when messages change
+		setTimeout(() => {
+			messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		}, 50);
 	}, [conversationMessages]);
 
 	useEffect(() => {
@@ -53,59 +56,38 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 		markMessagesAsRead(conversation.id);
 	}, [conversationMessages, conversation.id]);
 
-	const handleSendMessage = async () => {
-		if (!messageText.trim()) return;
-
-		const content = messageText.trim();
-		setMessageText('');
-		setIsTyping(false);
-		sendTypingIndicator(conversation.id, false);
-
-		try {
-			await sendTextMessage(conversation.id, content);
-		} catch (error) {
-			console.error('Failed to send message:', error);
+	// Auto-load messages on mount and when conversation changes
+	useEffect(() => {
+		if (conversation && conversationMessages.length === 0) {
+			console.log('ChatWindow - Auto-loading messages for empty conversation');
+			loadMessages(conversation.id);
 		}
-	};
+	}, [conversation?.id]);
 
-	const handleTyping = (value: string) => {
-		setMessageText(value);
-
-		if (!isTyping && value.trim()) {
-			setIsTyping(true);
-			sendTypingIndicator(conversation.id, true);
-		}
-
-		// Clear existing timeout
-		if (typingTimeoutRef.current) {
-			clearTimeout(typingTimeoutRef.current);
-		}
-
-		// Set timeout to stop typing indicator
-		typingTimeoutRef.current = setTimeout(() => {
-			setIsTyping(false);
-			sendTypingIndicator(conversation.id, false);
-		}, 3000);
-	};
-
-	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			handleSendMessage();
-		}
-	};
+	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport'].includes(role)) || false;
+	const clientName = isUserAdmin 
+		? (conversation.customerName || conversation.customerEmail || 'Customer')
+		: (conversation.adminName || 'Admin');
 
 	return (
 		<div className="flex flex-col h-full">
-			{/* Header */}
-			<div className="p-4 border-b bg-background">
-				<div className="flex items-center justify-between">
-					<div>
-						<h3 className="font-semibold">
-							{conversation.customerName || conversation.customerEmail || 'Customer'}
+			{/* Header with Logo and Client Name */}
+			<div className="px-4 py-3 border-b bg-background">
+				<div className="flex items-center gap-3">
+					{/* Company Logo */}
+					<div className="flex-shrink-0">
+						<Logo asLink={false} className="h-10 w-auto" />
+					</div>
+					{/* Client Name and Info */}
+					<div className="flex-1 min-w-0">
+						<h3 className="font-semibold text-lg truncate">
+							{clientName}
 						</h3>
+						{isUserAdmin && conversation.customerEmail && conversation.customerEmail !== conversation.customerName && (
+							<p className="text-sm text-muted-foreground truncate">{conversation.customerEmail}</p>
+						)}
 						{isTypingInThisConversation && (
-							<p className="text-sm text-muted-foreground">{t('chat.typing') || 'Typing...'}</p>
+							<p className="text-sm text-muted-foreground mt-1">{t('chat.typing') || 'Typing...'}</p>
 						)}
 					</div>
 				</div>
@@ -118,36 +100,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 						<p className="text-muted-foreground">{t('chat.noMessages') || 'No messages yet'}</p>
 					</div>
 				) : (
-					conversationMessages.map((message) => (
-						<div
-							key={message.id}
-							className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
-						>
-							{message.messageType === 'Text' ? (
-								<MessageBubble message={message} isOwn={message.senderId === user?.id} />
-							) : (
-								<VoiceMessagePlayer message={message} isOwn={message.senderId === user?.id} />
-							)}
-						</div>
-					))
+					conversationMessages.map((message) => {
+						const isOwn = message.senderId === user?.id;
+						return (
+							<div
+								key={message.id}
+								className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+							>
+								{!isOwn && message.senderName && (
+									<span className="text-xs text-muted-foreground mb-1 px-2">
+										{message.senderName}
+									</span>
+								)}
+								<div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+									{message.messageType === 'Text' ? (
+										<MessageBubble message={message} isOwn={isOwn} />
+									) : (
+										<VoiceMessagePlayer message={message} isOwn={isOwn} />
+									)}
+								</div>
+							</div>
+						);
+					})
 				)}
 				<div ref={messagesEndRef} />
-			</div>
-
-			{/* Input Area */}
-			<div className="p-4 border-t bg-background">
-				<div className="flex gap-2">
-					<Input
-						value={messageText}
-						onChange={(e) => handleTyping(e.target.value)}
-						onKeyPress={handleKeyPress}
-						placeholder={t('chat.typeMessage') || 'Type a message...'}
-						className="flex-1"
-					/>
-					<Button onClick={handleSendMessage} disabled={!messageText.trim()}>
-						<Send className="h-4 w-4" />
-					</Button>
-				</div>
 			</div>
 		</div>
 	);
