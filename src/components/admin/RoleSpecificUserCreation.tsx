@@ -236,9 +236,9 @@ const RoleSpecificUserCreation: React.FC = () => {
         resetForm,
     } = useUserCreationForm();
 
-    // Check permissions
+    // Check permissions (case-insensitive - hasRole is now case-insensitive)
     const { hasRole } = useAuthStore();
-    const canCreateUsers = hasRole('SuperAdmin') || hasRole('Admin');
+    const canCreateUsers = hasRole('SuperAdmin') || hasRole('superadmin') || hasRole('Admin') || hasRole('admin');
 
     useEffect(() => {
         if (!canCreateUsers) {

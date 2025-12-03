@@ -115,16 +115,18 @@ const UsersList: React.FC = () => {
     });
 
     // Check if user has access to users page (Admin or Super Admin only)
-    const hasAccess = hasAnyRole(['Admin', 'SuperAdmin']);
+    const hasAccess = hasAnyRole(['Admin', 'admin', 'SuperAdmin', 'superadmin']);
 
-    // Check if current user is super admin
-    const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+    // Check if current user is super admin or admin (case-insensitive)
+    const isSuperAdmin = hasAnyRole(['SuperAdmin', 'superadmin']);
+    const isAdmin = hasAnyRole(['Admin', 'admin']);
+    const canManageUsers = isSuperAdmin || isAdmin;
 
     useEffect(() => {
-        if (isSuperAdmin && user?.token) {
+        if (canManageUsers && user?.token) {
             fetchStatistics(user.token);
         }
-    }, [isSuperAdmin, user?.token, fetchStatistics]);
+    }, [canManageUsers, user?.token, fetchStatistics]);
 
     const loadAllUsers = useCallback(async (page: number = 1) => {
         if (!user?.token) {
@@ -429,7 +431,7 @@ const UsersList: React.FC = () => {
                 </p>
             </div>
 
-            {isSuperAdmin && (
+            {canManageUsers && (
                 <div className="space-y-10 mb-10">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                         {statisticsLoading ? (
@@ -636,7 +638,7 @@ const UsersList: React.FC = () => {
                                                 <Edit className="h-4 w-4" />
                                                 Edit
                                             </Button>
-                                            {isSuperAdmin && (
+                                            {canManageUsers && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -647,7 +649,7 @@ const UsersList: React.FC = () => {
                                                     Password
                                                 </Button>
                                             )}
-                                            {isSuperAdmin && (
+                                            {canManageUsers && (
                                                 <UserStatusToggle
                                                     userId={user.id}
                                                     userName={user.fullName}
@@ -717,7 +719,7 @@ const UsersList: React.FC = () => {
                 showDeleteImageModal={showDeleteImageModal}
                 setShowDeleteImageModal={setShowDeleteImageModal}
                 onStatusChange={handleUserStatusChange}
-                isSuperAdmin={isSuperAdmin}
+                isSuperAdmin={canManageUsers}
             />
 
 
