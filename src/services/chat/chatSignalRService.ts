@@ -6,6 +6,7 @@ import type { ChatMessageResponseDTO, TypingIndicator } from '@/types/chat.types
 class ChatSignalRService {
 	private connection: signalR.HubConnection | null = null;
 	private isConnected: boolean = false;
+	private isConnecting: boolean = false;
 	private listeners: Map<string, Function[]> = new Map();
 
 	private getAuthToken(): string | null {
@@ -18,8 +19,21 @@ class ChatSignalRService {
 
 	async connect(): Promise<void> {
 		try {
-			if (this.isConnected && this.connection?.state === 'Connected') {
+			// If already connected, return
+			if (this.isConnected && this.connection?.state === signalR.HubConnectionState.Connected) {
 				return;
+			}
+
+			// If already connecting, wait for it to complete
+			if (this.isConnecting) {
+				let waitCount = 0;
+				while (this.isConnecting && waitCount < 50) {
+					await new Promise(resolve => setTimeout(resolve, 100));
+					waitCount++;
+					if (this.isConnected && this.connection?.state === signalR.HubConnectionState.Connected) {
+						return;
+					}
+				}
 			}
 
 			const token = this.getAuthToken();
@@ -27,6 +41,28 @@ class ChatSignalRService {
 				throw new Error('No authentication token found');
 			}
 
+			// Disconnect existing connection if any
+			if (this.connection) {
+				const currentState = this.connection.state;
+				if (currentState === signalR.HubConnectionState.Connecting) {
+					let waitCount = 0;
+					while (this.connection.state === signalR.HubConnectionState.Connecting && waitCount < 30) {
+						await new Promise(resolve => setTimeout(resolve, 100));
+						waitCount++;
+					}
+				}
+				
+				if (this.connection.state !== signalR.HubConnectionState.Disconnected) {
+					try {
+						await this.connection.stop();
+						await new Promise(resolve => setTimeout(resolve, 200));
+					} catch (stopError) {
+						console.warn('Error stopping existing connection:', stopError);
+					}
+				}
+			}
+
+			this.isConnecting = true;
 			const baseUrl = import.meta.env.VITE_SIGNALR_URL || getApiBaseUrl();
 			const hubUrl = `${baseUrl}/chatHub`;
 
@@ -53,10 +89,12 @@ class ChatSignalRService {
 
 			await this.connection.start();
 			this.isConnected = true;
+			this.isConnecting = false;
 			console.log('✅ Chat SignalR connected');
 		} catch (error) {
-			console.error('Chat SignalR Connection Error:', error);
 			this.isConnected = false;
+			this.isConnecting = false;
+			console.error('Chat SignalR Connection Error:', error);
 			throw error;
 		}
 	}
@@ -107,10 +145,27 @@ class ChatSignalRService {
 	}
 
 	async disconnect(): Promise<void> {
+		// Wait for any ongoing connection attempt to complete
+		if (this.isConnecting) {
+			let waitCount = 0;
+			while (this.isConnecting && waitCount < 50) {
+				await new Promise(resolve => setTimeout(resolve, 100));
+				waitCount++;
+			}
+		}
+
 		if (this.connection) {
-			await this.connection.stop();
-			this.connection = null;
-			this.isConnected = false;
+			try {
+				if (this.connection.state !== signalR.HubConnectionState.Disconnected) {
+					await this.connection.stop();
+				}
+			} catch (error) {
+				console.warn('Error disconnecting SignalR:', error);
+			} finally {
+				this.connection = null;
+				this.isConnected = false;
+				this.isConnecting = false;
+			}
 		}
 	}
 
