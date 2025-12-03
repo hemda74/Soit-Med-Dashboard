@@ -10,8 +10,7 @@ export interface User extends AuthUser {
 }
 
 // Roles that are not authorized to access the application
-// Note: Salesman is allowed to access the web app (they use Weekly Plans)
-const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician'];
+const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
 
 interface AuthState {
 	user: User | null;
@@ -301,13 +300,12 @@ export const useAuthStore = create<AuthState>()(
 					}));
 				},
 
-				// Permissions
+				// Permissions (case-insensitive)
 				hasRole: (role: string) => {
 					const { user } = get();
-					return (
-						user?.roles.includes(role) ||
-						false
-					);
+					if (!user?.roles || !Array.isArray(user.roles)) return false;
+					const roleLower = role.toLowerCase();
+					return user.roles.some(r => r.toLowerCase() === roleLower);
 				},
 
 				hasAnyRole: (roles: string[]) => {
@@ -318,8 +316,9 @@ export const useAuthStore = create<AuthState>()(
 						!Array.isArray(user.roles)
 					)
 						return false;
+					const userRolesLower = user.roles.map(r => r.toLowerCase());
 					return roles.some((role) =>
-						user.roles.includes(role)
+						userRolesLower.includes(role.toLowerCase())
 					);
 				},
 

@@ -7,14 +7,24 @@ interface RoleGuardProps {
 }
 
 export default function RoleGuard({ requiredAnyRoles, children }: RoleGuardProps) {
-    const { isAuthenticated, hasAnyRole } = useAuthStore()
+    const { isAuthenticated, hasAnyRole, user } = useAuthStore()
 
     if (!isAuthenticated) return <Navigate to="/login" replace />
 
-    // SuperAdmin can access any route
-    if (hasAnyRole(['SuperAdmin'])) return children
+    // Case-insensitive role check helper
+    const hasAnyRoleCaseInsensitive = (roles: string[]): boolean => {
+        if (!user?.roles || !Array.isArray(user.roles)) return false
+        
+        const userRolesLower = user.roles.map(r => r.toLowerCase())
+        const requiredRolesLower = roles.map(r => r.toLowerCase())
+        
+        return requiredRolesLower.some(role => userRolesLower.includes(role))
+    }
 
-    if (requiredAnyRoles && requiredAnyRoles.length > 0 && !hasAnyRole(requiredAnyRoles)) {
+    // SuperAdmin/superadmin can access any route (case-insensitive)
+    if (hasAnyRoleCaseInsensitive(['SuperAdmin', 'superadmin'])) return children
+
+    if (requiredAnyRoles && requiredAnyRoles.length > 0 && !hasAnyRoleCaseInsensitive(requiredAnyRoles)) {
         return <Navigate to="/not-found" replace />
     }
 
