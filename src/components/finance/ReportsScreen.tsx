@@ -9,8 +9,8 @@ const ReportsScreen: React.FC = () => {
     const { user, hasAnyRole } = useAuthStore();
     const [activeTab, setActiveTab] = useState<'financial' | 'sales'>('financial');
 
-    // Check if user has access to reports (Sales Manager, Sales Employee, or Super Admin)
-    const hasAccess = hasAnyRole(['SalesManager', 'Salesman', 'SuperAdmin']);
+    // Check if user has access to reports (Sales Manager or Super Admin)
+    const hasAccess = hasAnyRole(['SalesManager', 'SuperAdmin']);
 
     if (!hasAccess) {
         return <Navigate to="/dashboard" replace />;
@@ -18,7 +18,7 @@ const ReportsScreen: React.FC = () => {
 
     // Check specific access for different report types
     const canAccessFinancial = hasAnyRole(['FinanceManager', 'SuperAdmin']);
-    const canAccessSales = hasAnyRole(['SalesManager', 'Salesman', 'SuperAdmin']); // Sales Manager, Sales Employee, and Super Admin
+    const canAccessSales = hasAnyRole(['SalesManager', 'SuperAdmin']); // Sales Manager and Super Admin
 
     const reportCategories = [
         {
