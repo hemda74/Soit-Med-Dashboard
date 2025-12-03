@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import * as signalR from '@microsoft/signalr';
 import { chatApi } from '@/services/chat/chatApi';
 import chatSignalRService from '@/services/chat/chatSignalRService';
 import type { ChatConversationResponseDTO, ChatMessageResponseDTO, TypingIndicator } from '@/types/chat.types';
@@ -55,6 +56,8 @@ export const useChatStore = create<ChatState>()(
 			set({ currentConversation: conversation });
 			if (conversation) {
 				get().joinConversation(conversation.id);
+				// Auto-load messages when conversation is selected
+				get().loadMessages(conversation.id);
 			}
 		},
 
@@ -111,9 +114,13 @@ export const useChatStore = create<ChatState>()(
 			try {
 				set({ loading: true, error: null });
 				const response = await chatApi.getConversations();
-				set({ conversations: response.data, loading: false });
+				// Ensure conversations is always an array
+				const conversationsList = Array.isArray(response.data) ? response.data : [];
+				console.log('Loaded conversations:', conversationsList.length, conversationsList);
+				set({ conversations: conversationsList, loading: false });
 			} catch (error: any) {
-				set({ error: error.message || 'Failed to load conversations', loading: false });
+				console.error('Error loading conversations:', error);
+				set({ error: error.message || 'Failed to load conversations', loading: false, conversations: [] });
 			}
 		},
 
@@ -122,15 +129,25 @@ export const useChatStore = create<ChatState>()(
 				set({ loading: true, error: null });
 				const response = await chatApi.getMessages(conversationId, page);
 				const existingMessages = get().messages.get(conversationId) || [];
-				const newMessages = response.data;
+				
+				// Ensure newMessages is always an array
+				const newMessages = Array.isArray(response?.data) ? response.data : [];
+				console.log('Chat Store - loadMessages:', {
+					conversationId,
+					existingCount: existingMessages.length,
+					newCount: newMessages.length,
+					response: response
+				});
 
 				// Merge messages, avoiding duplicates
 				const mergedMessages = [...existingMessages];
-				newMessages.forEach((msg) => {
-					if (!mergedMessages.find((m) => m.id === msg.id)) {
-						mergedMessages.push(msg);
-					}
-				});
+				if (Array.isArray(newMessages) && newMessages.length > 0) {
+					newMessages.forEach((msg) => {
+						if (!mergedMessages.find((m) => m.id === msg.id)) {
+							mergedMessages.push(msg);
+						}
+					});
+				}
 
 				// Sort by createdAt
 				mergedMessages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -138,6 +155,7 @@ export const useChatStore = create<ChatState>()(
 				get().setMessages(conversationId, mergedMessages);
 				set({ loading: false });
 			} catch (error: any) {
+				console.error('Error loading messages:', error);
 				set({ error: error.message || 'Failed to load messages', loading: false });
 			}
 		},
@@ -216,8 +234,20 @@ export const useChatStore = create<ChatState>()(
 
 		initialize: async () => {
 			try {
-				await chatSignalRService.connect();
-				set({ isConnected: true });
+				// Check connection state before connecting
+				const currentState = chatSignalRService.getConnectionState();
+				if (currentState === signalR.HubConnectionState.Connected) {
+					set({ isConnected: true });
+				} else if (currentState !== signalR.HubConnectionState.Connecting) {
+					try {
+						await chatSignalRService.connect();
+						set({ isConnected: true });
+					} catch (signalRError: any) {
+						console.warn('SignalR connection failed, continuing without real-time updates:', signalRError);
+						set({ isConnected: false });
+						// Continue anyway - user can still send messages via REST API
+					}
+				}
 
 				// Set up event listeners
 				chatSignalRService.addEventListener('message', (message: ChatMessageResponseDTO) => {
