@@ -304,15 +304,6 @@ export function onRenderCallback(
 	startTime: number,
 	commitTime: number
 ): void {
-	if (import.meta.env.DEV) {
-		console.log('Component render:', {
-			id,
-			phase,
-			actualDuration: `${actualDuration.toFixed(2)}ms`,
-			baseDuration: `${baseDuration.toFixed(2)}ms`,
-		});
-	}
-
 	// Only track slow renders in production
 	if (import.meta.env.PROD && actualDuration > 16) {
 		performanceMonitor.measureComponentRender(id, actualDuration);

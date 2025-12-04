@@ -15,7 +15,7 @@ const AppLayout: React.FC = () => {
         : "lg:pl-[290px]"
         }`}>
         <AppHeader />
-        <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+        <div className="mx-auto max-w-(--breakpoint-2xl)">
           <Outlet />
         </div>
       </div>

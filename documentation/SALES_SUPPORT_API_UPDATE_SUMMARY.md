@@ -11,7 +11,7 @@ This document summarizes all changes needed to update the Sales Support module t
 
 ## Changes Made
 
-### 1. Type Definitions Updated ✅
+### 1. Type Definitions Updated
 
 #### `src/types/sales.types.ts`
 
@@ -302,7 +302,7 @@ PUT /api/OfferRequest/{id}/status
 
 ## Next Steps
 
-1. ✅ Update type definitions
+1. Update type definitions
 2. ⏳ Update endpoints configuration
 3. ⏳ Update API service methods
 4. ⏳ Update store methods
@@ -315,4 +315,3 @@ PUT /api/OfferRequest/{id}/status
 
 **Last Updated:** October 27, 2025  
 **Status:** In Progress - Types Complete, Need to update services and UI
-

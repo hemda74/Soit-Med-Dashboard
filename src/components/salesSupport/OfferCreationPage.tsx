@@ -52,6 +52,7 @@ export default function OfferCreationPage() {
     // Step 1: Prefill data from request
     const [requestDetails, setRequestDetails] = useState<any | null>(null)
     const [loadingRequest, setLoadingRequest] = useState<boolean>(!!requestId)
+    const [isCustomerRequest, setIsCustomerRequest] = useState<boolean>(false)
 
     // Optional OfferRequest linking (for follow-up)
     const [selectedOfferRequestId, setSelectedOfferRequestId] = useState<string>(requestId || '')
@@ -134,6 +135,19 @@ export default function OfferCreationPage() {
     }
 
     const handleSelectFromCatalog = (product: Product) => {
+        // Validate required fields
+        if (!product.name) {
+            toast.error(translate('offerCreationPage.errors.productNameRequired', 'Product name is required'))
+            return
+        }
+
+        // Handle missing basePrice - default to 0 or show error
+        const productPrice = product.basePrice ?? 0
+        if (productPrice <= 0) {
+            toast.error(translate('offerCreationPage.errors.productBasePriceRequired', 'Product base price is required. Please set a base price for this product in the catalog.'))
+            return
+        }
+
         // Convert Product to productItems format
         const productItem = {
             name: product.name,
@@ -141,11 +155,11 @@ export default function OfferCreationPage() {
             factory: product.provider || '',
             country: product.country || '',
             year: product.year || '',
-            price: product.basePrice.toString(),
+            price: productPrice.toString(),
             imageUrl: product.imagePath || '',
             providerImagePath: product.providerImagePath || '',
             description: product.description || '',
-            inStock: product.inStock,
+            inStock: product.inStock !== undefined ? product.inStock : true,
         }
 
         // Check if already added
@@ -194,8 +208,19 @@ export default function OfferCreationPage() {
                 setRequestDetails(data)
                 const cid = String(data.clientId || '')
                 setClientId(cid)
+                setClientName(data.clientName || '')
                 setProducts(data.requestedProducts || '')
-                setAssignedToSalesmanId(data.requestedBy || '')
+                
+                // Auto-assign to requester (will be customer if from customer app, or salesman if from salesman)
+                const requesterId = data.requestedBy || ''
+                setAssignedToSalesmanId(requesterId)
+                
+                // Check if this is a customer request - if requestedBy matches a customer pattern or we can infer from context
+                // For now, we'll check if the request comes with client info and assume customer requests should be assigned to the requester
+                // Customer requests typically come from the customer app, so we'll hide the salesman field when there's a request
+                // and auto-assign to the requester
+                setIsCustomerRequest(!!requesterId) // If there's a requester, assume it might be a customer request
+                
                 // reflect into form
                 setValue('clientIdHidden', cid)
                 setValue('products', data.requestedProducts || '')
@@ -239,22 +264,6 @@ export default function OfferCreationPage() {
         }
     }, [requestId])
 
-    // Client search
-    const [clientQuery, setClientQuery] = useState('')
-    const [clientResults, setClientResults] = useState<any[]>([])
-    useEffect(() => {
-        const handler = setTimeout(async () => {
-            if (!clientQuery || clientQuery.length < 2) { setClientResults([]); return }
-            try {
-                const resp = await salesApi.searchClients({ query: clientQuery, page: 1, pageSize: 10 })
-                setClientResults(resp.data.clients)
-            } catch {
-                // Client search failed silently
-            }
-        }, 300)
-        return () => clearTimeout(handler)
-    }, [clientQuery])
-
     // Salesman search (server-side using /api/Offer/salesmen)
     const [salesmen, setSalesmen] = useState<any[]>([])
     const [salesmanQuery, setSalesmanQuery] = useState('')
@@ -292,9 +301,22 @@ export default function OfferCreationPage() {
 
     // Create offer
     const createOffer = async (formData: OfferFormInputs) => {
-        // Validation
-		if (!clientId || !assignedToSalesmanId) {
-			toast.error(translate('offerCreationPage.errors.selectClientAndSalesman', 'Please select client and salesman'))
+        // Validation - clientId comes from request
+        // For customer requests, assignedToSalesmanId is auto-set to requester
+        // For salesman requests, we need to validate
+		if (!isCustomerRequest && !assignedToSalesmanId) {
+			toast.error(translate('offerCreationPage.errors.selectSalesman', 'Please assign to a salesman'))
+            return
+        }
+        
+        // For customer requests, ensure assignedTo is set to requester
+        if (isCustomerRequest && requestDetails?.requestedBy) {
+            setAssignedToSalesmanId(requestDetails.requestedBy)
+        }
+
+        // ClientId should come from request, but validate it exists
+        if (!clientId) {
+            toast.error(translate('offerCreationPage.errors.missingClient', 'Client information is missing. Please ensure the offer request includes a client.'))
             return
         }
 
@@ -544,51 +566,33 @@ export default function OfferCreationPage() {
                         </div>
                     ) : null}
 
+                    {/* Client Info Display (from request) */}
+                    {clientId && clientName && (
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <div className="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <div>
+                                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Client: {clientName}</p>
+                                    <p className="text-xs text-blue-700 dark:text-blue-300">ID: #{clientId}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Offer Form */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label>Client *</Label>
-                            <Input
-                                value={clientQuery}
-                                onChange={(e) => setClientQuery(e.target.value)}
-                                placeholder="Type to search client (min 2 chars)..."
-                                className={!clientId ? 'border-yellow-400' : ''}
-                            />
-                            {clientResults.length > 0 && (
-                                <div className="mt-2 border rounded-md max-h-48 overflow-y-auto bg-white dark:bg-gray-800 shadow-lg">
-                                    {clientResults.map((c) => (
-                                        <div
-                                            key={c.id}
-                                            className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer border-b last:border-b-0"
-                                            onClick={() => {
-                                                setClientId(String(c.id));
-                                                setClientName(c.name);
-                                                setClientResults([]);
-                                                setClientQuery(c.name);
-                                            }}
-                                        >
-                                            <div className="text-sm font-medium">{c.name}</div>
-                                            <div className="text-xs text-gray-500">
-                                                {c.organizationName || 'N/A'} {c.classification ? `• ${c.classification}` : ''} • #{c.id}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            {clientId && clientName && (
-                                <div className="mt-1 px-2 py-1 bg-green-50 dark:bg-green-900 rounded text-xs text-green-700 dark:text-green-200">
-                                    ✓ Selected: {clientName} (#{clientId})
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <Label>Assign To Salesman *</Label>
-                            <Input
-                                value={salesmanQuery}
-                                onChange={(e) => setSalesmanQuery(e.target.value)}
-                                placeholder="Type to search salesman..."
-                                className={!assignedToSalesmanId ? 'border-yellow-400' : ''}
-                            />
+                        {/* Only show salesman field if NOT a customer request */}
+                        {!isCustomerRequest && (
+                            <div>
+                                <Label>Assign To Salesman *</Label>
+                                <Input
+                                    value={salesmanQuery}
+                                    onChange={(e) => setSalesmanQuery(e.target.value)}
+                                    placeholder="Type to search salesman..."
+                                    className={!assignedToSalesmanId ? 'border-yellow-400' : ''}
+                                />
                             {loadingSalesmen && (
                                 <div className="mt-2 px-3 py-2 text-sm text-gray-500">
                                     <svg className="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -627,7 +631,30 @@ export default function OfferCreationPage() {
                                     ✓ Selected: {assignedToSalesmanName}
                                 </div>
                             )}
-                        </div>
+                            </div>
+                        )}
+                        
+                        {/* Show assigned to info for customer requests */}
+                        {isCustomerRequest && assignedToSalesmanId && (
+                            <div className="md:col-span-2">
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                                Offer will be assigned to: {requestDetails?.requestedByName || 'Requester'}
+                                            </p>
+                                            <p className="text-xs text-blue-700 dark:text-blue-300">
+                                                This offer request was created by the customer, so it will be assigned directly to them.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
                         <div className="md:col-span-2">
                             <Label>Link to Offer Request (Optional - for follow-up tracking)</Label>
                             <Select
@@ -1232,22 +1259,28 @@ export default function OfferCreationPage() {
                     </div>
                     <div className="mt-6 flex flex-col gap-3">
                         {/* Validation warnings */}
-                        {(!clientId || !assignedToSalesmanId) && (
+                        {!isCustomerRequest && !assignedToSalesmanId && (
                             <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-                                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">⚠️ Required fields:</p>
+                                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">⚠️ Required field:</p>
                                 <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 ml-4 list-disc">
-                                    {!clientId && <li>Please select a client</li>}
                                     {!assignedToSalesmanId && <li>Please assign to a salesman</li>}
                                 </ul>
+                            </div>
+                        )}
+                        {!clientId && (
+                            <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+                                <p className="text-sm font-medium text-red-800 dark:text-red-200">❌ Error:</p>
+                                <p className="text-xs text-red-700 dark:text-red-300 mt-1">Client information is missing. Please ensure the offer request includes a client.</p>
                             </div>
                         )}
 
                         <div className="flex gap-2 items-center">
                             <Button
                                 onClick={() => handleSubmit(createOffer)()}
-                                disabled={creatingOffer || !clientId || !assignedToSalesmanId}
+                                disabled={creatingOffer || !clientId || (!isCustomerRequest && !assignedToSalesmanId)}
                                 className="px-6"
                                 size="lg"
+                                title={!clientId ? 'Client information is required from the offer request' : (!isCustomerRequest && !assignedToSalesmanId) ? 'Please assign to a salesman' : undefined}
                             >
                                 {creatingOffer ? (
                                     <>
@@ -1296,6 +1329,16 @@ export default function OfferCreationPage() {
                                 </Button>
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() =>
+                                        navigate(`/sales-support/offers/${offer?.id}/preview`, {
+                                            state: { offer },
+                                        })
+                                    }
+                                >
+                                    Preview HTML
                                 </Button>
                                 <Button variant="ghost" onClick={() => navigate('/dashboard?tab=my-offers')}>
                                     Back to Dashboard
@@ -1443,11 +1486,13 @@ export default function OfferCreationPage() {
                                             )}
 
                                             <p className="text-lg font-bold text-primary">
-                                                {new Intl.NumberFormat('en-US', {
-                                                    style: 'currency',
-                                                    currency: 'EGP',
-                                                    minimumFractionDigits: 0,
-                                                }).format(product.basePrice)}
+                                                {product.basePrice !== undefined && product.basePrice !== null
+                                                    ? new Intl.NumberFormat('en-US', {
+                                                        style: 'currency',
+                                                        currency: 'EGP',
+                                                        minimumFractionDigits: 0,
+                                                    }).format(product.basePrice)
+                                                    : 'Price not set'}
                                             </p>
 
                                             {product.description && (

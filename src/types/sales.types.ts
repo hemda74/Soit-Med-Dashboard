@@ -1187,16 +1187,16 @@ export interface Product {
 	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
-	basePrice: number;
 	description?: string;
 	imagePath?: string | null;
+	dataSheetPath?: string | null;
+	catalogPath?: string | null;
 	year?: number;
-	inStock: boolean;
-	isActive: boolean;
+	inventoryQuantity?: number;
 	createdBy?: string;
 	createdByName?: string;
-	createdAt: string;
-	updatedAt: string;
+	basePrice?: number;
+	inStock?: boolean;
 }
 
 export interface CreateProductDto {
@@ -1206,10 +1206,8 @@ export interface CreateProductDto {
 	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
-	basePrice: number;
 	description?: string;
 	year?: number;
-	inStock?: boolean;
 }
 
 export interface UpdateProductDto {
@@ -1219,11 +1217,59 @@ export interface UpdateProductDto {
 	providerImagePath?: string | null;
 	country?: string;
 	category?: string;
-	basePrice?: number;
 	description?: string;
 	year?: number;
-	inStock?: boolean;
+	inventoryQuantity?: number;
+}
+
+export interface UpdateInventoryDto {
+	inventoryQuantity: number;
+}
+
+// ==================== PRODUCT CATEGORIES ====================
+
+export interface ProductCategory {
+	id: number;
+	name: string;
+	nameAr?: string;
+	description?: string;
+	descriptionAr?: string;
+	iconPath?: string;
+	parentCategoryId?: number;
+	parentCategoryName?: string;
+	displayOrder: number;
+	isActive: boolean;
+	subCategories?: ProductCategory[];
+	productCount: number;
+}
+
+export interface CreateProductCategoryDto {
+	name: string;
+	nameAr?: string;
+	description?: string;
+	descriptionAr?: string;
+	parentCategoryId?: number;
+	displayOrder?: number;
 	isActive?: boolean;
+}
+
+export interface UpdateProductCategoryDto {
+	name?: string;
+	nameAr?: string;
+	description?: string;
+	descriptionAr?: string;
+	parentCategoryId?: number;
+	displayOrder?: number;
+	isActive?: boolean;
+}
+
+export interface CategoryHierarchy {
+	id: number;
+	name: string;
+	nameAr?: string;
+	iconPath?: string;
+	productCount: number;
+	subCategories: CategoryHierarchy[];
 }
 
 export interface ProductSearchParams {

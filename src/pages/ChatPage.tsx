@@ -6,9 +6,12 @@ import ChatWindow from '@/components/chat/ChatWindow';
 import ChatInputArea from '@/components/chat/ChatInputArea';
 import { Card } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
+import { MessageSquare, WifiOff, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const ChatPage: React.FC = () => {
-	const { t } = useTranslation();
+	const { t, language } = useTranslation();
+	const isRTL = language === 'ar';
 	const { user } = useAuthStore();
 	const {
 		conversations,
@@ -53,20 +56,33 @@ const ChatPage: React.FC = () => {
 
 	if (loading && (!conversations || conversations.length === 0)) {
 		return (
-			<div className="flex items-center justify-center h-screen">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-					<p className="text-muted-foreground">{t('chat.loading') || 'Loading chat...'}</p>
+			<div className="flex items-center justify-center h-screen bg-background">
+				<div className="text-center space-y-4">
+					<div className="relative">
+						<div className="animate-spin rounded-full h-12 w-12 border-4 border-muted border-t-primary mx-auto"></div>
+						<MessageSquare className="absolute inset-0 m-auto h-6 w-6 text-primary" />
+					</div>
+					<p className="text-muted-foreground text-lg font-medium">
+						{t('chat.loading') || 'Loading chat...'}
+					</p>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex flex-col h-full p-4 md:p-6">
-			<div className="flex-1 flex overflow-hidden min-h-0">
+		<div className={cn(
+			"flex flex-col h-[calc(100vh-5rem)] bg-background",
+			"-mx-4 md:-mx-6 px-4 md:px-6",
+			"relative",
+			isRTL && "rtl"
+		)}>
+			<div className="flex-1 flex overflow-hidden min-h-0 gap-0">
 				{/* Chat List Sidebar */}
-				<div className="w-80 border-r bg-background flex-shrink-0">
+				<div className={cn(
+					"w-full md:w-80 lg:w-96 border-r border-border bg-card flex-shrink-0 flex flex-col shadow-sm",
+					isRTL && "border-l border-r-0"
+				)}>
 					<ChatList
 						conversations={conversations}
 						currentConversationId={currentConversation?.id}
@@ -76,15 +92,28 @@ const ChatPage: React.FC = () => {
 				</div>
 
 				{/* Chat Window */}
-				<div className="flex-1 flex flex-col min-w-0">
+				<div className="flex-1 flex flex-col min-w-0 bg-background">
 					{currentConversation ? (
 						<ChatWindow conversation={currentConversation} />
 					) : (
 						<div className="flex-1 flex items-center justify-center bg-muted/30">
-							<Card className="p-8 text-center">
-								<p className="text-muted-foreground text-lg">
-									{t('chat.selectConversation') || 'Select a conversation to start chatting'}
-								</p>
+							<Card className="p-12 text-center max-w-md mx-4 shadow-md border border-border">
+								<div className="space-y-4">
+									<div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+										<MessageSquare className="h-8 w-8 text-primary" />
+									</div>
+									<div className="space-y-2">
+										<h3 className="text-xl font-semibold text-foreground">
+											{t('chat.welcome') || 'Welcome to Chat'}
+										</h3>
+										<p className="text-muted-foreground">
+											{isAdmin
+												? (t('chat.selectConversationAdmin') || 'Select a conversation from the sidebar to respond to customer messages')
+												: (t('chat.selectConversation') || 'Select a conversation from the sidebar to start chatting')
+											}
+										</p>
+									</div>
+								</div>
 							</Card>
 						</div>
 					)}
@@ -92,22 +121,35 @@ const ChatPage: React.FC = () => {
 			</div>
 
 			{/* Input Area - Fixed at bottom */}
-			{currentConversation && (
-				<div className="w-full px-4 py-3 border border-border rounded-lg bg-background shadow-md flex-shrink-0 mt-4 z-10">
-					<ChatInputArea conversationId={currentConversation.id} />
+			{currentConversation && currentConversation.id && (
+				<div className={cn(
+					"w-full px-4 md:px-6 py-4 border-t border-border bg-card/95 backdrop-blur-sm shadow-lg flex-shrink-0 relative z-10",
+					isRTL && "border-t"
+				)}>
+					<div className="max-w-7xl mx-auto">
+						<ChatInputArea conversationId={currentConversation.id} />
+					</div>
 				</div>
 			)}
 
 			{/* Connection Status */}
 			{!isConnected && (
-				<div className="bg-yellow-500/10 border-t border-yellow-500/20 px-4 py-2 text-sm text-yellow-600 dark:text-yellow-400">
-					{t('chat.disconnected') || 'Disconnected from chat server. Reconnecting...'}
+				<div className={cn(
+					"bg-yellow-500/10 border-t border-yellow-500/30 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400 flex items-center gap-2 backdrop-blur-sm",
+					isRTL && "flex-row-reverse"
+				)}>
+					<WifiOff className="h-4 w-4 flex-shrink-0" />
+					<span>{t('chat.disconnected') || 'Disconnected from chat server. Reconnecting...'}</span>
 				</div>
 			)}
 
 			{error && (
-				<div className="bg-destructive/10 border-t border-destructive/20 px-4 py-2 text-sm text-destructive">
-					{error}
+				<div className={cn(
+					"bg-destructive/10 border-t border-destructive/30 px-4 py-3 text-sm text-destructive flex items-center gap-2 backdrop-blur-sm",
+					isRTL && "flex-row-reverse"
+				)}>
+					<AlertCircle className="h-4 w-4 flex-shrink-0" />
+					<span>{error}</span>
 				</div>
 			)}
 		</div>
