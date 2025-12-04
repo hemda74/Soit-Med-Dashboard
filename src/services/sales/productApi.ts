@@ -4,6 +4,7 @@ import type {
 	Product,
 	CreateProductDto,
 	UpdateProductDto,
+	UpdateInventoryDto,
 	ApiResponse,
 } from '@/types/sales.types';
 import { getAuthToken } from '@/utils/authUtils';
@@ -246,6 +247,79 @@ class ProductApiService {
 	): string {
 		// Use centralized utility for consistent URL construction
 		return getStaticFileUrl(providerImagePath);
+	}
+
+	/**
+	 * Upload data sheet PDF for a product
+	 */
+	async uploadDataSheet(
+		id: number,
+		file: File
+	): Promise<ApiResponse<Product>> {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		return this.makeRequest<Product>(
+			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(id)}/upload-data-sheet`,
+			{
+				method: 'POST',
+				body: formData,
+			}
+		);
+	}
+
+	/**
+	 * Upload catalog PDF for a product
+	 */
+	async uploadCatalog(
+		id: number,
+		file: File
+	): Promise<ApiResponse<Product>> {
+		const formData = new FormData();
+		formData.append('file', file);
+
+		return this.makeRequest<Product>(
+			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(id)}/upload-catalog`,
+			{
+				method: 'POST',
+				body: formData,
+			}
+		);
+	}
+
+	/**
+	 * Get data sheet PDF URL
+	 */
+	getDataSheetUrl(productId: number): string {
+		const baseUrl = getApiBaseUrl();
+		return `${baseUrl}/api/Product/${productId}/data-sheet-file`;
+	}
+
+	/**
+	 * Get catalog PDF URL
+	 */
+	getCatalogUrl(productId: number): string {
+		const baseUrl = getApiBaseUrl();
+		return `${baseUrl}/api/Product/${productId}/catalog-file`;
+	}
+
+	/**
+	 * Update inventory quantity for a product
+	 */
+	async updateInventoryQuantity(
+		id: number,
+		updateDto: UpdateInventoryDto
+	): Promise<ApiResponse<Product>> {
+		return this.makeRequest<Product>(
+			`${API_ENDPOINTS.SALES.PRODUCTS.BY_ID(id)}/inventory`,
+			{
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(updateDto),
+			}
+		);
 	}
 }
 

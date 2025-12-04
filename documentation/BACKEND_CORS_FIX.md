@@ -193,8 +193,8 @@ Check that CORS is working by looking at the Network tab in browser DevTools:
 ## Summary
 
 - ❌ **Don't use** `AllowAnyOrigin()` with `AllowCredentials()`
-- ✅ **Do use** `WithOrigins([specific origins])` with `AllowCredentials()`
-- ✅ **Frontend workaround** already applied as temporary fix
+- **Do use** `WithOrigins([specific origins])` with `AllowCredentials()`
+- **Frontend workaround** already applied as temporary fix
 - 🔧 **Backend fix** is required for production
 
 ## Contact

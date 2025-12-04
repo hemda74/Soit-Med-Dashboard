@@ -115,7 +115,7 @@ private handleNotification(data: any): void {
 
 The system handles these connection states:
 
-- `Connected` - ✅ Connected and authenticated
+- `Connected` - Connected and authenticated
 - `Connecting` - 🔄 Attempting to connect
 - `Reconnecting` - 🔄 Lost connection, reconnecting
 - `Disconnected` - ❌ Not connected

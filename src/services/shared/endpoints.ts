@@ -257,6 +257,15 @@ export const API_ENDPOINTS = {
 			UPLOAD_IMAGE: (id: number) =>
 				`/api/Product/${id}/upload-image`,
 		},
+		// Product Categories
+		PRODUCT_CATEGORIES: {
+			BASE: '/api/ProductCategory',
+			BY_ID: (id: number) => `/api/ProductCategory/${id}`,
+			HIERARCHY: '/api/ProductCategory/hierarchy',
+			MAIN: '/api/ProductCategory/main',
+			SUBCATEGORIES: (id: number) =>
+				`/api/ProductCategory/${id}/subcategories`,
+		},
 		// Notifications
 		NOTIFICATION: {
 			BASE: '/api/Notification',

@@ -1,6 +1,6 @@
 # Quick Start: Weekly Plans Feature
 
-## 🚀 Access the Feature
+## Access the Feature
 
 ### URL Path
 
@@ -14,11 +14,11 @@ http://localhost:5173/weekly-plans
 
 The **Weekly Plans** menu item will appear in the sidebar for users with these roles:
 
-- ✅ **Salesman**
-- ✅ **Sales Manager**
-- ✅ **Super Admin**
+- **Salesman**
+- **Sales Manager**
+- **Super Admin**
 
-Look for the checklist icon (📋) in the sidebar menu.
+Look for the checklist icon ( ) in the sidebar menu.
 
 ---
 
@@ -28,10 +28,10 @@ Look for the checklist icon (📋) in the sidebar menu.
 
 When logged in as a **Salesman**, you will see:
 
-- ✅ "Create Plan" button
-- ✅ Your own weekly plans only
-- ✅ Edit/Delete buttons on your plans
-- ✅ Ability to add tasks and daily progress
+- "Create Plan" button
+- Your own weekly plans only
+- Edit/Delete buttons on your plans
+- Ability to add tasks and daily progress
 
 **What you can do:**
 
@@ -45,9 +45,9 @@ When logged in as a **Salesman**, you will see:
 
 When logged in as a **Sales Manager**, you will see:
 
-- ✅ All employee weekly plans
-- ✅ Filter by employee dropdown
-- ✅ Review button on all plans
+- All employee weekly plans
+- Filter by employee dropdown
+- Review button on all plans
 - ❌ No "Create Plan" button
 - ❌ Cannot edit employee plans
 
@@ -66,7 +66,7 @@ Has **all permissions** from both Salesman and Sales Manager roles.
 
 ---
 
-## 📝 Quick Workflow Guide
+## Quick Workflow Guide
 
 ### Creating Your First Weekly Plan (Salesman)
 
@@ -126,19 +126,19 @@ Has **all permissions** from both Salesman and Sales Manager roles.
 
 ---
 
-## 🎯 Key Features Available Now
+## Key Features Available Now
 
-✅ **Create weekly plans with tasks**
-✅ **View all plans** (role-based)
-✅ **Filter and search**
-✅ **Pagination**
-✅ **Progress tracking**
-✅ **Manager reviews**
-✅ **Rating system**
-✅ **Edit/Delete plans** (own plans only)
-✅ **Responsive design**
-✅ **Dark mode support**
-✅ **Arabic/English support**
+**Create weekly plans with tasks**
+**View all plans** (role-based)
+**Filter and search**
+**Pagination**
+**Progress tracking**
+**Manager reviews**
+**Rating system**
+**Edit/Delete plans** (own plans only)
+**Responsive design**
+**Dark mode support**
+**Arabic/English support**
 
 ---
 
@@ -215,7 +215,7 @@ VITE_API_BASE_URL=http://localhost:5117
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Complete Feature Documentation](./WEEKLY_PLAN_FEATURE.md)
 - [Implementation Summary](./WEEKLY_PLAN_IMPLEMENTATION_SUMMARY.md)
@@ -255,7 +255,7 @@ Once you access the feature, you should see:
 
 ---
 
-## ✨ Next Steps
+## Next Steps
 
 1. **Access the feature**: Navigate to `/weekly-plans`
 2. **Test functionality**: Create a plan, add tasks
@@ -271,33 +271,3 @@ The Weekly Plans system is fully functional and integrated into your application
 ---
 
 Last Updated: October 4, 2025
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

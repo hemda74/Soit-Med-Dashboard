@@ -3,6 +3,11 @@ import autoTable from 'jspdf-autotable';
 import letterheadPdfUrl from '@/assets/Letterhead.pdf?url';
 import letterheadPngUrl from '@/assets/Letterhead.png?url';
 import { getStaticFileUrl } from '@/utils/apiConfig';
+import {
+	downloadOfferPdfFromHtml,
+	getOfferPdfBlobFromHtml,
+	type HtmlPdfExportOptions,
+} from '@/utils/pdfGeneratorHtml';
 // @ts-ignore - arabic-reshaper doesn't have type definitions
 import arabicReshaper from 'arabic-reshaper';
 
@@ -42,6 +47,8 @@ interface OfferData {
 
 export type PDFLanguage = 'ar' | 'en';
 
+export type PDFRenderingMode = 'jspdf' | 'html' | 'both';
+
 export interface PDFExportOptions {
 	language?: PDFLanguage; // Default: 'en'
 	generateBothLanguages?: boolean; // Generate both Arabic and English versions
@@ -55,6 +62,8 @@ export interface PDFExportOptions {
 	showPrice?: boolean; // Show price column
 	// Custom descriptions per product (keyed by product id)
 	customDescriptions?: Record<number, string>;
+	// Rendering strategy
+	renderingMode?: PDFRenderingMode;
 }
 
 // Translation keys
@@ -390,7 +399,7 @@ export const generateOfferPDF = async (
 	const isRTL = lang === 'ar';
 
 	// Default options
-	const opts: Required<PDFExportOptions> = {
+	const opts: Required<Omit<PDFExportOptions, 'renderingMode'>> = {
 		language: lang,
 		generateBothLanguages: options.generateBothLanguages || false,
 		showProductHeaders: options.showProductHeaders !== false, // Default true
@@ -419,7 +428,7 @@ export const generateOfferPDF = async (
 	let useAmiriFont = false;
 	if (lang === 'ar') {
 		console.log(
-			'📝 Using Helvetica for Arabic (with reshaping & reverse)'
+			'  Using Helvetica for Arabic (with reshaping & reverse)'
 		);
 		doc.setFont('helvetica', 'normal');
 	}
@@ -941,7 +950,7 @@ export const generateOfferPDF = async (
 						eq.providerImageBase64
 							?.length || 0,
 					status: eq.providerImageBase64
-						? '✅ LOADED'
+						? '  LOADED'
 						: eq.providerImagePath
 						? '❌ FAILED TO LOAD'
 						: '⚠️ NO PATH PROVIDED',
@@ -966,7 +975,7 @@ export const generateOfferPDF = async (
 
 		console.log(`📊 Provider Image Summary:`);
 		console.log(
-			`   ✅ Successfully loaded: ${loadedCount}/${equipmentWithImages.length}`
+			`     Successfully loaded: ${loadedCount}/${equipmentWithImages.length}`
 		);
 		console.log(
 			`   ❌ Failed to load: ${failedCount}/${equipmentWithImages.length}`
@@ -1804,7 +1813,7 @@ export const generateOfferPDF = async (
 									5
 							) + 8;
 						console.log(
-							`[PDF RENDER] ✅ Successfully added provider logo for ${eq.name}`
+							`[PDF RENDER]   Successfully added provider logo for ${eq.name}`
 						);
 					} catch (error) {
 						console.error(
@@ -2019,7 +2028,7 @@ export const generateOfferPDF = async (
 				productName: eq.name || 'Unknown',
 				provider: eq.provider || 'N/A',
 				hadImageBase64: !!eq.providerImageBase64,
-				renderedInPDF: wasRendered ? '✅ YES' : '❌ NO',
+				renderedInPDF: wasRendered ? '  YES' : '❌ NO',
 				reason: wasRendered
 					? 'Image was available and rendered'
 					: eq.providerImagePath
@@ -2471,39 +2480,100 @@ export const generateOfferPDF = async (
 	return doc;
 };
 
+const DEFAULT_RENDERING_MODE: PDFRenderingMode = 'both';
+
+function shouldUseJsPdf(mode?: PDFRenderingMode): boolean {
+	return !mode || mode === 'jspdf' || mode === 'both';
+}
+
+function shouldUseHtml(mode?: PDFRenderingMode): boolean {
+	return mode === 'html' || mode === 'both';
+}
+
+function normalizeLanguages(options: PDFExportOptions): PDFLanguage[] {
+	if (options.generateBothLanguages) {
+		return ['ar', 'en'];
+	}
+	return [options.language || 'en'];
+}
+
+function mapToHtmlOptions(
+	options: PDFExportOptions,
+	extra?: Partial<HtmlPdfExportOptions>
+): HtmlPdfExportOptions {
+	return {
+		language: options.language,
+		generateBothLanguages: false,
+		showProductHeaders: options.showProductHeaders,
+		showModel: options.showModel,
+		showProvider: options.showProvider,
+		showCountry: options.showCountry,
+		showDescription: options.showDescription,
+		showImage: options.showImage,
+		showPrice: options.showPrice,
+		customDescriptions: options.customDescriptions,
+		...extra,
+	};
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => {
+			if (typeof reader.result === 'string') {
+				resolve(reader.result);
+			} else {
+				reject(
+					new Error('Failed to convert blob to base64 string')
+				);
+			}
+		};
+		reader.onerror = () =>
+			reject(
+				reader.error ||
+					new Error('Unknown error converting blob to base64')
+			);
+		reader.readAsDataURL(blob);
+	});
+}
+
 // Download PDF
 export const downloadOfferPDF = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ) => {
-	// Use jsPDF for both languages
-	if (options.generateBothLanguages) {
-		// Generate both Arabic and English versions
-		const docAr = await generateOfferPDF(offer, {
-			...options,
-			language: 'ar',
-			generateBothLanguages: false,
-		});
-		docAr.save(`Offer_${offer.id}_${offer.clientName}_AR.pdf`);
+	const renderingMode = options.renderingMode || DEFAULT_RENDERING_MODE;
+	const languages = normalizeLanguages(options);
+	const useJsPdf = shouldUseJsPdf(renderingMode);
+	const useHtml = shouldUseHtml(renderingMode);
 
-		// Small delay before generating English version
-		setTimeout(async () => {
-			const docEn = await generateOfferPDF(offer, {
+	// Legacy jsPDF generation
+	if (useJsPdf) {
+		for (const lang of languages) {
+			const doc = await generateOfferPDF(offer, {
 				...options,
-				language: 'en',
+				language: lang,
 				generateBothLanguages: false,
 			});
-			docEn.save(
-				`Offer_${offer.id}_${offer.clientName}_EN.pdf`
+			const langSuffix = lang === 'ar' ? 'AR' : 'EN';
+			const approachSuffix = useHtml ? '_JSPDF' : '';
+			doc.save(
+				`Offer_${offer.id}_${offer.clientName}_${langSuffix}${approachSuffix}.pdf`
 			);
-		}, 1000);
-	} else {
-		// Single language export
-		const doc = await generateOfferPDF(offer, options);
-		const langSuffix = options.language === 'ar' ? 'AR' : 'EN';
-		doc.save(
-			`Offer_${offer.id}_${offer.clientName}_${langSuffix}.pdf`
-		);
+		}
+	}
+
+	// HTML-first generation (canvas + jsPDF)
+	if (useHtml) {
+		for (const lang of languages) {
+			await downloadOfferPdfFromHtml(
+				offer,
+				mapToHtmlOptions(
+					{ ...options, language: lang, generateBothLanguages: false },
+					{ filenameSuffix: useJsPdf ? 'HTML' : undefined }
+				)
+			);
+		}
 	}
 };
 
@@ -2512,6 +2582,12 @@ export const getOfferPDFBlob = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ): Promise<Blob> => {
+	if (options.renderingMode === 'html') {
+		return getOfferPdfBlobFromHtml(
+			offer,
+			mapToHtmlOptions({ ...options, generateBothLanguages: false })
+		);
+	}
 	const doc = await generateOfferPDF(offer, options);
 	return doc.output('blob');
 };
@@ -2521,6 +2597,13 @@ export const getOfferPDFBase64 = async (
 	offer: OfferData,
 	options: PDFExportOptions = {}
 ): Promise<string> => {
+	if (options.renderingMode === 'html') {
+		const blob = await getOfferPdfBlobFromHtml(
+			offer,
+			mapToHtmlOptions({ ...options, generateBothLanguages: false })
+		);
+		return blobToBase64(blob);
+	}
 	const doc = await generateOfferPDF(offer, options);
 	return doc.output('dataurlstring');
 };

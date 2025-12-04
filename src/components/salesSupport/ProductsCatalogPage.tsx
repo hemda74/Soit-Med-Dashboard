@@ -28,12 +28,31 @@ import { usePerformance } from '@/hooks/usePerformance'
 import { useTranslation } from '@/hooks/useTranslation'
 import ProviderLogo from '@/components/sales/ProviderLogo'
 import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig'
+import { useAuthStore } from '@/stores/authStore'
 
-const CATEGORIES = ['X-Ray', 'Ultrasound', 'CT Scanner', 'MRI', 'Other']
+const CATEGORIES = [
+    'X-RAY',
+    'MOBILE X-RAY',
+    'PORTABLE X-RAY',
+    'DIGITAL FLAT PANEL',
+    'MRI',
+    'CT Scanner',
+    'C-ARM',
+    'U-ARM',
+    'DEXA',
+    'RADIOGRAPHIC FLUOROSCOPY',
+    'MAMMOGRAPHY',
+    'ULTRASOUND',
+    'Physiotherapy Line',
+    'Dermatology Line',
+    'IVD Line'
+]
 
 export default function ProductsCatalogPage() {
     usePerformance('ProductsCatalogPage');
     const { t } = useTranslation();
+    const { hasAnyRole } = useAuthStore();
+    const isInventoryManager = hasAnyRole(['InventoryManager', 'SuperAdmin']);
     const [products, setProducts] = useState<Product[]>([])
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(false)
@@ -42,7 +61,6 @@ export default function ProductsCatalogPage() {
     // Filters
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
-    const [inStockFilter, setInStockFilter] = useState<boolean | null>(null)
 
     // Dialog state
     const [dialogOpen, setDialogOpen] = useState(false)
@@ -55,20 +73,23 @@ export default function ProductsCatalogPage() {
         provider: '',
         country: '',
         category: '',
-        basePrice: 0,
         description: '',
         year: undefined,
-        inStock: true,
     })
     const [selectedImage, setSelectedImage] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [providerImageFile, setProviderImageFile] = useState<File | null>(null)
     const [providerImagePreview, setProviderImagePreview] = useState<string | null>(null)
+    const [dataSheetFile, setDataSheetFile] = useState<File | null>(null)
+    const [catalogFile, setCatalogFile] = useState<File | null>(null)
+    const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
+    const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null)
+    const [editingInventory, setEditingInventory] = useState<{ productId: number; quantity: number } | null>(null)
 
     // Load products
     useEffect(() => {
         loadProducts()
-    }, [selectedCategory, inStockFilter])
+    }, [selectedCategory])
 
     // Filter products client-side
     useEffect(() => {
@@ -93,9 +114,8 @@ export default function ProductsCatalogPage() {
         setLoading(true)
         setError(null)
         try {
-            const params: { category?: string; inStock?: boolean } = {}
+            const params: { category?: string } = {}
             if (selectedCategory && selectedCategory !== 'all') params.category = selectedCategory
-            if (inStockFilter !== null) params.inStock = inStockFilter
 
             const response = await productApi.getAllProducts(params)
             setProducts(response.data || [])
@@ -134,15 +154,15 @@ export default function ProductsCatalogPage() {
             provider: '',
             country: '',
             category: '',
-            basePrice: 0,
             description: '',
             year: undefined,
-            inStock: true,
         })
         setSelectedImage(null)
         setImagePreview(null)
         setProviderImageFile(null)
         setProviderImagePreview(null)
+        setDataSheetFile(null)
+        setCatalogFile(null)
         setDialogOpen(true)
     }
 
@@ -154,10 +174,8 @@ export default function ProductsCatalogPage() {
             provider: product.provider || '',
             country: product.country || '',
             category: product.category || '',
-            basePrice: product.basePrice,
             description: product.description || '',
             year: product.year,
-            inStock: product.inStock,
         })
         setSelectedImage(null)
         setImagePreview(product.imagePath ? productApi.getImageUrl(product.imagePath) : null)
@@ -167,6 +185,8 @@ export default function ProductsCatalogPage() {
                 ? productApi.getProviderImageUrl(product.providerImagePath)
                 : null
         )
+        setDataSheetFile(null)
+        setCatalogFile(null)
         setDialogOpen(true)
     }
 
@@ -223,11 +243,49 @@ export default function ProductsCatalogPage() {
         reader.readAsDataURL(file)
     }
 
+    const handleDataSheetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validate file type
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            toast.error(t('invalidFileType') || 'Invalid file type. Only PDF files are allowed.')
+            return
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(t('fileSizeMustBeLessThan5MB') || 'File size must be less than 5MB')
+            return
+        }
+
+        setDataSheetFile(file)
+    }
+
+    const handleCatalogSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // Validate file type
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            toast.error(t('invalidFileType') || 'Invalid file type. Only PDF files are allowed.')
+            return
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(t('fileSizeMustBeLessThan5MB') || 'File size must be less than 5MB')
+            return
+        }
+
+        setCatalogFile(file)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!formData.name || formData.basePrice <= 0) {
-            toast.error(t('nameAndPriceAreRequired'))
+        if (!formData.name) {
+            toast.error(t('nameIsRequired'))
             return
         }
 
@@ -249,6 +307,15 @@ export default function ProductsCatalogPage() {
                     await productApi.uploadProviderImage(editingProduct.id, providerImageFile)
                 }
 
+                // Upload PDFs if selected
+                if (dataSheetFile) {
+                    await productApi.uploadDataSheet(editingProduct.id, dataSheetFile)
+                }
+
+                if (catalogFile) {
+                    await productApi.uploadCatalog(editingProduct.id, catalogFile)
+                }
+
                 toast.success(t('productUpdatedSuccessfully'))
             } else {
                 // Create
@@ -262,6 +329,15 @@ export default function ProductsCatalogPage() {
 
                 if (providerImageFile && newProduct) {
                     await productApi.uploadProviderImage(newProduct.id, providerImageFile)
+                }
+
+                // Upload PDFs if selected
+                if (dataSheetFile && newProduct) {
+                    await productApi.uploadDataSheet(newProduct.id, dataSheetFile)
+                }
+
+                if (catalogFile && newProduct) {
+                    await productApi.uploadCatalog(newProduct.id, catalogFile)
                 }
 
                 toast.success(t('productCreatedSuccessfully'))
@@ -288,12 +364,20 @@ export default function ProductsCatalogPage() {
         }
     }
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'EGP',
-            minimumFractionDigits: 0,
-        }).format(price)
+    const openPdfViewer = (url: string) => {
+        setCurrentPdfUrl(url)
+        setPdfViewerOpen(true)
+    }
+
+    const handleUpdateInventory = async (productId: number, quantity: number) => {
+        try {
+            await productApi.updateInventoryQuantity(productId, { inventoryQuantity: quantity })
+            toast.success(t('inventoryUpdated'))
+            setEditingInventory(null)
+            loadProducts()
+        } catch (err: any) {
+            toast.error(err.message || t('failedToUpdateInventory'))
+        }
     }
 
     return (
@@ -344,31 +428,12 @@ export default function ProductsCatalogPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div>
-                            <Label>{t('stockStatus')}</Label>
-                            <Select
-                                value={inStockFilter === null ? 'all' : inStockFilter.toString()}
-                                onValueChange={(v) =>
-                                    setInStockFilter(v === 'all' ? null : v === 'true')
-                                }
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">{t('all')}</SelectItem>
-                                    <SelectItem value="true">{t('inStock')}</SelectItem>
-                                    <SelectItem value="false">{t('outOfStock')}</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="flex items-end">
                             <Button
                                 variant="outline"
                                 onClick={() => {
                                     setSearchTerm('')
                                     setSelectedCategory('all')
-                                    setInStockFilter(null)
                                     loadProducts()
                                 }}
                             >
@@ -425,11 +490,11 @@ export default function ProductsCatalogPage() {
                                                     </p>
                                                 )}
                                             </div>
-                                            <Badge
-                                                variant={product.inStock ? 'default' : 'secondary'}
-                                            >
-                                                {product.inStock ? t('inStock') : t('outOfStock')}
-                                            </Badge>
+                                            {product.inventoryQuantity !== null && product.inventoryQuantity !== undefined && (
+                                                <Badge variant="default">
+                                                    Qty: {product.inventoryQuantity}
+                                                </Badge>
+                                            )}
                                         </div>
 
                                         {(product.providerImagePath ||
@@ -451,9 +516,6 @@ export default function ProductsCatalogPage() {
                                                 {product.category}
                                             </Badge>
                                         )}
-                                        <p className="text-lg font-bold text-primary mb-3">
-                                            {formatPrice(product.basePrice)}
-                                        </p>
 
                                         {product.description && (
                                             <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -461,7 +523,51 @@ export default function ProductsCatalogPage() {
                                             </p>
                                         )}
 
+                                        {/* PDF Viewers */}
+                                        {(product.dataSheetPath || product.catalogPath) && (
+                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                {product.dataSheetPath && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => openPdfViewer(productApi.getDataSheetUrl(product.id))}
+                                                        className="text-xs"
+                                                    >
+                                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                        View Data Sheet
+                                                    </Button>
+                                                )}
+                                                {product.catalogPath && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => openPdfViewer(productApi.getCatalogUrl(product.id))}
+                                                        className="text-xs"
+                                                    >
+                                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                        View Catalog
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="flex gap-2">
+                                            {isInventoryManager && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setEditingInventory({
+                                                        productId: product.id,
+                                                        quantity: product.inventoryQuantity || 0
+                                                    })}
+                                                >
+                                                    Edit Inventory
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -566,25 +672,6 @@ export default function ProductsCatalogPage() {
                             </div>
 
                             <div>
-                                <Label>
-                                    {t('basePrice')} <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
-                                    value={formData.basePrice || ''}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            basePrice: parseFloat(e.target.value) || 0,
-                                        })
-                                    }
-                                    required
-                                />
-                            </div>
-
-                            <div>
                                 <Label>{t('year')}</Label>
                                 <Input
                                     type="number"
@@ -596,21 +683,6 @@ export default function ProductsCatalogPage() {
                                         })
                                     }
                                 />
-                            </div>
-
-                            <div className="col-span-2 flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="inStock"
-                                    checked={formData.inStock}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, inStock: e.target.checked })
-                                    }
-                                    className="w-4 h-4"
-                                />
-                                <Label htmlFor="inStock" className="cursor-pointer">
-                                    {t('inStock')}
-                                </Label>
                             </div>
 
                             <div className="col-span-2">
@@ -705,6 +777,58 @@ export default function ProductsCatalogPage() {
                                     )}
                                 </div>
                             </div>
+
+                            <div className="col-span-2">
+                                <Label>Data Sheet PDF</Label>
+                                <Input
+                                    type="file"
+                                    accept="application/pdf,.pdf"
+                                    onChange={handleDataSheetSelect}
+                                />
+                                {editingProduct?.dataSheetPath && (
+                                    <div className="mt-2">
+                                        <a
+                                            href={productApi.getDataSheetUrl(editingProduct.id)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm text-blue-600 hover:underline"
+                                        >
+                                            View current data sheet
+                                        </a>
+                                    </div>
+                                )}
+                                {dataSheetFile && (
+                                    <div className="mt-2 text-sm text-green-600">
+                                        {dataSheetFile.name} ({(dataSheetFile.size / 1024).toFixed(2)} KB)
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-span-2">
+                                <Label>Catalog PDF</Label>
+                                <Input
+                                    type="file"
+                                    accept="application/pdf,.pdf"
+                                    onChange={handleCatalogSelect}
+                                />
+                                {editingProduct?.catalogPath && (
+                                    <div className="mt-2">
+                                        <a
+                                            href={productApi.getCatalogUrl(editingProduct.id)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-sm text-blue-600 hover:underline"
+                                        >
+                                            View current catalog
+                                        </a>
+                                    </div>
+                                )}
+                                {catalogFile && (
+                                    <div className="mt-2 text-sm text-green-600">
+                                        {catalogFile.name} ({(catalogFile.size / 1024).toFixed(2)} KB)
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex justify-end gap-2 pt-4">
@@ -720,6 +844,78 @@ export default function ProductsCatalogPage() {
                             </Button>
                         </div>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* PDF Viewer Modal */}
+            <Dialog open={pdfViewerOpen} onOpenChange={setPdfViewerOpen}>
+                <DialogContent className="max-w-5xl max-h-[90vh]">
+                    <DialogHeader>
+                        <DialogTitle>Document Viewer</DialogTitle>
+                        <div className="flex gap-2 mt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => currentPdfUrl && window.open(currentPdfUrl, '_blank')}
+                            >
+                                Open in New Tab
+                            </Button>
+                        </div>
+                    </DialogHeader>
+                    {currentPdfUrl && (
+                        <div className="w-full h-[70vh] relative">
+                            <iframe
+                                src={`${currentPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                                className="w-full h-full border rounded"
+                                title="PDF Viewer"
+                                style={{ border: '1px solid #e5e7eb' }}
+                                onError={(e) => {
+                                    console.error('PDF iframe load error:', e);
+                                }}
+                            />
+                            <div className="absolute top-2 right-2 bg-white/90 p-2 rounded shadow text-xs text-gray-600">
+                                If PDF doesn't load, click "Open in New Tab"
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Inventory Edit Dialog */}
+            <Dialog open={editingInventory !== null} onOpenChange={(open) => !open && setEditingInventory(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Update Inventory Quantity</DialogTitle>
+                    </DialogHeader>
+                    {editingInventory && (
+                        <div className="space-y-4">
+                            <div>
+                                <Label>Inventory Quantity</Label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    value={editingInventory.quantity}
+                                    onChange={(e) => setEditingInventory({
+                                        ...editingInventory,
+                                        quantity: parseInt(e.target.value) || 0
+                                    })}
+                                />
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setEditingInventory(null)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => handleUpdateInventory(editingInventory.productId, editingInventory.quantity)}
+                                >
+                                    Update
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

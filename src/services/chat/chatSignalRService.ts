@@ -1,7 +1,10 @@
 import * as signalR from '@microsoft/signalr';
 import { getAuthToken } from '@/utils/authUtils';
 import { getApiBaseUrl } from '@/utils/apiConfig';
-import type { ChatMessageResponseDTO, TypingIndicator } from '@/types/chat.types';
+import type {
+	ChatMessageResponseDTO,
+	TypingIndicator,
+} from '@/types/chat.types';
 
 class ChatSignalRService {
 	private connection: signalR.HubConnection | null = null;
@@ -20,7 +23,11 @@ class ChatSignalRService {
 	async connect(): Promise<void> {
 		try {
 			// If already connected, return
-			if (this.isConnected && this.connection?.state === signalR.HubConnectionState.Connected) {
+			if (
+				this.isConnected &&
+				this.connection?.state ===
+					signalR.HubConnectionState.Connected
+			) {
 				return;
 			}
 
@@ -28,9 +35,17 @@ class ChatSignalRService {
 			if (this.isConnecting) {
 				let waitCount = 0;
 				while (this.isConnecting && waitCount < 50) {
-					await new Promise(resolve => setTimeout(resolve, 100));
+					await new Promise((resolve) =>
+						setTimeout(resolve, 100)
+					);
 					waitCount++;
-					if (this.isConnected && this.connection?.state === signalR.HubConnectionState.Connected) {
+					if (
+						this.isConnected &&
+						this.connection?.state ===
+							signalR
+								.HubConnectionState
+								.Connected
+					) {
 						return;
 					}
 				}
@@ -38,32 +53,55 @@ class ChatSignalRService {
 
 			const token = this.getAuthToken();
 			if (!token) {
-				throw new Error('No authentication token found');
+				throw new Error(
+					'No authentication token found'
+				);
 			}
 
 			// Disconnect existing connection if any
 			if (this.connection) {
 				const currentState = this.connection.state;
-				if (currentState === signalR.HubConnectionState.Connecting) {
+				if (
+					currentState ===
+					signalR.HubConnectionState.Connecting
+				) {
 					let waitCount = 0;
-					while (this.connection.state === signalR.HubConnectionState.Connecting && waitCount < 30) {
-						await new Promise(resolve => setTimeout(resolve, 100));
+					while (
+						this.connection.state ===
+							signalR
+								.HubConnectionState
+								.Connecting &&
+						waitCount < 30
+					) {
+						await new Promise((resolve) =>
+							setTimeout(resolve, 100)
+						);
 						waitCount++;
 					}
 				}
-				
-				if (this.connection.state !== signalR.HubConnectionState.Disconnected) {
+
+				if (
+					this.connection.state !==
+					signalR.HubConnectionState.Disconnected
+				) {
 					try {
 						await this.connection.stop();
-						await new Promise(resolve => setTimeout(resolve, 200));
+						await new Promise((resolve) =>
+							setTimeout(resolve, 200)
+						);
 					} catch (stopError) {
-						console.warn('Error stopping existing connection:', stopError);
+						console.warn(
+							'Error stopping existing connection:',
+							stopError
+						);
 					}
 				}
 			}
 
 			this.isConnecting = true;
-			const baseUrl = import.meta.env.VITE_SIGNALR_URL || getApiBaseUrl();
+			const baseUrl =
+				import.meta.env.VITE_SIGNALR_URL ||
+				getApiBaseUrl();
 			const hubUrl = `${baseUrl}/chatHub`;
 
 			this.connection = new signalR.HubConnectionBuilder()
@@ -75,10 +113,24 @@ class ChatSignalRService {
 					withCredentials: false,
 				})
 				.withAutomaticReconnect({
-					nextRetryDelayInMilliseconds: (retryContext) => {
-						if (retryContext.previousRetryCount === 0) return 0;
-						if (retryContext.previousRetryCount === 1) return 2000;
-						if (retryContext.previousRetryCount === 2) return 10000;
+					nextRetryDelayInMilliseconds: (
+						retryContext
+					) => {
+						if (
+							retryContext.previousRetryCount ===
+							0
+						)
+							return 0;
+						if (
+							retryContext.previousRetryCount ===
+							1
+						)
+							return 2000;
+						if (
+							retryContext.previousRetryCount ===
+							2
+						)
+							return 10000;
 						return 30000;
 					},
 				})
@@ -90,7 +142,7 @@ class ChatSignalRService {
 			await this.connection.start();
 			this.isConnected = true;
 			this.isConnecting = false;
-			console.log('✅ Chat SignalR connected');
+			console.log('  Chat SignalR connected');
 		} catch (error) {
 			this.isConnected = false;
 			this.isConnecting = false;
@@ -103,9 +155,12 @@ class ChatSignalRService {
 		if (!this.connection) return;
 
 		// Handle new messages
-		this.connection.on('ReceiveMessage', (message: ChatMessageResponseDTO) => {
-			this.notifyListeners('message', message);
-		});
+		this.connection.on(
+			'ReceiveMessage',
+			(message: ChatMessageResponseDTO) => {
+				this.notifyListeners('message', message);
+			}
+		);
 
 		// Handle typing indicators
 		this.connection.on('UserTyping', (data: TypingIndicator) => {
@@ -113,9 +168,16 @@ class ChatSignalRService {
 		});
 
 		// Handle read receipts
-		this.connection.on('MessagesRead', (data: { conversationId: number; userId: string; readAt: string }) => {
-			this.notifyListeners('messagesRead', data);
-		});
+		this.connection.on(
+			'MessagesRead',
+			(data: {
+				conversationId: number;
+				userId: string;
+				readAt: string;
+			}) => {
+				this.notifyListeners('messagesRead', data);
+			}
+		);
 
 		// Handle conversation updates
 		this.connection.on('ConversationUpdated', (data: any) => {
@@ -123,24 +185,42 @@ class ChatSignalRService {
 		});
 
 		// Handle conversation assignment
-		this.connection.on('ConversationAssigned', (data: { conversationId: number; customerId: string }) => {
-			this.notifyListeners('conversationAssigned', data);
-		});
+		this.connection.on(
+			'ConversationAssigned',
+			(data: {
+				conversationId: number;
+				customerId: string;
+			}) => {
+				this.notifyListeners(
+					'conversationAssigned',
+					data
+				);
+			}
+		);
 
 		// Connection events
 		this.connection.onreconnecting(() => {
 			this.isConnected = false;
-			this.notifyListeners('connectionStatus', { isConnected: false, isReconnecting: true });
+			this.notifyListeners('connectionStatus', {
+				isConnected: false,
+				isReconnecting: true,
+			});
 		});
 
 		this.connection.onreconnected(() => {
 			this.isConnected = true;
-			this.notifyListeners('connectionStatus', { isConnected: true, isReconnecting: false });
+			this.notifyListeners('connectionStatus', {
+				isConnected: true,
+				isReconnecting: false,
+			});
 		});
 
 		this.connection.onclose(() => {
 			this.isConnected = false;
-			this.notifyListeners('connectionStatus', { isConnected: false, isReconnecting: false });
+			this.notifyListeners('connectionStatus', {
+				isConnected: false,
+				isReconnecting: false,
+			});
 		});
 	}
 
@@ -149,18 +229,26 @@ class ChatSignalRService {
 		if (this.isConnecting) {
 			let waitCount = 0;
 			while (this.isConnecting && waitCount < 50) {
-				await new Promise(resolve => setTimeout(resolve, 100));
+				await new Promise((resolve) =>
+					setTimeout(resolve, 100)
+				);
 				waitCount++;
 			}
 		}
 
 		if (this.connection) {
 			try {
-				if (this.connection.state !== signalR.HubConnectionState.Disconnected) {
+				if (
+					this.connection.state !==
+					signalR.HubConnectionState.Disconnected
+				) {
 					await this.connection.stop();
 				}
 			} catch (error) {
-				console.warn('Error disconnecting SignalR:', error);
+				console.warn(
+					'Error disconnecting SignalR:',
+					error
+				);
 			} finally {
 				this.connection = null;
 				this.isConnected = false;
@@ -170,21 +258,46 @@ class ChatSignalRService {
 	}
 
 	async joinConversation(conversationId: number): Promise<void> {
-		if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
+		if (
+			!this.connection ||
+			this.connection.state !==
+				signalR.HubConnectionState.Connected
+		) {
 			await this.connect();
 		}
-		await this.connection!.invoke('JoinConversation', conversationId);
+		await this.connection!.invoke(
+			'JoinConversation',
+			conversationId
+		);
 	}
 
 	async leaveConversation(conversationId: number): Promise<void> {
-		if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
-			await this.connection.invoke('LeaveConversation', conversationId);
+		if (
+			this.connection &&
+			this.connection.state ===
+				signalR.HubConnectionState.Connected
+		) {
+			await this.connection.invoke(
+				'LeaveConversation',
+				conversationId
+			);
 		}
 	}
 
-	async sendTypingIndicator(conversationId: number, isTyping: boolean): Promise<void> {
-		if (this.connection && this.connection.state === signalR.HubConnectionState.Connected) {
-			await this.connection.invoke('Typing', conversationId, isTyping);
+	async sendTypingIndicator(
+		conversationId: number,
+		isTyping: boolean
+	): Promise<void> {
+		if (
+			this.connection &&
+			this.connection.state ===
+				signalR.HubConnectionState.Connected
+		) {
+			await this.connection.invoke(
+				'Typing',
+				conversationId,
+				isTyping
+			);
 		}
 	}
 
@@ -212,16 +325,21 @@ class ChatSignalRService {
 				try {
 					callback(data);
 				} catch (error) {
-					console.error(`Error in chat event listener for ${event}:`, error);
+					console.error(
+						`Error in chat event listener for ${event}:`,
+						error
+					);
 				}
 			});
 		}
 	}
 
 	getConnectionState(): signalR.HubConnectionState {
-		return this.connection?.state || signalR.HubConnectionState.Disconnected;
+		return (
+			this.connection?.state ||
+			signalR.HubConnectionState.Disconnected
+		);
 	}
 }
 
 export default new ChatSignalRService();
-

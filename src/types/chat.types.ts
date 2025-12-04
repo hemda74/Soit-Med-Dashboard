@@ -2,7 +2,10 @@ export interface ChatConversationResponseDTO {
 	id: number;
 	customerId: string;
 	customerName?: string;
+	customerFirstName?: string;
+	customerLastName?: string;
 	customerEmail?: string;
+	customerImageUrl?: string;
 	adminId?: string;
 	adminName?: string;
 	lastMessageAt: string;

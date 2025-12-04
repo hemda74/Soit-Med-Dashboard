@@ -258,7 +258,6 @@ export interface SalesState {
 	analyticsLoading: boolean;
 	analyticsError: string | null;
 
-
 	// Pagination state
 	pagination: {
 		page: number;
@@ -1016,12 +1015,18 @@ export const useSalesStore = create<SalesStore>()(
 						dealsError: null,
 					});
 					try {
-						console.log('getDeals called with filters:', filters);
+						console.log(
+							'getDeals called with filters:',
+							filters
+						);
 						const response =
 							await salesApi.getDeals(
 								filters
 							);
-						console.log('getDeals response:', response);
+						console.log(
+							'getDeals response:',
+							response
+						);
 
 						// Backend returns ApiResponse<List<DealResponseDTO>> - simple array, not paginated
 						const dealsData = Array.isArray(
@@ -1029,7 +1034,10 @@ export const useSalesStore = create<SalesStore>()(
 						)
 							? response.data
 							: [];
-						console.log('Setting deals:', dealsData);
+						console.log(
+							'Setting deals:',
+							dealsData
+						);
 
 						// Set pagination metadata (backend doesn't provide pagination, so we calculate it)
 						const paginationData = {
@@ -1414,9 +1422,6 @@ export const useSalesStore = create<SalesStore>()(
 								[],
 							offersLoading: false,
 						});
-						toast.success(
-							'Your offers loaded successfully'
-						);
 					} catch (error: any) {
 						set({
 							offers: [],
@@ -1601,14 +1606,29 @@ export const useSalesStore = create<SalesStore>()(
 						offersError: null,
 					});
 					try {
-						console.log('getOffersByClient called with clientId:', clientId);
+						console.log(
+							'getOffersByClient called with clientId:',
+							clientId
+						);
 						const response =
 							await salesApi.getOffersByClient(
 								clientId
 							);
-						console.log('getOffersByClient response:', response);
-						const offersData = Array.isArray(response.data) ? response.data : [];
-						console.log('Setting offersByClient for clientId:', clientId, offersData);
+						console.log(
+							'getOffersByClient response:',
+							response
+						);
+						const offersData =
+							Array.isArray(
+								response.data
+							)
+								? response.data
+								: [];
+						console.log(
+							'Setting offersByClient for clientId:',
+							clientId,
+							offersData
+						);
 						set((state) => ({
 							offersByClient: {
 								...state.offersByClient,
@@ -2160,10 +2180,11 @@ export const useSalesStore = create<SalesStore>()(
 							);
 						set({
 							taskProgress:
-								response.data
-									?.data ||
-								response.data ||
-								[],
+								Array.isArray(
+									response.data
+								)
+									? response.data
+									: [],
 							taskProgressLoading:
 								false,
 						});
@@ -2332,11 +2353,23 @@ export const useSalesStore = create<SalesStore>()(
 								clientId,
 								filters
 							);
-						console.log('getClientVisits response:', response);
-						const visitsData = Array.isArray(response.data) ? response.data : [];
-						console.log('Setting clientVisits:', visitsData);
+						console.log(
+							'getClientVisits response:',
+							response
+						);
+						const visitsData =
+							Array.isArray(
+								response.data
+							)
+								? response.data
+								: [];
+						console.log(
+							'Setting clientVisits:',
+							visitsData
+						);
 						set({
-							clientVisits: visitsData,
+							clientVisits:
+								visitsData,
 							visitsLoading: false,
 						});
 					} catch (error: any) {
@@ -4018,7 +4051,6 @@ export const useSalesStore = create<SalesStore>()(
 						requestWorkflowsError: null,
 						termsError: null,
 						analyticsError: null,
-						reportsError: null,
 					});
 				},
 			}),

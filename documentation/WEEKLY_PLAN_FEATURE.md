@@ -12,9 +12,9 @@ The Weekly Plan feature is a complete refactoring of the Sales Reports system, t
 | **Frequency**      | Daily/Weekly/Monthly/Custom  | Weekly only                          |
 | **Detail Level**   | Single text block            | Multiple tasks + daily updates       |
 | **Tracking**       | Difficult                    | Easy and organized                   |
-| **Tasks**          | ❌ Not available             | ✅ Available with completion status  |
-| **Daily Progress** | ❌ Not available             | ✅ Available                         |
-| **Completion**     | ❌ Not tracked               | ✅ Automatic calculation             |
+| **Tasks**          | ❌ Not available             | Available with completion status     |
+| **Daily Progress** | ❌ Not available             | Available                            |
+| **Completion**     | ❌ Not tracked               | Automatic calculation                |
 
 ## System Architecture
 
@@ -32,14 +32,14 @@ Daily progress notes added by the employee
 
 ## User Roles & Permissions
 
-| Action               | Salesman       | Sales Manager | Super Admin |
-| -------------------- | -------------- | ------------- | ----------- |
-| Create weekly plan   | ✅             | ❌            | ❌          |
-| Edit/Delete own plan | ✅             | ❌            | ❌          |
-| Add/Edit tasks       | ✅ (own plans) | ❌            | ❌          |
-| Add daily progress   | ✅ (own plans) | ❌            | ❌          |
-| View all plans       | ❌             | ✅            | ✅          |
-| Review/Rate plans    | ❌             | ✅            | ✅          |
+| Action               | Salesman    | Sales Manager | Super Admin |
+| -------------------- | ----------- | ------------- | ----------- |
+| Create weekly plan   |             | ❌            | ❌          |
+| Edit/Delete own plan |             | ❌            | ❌          |
+| Add/Edit tasks       | (own plans) | ❌            | ❌          |
+| Add daily progress   | (own plans) | ❌            | ❌          |
+| View all plans       | ❌          |               |             |
+| Review/Rate plans    | ❌          |               |             |
 
 ## Backend API Endpoints
 
@@ -364,7 +364,7 @@ await weeklyPlanApi.reviewWeeklyPlan(planId, {
 
 ## Features
 
-### ✅ Implemented Features
+### Implemented Features
 
 1. **Weekly Plan Management**
 
@@ -609,27 +609,3 @@ For issues or questions:
 ---
 
 Last Updated: October 4, 2025
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

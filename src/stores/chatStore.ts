@@ -251,21 +251,27 @@ export const useChatStore = create<ChatState>()(
 
 				// Set up event listeners
 				chatSignalRService.addEventListener('message', (message: ChatMessageResponseDTO) => {
-					get().addMessage(message.conversationId, message);
+					if (message && message.conversationId) {
+						get().addMessage(message.conversationId, message);
+					}
 				});
 
 				chatSignalRService.addEventListener('typing', (data: TypingIndicator) => {
-					get().setTypingUser(data.conversationId, data.userId, data.isTyping);
+					if (data && data.conversationId && data.userId) {
+						get().setTypingUser(data.conversationId, data.userId, data.isTyping);
+					}
 				});
 
 				chatSignalRService.addEventListener('messagesRead', (data: { conversationId: number; userId: string }) => {
-					const messages = get().messages.get(data.conversationId) || [];
-					messages.forEach((msg) => {
-						if (msg.senderId === data.userId) {
-							msg.isRead = true;
-						}
-					});
-					get().setMessages(data.conversationId, messages);
+					if (data && data.conversationId && data.userId) {
+						const messages = get().messages.get(data.conversationId) || [];
+						messages.forEach((msg) => {
+							if (msg.senderId === data.userId) {
+								msg.isRead = true;
+							}
+						});
+						get().setMessages(data.conversationId, messages);
+					}
 				});
 
 				chatSignalRService.addEventListener('connectionStatus', (status: { isConnected: boolean }) => {
