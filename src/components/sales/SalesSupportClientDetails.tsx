@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PhoneIcon, EnvelopeIcon, MapPinIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { PhoneIcon, MapPinIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 
 interface SalesSupportClientDetailsProps {
