@@ -16,6 +16,7 @@ import type {
 	CustomerSparePartDecisionDTO,
 } from '@/types/maintenance.types';
 import toast from 'react-hot-toast';
+import { getTranslation } from '@/utils/translations';
 
 // Query keys
 export const maintenanceQueryKeys = {
@@ -126,7 +127,7 @@ export const useCreateMaintenanceRequest = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.customerRequests() });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.pendingRequests() });
-			toast.success('Maintenance request created successfully');
+			toast.success(getTranslation('maintenanceRequestCreatedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to create maintenance request');
@@ -147,7 +148,7 @@ export const useAssignToEngineer = () => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(variables.requestId) });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.pendingRequests() });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.engineerRequests() });
-			toast.success('Request assigned to engineer successfully');
+			toast.success(getTranslation('requestAssignedToEngineerSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to assign request');
@@ -168,7 +169,7 @@ export const useCreateMaintenanceVisit = () => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.visits(data.maintenanceRequestId) });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(data.maintenanceRequestId) });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.engineerRequests() });
-			toast.success('Maintenance visit created successfully');
+			toast.success(getTranslation('maintenanceVisitCreatedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to create maintenance visit');
@@ -188,7 +189,7 @@ export const useCreateSparePartRequest = () => {
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.sparePart(data.id) });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(data.maintenanceRequestId) });
-			toast.success('Spare part request created successfully');
+			toast.success(getTranslation('sparePartRequestCreatedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to create spare part request');
@@ -208,7 +209,7 @@ export const useSetSparePartPrice = () => {
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.sparePart(variables.id) });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.request(data.maintenanceRequestId) });
-			toast.success('Spare part price set successfully');
+			toast.success(getTranslation('sparePartPriceSetSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to set spare part price');
@@ -251,7 +252,7 @@ export const useUpdateMaintenanceRequestStatus = () => {
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.pendingRequests() });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.engineerRequests() });
 			queryClient.invalidateQueries({ queryKey: maintenanceQueryKeys.customerRequests() });
-			toast.success('Status updated successfully');
+			toast.success(getTranslation('statusUpdatedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to update status');
