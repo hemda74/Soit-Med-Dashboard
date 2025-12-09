@@ -25,15 +25,29 @@ const ChatPage: React.FC = () => {
 		disconnect,
 	} = useChatStore();
 
+	const [userRoles, setUserRoles] = useState<string[]>([]);
+	const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 	const [isAdmin, setIsAdmin] = useState(false);
+	const [isSalesSupport, setIsSalesSupport] = useState(false);
+	const [isMaintenanceSupport, setIsMaintenanceSupport] = useState(false);
 
 	useEffect(() => {
-		// Check if user is admin
-		const adminRoles = ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport'];
-		const userIsAdmin = user?.roles.some((role) => adminRoles.includes(role)) || false;
-		setIsAdmin(userIsAdmin);
+		// Get user roles
+		const roles = user?.roles || [];
+		setUserRoles(roles);
+		
+		// Check specific roles
+		const superAdmin = roles.includes('SuperAdmin');
+		const admin = roles.includes('Admin');
+		const salesSupport = roles.includes('SalesSupport');
+		const maintenanceSupport = roles.includes('MaintenanceSupport');
+		
+		setIsSuperAdmin(superAdmin);
+		setIsAdmin(admin);
+		setIsSalesSupport(salesSupport);
+		setIsMaintenanceSupport(maintenanceSupport);
 
-		console.log('ChatPage - User:', user?.id, 'Roles:', user?.roles, 'IsAdmin:', userIsAdmin);
+		console.log('ChatPage - User:', user?.id, 'Roles:', roles);
 
 		// Initialize chat
 		initialize();
@@ -87,7 +101,9 @@ const ChatPage: React.FC = () => {
 						conversations={conversations}
 						currentConversationId={currentConversation?.id}
 						onSelectConversation={(conversation) => setCurrentConversation(conversation)}
-						isAdmin={isAdmin}
+						isAdmin={isAdmin || isSalesSupport || isMaintenanceSupport || isSuperAdmin}
+						isSuperAdmin={isSuperAdmin}
+						userRole={isSuperAdmin ? 'SuperAdmin' : isAdmin ? 'Admin' : isSalesSupport ? 'SalesSupport' : isMaintenanceSupport ? 'MaintenanceSupport' : 'Customer'}
 					/>
 				</div>
 
@@ -107,7 +123,9 @@ const ChatPage: React.FC = () => {
 											{t('chat.welcome') || 'Welcome to Chat'}
 										</h3>
 										<p className="text-muted-foreground">
-											{isAdmin
+											{isSuperAdmin
+												? (t('chat.selectConversationSuperAdmin') || 'Select a conversation from the sidebar to view and respond. You can see all chat types.')
+												: (isAdmin || isSalesSupport || isMaintenanceSupport)
 												? (t('chat.selectConversationAdmin') || 'Select a conversation from the sidebar to respond to customer messages')
 												: (t('chat.selectConversation') || 'Select a conversation from the sidebar to start chatting')
 											}
