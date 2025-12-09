@@ -189,7 +189,7 @@ const DealsManagementPage: React.FC = () => {
 		} catch (err: any) {
 			console.error('Failed to load deals:', err);
 			setError(err.message || 'Failed to load deals');
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 		} finally {
 			setLoading(false);
 		}
@@ -242,7 +242,7 @@ const DealsManagementPage: React.FC = () => {
 			}
 		} catch (err: any) {
 			console.error('Failed to load deal details:', err);
-			toast.error('Failed to load deal details');
+			toast.error(t('failedToLoadDealDetails'));
 		}
 	};
 

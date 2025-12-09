@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { FileText, Building2, DollarSign, Calendar, User, Eye, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Deal {
 	id: string | number;
@@ -25,6 +26,7 @@ interface Deal {
 }
 
 const LegalDealsPage: React.FC = () => {
+	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [deals, setDeals] = useState<Deal[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ const LegalDealsPage: React.FC = () => {
 			}
 		} catch (error: any) {
 			console.error('Failed to load deals:', error);
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 			setDeals([]);
 		} finally {
 			setLoading(false);

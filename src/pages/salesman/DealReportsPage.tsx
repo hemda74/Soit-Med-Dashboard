@@ -10,6 +10,7 @@ import { FileText, Building2, DollarSign, Calendar, Eye } from 'lucide-react';
 import SalesmanReportForm from '@/components/sales/SalesmanReportForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Deal {
 	id: string | number;
@@ -22,6 +23,7 @@ interface Deal {
 }
 
 const DealReportsPage: React.FC = () => {
+	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [deals, setDeals] = useState<Deal[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -55,7 +57,7 @@ const DealReportsPage: React.FC = () => {
 			}
 		} catch (error: any) {
 			console.error('Failed to load deals:', error);
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 			setDeals([]);
 		} finally {
 			setLoading(false);
@@ -66,7 +68,7 @@ const DealReportsPage: React.FC = () => {
 		setShowReportDialog(false);
 		setSelectedDeal(null);
 		loadDeals();
-		toast.success('Report submitted successfully');
+		toast.success(t('reportSubmittedSuccessfully'));
 	};
 
 	if (loading) {

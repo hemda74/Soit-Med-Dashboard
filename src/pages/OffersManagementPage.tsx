@@ -653,7 +653,7 @@ const OffersManagementPage: React.FC = () => {
 				generateBothLanguages: true, // Generate both Arabic and English versions
 				showProductHeaders: true,
 			});
-			toast.success('PDF exported successfully! Both Arabic and English versions downloaded.');
+			toast.success(t('pdfExportedSuccessfully'));
 		} catch (error: any) {
 			console.error('Error exporting PDF:', error);
 			toast.error(error.message || 'Failed to export PDF');
