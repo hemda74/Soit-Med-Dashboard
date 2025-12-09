@@ -1,3 +1,5 @@
+export type ChatType = 'Support' | 'Sales' | 'Maintenance';
+
 export interface ChatConversationResponseDTO {
 	id: number;
 	customerId: string;
@@ -8,6 +10,8 @@ export interface ChatConversationResponseDTO {
 	customerImageUrl?: string;
 	adminId?: string;
 	adminName?: string;
+	chatType: number; // 0 = Support, 1 = Sales, 2 = Maintenance
+	chatTypeName: string; // "Support", "Sales", "Maintenance"
 	lastMessageAt: string;
 	lastMessagePreview?: string;
 	isActive: boolean;
