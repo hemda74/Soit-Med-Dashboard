@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { format, isToday, isYesterday } from 'date-fns';
 import type { ChatConversationResponseDTO } from '@/types/chat.types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Search, MessageSquare, Users } from 'lucide-react';
+import { Search, MessageSquare, Users, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Avatar component with fallback to initials
@@ -45,6 +45,8 @@ interface ChatListProps {
 	currentConversationId?: number;
 	onSelectConversation: (conversation: ChatConversationResponseDTO) => void;
 	isAdmin: boolean;
+	isSuperAdmin?: boolean;
+	userRole?: string;
 }
 
 const ChatList: React.FC<ChatListProps> = ({
@@ -52,6 +54,8 @@ const ChatList: React.FC<ChatListProps> = ({
 	currentConversationId,
 	onSelectConversation,
 	isAdmin,
+	isSuperAdmin = false,
+	userRole = 'Customer',
 }) => {
 	const { t, language } = useTranslation();
 	const isRTL = language === 'ar';
@@ -109,10 +113,19 @@ const ChatList: React.FC<ChatListProps> = ({
 				"p-4 border-b border-border bg-card flex-shrink-0",
 				isRTL && "text-right"
 			)}>
-				<div className="flex items-center gap-2 mb-3">
+					<div className="flex items-center gap-2 mb-3">
 					<MessageSquare className="h-5 w-5 text-primary" />
 					<h2 className="text-lg font-semibold text-foreground">
-						{t('chat.conversations') || 'Conversations'}
+						{isSuperAdmin 
+							? (t('chat.allConversations') || 'All Conversations')
+							: isAdmin
+							? (t('chat.supportConversations') || 'Support Chats')
+							: userRole === 'SalesSupport'
+							? (t('chat.salesConversations') || 'Sales Chats')
+							: userRole === 'MaintenanceSupport'
+							? (t('chat.maintenanceConversations') || 'Maintenance Chats')
+							: (t('chat.conversations') || 'Conversations')
+						}
 					</h2>
 					{safeConversations.length > 0 && (
 						<Badge variant="secondary" className="ml-auto">
@@ -213,13 +226,28 @@ const ChatList: React.FC<ChatListProps> = ({
 													avatarColor={getAvatarColor(conversation.id)}
 												/>
 												<div className="flex-1 min-w-0">
-													<div className="flex items-center gap-2">
+													<div className="flex items-center gap-2 flex-wrap">
 														<p className={cn(
 															"font-semibold truncate",
 															hasUnread ? "text-foreground" : "text-foreground/80"
 														)}>
 															{displayName}
 														</p>
+														{/* Show chat type badge for SuperAdmin */}
+														{isSuperAdmin && conversation.chatTypeName && (
+															<Badge
+																variant="outline"
+																className={cn(
+																	"h-5 px-1.5 text-xs font-medium",
+																	conversation.chatTypeName === 'Support' && "border-blue-500 text-blue-700 dark:text-blue-400",
+																	conversation.chatTypeName === 'Sales' && "border-green-500 text-green-700 dark:text-green-400",
+																	conversation.chatTypeName === 'Maintenance' && "border-orange-500 text-orange-700 dark:text-orange-400"
+																)}
+															>
+																<Tag className="h-3 w-3 mr-1" />
+																{conversation.chatTypeName}
+															</Badge>
+														)}
 														{hasUnread && (
 															<Badge
 																variant="destructive"

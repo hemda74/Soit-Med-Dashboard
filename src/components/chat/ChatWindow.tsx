@@ -6,7 +6,8 @@ import MessageBubble from './MessageBubble';
 import VoiceMessagePlayer from './VoiceMessagePlayer';
 import { useTranslation } from '@/hooks/useTranslation';
 import Logo from '@/components/Logo';
-import { Circle } from 'lucide-react';
+import { Circle, Tag } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 
@@ -99,7 +100,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 		}
 	}, [conversation?.id]);
 
-	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport'].includes(role)) || false;
+	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport', 'MaintenanceSupport'].includes(role)) || false;
+	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
 	// For admin: show customer first name, last name, and image
 	const clientName = isUserAdmin
 		? (conversation.customerFirstName && conversation.customerLastName
@@ -181,9 +183,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 					</div>
 					{/* Client Name and Info */}
 					<div className="flex-1 min-w-0">
-						<h3 className="font-semibold text-lg text-foreground truncate">
-							{clientName}
-						</h3>
+						<div className="flex items-center gap-2 flex-wrap">
+							<h3 className="font-semibold text-lg text-foreground truncate">
+								{clientName}
+							</h3>
+							{/* Show chat type badge for SuperAdmin */}
+							{isSuperAdmin && conversation.chatTypeName && (
+								<Badge
+									variant="outline"
+									className={cn(
+										"h-5 px-1.5 text-xs font-medium",
+										conversation.chatTypeName === 'Support' && "border-blue-500 text-blue-700 dark:text-blue-400",
+										conversation.chatTypeName === 'Sales' && "border-green-500 text-green-700 dark:text-green-400",
+										conversation.chatTypeName === 'Maintenance' && "border-orange-500 text-orange-700 dark:text-orange-400"
+									)}
+								>
+									<Tag className="h-3 w-3 mr-1" />
+									{conversation.chatTypeName}
+								</Badge>
+							)}
+						</div>
 						{isUserAdmin && conversation.customerEmail && conversation.customerEmail !== conversation.customerName && (
 							<p className="text-sm text-muted-foreground truncate">{conversation.customerEmail}</p>
 						)}
