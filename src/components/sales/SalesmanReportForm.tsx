@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { salesApi } from '@/services/sales/salesApi';
 import toast from 'react-hot-toast';
 import { FileText, Upload, X, Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
 
 interface SalesmanReportFormProps {
 	dealId: string | number;
@@ -21,7 +20,6 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 	onSuccess,
 	onCancel,
 }) => {
-	const { user } = useAuthStore();
 	const [reportText, setReportText] = useState('');
 	const [attachments, setAttachments] = useState<File[]>([]);
 	const [uploading, setUploading] = useState(false);
