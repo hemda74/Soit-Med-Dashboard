@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSalesStore } from '@/stores/salesStore';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
 	PlusIcon,
 	TrashIcon,
@@ -31,6 +32,7 @@ const WeeklyPlanForm: React.FC<WeeklyPlanFormProps> = ({
 	planId,
 	initialData
 }) => {
+	const { t } = useTranslation();
 	const {
 		createWeeklyPlan,
 		updateWeeklyPlan,
@@ -255,7 +257,7 @@ const WeeklyPlanForm: React.FC<WeeklyPlanFormProps> = ({
 													onChange={(e) =>
 														updateItem(index, 'title', e.target.value)
 													}
-													placeholder="Enter task title"
+													placeholder={t('enterTaskTitle')}
 													className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 												/>
 											</div>
@@ -298,7 +300,7 @@ const WeeklyPlanForm: React.FC<WeeklyPlanFormProps> = ({
 													onChange={(e) =>
 														updateItem(index, 'description', e.target.value)
 													}
-													placeholder="Brief description"
+													placeholder={t('briefDescription')}
 													className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 												/>
 											</div>
@@ -313,7 +315,7 @@ const WeeklyPlanForm: React.FC<WeeklyPlanFormProps> = ({
 												onChange={(e) =>
 													updateItem(index, 'notes', e.target.value)
 												}
-												placeholder="Additional notes..."
+												placeholder={t('additionalNotes')}
 												rows={2}
 												className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 											/>
