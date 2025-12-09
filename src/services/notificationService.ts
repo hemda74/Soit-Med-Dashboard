@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { API_ENDPOINTS } from './shared/endpoints';
 import { getAuthToken } from '@/utils/authUtils';
 import { getApiBaseUrl } from '@/utils/apiConfig';
+import { getTranslation } from '@/utils/translations';
 
 export interface NotificationFilter {
 	roles?: string[];
@@ -564,7 +565,7 @@ class NotificationService {
 		};
 
 		this.addNotification(notification);
-		toast.success('Weekly plan has been updated');
+		toast.success(getTranslation('weeklyPlanUpdated'));
 	}
 
 

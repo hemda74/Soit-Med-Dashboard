@@ -17,6 +17,7 @@ import type {
 	PaymentMethodStatisticsDTO,
 } from '@/types/payment.types';
 import toast from 'react-hot-toast';
+import { getTranslation } from '@/utils/translations';
 
 // Query keys
 export const paymentQueryKeys = {
@@ -174,7 +175,7 @@ export const useCreatePayment = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.customerPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
-			toast.success('Payment created successfully');
+			toast.success(getTranslation('paymentCreatedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to create payment');
@@ -195,7 +196,7 @@ export const useProcessStripePayment = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.customerPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
-			toast.success('Payment processed successfully');
+			toast.success(getTranslation('paymentProcessedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to process payment');
@@ -216,7 +217,7 @@ export const useProcessPayPalPayment = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.customerPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
-			toast.success('Payment processed successfully');
+			toast.success(getTranslation('paymentProcessedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to process payment');
@@ -237,7 +238,7 @@ export const useRecordCashPayment = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.customerPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
-			toast.success('Cash payment recorded successfully');
+			toast.success(getTranslation('cashPaymentRecordedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to record cash payment');
@@ -258,7 +259,7 @@ export const useRecordBankTransfer = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.customerPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
-			toast.success('Bank transfer recorded successfully');
+			toast.success(getTranslation('bankTransferRecordedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to record bank transfer');
@@ -279,7 +280,7 @@ export const useConfirmPayment = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payments() });
-			toast.success('Payment confirmed successfully');
+			toast.success(getTranslation('paymentConfirmedSuccessfully'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to confirm payment');
@@ -300,7 +301,7 @@ export const useRejectPayment = () => {
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payment(variables.paymentId) });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.pendingPayments() });
 			queryClient.invalidateQueries({ queryKey: paymentQueryKeys.payments() });
-			toast.success('Payment rejected');
+			toast.success(getTranslation('paymentRejected'));
 		},
 		onError: (error: any) => {
 			toast.error(error.message || 'Failed to reject payment');
