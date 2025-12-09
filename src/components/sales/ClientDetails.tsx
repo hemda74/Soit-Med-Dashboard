@@ -149,11 +149,11 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                 }
                 setSelectedDeal(dealData);
             } else {
-                toast.error('Failed to load deal details');
+                toast.error(t('failedToLoadDealDetails'));
             }
         } catch (error: any) {
             console.error('Failed to load deal details:', error);
-            toast.error(error.message || 'Failed to load deal details');
+                toast.error(error.message || t('failedToLoadDealDetails'));
         } finally {
             setLoadingDealDetails(false);
         }
@@ -178,11 +178,11 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                     setOfferEquipment([]);
                 }
             } else {
-                toast.error('Failed to load offer details');
+                toast.error(t('failedToLoadOfferDetails'));
             }
         } catch (error: any) {
             console.error('Failed to load offer details:', error);
-            toast.error(error.message || 'Failed to load offer details');
+                toast.error(error.message || t('failedToLoadOfferDetails'));
         } finally {
             setLoadingOfferDetails(false);
             setLoadingEquipment(false);
@@ -196,7 +196,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             if (response.success && response.data) {
                 setSelectedVisit(response.data);
             } else {
-                toast.error('Failed to load visit details');
+                toast.error(t('failedToLoadVisitDetails'));
             }
         } catch (error: any) {
             console.error('Failed to load visit details:', error);
