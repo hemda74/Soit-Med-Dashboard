@@ -120,7 +120,7 @@ const EditOfferPage: React.FC = () => {
 			}
 		} catch (err: any) {
 			setError(err.message || 'Failed to load offer');
-			toast.error('Failed to load offer');
+			toast.error(t('failedToLoadOffer'));
 		} finally {
 			setLoading(false);
 		}
@@ -197,7 +197,7 @@ const EditOfferPage: React.FC = () => {
 			const response = await salesApi.updateOfferBySalesManager(id, data);
 			
 			if (response.success) {
-				toast.success('Offer updated successfully');
+				toast.success(t('offerUpdatedSuccessfully'));
 				navigate(-1); // Go back to previous page
 			} else {
 				toast.error(response.message || 'Failed to update offer');

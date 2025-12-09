@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { UserPlus, Building2, DollarSign, Calendar, CheckCircle, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Deal {
 	id: string | number;
@@ -21,6 +22,7 @@ interface Deal {
 }
 
 const ClientAccountCreationPage: React.FC = () => {
+	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [deals, setDeals] = useState<Deal[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ const ClientAccountCreationPage: React.FC = () => {
 			}
 		} catch (error: any) {
 			console.error('Failed to load deals:', error);
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 			setDeals([]);
 		} finally {
 			setLoading(false);
@@ -67,7 +69,7 @@ const ClientAccountCreationPage: React.FC = () => {
 			const response = await salesApi.markClientAccountCreated(dealId);
 
 			if (response.success) {
-				toast.success('Client account marked as created');
+				toast.success(t('clientAccountMarkedAsCreated'));
 				loadDeals();
 			} else {
 				toast.error(response.message || 'Failed to mark account as created');
