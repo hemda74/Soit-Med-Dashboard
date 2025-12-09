@@ -31,6 +31,7 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
     plan,
     onClose,
 }) => {
+    const { t } = useTranslation();
     const [fullPlan, setFullPlan] = useState<WeeklyPlan | null>(plan);
     const [loading, setLoading] = useState(false);
 
@@ -261,7 +262,7 @@ const ViewWeeklyPlanModal: React.FC<ViewWeeklyPlanModalProps> = ({
                                                                         <div className="mt-2">
                                                                             <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
                                                                                 <Volume2 className="h-3 w-3" />
-                                                                                <span>Voice Description</span>
+                                                                                <span>{t('voiceDescription')}</span>
                                                                             </div>
                                                                             <audio 
                                                                                 controls 

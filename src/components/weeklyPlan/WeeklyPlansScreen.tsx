@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
     Plus,
     Calendar,
@@ -38,6 +39,7 @@ import { format } from 'date-fns';
 // Helper function to render stars
 
 export const WeeklyPlansScreen: React.FC = () => {
+    const { t } = useTranslation();
     const {
         plans,
         loading,
@@ -181,7 +183,7 @@ export const WeeklyPlansScreen: React.FC = () => {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Plans</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('totalPlans')}</p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {statistics.totalPlans}
                                     </p>
@@ -200,7 +202,7 @@ export const WeeklyPlansScreen: React.FC = () => {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completion Rate</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('completionRate')}</p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {statistics.completionRate}%
                                     </p>
@@ -219,7 +221,7 @@ export const WeeklyPlansScreen: React.FC = () => {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Reviews</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('pendingReviews')}</p>
                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">
                                         {statistics.pendingReviews}
                                     </p>
@@ -366,7 +368,7 @@ export const WeeklyPlansScreen: React.FC = () => {
                                     }
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="All plans" />
+                                        <SelectValue placeholder={t('allPlans')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">
@@ -499,7 +501,7 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                             <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Employee</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{t('employee')}</p>
                                                             <p className="font-medium text-gray-900 dark:text-white">
                                                                 {plan.employee
                                                                     ? `${plan.employee.firstName} ${plan.employee.lastName}`
