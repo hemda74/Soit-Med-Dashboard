@@ -262,9 +262,9 @@ const SalesSupportDashboard: React.FC = () => {
 			if (data) {
 				setSelectedOffer(data);
 			}
-			toast.success('Offer sent to salesman successfully');
+			toast.success(t('offerSentToSalesmanSuccessfully'));
 		} catch (error: any) {
-			toast.error(error.message || 'Failed to send offer to salesman');
+			toast.error(error.message || t('failedToSendOfferToSalesman'));
 		}
 	};
 
@@ -340,7 +340,7 @@ const SalesSupportDashboard: React.FC = () => {
 			const token = authState.user?.token;
 
 			if (!token) {
-				toast.error('Authentication required for backend PDFs. Frontend PDFs generated successfully.');
+				toast.error(t('authenticationRequiredForBackendPdfs'));
 			} else {
 				const apiBaseUrl = getApiBaseUrl();
 				const languages = ['en', 'ar'];
@@ -396,7 +396,7 @@ const SalesSupportDashboard: React.FC = () => {
 
 			// Dismiss loading toast
 			toast.dismiss(loadingToast);
-			toast.success('All 6 PDFs exported successfully! (jsPDF EN/AR, HTML EN/AR, Backend EN/AR)');
+			toast.success(t('allPdfsExportedSuccessfully'));
 		} catch (error: any) {
 			console.error('PDF export error:', error);
 			toast.error(error.message || 'Failed to export PDFs. Please try again.');
@@ -534,7 +534,7 @@ const SalesSupportDashboard: React.FC = () => {
 							</div>
 							<div className="text-right">
 								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{activeRequestsCount}</p>
-								<p className="text-sm text-gray-500 dark:text-gray-400">{t('activeRequests') || 'Active Requests'}</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">{t('activeRequests')}</p>
 							</div>
 						</div>
 						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -858,7 +858,7 @@ const SalesSupportDashboard: React.FC = () => {
 							<Card className="shadow-md">
 								<CardHeader>
 									<CardTitle>{t('pending')} {t('requests')}</CardTitle>
-									<CardDescription>{t('assignedRequests')} waiting for action</CardDescription>
+									<CardDescription>{t('assignedRequests')} {t('waitingForAction')}</CardDescription>
 								</CardHeader>
 								<CardContent>
 									{requestWorkflowsLoading ? (
@@ -919,7 +919,7 @@ const SalesSupportDashboard: React.FC = () => {
 									</div>
 									<div className="w-64">
 										<Input
-											placeholder="Search offers..."
+											placeholder={t('searchOffers')}
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 										/>
