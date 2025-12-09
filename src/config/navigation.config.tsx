@@ -153,12 +153,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/sales-support/requests',
     roles: ['SalesSupport', 'SuperAdmin'] as const,
   },
-  // Chat section - Admin roles
+  // Chat section - Role-based chat access
   {
     icon: <MessageCircle className={ICON_SIZE} />,
     name: t('chat') || 'Chat',
     path: '/chat',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin', 'SalesManager', 'SalesSupport'] as const,
+    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin', 'SalesSupport', 'MaintenanceSupport'] as const,
   },
   // Maintenance section
   {
