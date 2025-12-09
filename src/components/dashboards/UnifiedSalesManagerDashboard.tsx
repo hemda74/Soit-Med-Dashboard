@@ -405,11 +405,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {clientsLoading || analyticsLoading ? '-' : totalClients.toLocaleString()}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Total Clients</p>
+                                    <p className="text-sm text-muted-foreground">{t('totalClients')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">All Clients</h3>
-                            <p className="text-muted-foreground text-sm">View and manage all team clients</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('allClients')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('viewAndManageAllTeamClients')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -426,11 +426,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {dealsLoading ? '-' : pendingDealsCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Pending Deals</p>
+                                    <p className="text-sm text-muted-foreground">{t('pendingDeals')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Deal Approvals</h3>
-                            <p className="text-muted-foreground text-sm">Review and approve pending deals</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('dealApprovals')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('reviewAndApprovePendingDeals')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -447,11 +447,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {pendingOffersLoading ? '-' : pendingOffersCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Pending Offers</p>
+                                    <p className="text-sm text-muted-foreground">{t('pendingOffers')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Offer Approvals</h3>
-                            <p className="text-muted-foreground text-sm">Review and approve pending offers</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('offerApprovals')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('reviewAndApprovePendingOffers')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -467,11 +467,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                 <p className="text-2xl font-bold text-foreground">
                                     {allDealsLoading ? '-' : `EGP ${totalRevenue.toLocaleString()}`}
                                 </p>
-                                <p className="text-sm text-muted-foreground">Total Revenue</p>
+                                <p className="text-sm text-muted-foreground">{t('totalRevenue')}</p>
                             </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">Revenue</h3>
-                        <p className="text-muted-foreground text-sm">Total successful deals revenue</p>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{t('revenue')}</h3>
+                        <p className="text-muted-foreground text-sm">{t('totalSuccessfulDealsRevenue')}</p>
                     </CardContent>
                 </Card>
 
@@ -487,11 +487,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {analyticsLoading ? '-' : `${teamPerformancePercentage}%`}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Target Met</p>
+                                    <p className="text-sm text-muted-foreground">{t('targetMet')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Team Performance</h3>
-                            <p className="text-muted-foreground text-sm">Monitor team performance metrics</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('teamPerformance')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('monitorTeamPerformanceMetrics')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -508,11 +508,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {weeklyPlansLoading ? '-' : activePlans.length}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Active Plans</p>
+                                    <p className="text-sm text-muted-foreground">{t('activePlans')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Weekly Plans</h3>
-                            <p className="text-muted-foreground text-sm">View and manage weekly sales plans</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('weeklyPlans')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('viewAndManageWeeklySalesPlans')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -529,11 +529,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {targetsLoading ? '-' : moneyTargets.length}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Money Targets</p>
+                                    <p className="text-sm text-muted-foreground">{t('moneyTargets')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Sales Targets</h3>
-                            <p className="text-muted-foreground text-sm">Set and track money targets</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('salesTargets')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('setAndTrackMoneyTargets')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -550,11 +550,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {salesmenLoading ? '-' : salesmenCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Team Members</p>
+                                    <p className="text-sm text-muted-foreground">{t('teamMembers')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Team Management</h3>
-                            <p className="text-muted-foreground text-sm">Manage your sales team members</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('teamManagement')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('manageYourSalesTeamMembers')}</p>
                         </CardContent>
                     </Card>
                 </Link>

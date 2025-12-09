@@ -590,7 +590,7 @@ export default function OfferCreationPage() {
                                 <Input
                                     value={salesmanQuery}
                                     onChange={(e) => setSalesmanQuery(e.target.value)}
-                                    placeholder="Type to search salesman..."
+                                    placeholder={t('typeToSearchSalesman')}
                                     className={!assignedToSalesmanId ? 'border-yellow-400' : ''}
                                 />
                             {loadingSalesmen && (
@@ -951,19 +951,19 @@ export default function OfferCreationPage() {
                                     </div>
                                     <div>
                                         <Label>Model</Label>
-                                        <Input value={newProduct.model} onChange={(e) => setNewProduct({ ...newProduct, model: e.target.value })} placeholder="Model number" />
+                                        <Input value={newProduct.model} onChange={(e) => setNewProduct({ ...newProduct, model: e.target.value })} placeholder={t('modelNumber')} />
                                     </div>
                                     <div>
                                         <Label>Factory</Label>
-                                        <Input value={newProduct.factory} onChange={(e) => setNewProduct({ ...newProduct, factory: e.target.value })} placeholder="Manufacturer" />
+                                        <Input value={newProduct.factory} onChange={(e) => setNewProduct({ ...newProduct, factory: e.target.value })} placeholder={t('manufacturer')} />
                                     </div>
                                     <div>
                                         <Label>Country</Label>
-                                        <Input value={newProduct.country} onChange={(e) => setNewProduct({ ...newProduct, country: e.target.value })} placeholder="Country of origin" />
+                                        <Input value={newProduct.country} onChange={(e) => setNewProduct({ ...newProduct, country: e.target.value })} placeholder={t('countryOfOrigin')} />
                                     </div>
                                     <div>
                                         <Label>Year</Label>
-                                        <Input value={newProduct.year as any} onChange={(e) => setNewProduct({ ...newProduct, year: e.target.value })} placeholder="Year" />
+                                        <Input value={newProduct.year as any} onChange={(e) => setNewProduct({ ...newProduct, year: e.target.value })} placeholder={t('year')} />
                                     </div>
                                     <div>
                                         <Label>Price *</Label>
@@ -988,7 +988,7 @@ export default function OfferCreationPage() {
                                     </div>
                                     <div className="md:col-span-3">
                                         <Label>Description</Label>
-                                        <Textarea rows={2} value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder="Product description..." />
+                                        <Textarea rows={2} value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })} placeholder={t('productDescription')} />
                                     </div>
                                 </div>
                                 <div className="mt-3">
@@ -1070,7 +1070,7 @@ export default function OfferCreationPage() {
                                                         <Input 
                                                             value={editingProduct.name} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} 
-                                                            placeholder="Product name" 
+                                                            placeholder={t('productName')} 
                                                         />
                                                     </div>
                                                     <div>
@@ -1078,7 +1078,7 @@ export default function OfferCreationPage() {
                                                         <Input 
                                                             value={editingProduct.model} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, model: e.target.value })} 
-                                                            placeholder="Model number" 
+                                                            placeholder={t('modelNumber')} 
                                                         />
                                                     </div>
                                                     <div>
@@ -1086,7 +1086,7 @@ export default function OfferCreationPage() {
                                                         <Input 
                                                             value={editingProduct.factory} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, factory: e.target.value })} 
-                                                            placeholder="Manufacturer" 
+                                                            placeholder={t('manufacturer')} 
                                                         />
                                                     </div>
                                                     <div>
@@ -1094,7 +1094,7 @@ export default function OfferCreationPage() {
                                                         <Input 
                                                             value={editingProduct.country} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, country: e.target.value })} 
-                                                            placeholder="Country of origin" 
+                                                            placeholder={t('countryOfOrigin')} 
                                                         />
                                                     </div>
                                                     <div>
@@ -1103,7 +1103,7 @@ export default function OfferCreationPage() {
                                                             type="number"
                                                             value={editingProduct.year as any} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, year: e.target.value })} 
-                                                            placeholder="Year" 
+                                                            placeholder={t('year')} 
                                                         />
                                                     </div>
                                                     <div>
@@ -1147,7 +1147,7 @@ export default function OfferCreationPage() {
                                                             rows={3} 
                                                             value={editingProduct.description} 
                                                             onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} 
-                                                            placeholder="Product description, specifications, features..." 
+                                                            placeholder={t('productDescriptionSpecifications')} 
                                                         />
                                                     </div>
                                                     <div className="md:col-span-3">
@@ -1378,7 +1378,7 @@ export default function OfferCreationPage() {
                                 <Input
                                     value={catalogSearchTerm}
                                     onChange={(e) => setCatalogSearchTerm(e.target.value)}
-                                    placeholder="Search products by name, model, provider..."
+                                    placeholder={t('searchProductsByNameModel')}
                                     onKeyDown={(e) => e.key === 'Enter' && handleCatalogSearch()}
                                 />
                             </div>
@@ -1392,7 +1392,7 @@ export default function OfferCreationPage() {
                                 onValueChange={setCatalogSelectedCategory}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="All Categories" />
+                                    <SelectValue placeholder={t('allCategories')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Categories</SelectItem>
