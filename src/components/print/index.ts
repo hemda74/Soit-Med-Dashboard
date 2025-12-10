@@ -1,17 +1,8 @@
 /**
  * Print Components
- * HTML-based PDF generation components
+ * HTML-based PDF preview components (for display only)
+ * Note: PDF export is now handled by backend API
  */
 
 export { OfferPrintTemplate } from './OfferPrintTemplate';
 export type { PDFLanguage, PDFExportOptions } from './OfferPrintTemplate';
-
-// Re-export utility functions
-export {
-	printOfferHtml,
-	previewOfferHtml,
-	downloadOfferPdfFromHtml,
-	getOfferPdfBlobFromHtml,
-} from '@/utils/pdfGeneratorHtml';
-export type { HtmlPdfExportOptions, OfferData, OfferEquipment } from '@/utils/pdfGeneratorHtml';
-

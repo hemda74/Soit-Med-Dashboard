@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     OfferPrintTemplate,
-    printOfferHtml,
-    downloadOfferPdfFromHtml,
 } from '@/components/print';
+import { useAuthStore } from '@/stores/authStore';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 import type {
     OfferData,
     OfferEquipment,
@@ -262,7 +262,7 @@ const OfferPrintPreviewPage = () => {
         }
         setIsPrinting(true);
         try {
-            await printOfferHtml(finalOffer, previewOptions);
+            window.print();
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Failed to open print dialog');
@@ -278,7 +278,40 @@ const OfferPrintPreviewPage = () => {
         }
         setIsDownloading(true);
         try {
-            await downloadOfferPdfFromHtml(finalOffer, previewOptions);
+            const authState = useAuthStore.getState();
+            const token = authState.user?.token;
+
+            if (!token) {
+                toast.error('Authentication required for PDF download');
+                return;
+            }
+
+            const apiBaseUrl = getApiBaseUrl();
+            const response = await fetch(
+                `${apiBaseUrl}/api/Offer/${finalOffer.id}/pdf?language=${previewOptions.language || 'en'}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/pdf',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to generate PDF');
+            }
+
+            const pdfBlob = await response.blob();
+            const url = window.URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Offer_${finalOffer.id}_${previewOptions.language === 'ar' ? 'AR' : 'EN'}_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            toast.success('PDF downloaded successfully');
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Failed to download PDF');

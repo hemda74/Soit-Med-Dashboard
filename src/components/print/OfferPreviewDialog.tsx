@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { OfferPrintTemplate } from './OfferPrintTemplate';
 import type { PDFExportOptions, PDFLanguage } from './OfferPrintTemplate';
-import { printOfferHtml, previewOfferHtml, downloadOfferPdfFromHtml } from '@/utils/pdfGeneratorHtml';
+import { useAuthStore } from '@/stores/authStore';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 import { Printer, Download, ExternalLink, Languages } from 'lucide-react';
 
 interface OfferData {
@@ -47,30 +48,76 @@ export const OfferPreviewDialog: React.FC<OfferPreviewDialogProps> = ({
 	};
 
 	// Handle print via browser dialog
-	const handlePrint = useCallback(async () => {
-		try {
-			await printOfferHtml(offer, currentOptions);
-		} catch (error) {
-			console.error('Print error:', error);
-		}
-	}, [offer, currentOptions]);
+	const handlePrint = useCallback(() => {
+		window.print();
+	}, []);
 
 	// Handle open in new window
 	const handleOpenInNewWindow = useCallback(() => {
-		previewOfferHtml(offer, currentOptions);
-	}, [offer, currentOptions]);
+		const printWindow = window.open('', '_blank');
+		if (printWindow && printContainerRef.current) {
+			printWindow.document.write(`
+				<!DOCTYPE html>
+				<html>
+					<head>
+						<title>Offer ${offer.id} Preview</title>
+						<style>
+							body { margin: 0; padding: 20px; }
+						</style>
+					</head>
+					<body>
+						${printContainerRef.current.innerHTML}
+					</body>
+				</html>
+			`);
+			printWindow.document.close();
+		}
+	}, [offer]);
 
-	// Handle download as PDF
+	// Handle download as PDF from backend
 	const handleDownload = useCallback(async () => {
 		setIsExporting(true);
 		try {
-			await downloadOfferPdfFromHtml(offer, currentOptions);
+			const authState = useAuthStore.getState();
+			const token = authState.user?.token;
+
+			if (!token) {
+				alert('Authentication required for PDF download');
+				return;
+			}
+
+			const apiBaseUrl = getApiBaseUrl();
+			const response = await fetch(
+				`${apiBaseUrl}/api/Offer/${offer.id}/pdf?language=${language}`,
+				{
+					method: 'GET',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Accept': 'application/pdf',
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error('Failed to generate PDF');
+			}
+
+			const pdfBlob = await response.blob();
+			const url = window.URL.createObjectURL(pdfBlob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `Offer_${offer.id}_${language === 'ar' ? 'AR' : 'EN'}_${new Date().toISOString().split('T')[0]}.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
 		} catch (error) {
 			console.error('Download error:', error);
+			alert('Failed to download PDF');
 		} finally {
 			setIsExporting(false);
 		}
-	}, [offer, currentOptions]);
+	}, [offer, language]);
 
 	// Toggle language
 	const toggleLanguage = () => {
@@ -120,8 +167,8 @@ export const OfferPreviewDialog: React.FC<OfferPreviewDialogProps> = ({
 										? 'جاري التصدير...'
 										: 'Exporting...'
 									: language === 'ar'
-									? 'تحميل PDF'
-									: 'Download PDF'}
+										? 'تحميل PDF'
+										: 'Download PDF'}
 							</Button>
 							<Button
 								variant="default"

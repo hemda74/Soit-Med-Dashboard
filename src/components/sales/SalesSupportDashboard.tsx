@@ -38,7 +38,6 @@ import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
 import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
 import { usePerformance } from '@/hooks/usePerformance';
-import { downloadOfferPDF } from '@/utils/pdfGenerator';
 
 type SalesSupportTab = 'overview' | 'my-offers' | 'requests';
 const SALES_SUPPORT_TABS: readonly SalesSupportTab[] = ['overview', 'my-offers', 'requests'];
@@ -326,16 +325,9 @@ const SalesSupportDashboard: React.FC = () => {
 			};
 
 			// Show loading toast
-			const loadingToast = toast.loading('Generating 6 PDFs (jsPDF EN/AR, HTML EN/AR, Backend EN/AR)...');
+			const loadingToast = toast.loading('Generating PDFs (Backend EN/AR)...');
 
-			// 1-4: Generate frontend PDFs (jsPDF + HTML, both EN and AR)
-			await downloadOfferPDF(offerData, {
-				renderingMode: 'both', // Generate both jsPDF and HTML versions
-				generateBothLanguages: true, // Generate both English and Arabic
-				showProductHeaders: true,
-			});
-
-			// 5-6: Generate backend PDFs (both EN and AR)
+			// Generate backend PDFs (both EN and AR)
 			const authState = useAuthStore.getState();
 			const token = authState.user?.token;
 
@@ -396,7 +388,7 @@ const SalesSupportDashboard: React.FC = () => {
 
 			// Dismiss loading toast
 			toast.dismiss(loadingToast);
-			toast.success(t('allPdfsExportedSuccessfully'));
+			toast.success(t('pdfsExportedSuccessfully') || 'PDFs exported successfully!');
 		} catch (error: any) {
 			console.error('PDF export error:', error);
 			toast.error(error.message || 'Failed to export PDFs. Please try again.');
