@@ -858,16 +858,23 @@ export const translations = {
 		markAsNeedsModification: 'Mark as Needs Modification',
 		markAsUnderReview: 'Mark as Under Review',
 		resumeFromUnderReview: 'Resume to Sent',
-		onlySentOffersCanBeMarkedUnderReview: 'Only sent offers can be marked as under review',
-		offerMarkedAsUnderReview: 'Offer marked as under review successfully',
-		onlyUnderReviewOffersCanBeResumed: 'Only offers under review can be resumed',
-		offerResumedFromUnderReview: 'Offer resumed from under review successfully',
+		onlySentOffersCanBeMarkedUnderReview:
+			'Only sent offers can be marked as under review',
+		offerMarkedAsUnderReview:
+			'Offer marked as under review successfully',
+		onlyUnderReviewOffersCanBeResumed:
+			'Only offers under review can be resumed',
+		offerResumedFromUnderReview:
+			'Offer resumed from under review successfully',
 		underReviewTooltipTitle: 'Under Review',
-		underReviewTooltipDescription: 'Pause the offer for internal review. Does not return to SalesSupport. You can resume it later.',
+		underReviewTooltipDescription:
+			'Pause the offer for internal review. Does not return to SalesSupport. You can resume it later.',
 		needsModificationTooltipTitle: 'Needs Modification',
-		needsModificationTooltipDescription: 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.',
+		needsModificationTooltipDescription:
+			'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.',
 		resumeFromReviewTooltipTitle: 'Resume from Review',
-		resumeFromReviewTooltipDescription: 'Resume the offer from under review back to Sent status. The offer will be available for client response again.',
+		resumeFromReviewTooltipDescription:
+			'Resume the offer from under review back to Sent status. The offer will be available for client response again.',
 		loading: 'Loading...',
 		offerDetails: 'Offer Details',
 		discount: 'Discount',
@@ -1494,34 +1501,42 @@ export const translations = {
 		},
 
 		// Missing translations for Sales Support Dashboard
-		unauthorizedAccess: 'You do not have permission to access this page.',
+		unauthorizedAccess:
+			'You do not have permission to access this page.',
 		salesManagerApprovalRequired: 'SalesManager approval required',
 		activeRequests: 'Active Requests',
 		latestOfferEvents: 'Latest offer lifecycle events',
 		loadingActivity: 'Loading recent activity...',
 		noRecentActivity: 'No recent activity',
-		activityEmptyState: 'Activity will appear as offers and requests are processed',
+		activityEmptyState:
+			'Activity will appear as offers and requests are processed',
 		myOffersSnapshot: 'My Offers',
-		myOffersSnapshotDescription: 'Monitor your pipeline at a glance',
+		myOffersSnapshotDescription:
+			'Monitor your pipeline at a glance',
 		viewMyOffers: 'Go to My Offers',
 		waitingForAction: 'waiting for action',
 		comments: 'Comments',
 		rejectedAt: 'Rejected at',
 		awaitingSalesManagerApproval: 'Awaiting SalesManager approval',
 		generatingPdf: 'Generating PDF...',
-		offerAwaitingApproval: 'SalesManager has not approved this offer yet.',
-		offerCannotBeSentYet: 'You can send the offer once SalesManager approval is completed.',
+		offerAwaitingApproval:
+			'SalesManager has not approved this offer yet.',
+		offerCannotBeSentYet:
+			'You can send the offer once SalesManager approval is completed.',
 
 		// Salesman Report Form
 		submitReport: 'Submit Report',
-		submitReportForDeal: 'Submit your report for deal with {clientName}',
+		submitReportForDeal:
+			'Submit your report for deal with {clientName}',
 		submitReportWithOffer: 'Submit your report with the offer',
 		reportText: 'Report Text',
 		enterReportDetails: 'Enter your report details here...',
-		provideDetailedReport: 'Please provide a detailed report about the offer and client interaction.',
+		provideDetailedReport:
+			'Please provide a detailed report about the offer and client interaction.',
 		attachmentsOptional: 'Attachments (Optional)',
 		uploadFiles: 'Upload Files',
-		attachFilesDescription: 'You can attach images, PDFs, or documents related to the offer.',
+		attachFilesDescription:
+			'You can attach images, PDFs, or documents related to the offer.',
 		pleaseEnterReportText: 'Please enter a report text',
 		reportSubmittedSuccessfully: 'Report submitted successfully',
 		failedToSubmitReport: 'Failed to submit report',
@@ -1529,24 +1544,28 @@ export const translations = {
 		uploading: 'Uploading...',
 
 		// Additional Sales Support Dashboard translations
-		offerSentToSalesmanSuccessfully: 'Offer sent to salesman successfully',
+		offerSentToSalesmanSuccessfully:
+			'Offer sent to salesman successfully',
 		failedToSendOfferToSalesman: 'Failed to send offer to salesman',
-		authenticationRequiredForBackendPdfs: 'Authentication required for backend PDFs. Frontend PDFs generated successfully.',
-		allPdfsExportedSuccessfully: 'All 6 PDFs exported successfully! (jsPDF EN/AR, HTML EN/AR, Backend EN/AR)',
+		authenticationRequiredForBackendPdfs:
+			'Authentication required for backend PDFs. Frontend PDFs generated successfully.',
+		allPdfsExportedSuccessfully: 'PDFs exported successfully!',
 		searchOffers: 'Search offers...',
-		pdfExportedSuccessfully: 'PDF exported successfully! Both Arabic and English versions downloaded.',
+		pdfExportedSuccessfully:
+			'PDF exported successfully! Both Arabic and English versions downloaded.',
 
 		// Weekly Plans
 		weeklyPlanUpdated: 'Weekly plan has been updated',
 		allPlans: 'All plans',
-		provideFeedbackOnPerformance: 'Provide feedback on performance, achievements, areas for improvement...',
+		provideFeedbackOnPerformance:
+			'Provide feedback on performance, achievements, areas for improvement...',
 		planTitlePlaceholder: 'Plan title',
 		planDescriptionPlaceholder: 'Plan description...',
-		briefDescriptionOfWeeksPlan: "Brief description of this week's plan and objectives...",
+		briefDescriptionOfWeeksPlan:
+			"Brief description of this week's plan and objectives...",
 		purposeOptional: 'Purpose (optional)',
 		enterTaskTitle: 'Enter task title',
 		briefDescription: 'Brief description',
-		additionalNotes: 'Additional notes...',
 		voiceDescription: 'Voice Description',
 		allAssociatedData: 'All associated data',
 		followUp: 'Follow Up',
@@ -1557,60 +1576,37 @@ export const translations = {
 		totalPlans: 'Total Plans',
 		completionRate: 'Completion Rate',
 		pendingReviews: 'Pending Reviews',
-		employee: 'Employee',
 
 		// Client Details
 		organization: 'Organization',
 		offerHistory: 'Offer History',
 		noOffersFoundForClient: 'No offers found for this client',
-		failedToLoadDealDetails: 'Failed to load deal details',
 		failedToLoadOfferDetails: 'Failed to load offer details',
 		failedToLoadVisitDetails: 'Failed to load visit details',
 
 		// Unified Sales Manager Dashboard
-		totalClients: 'Total Clients',
 		allClients: 'All Clients',
-		viewAndManageAllTeamClients: 'View and manage all team clients',
 		pendingDeals: 'Pending Deals',
 		dealApprovals: 'Deal Approvals',
-		reviewAndApprovePendingDeals: 'Review and approve pending deals',
 		pendingOffers: 'Pending Offers',
 		offerApprovals: 'Offer Approvals',
-		reviewAndApprovePendingOffers: 'Review and approve pending offers',
-		totalRevenue: 'Total Revenue',
-		revenue: 'Revenue',
-		totalSuccessfulDealsRevenue: 'Total successful deals revenue',
-		targetMet: 'Target Met',
-		teamPerformance: 'Team Performance',
-		monitorTeamPerformanceMetrics: 'Monitor team performance metrics',
 		activePlans: 'Active Plans',
-		viewAndManageWeeklySalesPlans: 'View and manage weekly sales plans',
-		moneyTargets: 'Money Targets',
-		salesTargets: 'Sales Targets',
-		setAndTrackMoneyTargets: 'Set and track money targets',
-		teamMembers: 'Team Members',
-		teamManagement: 'Team Management',
-		manageYourSalesTeamMembers: 'Manage your sales team members',
 
 		// Offer Creation Page
 		typeToSearchSalesman: 'Type to search salesman...',
 		productName: 'Product name',
 		modelNumber: 'Model number',
-		manufacturer: 'Manufacturer',
-		countryOfOrigin: 'Country of origin',
-		year: 'Year',
 		productDescription: 'Product description...',
-		productDescriptionSpecifications: 'Product description, specifications, features...',
-		searchProductsByNameModel: 'Search products by name, model, provider...',
-		allCategories: 'All Categories',
+		productDescriptionSpecifications:
+			'Product description, specifications, features...',
+		searchProductsByNameModel:
+			'Search products by name, model, provider...',
 
 		// Deal Reports Page
 		failedToLoadDeals: 'Failed to load deals',
-		reportSubmittedSuccessfully: 'Report submitted successfully',
 
 		// Edit Offer Page
 		failedToLoadOffer: 'Failed to load offer',
-		offerUpdatedSuccessfully: 'Offer updated successfully',
 		offerUpdatedSuccessfully: 'Offer updated successfully',
 
 		// Deals Management Page
@@ -1620,27 +1616,33 @@ export const translations = {
 		// (uses same failedToLoadDeals)
 
 		// Client Account Creation Page
-		clientAccountMarkedAsCreated: 'Client account marked as created',
+		clientAccountMarkedAsCreated:
+			'Client account marked as created',
 
 		// Payment Queries
 		paymentCreatedSuccessfully: 'Payment created successfully',
 		paymentProcessedSuccessfully: 'Payment processed successfully',
-		cashPaymentRecordedSuccessfully: 'Cash payment recorded successfully',
-		bankTransferRecordedSuccessfully: 'Bank transfer recorded successfully',
+		cashPaymentRecordedSuccessfully:
+			'Cash payment recorded successfully',
+		bankTransferRecordedSuccessfully:
+			'Bank transfer recorded successfully',
 		paymentConfirmedSuccessfully: 'Payment confirmed successfully',
 		paymentRejected: 'Payment rejected',
 
 		// Maintenance Queries
-		maintenanceRequestCreatedSuccessfully: 'Maintenance request created successfully',
-		requestAssignedToEngineerSuccessfully: 'Request assigned to engineer successfully',
-		maintenanceVisitCreatedSuccessfully: 'Maintenance visit created successfully',
-		sparePartRequestCreatedSuccessfully: 'Spare part request created successfully',
-		sparePartPriceSetSuccessfully: 'Spare part price set successfully',
+		maintenanceRequestCreatedSuccessfully:
+			'Maintenance request created successfully',
+		requestAssignedToEngineerSuccessfully:
+			'Request assigned to engineer successfully',
+		maintenanceVisitCreatedSuccessfully:
+			'Maintenance visit created successfully',
+		sparePartRequestCreatedSuccessfully:
+			'Spare part request created successfully',
+		sparePartPriceSetSuccessfully:
+			'Spare part price set successfully',
 		statusUpdatedSuccessfully: 'Status updated successfully',
 
 		// Additional translations
-		call: 'Call',
-		email: 'Email',
 		visit: 'Visit',
 	},
 	ar: {
@@ -2372,16 +2374,22 @@ export const translations = {
 		markAsNeedsModification: 'وضع علامة يحتاج تعديل',
 		markAsUnderReview: 'وضع تحت المراجعة',
 		resumeFromUnderReview: 'استئناف إلى مرسل',
-		onlySentOffersCanBeMarkedUnderReview: 'يمكن وضع العروض المرسلة فقط تحت المراجعة',
+		onlySentOffersCanBeMarkedUnderReview:
+			'يمكن وضع العروض المرسلة فقط تحت المراجعة',
 		offerMarkedAsUnderReview: 'تم وضع العرض تحت المراجعة بنجاح',
-		onlyUnderReviewOffersCanBeResumed: 'يمكن استئناف العروض تحت المراجعة فقط',
-		offerResumedFromUnderReview: 'تم استئناف العرض من تحت المراجعة بنجاح',
+		onlyUnderReviewOffersCanBeResumed:
+			'يمكن استئناف العروض تحت المراجعة فقط',
+		offerResumedFromUnderReview:
+			'تم استئناف العرض من تحت المراجعة بنجاح',
 		underReviewTooltipTitle: 'قيد المراجعة',
-		underReviewTooltipDescription: 'إيقاف العرض مؤقتاً للمراجعة الداخلية. لا يعود إلى دعم المبيعات. يمكنك استئنافه لاحقاً.',
+		underReviewTooltipDescription:
+			'إيقاف العرض مؤقتاً للمراجعة الداخلية. لا يعود إلى دعم المبيعات. يمكنك استئنافه لاحقاً.',
 		needsModificationTooltipTitle: 'يحتاج تعديل',
-		needsModificationTooltipDescription: 'طلب تعديلات على العرض. يعود إلى دعم المبيعات للتعديل. بعد التعديل، ينتقل العرض إلى حالة المسودة.',
+		needsModificationTooltipDescription:
+			'طلب تعديلات على العرض. يعود إلى دعم المبيعات للتعديل. بعد التعديل، ينتقل العرض إلى حالة المسودة.',
 		resumeFromReviewTooltipTitle: 'استئناف من المراجعة',
-		resumeFromReviewTooltipDescription: 'استئناف العرض من تحت المراجعة إلى حالة المرسل. سيكون العرض متاحاً مرة أخرى لرد العميل.',
+		resumeFromReviewTooltipDescription:
+			'استئناف العرض من تحت المراجعة إلى حالة المرسل. سيكون العرض متاحاً مرة أخرى لرد العميل.',
 		loading: 'جاري التحميل...',
 		offerDetails: 'تفاصيل العرض',
 		discount: 'الخصم',
@@ -2991,15 +2999,18 @@ export const translations = {
 		noRecentActivity: 'لا يوجد نشاط حديث',
 		activityEmptyState: 'سيظهر النشاط عند معالجة العروض والطلبات',
 		myOffersSnapshot: 'عروضي',
-		myOffersSnapshotDescription: 'راقب خط الأنابيب الخاص بك في لمحة',
+		myOffersSnapshotDescription:
+			'راقب خط الأنابيب الخاص بك في لمحة',
 		viewMyOffers: 'انتقل إلى عروضي',
 		waitingForAction: 'في انتظار الإجراء',
 		comments: 'التعليقات',
 		rejectedAt: 'تم الرفض في',
 		awaitingSalesManagerApproval: 'في انتظار موافقة مدير المبيعات',
 		generatingPdf: 'جاري إنشاء PDF...',
-		offerAwaitingApproval: 'لم يوافق مدير المبيعات على هذا العرض بعد.',
-		offerCannotBeSentYet: 'يمكنك إرسال العرض بمجرد اكتمال موافقة مدير المبيعات.',
+		offerAwaitingApproval:
+			'لم يوافق مدير المبيعات على هذا العرض بعد.',
+		offerCannotBeSentYet:
+			'يمكنك إرسال العرض بمجرد اكتمال موافقة مدير المبيعات.',
 
 		// Salesman Report Form
 		submitReport: 'إرسال التقرير',
@@ -3007,10 +3018,12 @@ export const translations = {
 		submitReportWithOffer: 'إرسال تقريرك مع العرض',
 		reportText: 'نص التقرير',
 		enterReportDetails: 'أدخل تفاصيل تقريرك هنا...',
-		provideDetailedReport: 'يرجى تقديم تقرير مفصل حول العرض وتفاعل العميل.',
+		provideDetailedReport:
+			'يرجى تقديم تقرير مفصل حول العرض وتفاعل العميل.',
 		attachmentsOptional: 'المرفقات (اختياري)',
 		uploadFiles: 'رفع الملفات',
-		attachFilesDescription: 'يمكنك إرفاق الصور أو ملفات PDF أو المستندات المتعلقة بالعرض.',
+		attachFilesDescription:
+			'يمكنك إرفاق الصور أو ملفات PDF أو المستندات المتعلقة بالعرض.',
 		pleaseEnterReportText: 'يرجى إدخال نص التقرير',
 		reportSubmittedSuccessfully: 'تم إرسال التقرير بنجاح',
 		failedToSubmitReport: 'فشل إرسال التقرير',
@@ -3018,24 +3031,29 @@ export const translations = {
 		uploading: 'جاري الرفع...',
 
 		// Additional Sales Support Dashboard translations
-		offerSentToSalesmanSuccessfully: 'تم إرسال العرض إلى مندوب المبيعات بنجاح',
-		failedToSendOfferToSalesman: 'فشل إرسال العرض إلى مندوب المبيعات',
-		authenticationRequiredForBackendPdfs: 'المصادقة مطلوبة لملفات PDF من الخادم. تم إنشاء ملفات PDF من الواجهة الأمامية بنجاح.',
-		allPdfsExportedSuccessfully: 'تم تصدير جميع ملفات PDF الستة بنجاح! (jsPDF EN/AR، HTML EN/AR، Backend EN/AR)',
+		offerSentToSalesmanSuccessfully:
+			'تم إرسال العرض إلى مندوب المبيعات بنجاح',
+		failedToSendOfferToSalesman:
+			'فشل إرسال العرض إلى مندوب المبيعات',
+		authenticationRequiredForBackendPdfs:
+			'المصادقة مطلوبة لملفات PDF من الخادم. تم إنشاء ملفات PDF من الواجهة الأمامية بنجاح.',
+		allPdfsExportedSuccessfully: 'تم تصدير ملفات PDF بنجاح!',
 		searchOffers: 'البحث عن العروض...',
-		pdfExportedSuccessfully: 'تم تصدير PDF بنجاح! تم تنزيل النسختين العربية والإنجليزية.',
+		pdfExportedSuccessfully:
+			'تم تصدير PDF بنجاح! تم تنزيل النسختين العربية والإنجليزية.',
 
 		// Weekly Plans
 		weeklyPlanUpdated: 'تم تحديث الخطة الأسبوعية',
 		allPlans: 'جميع الخطط',
-		provideFeedbackOnPerformance: 'قدم ملاحظات حول الأداء والإنجازات والمناطق التي تحتاج تحسين...',
+		provideFeedbackOnPerformance:
+			'قدم ملاحظات حول الأداء والإنجازات والمناطق التي تحتاج تحسين...',
 		planTitlePlaceholder: 'عنوان الخطة',
 		planDescriptionPlaceholder: 'وصف الخطة...',
-		briefDescriptionOfWeeksPlan: 'وصف موجز لخطة هذا الأسبوع والأهداف...',
+		briefDescriptionOfWeeksPlan:
+			'وصف موجز لخطة هذا الأسبوع والأهداف...',
 		purposeOptional: 'الغرض (اختياري)',
 		enterTaskTitle: 'أدخل عنوان المهمة',
 		briefDescription: 'وصف موجز',
-		additionalNotes: 'ملاحظات إضافية...',
 		voiceDescription: 'الوصف الصوتي',
 		allAssociatedData: 'جميع البيانات المرتبطة',
 		followUp: 'متابعة',
@@ -3046,95 +3064,63 @@ export const translations = {
 		totalPlans: 'إجمالي الخطط',
 		completionRate: 'معدل الإنجاز',
 		pendingReviews: 'المراجعات المعلقة',
-		employee: 'الموظف',
 
 		// Client Details
 		organization: 'المؤسسة',
 		offerHistory: 'تاريخ العروض',
 		noOffersFoundForClient: 'لم يتم العثور على عروض لهذا العميل',
-		failedToLoadDealDetails: 'فشل تحميل تفاصيل الصفقة',
 		failedToLoadOfferDetails: 'فشل تحميل تفاصيل العرض',
 		failedToLoadVisitDetails: 'فشل تحميل تفاصيل الزيارة',
 
 		// Unified Sales Manager Dashboard
-		totalClients: 'إجمالي العملاء',
 		allClients: 'جميع العملاء',
-		viewAndManageAllTeamClients: 'عرض وإدارة جميع عملاء الفريق',
 		pendingDeals: 'الصفقات المعلقة',
 		dealApprovals: 'موافقات الصفقات',
-		reviewAndApprovePendingDeals: 'مراجعة والموافقة على الصفقات المعلقة',
 		pendingOffers: 'العروض المعلقة',
 		offerApprovals: 'موافقات العروض',
-		reviewAndApprovePendingOffers: 'مراجعة والموافقة على العروض المعلقة',
-		totalRevenue: 'إجمالي الإيرادات',
-		revenue: 'الإيرادات',
-		totalSuccessfulDealsRevenue: 'إجمالي إيرادات الصفقات الناجحة',
-		targetMet: 'تم تحقيق الهدف',
-		teamPerformance: 'أداء الفريق',
-		monitorTeamPerformanceMetrics: 'مراقبة مؤشرات أداء الفريق',
 		activePlans: 'الخطط النشطة',
-		viewAndManageWeeklySalesPlans: 'عرض وإدارة الخطط الأسبوعية للمبيعات',
-		moneyTargets: 'الأهداف المالية',
-		salesTargets: 'أهداف المبيعات',
-		setAndTrackMoneyTargets: 'تحديد وتتبع الأهداف المالية',
-		teamMembers: 'أعضاء الفريق',
-		teamManagement: 'إدارة الفريق',
-		manageYourSalesTeamMembers: 'إدارة أعضاء فريق المبيعات',
 
 		// Offer Creation Page
 		typeToSearchSalesman: 'اكتب للبحث عن مندوب مبيعات...',
 		productName: 'اسم المنتج',
-		modelNumber: 'رقم الموديل',
-		manufacturer: 'الشركة المصنعة',
-		countryOfOrigin: 'بلد المنشأ',
-		year: 'السنة',
 		productDescription: 'وصف المنتج...',
-		productDescriptionSpecifications: 'وصف المنتج، المواصفات، الميزات...',
-		searchProductsByNameModel: 'البحث عن المنتجات بالاسم، الموديل، المورد...',
-		allCategories: 'جميع الفئات',
+		productDescriptionSpecifications:
+			'وصف المنتج، المواصفات، الميزات...',
+		searchProductsByNameModel:
+			'البحث عن المنتجات بالاسم، الموديل، المورد...',
 
 		// Deal Reports Page
 		failedToLoadDeals: 'فشل تحميل الصفقات',
-		reportSubmittedSuccessfully: 'تم إرسال التقرير بنجاح',
 
 		// Edit Offer Page
 		failedToLoadOffer: 'فشل تحميل العرض',
-		offerUpdatedSuccessfully: 'تم تحديث العرض بنجاح',
 
 		// Deals Management Page
-		// (uses same failedToLoadDealDetails)
-
-		// Legal Deals Page
-		// (uses same failedToLoadDeals)
-
 		// Client Account Creation Page
-		clientAccountMarkedAsCreated: 'تم وضع علامة على حساب العميل كمنشأ',
-
 		// Payment Queries
 		paymentCreatedSuccessfully: 'تم إنشاء الدفع بنجاح',
 		paymentProcessedSuccessfully: 'تم معالجة الدفع بنجاح',
 		cashPaymentRecordedSuccessfully: 'تم تسجيل الدفع النقدي بنجاح',
-		bankTransferRecordedSuccessfully: 'تم تسجيل التحويل البنكي بنجاح',
+		bankTransferRecordedSuccessfully:
+			'تم تسجيل التحويل البنكي بنجاح',
 		paymentConfirmedSuccessfully: 'تم تأكيد الدفع بنجاح',
 		paymentRejected: 'تم رفض الدفع',
 
 		// Maintenance Queries
-		maintenanceRequestCreatedSuccessfully: 'تم إنشاء طلب الصيانة بنجاح',
-		requestAssignedToEngineerSuccessfully: 'تم تعيين الطلب للمهندس بنجاح',
-		maintenanceVisitCreatedSuccessfully: 'تم إنشاء زيارة الصيانة بنجاح',
-		sparePartRequestCreatedSuccessfully: 'تم إنشاء طلب قطع الغيار بنجاح',
+		maintenanceRequestCreatedSuccessfully:
+			'تم إنشاء طلب الصيانة بنجاح',
+		requestAssignedToEngineerSuccessfully:
+			'تم تعيين الطلب للمهندس بنجاح',
+		maintenanceVisitCreatedSuccessfully:
+			'تم إنشاء زيارة الصيانة بنجاح',
+		sparePartRequestCreatedSuccessfully:
+			'تم إنشاء طلب قطع الغيار بنجاح',
 		sparePartPriceSetSuccessfully: 'تم تعيين سعر قطع الغيار بنجاح',
 		statusUpdatedSuccessfully: 'تم تحديث الحالة بنجاح',
 
 		// Additional translations
 		call: 'مكالمة',
-		email: 'بريد إلكتروني',
 		visit: 'زيارة',
-		followUp: 'متابعة',
-		meeting: 'اجتماع',
-		medium: 'متوسط',
-		high: 'عالي',
-		low: 'منخفض',
 	},
 };
 

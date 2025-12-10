@@ -10,7 +10,7 @@ import './OfferPrint.css';
 async function convertPdfToImage(pdfUrl: string): Promise<string | null> {
 	try {
 		const pdfjsLib = await import('pdfjs-dist');
-		
+
 		// Set worker source
 		if (typeof window !== 'undefined') {
 			pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -82,24 +82,24 @@ async function getLetterheadImage(): Promise<string | null> {
 	if (cachedLetterheadImage !== undefined) {
 		return cachedLetterheadImage;
 	}
-	
+
 	let base64: string | null = null;
-	
+
 	// Try PNG first
 	if (letterheadPngUrl) {
 		base64 = await loadImageAsBase64(letterheadPngUrl);
 	}
-	
+
 	// Fall back to converting PDF
 	if (!base64 && letterheadPdfUrl) {
 		base64 = await convertPdfToImage(letterheadPdfUrl);
 	}
-	
+
 	cachedLetterheadImage = base64;
 	return base64;
 }
 
-// Types matching the existing pdfGenerator
+// Types for offer data
 interface OfferEquipment {
 	id: number;
 	name: string;
@@ -207,7 +207,7 @@ const translations: Record<PDFLanguage, Record<string, string>> = {
 function normalizeEquipment(eq: any): OfferEquipment & { normalizedImageUrl: string; normalizedProviderImageUrl: string } {
 	const imagePath = eq.imagePath || eq.ImagePath || eq.imageUrl || eq.ImageUrl || null;
 	const providerImagePath = eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath || null;
-	
+
 	return {
 		id: eq.id || eq.Id,
 		name: eq.name || eq.Name || 'N/A',
@@ -227,8 +227,8 @@ function normalizeEquipment(eq: any): OfferEquipment & { normalizedImageUrl: str
 		providerImagePath,
 		customDescription: eq.customDescription,
 		normalizedImageUrl: imagePath && !imagePath.includes('placeholder') ? getStaticFileUrl(imagePath) : '',
-		normalizedProviderImageUrl: providerImagePath && !providerImagePath.includes('placeholder') && !providerImagePath.endsWith('.svg') 
-			? getStaticFileUrl(providerImagePath) 
+		normalizedProviderImageUrl: providerImagePath && !providerImagePath.includes('placeholder') && !providerImagePath.endsWith('.svg')
+			? getStaticFileUrl(providerImagePath)
 			: '',
 	};
 }
@@ -242,10 +242,10 @@ export const OfferPrintTemplate: React.FC<OfferPrintTemplateProps> = ({ offer, o
 	const lang: PDFLanguage = options.language || 'en';
 	const isRTL = lang === 'ar';
 	const t = translations[lang];
-	
+
 	// Load letterhead dynamically
 	const [letterheadUrl, setLetterheadUrl] = useState<string>(letterheadPngUrl);
-	
+
 	useEffect(() => {
 		getLetterheadImage().then((image) => {
 			if (image) {
@@ -347,8 +347,8 @@ export const OfferPrintTemplate: React.FC<OfferPrintTemplateProps> = ({ offer, o
 													{opts.showProvider && opts.showCountry
 														? `${t.provider} / ${t.country}`
 														: opts.showProvider
-														? t.provider
-														: t.country}
+															? t.provider
+															: t.country}
 												</th>
 											)}
 											{opts.showPrice && <th className="col-price">{t.price}</th>}

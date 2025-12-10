@@ -26,9 +26,10 @@ import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
 import { productApi } from '@/services/sales/productApi'
 import type { Product } from '@/types/sales.types'
-import { downloadOfferPDF } from '@/utils/pdfGenerator'
 import { usePerformance } from '@/hooks/usePerformance'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useAuthStore } from '@/stores/authStore'
+import { getApiBaseUrl } from '@/utils/apiConfig'
 import ProviderLogo from '@/components/sales/ProviderLogo'
 import { getStaticFileUrl } from '@/utils/apiConfig'
 
@@ -39,11 +40,11 @@ function useQuery() {
 
 export default function OfferCreationPage() {
     usePerformance('OfferCreationPage');
-	const { t } = useTranslation();
-	const translate = (key: string, fallback: string) => {
-		const value = t(key);
-		return value && value !== key ? value : fallback;
-	};
+    const { t } = useTranslation();
+    const translate = (key: string, fallback: string) => {
+        const value = t(key);
+        return value && value !== key ? value : fallback;
+    };
     const query = useQuery()
     const navigate = useNavigate()
 
@@ -108,9 +109,9 @@ export default function OfferCreationPage() {
             const response = await productApi.getAllProducts(params)
 
             setCatalogProducts(response.data || [])
-		} catch (err: any) {
-			console.error('Error loading catalog products:', err)
-			toast.error(err.message || translate('offerCreationPage.errors.loadProducts', 'Failed to load products'))
+        } catch (err: any) {
+            console.error('Error loading catalog products:', err)
+            toast.error(err.message || translate('offerCreationPage.errors.loadProducts', 'Failed to load products'))
             setCatalogProducts([])
         } finally {
             setLoadingCatalog(false)
@@ -127,8 +128,8 @@ export default function OfferCreationPage() {
         try {
             const response = await productApi.searchProducts(catalogSearchTerm)
             setCatalogProducts(response.data || [])
-		} catch (err: any) {
-			toast.error(err.message || translate('offerCreationPage.errors.searchFailed', 'Search failed'))
+        } catch (err: any) {
+            toast.error(err.message || translate('offerCreationPage.errors.searchFailed', 'Search failed'))
         } finally {
             setLoadingCatalog(false)
         }
@@ -164,13 +165,13 @@ export default function OfferCreationPage() {
 
         // Check if already added
         const exists = productItems.some((p) => p.name === product.name && p.model === productItem.model)
-		if (exists) {
-			toast.error(translate('offerCreationPage.errors.productExists', 'Product already added'))
+        if (exists) {
+            toast.error(translate('offerCreationPage.errors.productExists', 'Product already added'))
             return
         }
 
         setProductItems((prev) => [...prev, productItem])
-		toast.success(translate('offerCreationPage.success.productAdded', 'Product added from catalog'))
+        toast.success(translate('offerCreationPage.success.productAdded', 'Product added from catalog'))
         setCatalogDialogOpen(false)
     }
 
@@ -210,22 +211,22 @@ export default function OfferCreationPage() {
                 setClientId(cid)
                 setClientName(data.clientName || '')
                 setProducts(data.requestedProducts || '')
-                
+
                 // Auto-assign to requester (will be customer if from customer app, or salesman if from salesman)
                 const requesterId = data.requestedBy || ''
                 setAssignedToSalesmanId(requesterId)
-                
+
                 // Check if this is a customer request - if requestedBy matches a customer pattern or we can infer from context
                 // For now, we'll check if the request comes with client info and assume customer requests should be assigned to the requester
                 // Customer requests typically come from the customer app, so we'll hide the salesman field when there's a request
                 // and auto-assign to the requester
                 setIsCustomerRequest(!!requesterId) // If there's a requester, assume it might be a customer request
-                
+
                 // reflect into form
                 setValue('clientIdHidden', cid)
                 setValue('products', data.requestedProducts || '')
-			} catch (e: any) {
-				toast.error(e.message || translate('offerCreationPage.errors.loadRequestDetails', 'Failed to load request details'))
+            } catch (e: any) {
+                toast.error(e.message || translate('offerCreationPage.errors.loadRequestDetails', 'Failed to load request details'))
             } finally {
                 setLoadingRequest(false)
             }
@@ -285,12 +286,12 @@ export default function OfferCreationPage() {
                 setSalesmen([])
 
                 // Show toast for specific errors
-				if (error.response?.status === 403) {
-					toast.error(translate('offerCreationPage.errors.salesmenAccessDenied', 'Access denied: You do not have permission to view salesmen'))
-				} else if (error.response?.status === 401) {
-					toast.error(translate('offerCreationPage.errors.salesmenUnauthorized', 'Unauthorized: Please log in again'))
-				} else if (error.message) {
-					toast.error(`${translate('offerCreationPage.errors.salesmenLoadFailedPrefix', 'Failed to load salesmen:')} ${error.message}`)
+                if (error.response?.status === 403) {
+                    toast.error(translate('offerCreationPage.errors.salesmenAccessDenied', 'Access denied: You do not have permission to view salesmen'))
+                } else if (error.response?.status === 401) {
+                    toast.error(translate('offerCreationPage.errors.salesmenUnauthorized', 'Unauthorized: Please log in again'))
+                } else if (error.message) {
+                    toast.error(`${translate('offerCreationPage.errors.salesmenLoadFailedPrefix', 'Failed to load salesmen:')} ${error.message}`)
                 }
             } finally {
                 setLoadingSalesmen(false)
@@ -304,11 +305,11 @@ export default function OfferCreationPage() {
         // Validation - clientId comes from request
         // For customer requests, assignedToSalesmanId is auto-set to requester
         // For salesman requests, we need to validate
-		if (!isCustomerRequest && !assignedToSalesmanId) {
-			toast.error(translate('offerCreationPage.errors.selectSalesman', 'Please assign to a salesman'))
+        if (!isCustomerRequest && !assignedToSalesmanId) {
+            toast.error(translate('offerCreationPage.errors.selectSalesman', 'Please assign to a salesman'))
             return
         }
-        
+
         // For customer requests, ensure assignedTo is set to requester
         if (isCustomerRequest && requestDetails?.requestedBy) {
             setAssignedToSalesmanId(requestDetails.requestedBy)
@@ -335,13 +336,13 @@ export default function OfferCreationPage() {
         }
 
         // Final validation
-		if (!productsString || productsString.trim() === '') {
-			toast.error(translate('offerCreationPage.errors.missingProducts', 'Please add at least one product (from catalog or text description)'))
+        if (!productsString || productsString.trim() === '') {
+            toast.error(translate('offerCreationPage.errors.missingProducts', 'Please add at least one product (from catalog or text description)'))
             return
         }
 
-		if (calculatedTotal <= 0) {
-			toast.error(translate('offerCreationPage.errors.invalidTotal', 'Total amount must be greater than 0'))
+        if (calculatedTotal <= 0) {
+            toast.error(translate('offerCreationPage.errors.invalidTotal', 'Total amount must be greater than 0'))
             return
         }
 
@@ -419,9 +420,9 @@ export default function OfferCreationPage() {
                 const resp = await salesApi.createOffer(payload);
                 setOffer(resp.data);
             }
-			toast.success(translate('offerCreationPage.success.offerCreated', 'Offer created successfully! It is now pending SalesManager approval. Once approved, you can send it to the salesman.'))
-		} catch (e: any) {
-			toast.error(e.message || translate('offerCreationPage.errors.createOfferFailed', 'Failed to create offer'))
+            toast.success(translate('offerCreationPage.success.offerCreated', 'Offer created successfully! It is now pending SalesManager approval. Once approved, you can send it to the salesman.'))
+        } catch (e: any) {
+            toast.error(e.message || translate('offerCreationPage.errors.createOfferFailed', 'Failed to create offer'))
         } finally {
             setCreatingOffer(false)
         }
@@ -455,90 +456,63 @@ export default function OfferCreationPage() {
     const exportPdf = async () => {
         if (!offer) return
         try {
-            // Handle arrays - convert to string for PDF display
-            const formatArray = (arr: string[] | string | undefined): string => {
-                if (!arr) return ''
-                if (Array.isArray(arr)) {
-                    return arr.filter(item => item && item.trim()).join('; ')
-                }
-                return String(arr)
+            // Generate PDF from backend (both EN and AR)
+            const authState = useAuthStore.getState();
+            const token = authState.user?.token;
+
+            if (!token) {
+                toast.error('Authentication required for PDF export');
+                return;
             }
 
-            // Fetch equipment data for PDF
-            let equipmentData: any[] = [];
-            try {
-                const equipmentResponse = await salesApi.getOfferEquipment(offer.id);
-                if (equipmentResponse.success && equipmentResponse.data) {
-                    // VERIFICATION: Log raw API response
-                    console.log('=== OFFER CREATION: Raw Equipment API Response ===');
-                    if (equipmentResponse.data.length > 0) {
-                        console.log('First equipment item:', equipmentResponse.data[0]);
-                        console.log('All keys:', Object.keys(equipmentResponse.data[0]));
-                        // Check specifically for providerImagePath
-                        const firstItem = equipmentResponse.data[0] as any;
-                        console.log('Provider Image Path Check:', {
-                            providerImagePath: firstItem.providerImagePath,
-                            ProviderImagePath: firstItem.ProviderImagePath,
-                            providerLogoPath: firstItem.providerLogoPath,
-                            ProviderLogoPath: firstItem.ProviderLogoPath,
-                            hasProviderImagePath: !!firstItem.providerImagePath,
+            const apiBaseUrl = getApiBaseUrl();
+            const languages = ['en', 'ar'];
+
+            for (const lang of languages) {
+                try {
+                    const response = await fetch(
+                        `${apiBaseUrl}/api/Offer/${offer.id}/pdf?language=${lang}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Accept': 'application/pdf',
+                            },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`Backend PDF generation failed for ${lang}:`, {
+                            status: response.status,
+                            statusText: response.statusText,
+                            error: errorText
                         });
+                        continue;
                     }
-                    
-                    // Normalize equipment data to match PDF generator interface
-                    equipmentData = equipmentResponse.data.map((eq: any) => {
-                        const mapped = {
-                            id: eq.id,
-                            name: eq.name || 'N/A',
-                            model: eq.model,
-                            provider: eq.provider || eq.Provider || eq.manufacturer,
-                            country: eq.country || eq.Country,
-                            year: eq.year ?? eq.Year,
-                            price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-                            description: eq.description || eq.Description || eq.specifications,
-                            inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-                            imagePath: eq.imagePath || eq.ImagePath,
-                            providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-                        };
-                        
-                        // Log providerImagePath status for each item
-                        console.log(`[OFFER CREATION] Equipment: ${mapped.name}`, {
-                            hasProviderImagePath: !!mapped.providerImagePath,
-                            providerImagePath: mapped.providerImagePath || 'NOT SET',
-                            rawProviderImagePath: eq.providerImagePath,
-                            rawProviderImagePathPascal: eq.ProviderImagePath,
-                        });
-                        
-                        return mapped;
-                    });
+
+                    const pdfBlob = await response.blob();
+
+                    if (!pdfBlob || pdfBlob.size === 0) {
+                        console.error(`Received empty PDF file for ${lang}`);
+                        continue;
+                    }
+
+                    const url = window.URL.createObjectURL(pdfBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    const langSuffix = lang === 'ar' ? 'AR' : 'EN';
+                    link.download = `Offer_${offer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                } catch (error: any) {
+                    console.error(`Error generating backend PDF for ${lang}:`, error);
                 }
-            } catch (e) {
-                // Equipment data not available for PDF
             }
 
-            // Generate PDF from frontend (using existing data)
-            // Generate both Arabic and English versions
-            await downloadOfferPDF({
-                id: offer.id,
-                clientName: clientName || 'Client',
-                clientType: undefined,
-                clientLocation: undefined,
-                products: offer.products,
-                totalAmount: offer.totalAmount,
-                discountAmount: offer.discountAmount,
-                validUntil: formatArray(offer.validUntil),
-                paymentTerms: formatArray(offer.paymentTerms),
-                deliveryTerms: formatArray(offer.deliveryTerms),
-                warrantyTerms: formatArray(offer.warrantyTerms),
-                createdAt: offer.createdAt,
-                status: offer.status,
-                assignedToName: assignedToSalesmanName || offer.assignedTo,
-                equipment: equipmentData, // Add equipment data
-            }, {
-                generateBothLanguages: true, // Generate both Arabic and English versions
-                showProductHeaders: true,
-            })
-            toast.success('PDF exported successfully! Both Arabic and English versions downloaded.')
+            toast.success('PDFs exported successfully! Both Arabic and English versions downloaded.')
         } catch (e: any) {
             toast.error(e.message || 'Export failed')
         }
@@ -593,47 +567,47 @@ export default function OfferCreationPage() {
                                     placeholder={t('typeToSearchSalesman')}
                                     className={!assignedToSalesmanId ? 'border-yellow-400' : ''}
                                 />
-                            {loadingSalesmen && (
-                                <div className="mt-2 px-3 py-2 text-sm text-gray-500">
-                                    <svg className="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Loading salesmen...
-                                </div>
-                            )}
-                            {!loadingSalesmen && salesmen.length > 0 && (
-                                <div className="mt-2 border rounded-md max-h-48 overflow-y-auto bg-white dark:bg-gray-800 shadow-lg">
-                                    {salesmen.map((u: any) => (
-                                        <div
-                                            key={u.id}
-                                            className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer border-b last:border-b-0"
-                                            onClick={() => {
-                                                setAssignedToSalesmanId(String(u.id));
-                                                const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email || '';
-                                                setAssignedToSalesmanName(fullName);
-                                                setSalesmanQuery(fullName);
-                                            }}
-                                        >
-                                            <div className="text-sm font-medium">{`${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email}</div>
-                                            <div className="text-xs text-gray-500">{u.email} • ID: {u.id}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            {!loadingSalesmen && salesmen.length === 0 && salesmanQuery.length > 0 && (
-                                <div className="mt-2 px-3 py-2 text-sm text-gray-500 border rounded-md bg-gray-50 dark:bg-gray-800">
-                                    No salesmen found matching "{salesmanQuery}"
-                                </div>
-                            )}
-                            {assignedToSalesmanId && assignedToSalesmanName && (
-                                <div className="mt-1 px-2 py-1 bg-green-50 dark:bg-green-900 rounded text-xs text-green-700 dark:text-green-200">
-                                    ✓ Selected: {assignedToSalesmanName}
-                                </div>
-                            )}
+                                {loadingSalesmen && (
+                                    <div className="mt-2 px-3 py-2 text-sm text-gray-500">
+                                        <svg className="animate-spin h-4 w-4 inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Loading salesmen...
+                                    </div>
+                                )}
+                                {!loadingSalesmen && salesmen.length > 0 && (
+                                    <div className="mt-2 border rounded-md max-h-48 overflow-y-auto bg-white dark:bg-gray-800 shadow-lg">
+                                        {salesmen.map((u: any) => (
+                                            <div
+                                                key={u.id}
+                                                className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer border-b last:border-b-0"
+                                                onClick={() => {
+                                                    setAssignedToSalesmanId(String(u.id));
+                                                    const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email || '';
+                                                    setAssignedToSalesmanName(fullName);
+                                                    setSalesmanQuery(fullName);
+                                                }}
+                                            >
+                                                <div className="text-sm font-medium">{`${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email}</div>
+                                                <div className="text-xs text-gray-500">{u.email} • ID: {u.id}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!loadingSalesmen && salesmen.length === 0 && salesmanQuery.length > 0 && (
+                                    <div className="mt-2 px-3 py-2 text-sm text-gray-500 border rounded-md bg-gray-50 dark:bg-gray-800">
+                                        No salesmen found matching "{salesmanQuery}"
+                                    </div>
+                                )}
+                                {assignedToSalesmanId && assignedToSalesmanName && (
+                                    <div className="mt-1 px-2 py-1 bg-green-50 dark:bg-green-900 rounded text-xs text-green-700 dark:text-green-200">
+                                        ✓ Selected: {assignedToSalesmanName}
+                                    </div>
+                                )}
                             </div>
                         )}
-                        
+
                         {/* Show assigned to info for customer requests */}
                         {isCustomerRequest && assignedToSalesmanId && (
                             <div className="md:col-span-2">
@@ -654,7 +628,7 @@ export default function OfferCreationPage() {
                                 </div>
                             </div>
                         )}
-                        
+
                         <div className="md:col-span-2">
                             <Label>Link to Offer Request (Optional - for follow-up tracking)</Label>
                             <Select
@@ -1067,69 +1041,69 @@ export default function OfferCreationPage() {
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                                     <div>
                                                         <Label>Name *</Label>
-                                                        <Input 
-                                                            value={editingProduct.name} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })} 
-                                                            placeholder={t('productName')} 
+                                                        <Input
+                                                            value={editingProduct.name}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                                                            placeholder={t('productName')}
                                                         />
                                                     </div>
                                                     <div>
                                                         <Label>Model</Label>
-                                                        <Input 
-                                                            value={editingProduct.model} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, model: e.target.value })} 
-                                                            placeholder={t('modelNumber')} 
+                                                        <Input
+                                                            value={editingProduct.model}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, model: e.target.value })}
+                                                            placeholder={t('modelNumber')}
                                                         />
                                                     </div>
                                                     <div>
                                                         <Label>Factory/Manufacturer</Label>
-                                                        <Input 
-                                                            value={editingProduct.factory} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, factory: e.target.value })} 
-                                                            placeholder={t('manufacturer')} 
+                                                        <Input
+                                                            value={editingProduct.factory}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, factory: e.target.value })}
+                                                            placeholder={t('manufacturer')}
                                                         />
                                                     </div>
                                                     <div>
                                                         <Label>Country</Label>
-                                                        <Input 
-                                                            value={editingProduct.country} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, country: e.target.value })} 
-                                                            placeholder={t('countryOfOrigin')} 
+                                                        <Input
+                                                            value={editingProduct.country}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, country: e.target.value })}
+                                                            placeholder={t('countryOfOrigin')}
                                                         />
                                                     </div>
                                                     <div>
                                                         <Label>Year</Label>
-                                                        <Input 
+                                                        <Input
                                                             type="number"
-                                                            value={editingProduct.year as any} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, year: e.target.value })} 
-                                                            placeholder={t('year')} 
+                                                            value={editingProduct.year as any}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, year: e.target.value })}
+                                                            placeholder={t('year')}
                                                         />
                                                     </div>
                                                     <div>
                                                         <Label>Price *</Label>
-                                                        <Input 
-                                                            type="number" 
+                                                        <Input
+                                                            type="number"
                                                             step="0.01"
-                                                            value={editingProduct.price as any} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })} 
-                                                            placeholder="0.00" 
+                                                            value={editingProduct.price as any}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                                                            placeholder="0.00"
                                                         />
                                                     </div>
                                                     <div className="md:col-span-2">
                                                         <Label>Image URL</Label>
-                                                        <Input 
-                                                            value={editingProduct.imageUrl} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })} 
-                                                            placeholder="https://..." 
+                                                        <Input
+                                                            value={editingProduct.imageUrl}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, imageUrl: e.target.value })}
+                                                            placeholder="https://..."
                                                         />
                                                     </div>
                                                     <div className="md:col-span-2">
                                                         <Label>Provider Logo URL</Label>
-                                                        <Input 
-                                                            value={editingProduct.providerImagePath || ''} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, providerImagePath: e.target.value })} 
-                                                            placeholder="https://... or path" 
+                                                        <Input
+                                                            value={editingProduct.providerImagePath || ''}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, providerImagePath: e.target.value })}
+                                                            placeholder="https://... or path"
                                                         />
                                                         {editingProduct.providerImagePath && (
                                                             <div className="mt-2">
@@ -1143,11 +1117,11 @@ export default function OfferCreationPage() {
                                                     </div>
                                                     <div className="md:col-span-3">
                                                         <Label>Description</Label>
-                                                        <Textarea 
-                                                            rows={3} 
-                                                            value={editingProduct.description} 
-                                                            onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} 
-                                                            placeholder={t('productDescriptionSpecifications')} 
+                                                        <Textarea
+                                                            rows={3}
+                                                            value={editingProduct.description}
+                                                            onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                                                            placeholder={t('productDescriptionSpecifications')}
                                                         />
                                                     </div>
                                                     <div className="md:col-span-3">
@@ -1211,8 +1185,8 @@ export default function OfferCreationPage() {
                                                     )}
                                                     {p.imageUrl && (
                                                         <div className="mt-2">
-                                                            <img 
-                                                                src={p.imageUrl} 
+                                                            <img
+                                                                src={p.imageUrl}
                                                                 alt={p.name}
                                                                 className="w-20 h-20 object-cover rounded border"
                                                                 onError={(e) => {
@@ -1223,9 +1197,9 @@ export default function OfferCreationPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
                                                         onClick={() => {
                                                             setEditingProduct({ ...p })
                                                             setEditingProductIndex(idx)
@@ -1236,9 +1210,9 @@ export default function OfferCreationPage() {
                                                         </svg>
                                                         Edit
                                                     </Button>
-                                                    <Button 
-                                                        variant="destructive" 
-                                                        size="sm" 
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
                                                         onClick={() => {
                                                             setProductItems((prev) => prev.filter((_, i) => i !== idx))
                                                             toast.success(translate('offerCreationPage.success.productRemoved', 'Product removed'))
@@ -1311,11 +1285,11 @@ export default function OfferCreationPage() {
                         <CardHeader>
                             <CardTitle>Offer Status</CardTitle>
                             <CardDescription>
-                                {offer.status === 'PendingSalesManagerApproval' 
+                                {offer.status === 'PendingSalesManagerApproval'
                                     ? 'Offer is pending SalesManager approval. Once approved, you can send it to the salesman.'
                                     : offer.status === 'Sent'
-                                    ? 'Offer has been approved and is ready to send to salesman.'
-                                    : 'Manage your offer'}
+                                        ? 'Offer has been approved and is ready to send to salesman.'
+                                        : 'Manage your offer'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
