@@ -395,7 +395,13 @@ export default function OfferCreationPage() {
                 // Use selectedOfferRequestId (from dropdown) or requestId (from URL)
                 const offerRequestIdToUse = selectedOfferRequestId || requestId;
                 if (offerRequestIdToUse) payload.offerRequestId = Number(offerRequestIdToUse);
-                if (formData.discountAmount) payload.discountAmount = Number(formData.discountAmount);
+                
+                // Calculate and apply discount
+                const discount = formData.discountAmount ? Number(formData.discountAmount) : 0;
+                if (discount > 0) {
+                    payload.discountAmount = discount;
+                    payload.finalPrice = calculatedTotal - discount;
+                }
 
                 // Use the CreateOfferWithItems endpoint
                 const resp = await salesApi.createOfferWithItems(payload);
@@ -415,7 +421,13 @@ export default function OfferCreationPage() {
                 // Use selectedOfferRequestId (from dropdown) or requestId (from URL)
                 const offerRequestIdToUse = selectedOfferRequestId || requestId;
                 if (offerRequestIdToUse) payload.offerRequestId = Number(offerRequestIdToUse);
-                if (formData.discountAmount) payload.discountAmount = Number(formData.discountAmount);
+                
+                // Calculate and apply discount
+                const discount = formData.discountAmount ? Number(formData.discountAmount) : 0;
+                if (discount > 0) {
+                    payload.discountAmount = discount;
+                    payload.finalPrice = calculatedTotal - discount;
+                }
 
                 const resp = await salesApi.createOffer(payload);
                 setOffer(resp.data);
@@ -1303,16 +1315,6 @@ export default function OfferCreationPage() {
                                 </Button>
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() =>
-                                        navigate(`/sales-support/offers/${offer?.id}/preview`, {
-                                            state: { offer },
-                                        })
-                                    }
-                                >
-                                    Preview HTML
                                 </Button>
                                 <Button variant="ghost" onClick={() => navigate('/dashboard?tab=my-offers')}>
                                     Back to Dashboard

@@ -272,62 +272,11 @@ const SalesSupportDashboard: React.FC = () => {
 
 		setExportingPdf(true);
 		try {
-			// Handle arrays - convert to string for PDF display
-			const formatArray = (arr: string[] | string | undefined): string => {
-				if (!arr) return '';
-				if (Array.isArray(arr)) {
-					return arr.filter(item => item && item.trim()).join('; ');
-				}
-				return String(arr);
-			}
-
-			// Fetch equipment data for PDF
-			let equipmentData: any[] = [];
-			try {
-				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
-				if (equipmentResponse.success && equipmentResponse.data) {
-					// Normalize equipment data to match PDF generator interface
-					equipmentData = equipmentResponse.data.map((eq: any) => ({
-						id: eq.id,
-						name: eq.name || 'N/A',
-						model: eq.model,
-						provider: eq.provider || eq.Provider || eq.manufacturer,
-						country: eq.country || eq.Country,
-						year: eq.year ?? eq.Year,
-						price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-						description: eq.description || eq.Description || eq.specifications,
-						inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-						imagePath: eq.imagePath || eq.ImagePath,
-						providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-					}));
-				}
-			} catch (e) {
-				console.warn('Could not load equipment for PDF:', e);
-			}
-
-			// Prepare offer data for PDF generation
-			const offerData = {
-				id: selectedOffer.id,
-				clientName: selectedOffer.clientName || 'Client',
-				clientType: undefined,
-				clientLocation: undefined,
-				products: selectedOffer.products,
-				totalAmount: selectedOffer.totalAmount,
-				discountAmount: selectedOffer.discountAmount,
-				validUntil: formatArray(selectedOffer.validUntil),
-				paymentTerms: formatArray(selectedOffer.paymentTerms),
-				deliveryTerms: formatArray(selectedOffer.deliveryTerms),
-				warrantyTerms: formatArray(selectedOffer.warrantyTerms),
-				createdAt: selectedOffer.createdAt,
-				status: selectedOffer.status,
-				assignedToName: selectedOffer.assignedToName,
-				equipment: equipmentData,
-			};
-
 			// Show loading toast
 			const loadingToast = toast.loading('Generating PDFs (Backend EN/AR)...');
 
-			// Generate backend PDFs (both EN and AR)
+			// Generate PDFs from backend API (both EN and AR)
+			// Backend handles all PDF generation logic - frontend just requests and downloads
 			const authState = useAuthStore.getState();
 			const token = authState.user?.token;
 
