@@ -1,19 +1,25 @@
 // Offer Approval Form Component - SalesManager approves/rejects offers
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { salesApi } from '@/services/sales/salesApi';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Edit, FileText, Download, Plus, Trash2, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuthStore } from '@/stores/authStore';
+import { getApiBaseUrl, getStaticFileUrl } from '@/utils/apiConfig';
+import type { OfferEquipment } from '@/types/sales.types';
 import toast from 'react-hot-toast';
 
 // Validation schema for offer approval
@@ -52,7 +58,26 @@ interface OfferApprovalFormProps {
 export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferApprovalFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
+    const [exportingLanguage, setExportingLanguage] = useState<'en' | 'ar' | null>(null);
+    const [showEquipmentSection, setShowEquipmentSection] = useState(false);
+    const [equipment, setEquipment] = useState<OfferEquipment[]>([]);
+    const [loadingEquipment, setLoadingEquipment] = useState(false);
+    const [showAddEquipmentForm, setShowAddEquipmentForm] = useState(false);
+    const [newEquipment, setNewEquipment] = useState({
+        name: '',
+        model: '',
+        provider: '',
+        country: '',
+        year: '',
+        price: '',
+        description: '',
+        inStock: true,
+    });
+    const [deletingEquipmentId, setDeletingEquipmentId] = useState<number | null>(null);
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const { user } = useAuthStore();
 
     const form = useForm<ApprovalFormValues>({
         resolver: zodResolver(approvalSchema),
@@ -61,6 +86,112 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
             rejectionReason: '',
         },
     });
+
+    // Load equipment when component mounts
+    useEffect(() => {
+        if (offer.id) {
+            loadEquipment();
+        }
+    }, [offer.id]);
+
+    const loadEquipment = async () => {
+        if (!offer.id) return;
+        try {
+            setLoadingEquipment(true);
+            const response = await salesApi.getOfferEquipment(offer.id);
+            if (response.success && response.data) {
+                setEquipment(response.data || []);
+            }
+        } catch (error: any) {
+            console.error('Failed to load equipment:', error);
+            toast.error('Failed to load equipment');
+        } finally {
+            setLoadingEquipment(false);
+        }
+    };
+
+    const handleAddEquipment = async () => {
+        if (!newEquipment.name || !newEquipment.price) {
+            toast.error('Equipment name and price are required');
+            return;
+        }
+
+        try {
+            const price = parseFloat(newEquipment.price);
+            if (isNaN(price) || price <= 0) {
+                toast.error('Please enter a valid price');
+                return;
+            }
+
+            // Use direct API call to match backend DTO structure
+            const token = user?.token;
+            if (!token) {
+                toast.error('Authentication required');
+                return;
+            }
+
+            const apiBaseUrl = getApiBaseUrl();
+            const equipmentData = {
+                name: newEquipment.name,
+                model: newEquipment.model || null,
+                provider: newEquipment.provider || null,
+                country: newEquipment.country || null,
+                year: newEquipment.year ? parseInt(newEquipment.year) : null,
+                price: price,
+                description: newEquipment.description || null,
+                inStock: newEquipment.inStock,
+            };
+
+            const response = await fetch(`${apiBaseUrl}/api/Offer/${offer.id}/equipment`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(equipmentData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to add equipment');
+            }
+
+            toast.success('Equipment added successfully');
+            setNewEquipment({
+                name: '',
+                model: '',
+                provider: '',
+                country: '',
+                year: '',
+                price: '',
+                description: '',
+                inStock: true,
+            });
+            setShowAddEquipmentForm(false);
+            loadEquipment();
+        } catch (error: any) {
+            console.error('Failed to add equipment:', error);
+            toast.error(error.message || 'Failed to add equipment');
+        }
+    };
+
+    const handleDeleteEquipment = async (equipmentId: number) => {
+        if (!confirm('Are you sure you want to delete this equipment?')) {
+            return;
+        }
+
+        try {
+            setDeletingEquipmentId(equipmentId);
+            await salesApi.deleteOfferEquipment(offer.id, equipmentId);
+            toast.success('Equipment deleted successfully');
+            loadEquipment();
+        } catch (error: any) {
+            console.error('Failed to delete equipment:', error);
+            toast.error(error.message || 'Failed to delete equipment');
+        } finally {
+            setDeletingEquipmentId(null);
+        }
+    };
 
     const onSubmit = async (data: ApprovalFormValues) => {
         if (!action) return;
@@ -103,6 +234,84 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
         } else {
             // First click: just set action to show rejection reason field
             setAction('reject');
+        }
+    };
+
+    const handleEditOffer = () => {
+        navigate(`/sales-manager/offers/${offer.id}/edit`);
+    };
+
+    const handleExportPdf = async (language: 'en' | 'ar' = 'en') => {
+        if (!offer.id || isExportingPdf) return;
+
+        try {
+            setIsExportingPdf(true);
+            setExportingLanguage(language);
+            const token = user?.token;
+
+            if (!token) {
+                toast.error('Authentication required for PDF export');
+                return;
+            }
+
+            const apiBaseUrl = getApiBaseUrl();
+            const loadingToast = toast.loading(`Generating PDF (${language.toUpperCase()})...`);
+
+            try {
+                const response = await fetch(
+                    `${apiBaseUrl}/api/Offer/${offer.id}/pdf?language=${language}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/pdf',
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`PDF generation failed for ${language}:`, {
+                        status: response.status,
+                        statusText: response.statusText,
+                        error: errorText
+                    });
+                    toast.error(`Failed to generate PDF (${language.toUpperCase()})`);
+                    return;
+                }
+
+                const pdfBlob = await response.blob();
+
+                if (!pdfBlob || pdfBlob.size === 0) {
+                    console.error(`Received empty PDF file for ${language}`);
+                    toast.error(`Received empty PDF file (${language.toUpperCase()})`);
+                    return;
+                }
+
+                // Create download link
+                const url = window.URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                const langSuffix = language === 'ar' ? 'AR' : 'EN';
+                link.download = `Offer_${offer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                toast.dismiss(loadingToast);
+                toast.success(`PDF downloaded successfully (${language.toUpperCase()})`);
+            } catch (error: any) {
+                console.error(`Error generating PDF for ${language}:`, error);
+                toast.dismiss(loadingToast);
+                toast.error(`Error generating PDF (${language.toUpperCase()}): ${error.message}`);
+            }
+        } catch (error: any) {
+            console.error('Error exporting PDF:', error);
+            toast.error(error.message || 'Failed to export PDF');
+        } finally {
+            setIsExportingPdf(false);
+            setExportingLanguage(null);
         }
     };
 
@@ -184,6 +393,275 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <Separator />
+
+                {/* Equipment Section */}
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setShowEquipmentSection(!showEquipmentSection)}
+                        className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                            <span className="font-medium">Equipment ({equipment.length})</span>
+                        </div>
+                        {showEquipmentSection ? (
+                            <ChevronUp className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                        ) : (
+                            <ChevronDown className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                        )}
+                    </button>
+
+                    {showEquipmentSection && (
+                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            {loadingEquipment ? (
+                                <div className="text-center py-4">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading equipment...</p>
+                                </div>
+                            ) : equipment.length > 0 ? (
+                                <div className="space-y-3">
+                                    {equipment.map((eq) => (
+                                        <div
+                                            key={eq.id}
+                                            className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-600 flex items-start justify-between gap-4"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-start gap-3">
+                                                    {eq.imagePath && (
+                                                        <img
+                                                            src={getStaticFileUrl(eq.imagePath)}
+                                                            alt={eq.name}
+                                                            className="w-16 h-16 object-cover rounded border border-gray-200 dark:border-gray-700"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    )}
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold text-sm">{eq.name}</h4>
+                                                            {eq.inStock === false && (
+                                                                <Badge variant="secondary" className="text-xs">Out of Stock</Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                                            {eq.model && <p>Model: {eq.model}</p>}
+                                                            {eq.provider && <p>Provider: {eq.provider}</p>}
+                                                            {eq.country && <p>Country: {eq.country}</p>}
+                                                            {eq.year && <p>Year: {eq.year}</p>}
+                                                            {eq.price && (
+                                                                <p className="font-semibold text-green-600 dark:text-green-400">
+                                                                    Price: EGP {eq.price.toLocaleString()}
+                                                                </p>
+                                                            )}
+                                                            {eq.description && (
+                                                                <p className="mt-2 text-gray-700 dark:text-gray-300">{eq.description}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => handleDeleteEquipment(eq.id)}
+                                                disabled={deletingEquipmentId === eq.id}
+                                            >
+                                                {deletingEquipmentId === eq.id ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                        Deleting...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="h-4 w-4 mr-1" />
+                                                        Delete
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                                    <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">No equipment added yet</p>
+                                </div>
+                            )}
+
+                            {!showAddEquipmentForm ? (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setShowAddEquipmentForm(true)}
+                                    className="w-full"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Equipment
+                                </Button>
+                            ) : (
+                                <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-600 space-y-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-medium text-sm">Add New Equipment</h4>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setShowAddEquipmentForm(false);
+                                                setNewEquipment({
+                                                    name: '',
+                                                    model: '',
+                                                    provider: '',
+                                                    country: '',
+                                                    year: '',
+                                                    price: '',
+                                                    description: '',
+                                                    inStock: true,
+                                                });
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <Label className="text-xs">Name *</Label>
+                                            <Input
+                                                value={newEquipment.name}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                                                placeholder="Equipment name"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Price *</Label>
+                                            <Input
+                                                type="number"
+                                                value={newEquipment.price}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, price: e.target.value })}
+                                                placeholder="0.00"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Model</Label>
+                                            <Input
+                                                value={newEquipment.model}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, model: e.target.value })}
+                                                placeholder="Model number"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Provider</Label>
+                                            <Input
+                                                value={newEquipment.provider}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, provider: e.target.value })}
+                                                placeholder="Manufacturer"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Country</Label>
+                                            <Input
+                                                value={newEquipment.country}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, country: e.target.value })}
+                                                placeholder="Country"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Year</Label>
+                                            <Input
+                                                value={newEquipment.year}
+                                                onChange={(e) => setNewEquipment({ ...newEquipment, year: e.target.value })}
+                                                placeholder="Year"
+                                                className="h-8 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs">Description</Label>
+                                        <Textarea
+                                            value={newEquipment.description}
+                                            onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
+                                            placeholder="Equipment description"
+                                            rows={2}
+                                            className="text-sm"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        onClick={handleAddEquipment}
+                                        className="w-full"
+                                        size="sm"
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add Equipment
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <Separator />
+
+                {/* Action Buttons - Edit and PDF */}
+                <div className="flex gap-2 pb-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleEditOffer}
+                        className="flex-1"
+                    >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Offer
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleExportPdf('en')}
+                        disabled={isExportingPdf}
+                        className="flex-1"
+                    >
+                        {isExportingPdf && exportingLanguage === 'en' ? (
+                            <>
+                                <FileText className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF (EN)
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleExportPdf('ar')}
+                        disabled={isExportingPdf}
+                        className="flex-1"
+                    >
+                        {isExportingPdf && exportingLanguage === 'ar' ? (
+                            <>
+                                <FileText className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF (AR)
+                            </>
+                        )}
+                    </Button>
                 </div>
 
                 <Separator />
