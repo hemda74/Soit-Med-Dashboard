@@ -233,8 +233,8 @@ const ChatList: React.FC<ChatListProps> = ({
 														)}>
 															{displayName}
 														</p>
-														{/* Show chat type badge for SuperAdmin */}
-														{isSuperAdmin && conversation.chatTypeName && (
+														{/* Show chat type badge for SuperAdmin, Admin, and Support roles */}
+														{isAdmin && conversation.chatTypeName && (
 															<Badge
 																variant="outline"
 																className={cn(

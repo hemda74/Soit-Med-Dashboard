@@ -102,6 +102,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
 	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport', 'MaintenanceSupport'].includes(role)) || false;
 	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
+	const isAdmin = user?.roles.includes('Admin') || false;
+	const isSalesSupport = user?.roles.includes('SalesSupport') || false;
+	const isMaintenanceSupport = user?.roles.includes('MaintenanceSupport') || false;
 	// For admin: show customer first name, last name, and image
 	const clientName = isUserAdmin
 		? (conversation.customerFirstName && conversation.customerLastName
@@ -187,8 +190,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 							<h3 className="font-semibold text-lg text-foreground truncate">
 								{clientName}
 							</h3>
-							{/* Show chat type badge for SuperAdmin */}
-							{isSuperAdmin && conversation.chatTypeName && (
+							{/* Show chat type badge for SuperAdmin, Admin, and Support roles */}
+							{(isSuperAdmin || isAdmin || isSalesSupport || isMaintenanceSupport) && conversation.chatTypeName && (
 								<Badge
 									variant="outline"
 									className={cn(
