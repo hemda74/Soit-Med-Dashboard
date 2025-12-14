@@ -87,7 +87,7 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ conversationId }) => {
 				value={messageText}
 				onChange={(e) => handleTyping(e.target.value)}
 				onKeyDown={handleKeyPress}
-				placeholder={t('chat.typeMessage') || 'Type a message...'}
+				placeholder={t('chatTranslations.typeMessage') || 'Type a message...'}
 				className={cn(
 					"flex-1 min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent",
 					"focus-visible:ring-0 focus-visible:ring-offset-0",

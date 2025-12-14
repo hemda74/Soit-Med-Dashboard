@@ -199,7 +199,8 @@ class ChatSignalRService {
 		);
 
 		// Connection events
-		this.connection.onreconnecting(() => {
+		this.connection.onreconnecting((error) => {
+			console.log('🔄 Chat SignalR reconnecting...', error);
 			this.isConnected = false;
 			this.notifyListeners('connectionStatus', {
 				isConnected: false,
@@ -207,7 +208,8 @@ class ChatSignalRService {
 			});
 		});
 
-		this.connection.onreconnected(() => {
+		this.connection.onreconnected((connectionId) => {
+			console.log('✅ Chat SignalR reconnected:', connectionId);
 			this.isConnected = true;
 			this.notifyListeners('connectionStatus', {
 				isConnected: true,
@@ -215,11 +217,14 @@ class ChatSignalRService {
 			});
 		});
 
-		this.connection.onclose(() => {
+		this.connection.onclose((error) => {
+			console.warn('⚠️ Chat SignalR connection closed:', error);
 			this.isConnected = false;
+			// Check if automatic reconnect is still trying
+			const isReconnecting = this.connection?.state === signalR.HubConnectionState.Reconnecting;
 			this.notifyListeners('connectionStatus', {
 				isConnected: false,
-				isReconnecting: false,
+				isReconnecting: isReconnecting || false,
 			});
 		});
 	}
