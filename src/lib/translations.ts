@@ -1644,6 +1644,22 @@ export const translations = {
 
 		// Additional translations
 		visit: 'Visit',
+		chat: 'Chat',
+
+		// Chat translations (nested)
+		chatTranslations: {
+			disconnected:
+				'Disconnected from chat server. Reconnecting...',
+			loading: 'Loading chat...',
+			welcome: 'Welcome to Chat',
+			selectConversation:
+				'Select a conversation from the sidebar to start chatting',
+			selectConversationAdmin:
+				'Select a conversation from the sidebar to respond to customer messages',
+			selectConversationSuperAdmin:
+				'Select a conversation from the sidebar to view and respond. You can see all chat types.',
+			typeMessage: 'Type a message...',
+		},
 	},
 	ar: {
 		Hello: 'مرحبا',
@@ -3121,6 +3137,22 @@ export const translations = {
 		// Additional translations
 		call: 'مكالمة',
 		visit: 'زيارة',
+		chat: 'دردشة',
+
+		// Chat translations (nested)
+		chatTranslations: {
+			disconnected:
+				'انقطع الاتصال بخادم الدردشة. إعادة الاتصال...',
+			loading: 'جاري تحميل الدردشة...',
+			welcome: 'مرحباً بك في الدردشة',
+			selectConversation:
+				'اختر محادثة من الشريط الجانبي لبدء الدردشة',
+			selectConversationAdmin:
+				'اختر محادثة من الشريط الجانبي للرد على رسائل العملاء',
+			selectConversationSuperAdmin:
+				'اختر محادثة من الشريط الجانبي لعرض والرد. يمكنك رؤية جميع أنواع الدردشة.',
+			typeMessage: 'اكتب رسالة...',
+		},
 	},
 };
 
