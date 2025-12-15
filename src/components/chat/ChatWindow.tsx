@@ -33,8 +33,8 @@ const AvatarWithFallback: React.FC<{
 
 	return (
 		<div className={cn("rounded-full flex items-center justify-center overflow-hidden", className)}>
-			<img 
-				src={imageUrl} 
+			<img
+				src={imageUrl}
 				alt={alt}
 				className="h-full w-full object-cover"
 				onError={() => setImageError(true)}
@@ -55,10 +55,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 		messages,
 		typingUsers,
 		loadMessages,
-		sendTextMessage,
 		sendTypingIndicator,
 		markMessagesAsRead,
-		setTypingUser,
 	} = useChatStore();
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -68,49 +66,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 	const isTypingInThisConversation = typingUsers.get(conversation.id)?.size > 0;
 
 	useEffect(() => {
-		console.log('ChatWindow - Loading messages for conversation:', conversation.id);
 		// Load messages immediately when conversation changes
-		loadMessages(conversation.id);
+		// Always load page 1 (fresh load) when conversation changes
+		console.log('ChatWindow - Conversation changed, loading messages for:', conversation.id);
+		loadMessages(conversation.id, 1);
 		markMessagesAsRead(conversation.id);
 
 		// Auto-scroll to bottom after messages load
 		setTimeout(() => {
 			messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-		}, 100);
+		}, 300);
 	}, [conversation.id]);
 
 	useEffect(() => {
-		console.log('ChatWindow - Conversation messages updated:', conversationMessages.length, conversationMessages);
 		// Auto-scroll to bottom when messages change
-		setTimeout(() => {
-			messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-		}, 50);
-	}, [conversationMessages]);
+		if (conversationMessages.length > 0) {
+			setTimeout(() => {
+				messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+			}, 100);
+		}
+	}, [conversationMessages.length]);
 
 	useEffect(() => {
 		// Mark messages as read when viewing
-		markMessagesAsRead(conversation.id);
-	}, [conversationMessages, conversation.id]);
-
-	// Auto-load messages on mount and when conversation changes
-	useEffect(() => {
-		if (conversation && conversationMessages.length === 0) {
-			console.log('ChatWindow - Auto-loading messages for empty conversation');
-			loadMessages(conversation.id);
+		if (conversationMessages.length > 0) {
+			markMessagesAsRead(conversation.id);
 		}
-	}, [conversation?.id]);
+	}, [conversationMessages.length, conversation.id]);
 
 	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport', 'MaintenanceSupport'].includes(role)) || false;
 	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
 	const isAdmin = user?.roles.includes('Admin') || false;
 	const isSalesSupport = user?.roles.includes('SalesSupport') || false;
 	const isMaintenanceSupport = user?.roles.includes('MaintenanceSupport') || false;
-	// For admin: show customer first name, last name, and image
+	// For Admin: show customer first name, last name, and image
 	const clientName = isUserAdmin
 		? (conversation.customerFirstName && conversation.customerLastName
 			? `${conversation.customerFirstName} ${conversation.customerLastName}`
 			: conversation.customerName || conversation.customerEmail || 'Customer')
-		: (conversation.adminName || 'Admin');
+		: (conversation.AdminName || 'Admin');
 	const clientImage = isUserAdmin ? conversation.customerImageUrl : undefined;
 	const clientInitials = isUserAdmin && conversation.customerFirstName && conversation.customerLastName
 		? `${conversation.customerFirstName.charAt(0)}${conversation.customerLastName.charAt(0)}`.toUpperCase()
