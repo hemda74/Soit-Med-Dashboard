@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Camera, Trash2, AlertTriangle, Save, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -84,7 +84,7 @@ export default function EditUserModal({
     });
 
     // Update form when user changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (user) {
             editForm.reset({
                 firstName: user.firstName || '',

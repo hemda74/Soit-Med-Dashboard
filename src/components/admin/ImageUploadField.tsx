@@ -6,10 +6,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface ImageUploadFieldProps {
     imagePreview: string | null;
     imageError: string;
-    imageAltText?: string;
     onImageSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveImage: () => void;
-    onAltTextChange?: (value: string) => void;
 }
 
 const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
@@ -84,7 +82,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                                 {t('uploadImage')}
                             </Button>
                             <p className="text-sm text-green-600">
-                                {imagePreview ? 'Image selected' : ''}
+                                Image selected
                             </p>
                         </div>
                     </div>

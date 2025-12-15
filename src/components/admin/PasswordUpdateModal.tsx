@@ -74,7 +74,6 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
             );
 
             if (response.success) {
-                console.log('Password update successful:', response);
                 setSuccessModal({
                     isOpen: true,
                     message: response.message,
@@ -140,24 +139,6 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
                                 ID: {user.id}
                             </div>
                         </div>
-
-                        {/* Test Button - Remove this after testing */}
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                setSuccessModal({
-                                    isOpen: true,
-                                    message: 'Test success message',
-                                    password: 'TestPassword123!',
-                                    userId: user.id,
-                                    userName: user.userName,
-                                });
-                            }}
-                            className="w-full"
-                        >
-                            Test Success Modal
-                        </Button>
 
                         {/* Password Form */}
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
