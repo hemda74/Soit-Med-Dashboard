@@ -23,24 +23,28 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = ({ message, isOwn 
 		const audio = new Audio(message.voiceFileUrl);
 		audioRef.current = audio;
 
-		audio.addEventListener('loadedmetadata', () => {
+		const handleLoadedMetadata = () => {
 			setDuration(audio.duration);
-		});
+		};
 
-		audio.addEventListener('timeupdate', () => {
+		const handleTimeUpdate = () => {
 			setCurrentTime(audio.currentTime);
-		});
+		};
 
-		audio.addEventListener('ended', () => {
+		const handleEnded = () => {
 			setIsPlaying(false);
 			setCurrentTime(0);
-		});
+		};
+
+		audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+		audio.addEventListener('timeupdate', handleTimeUpdate);
+		audio.addEventListener('ended', handleEnded);
 
 		return () => {
 			audio.pause();
-			audio.removeEventListener('loadedmetadata', () => {});
-			audio.removeEventListener('timeupdate', () => {});
-			audio.removeEventListener('ended', () => {});
+			audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+			audio.removeEventListener('timeupdate', handleTimeUpdate);
+			audio.removeEventListener('ended', handleEnded);
 		};
 	}, [message.voiceFileUrl]);
 
