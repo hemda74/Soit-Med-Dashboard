@@ -4,4 +4,3 @@ export { default as VisitsTrendChart } from './VisitsTrendChart';
 export { default as OffersTrendChart } from './OffersTrendChart';
 export { default as ConversionRateChart } from './ConversionRateChart';
 export { default as DealStatusChart } from './DealStatusChart';
-
