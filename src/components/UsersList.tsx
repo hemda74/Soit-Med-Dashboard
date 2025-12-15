@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BarChart3, Edit, Key, Settings, TestTube, UserPlus, Users } from 'lucide-react';
+import { Edit, Key, Settings, TestTube, UserPlus, Users } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import type { UserListResponse } from '@/types/user.types';
 import type { DepartmentUser } from '@/types/department.types';
@@ -12,9 +12,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { useAppStore } from '@/stores/appStore';
 import UserFiltersComponent from './filters/UserFilters';
 import Pagination from './Pagination';
-import { PasswordUpdateModal } from './admin/PasswordUpdateModal';
+import { PasswordUpdateModal } from './Admin/PasswordUpdateModal';
 import ProfileImage from './ProfileImage';
-import EditUserModal from './admin/EditUserModal';
+import EditUserModal from './Admin/EditUserModal';
 import Logo from './Logo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,11 +27,7 @@ import {
     useStatisticsLoading,
     useStatisticsStore
 } from '@/stores/statisticsStore';
-import {
-    UnifiedAnalyticsCard,
-    MonthlyActivityChart,
-
-} from '@/components/charts';
+import { UnifiedAnalyticsCard } from '@/components/charts';
 
 type ViewMode = 'all' | 'filtered';
 
@@ -115,11 +111,11 @@ const UsersList: React.FC = () => {
     });
 
     // Check if user has access to users page (Admin or Super Admin only)
-    const hasAccess = hasAnyRole(['Admin', 'admin', 'SuperAdmin', 'superadmin']);
+    const hasAccess = hasAnyRole(['Admin', 'SuperAdmin']);
 
-    // Check if current user is super admin or admin (case-insensitive)
-    const isSuperAdmin = hasAnyRole(['SuperAdmin', 'superadmin']);
-    const isAdmin = hasAnyRole(['Admin', 'admin']);
+    // Check if current user is super Admin or Admin
+    const isSuperAdmin = hasAnyRole(['SuperAdmin']);
+    const isAdmin = hasAnyRole(['Admin']);
     const canManageUsers = isSuperAdmin || isAdmin;
 
     useEffect(() => {
@@ -400,7 +396,7 @@ const UsersList: React.FC = () => {
     }
 
     const handleCreateUser = () => {
-        navigate('/admin/create-role-user');
+        navigate('/Admin/create-role-user');
     };
 
     return (
@@ -512,32 +508,20 @@ const UsersList: React.FC = () => {
                             </>
                         )}
                     </div>
-                    <section className="space-y-6">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 rounded-2xl bg-primary/10 text-primary">
-                                    <BarChart3 className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-primary font-semibold uppercase tracking-wide">
-                                        {t('userAnalytics') || 'User Analytics'}
-                                    </p>
-                                    <h2 className="text-2xl font-bold text-foreground">
-                                        {t('userAnalyticsOverview') || 'User statistics & health'}
-                                    </h2>
-                                    <p className="text-muted-foreground mt-1 max-w-2xl">
-                                        {t('userAnalyticsDescription') || 'Monitor user growth, activity, engagement, and system health directly where you manage users.'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="grid gap-6 lg:grid-cols-2">
-                            <UnifiedAnalyticsCard />
-                            <MonthlyActivityChart />
-                        </div>
 
-
-                    </section>
+                    {/* Analytics Dashboard */}
+                    <div className="mt-8">
+                        <div className="mb-4">
+                            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                                <Settings className="w-6 h-6 text-primary" />
+                                {t('analyticsDashboard') || 'Analytics Dashboard'}
+                            </h2>
+                            <p className="text-muted-foreground mt-1">
+                                {t('analyticsDescription') || 'Comprehensive user analytics and insights'}
+                            </p>
+                        </div>
+                        <UnifiedAnalyticsCard />
+                    </div>
                 </div>
             )}
 
