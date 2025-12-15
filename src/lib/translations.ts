@@ -23,7 +23,7 @@ export const translations = {
 		dashboardNoPermissionMessage:
 			"You don't have permission to view analytics and statistics.",
 		dashboardContactAdmin:
-			'Please contact your administrator if you need access to this information.',
+			'Please contact your Administrator if you need access to this information.',
 		profile: 'Profile',
 		profileDescription: 'Your account information',
 		name: 'Name',
@@ -45,7 +45,7 @@ export const translations = {
 		activeUsers: 'Active Users',
 		inactiveUsers: 'Inactive Users',
 		successRate: 'Success Rate',
-		adminModule: 'Admin Module',
+		AdminModule: 'Admin Module',
 		usersManagement: 'Users Management',
 		usersManagementDescription: 'View and manage all users',
 		usersManagementDetails:
@@ -101,28 +101,6 @@ export const translations = {
 		viewInventory: 'View Inventory',
 		accountingDashboardDescription:
 			'Inspect financial performance, invoicing, and payment follow-ups.',
-
-		// Monthly Activity Chart
-		monthlyActivityOverview: 'Monthly Activity Overview',
-		monthlyActivityDescription:
-			'User activities and system usage patterns',
-		numberOfActivities: 'Number of Activities',
-		activitiesLabel: 'activities',
-		loginsLabel: 'Logins',
-		reportsCreatedLabel: 'Reports Created',
-		dataExportsLabel: 'Data Exports',
-		janShort: 'Jan',
-		febShort: 'Feb',
-		marShort: 'Mar',
-		aprShort: 'Apr',
-		mayShort: 'May',
-		junShort: 'Jun',
-		julShort: 'Jul',
-		augShort: 'Aug',
-		sepShort: 'Sep',
-		octShort: 'Oct',
-		novShort: 'Nov',
-		decShort: 'Dec',
 
 		// Sidebar
 		menu: 'Menu',
@@ -270,8 +248,8 @@ export const translations = {
 			'There was an error creating the user. Please try again.',
 		tryAgain: 'Try Again',
 		accessDenied: 'Access Denied',
-		adminAccessRequired:
-			'You need administrator privileges to create users',
+		AdminAccessRequired:
+			'You need Administrator privileges to create users',
 		goBack: 'Go Back',
 		failedToLoadRoles: 'Failed to load available roles',
 		failedToLoadRoleFields: 'Failed to load role-specific fields',
@@ -318,12 +296,12 @@ export const translations = {
 		doctor: 'Doctor',
 		engineer: 'Engineer',
 		technician: 'Technician',
-		admin: 'Admin',
+		Admin: 'Admin',
 		financeManager: 'Finance Manager',
 		financeEmployee: 'Finance Employee',
 		legalManager: 'Legal Manager',
 		legalEmployee: 'Legal Employee',
-		salesman: 'Salesman',
+		salesman: 'SalesMan',
 		salesManager: 'Sales Manager',
 		maintenanceManager: 'Maintenance Manager',
 		maintenanceSupport: 'Maintenance Support',
@@ -331,7 +309,7 @@ export const translations = {
 			'Medical staff including doctors and technicians',
 		engineerDescription: 'Technical and engineering staff',
 		technicianDescription: 'Medical technicians',
-		adminDescription: 'Administrative and management roles',
+		AdminDescription: 'Administrative and management roles',
 		financeManagerDescription:
 			'Financial management and accounting',
 		financeEmployeeDescription:
@@ -380,7 +358,7 @@ export const translations = {
 		departmentAssignment: 'Department Assignment',
 		departmentWillBeAssigned:
 			'Department will be automatically assigned based on role:',
-		adminDepartment: 'Admin (ID: 1)',
+		AdminDepartment: 'Admin (ID: 1)',
 		medicalDepartment: 'Medical (ID: 2)',
 		selectMedicalDepartment: 'Select Medical Department',
 		salesDepartment: 'Sales (ID: 3)',
@@ -409,7 +387,7 @@ export const translations = {
 			'Password must contain at least one special character',
 		passwordsDoNotMatchError: 'Passwords do not match',
 		accessDeniedTitle: 'Access Denied',
-		adminAccessRequiredMessage: 'Admin access required',
+		AdminAccessRequiredMessage: 'Admin access required',
 
 		// Image Upload
 		profileImage: 'Profile Image',
@@ -561,7 +539,7 @@ export const translations = {
 		revenueTrendDescription: 'Revenue performance by salesman for',
 		revenueAxisLabel: 'Revenue (EGP)',
 		noRevenueData: 'No revenue data available',
-		totalDealsBySalesman: 'Total Deals by Salesman',
+		totalDealsBySalesMan: 'Total Deals by SalesMan',
 		topPerformersFor: 'Top performers for',
 		noDealsDataAvailable: 'No deals data available',
 		numberOfDeals: 'Number of Deals',
@@ -825,7 +803,7 @@ export const translations = {
 		addEquipment: 'Add Equipment',
 		updateTerms: 'Update Terms',
 		createInstallments: 'Create Installments',
-		sendToSalesman: 'Send to Salesman',
+		sendToSalesMan: 'Send to SalesMan',
 		exportPdf: 'Export PDF',
 		model: 'Model',
 		provider: 'Provider',
@@ -963,7 +941,7 @@ export const translations = {
 			'Only managers can set money targets',
 		pleaseEnterValidTargetRevenue:
 			'Please enter a valid target revenue amount',
-		pleaseSelectSalesmanForIndividualTarget:
+		pleaseSelectSalesManForIndividualTarget:
 			'Please select a salesman for individual money target',
 		onlySalesmenCanSetActivityTargets:
 			'Only salesmen can set activity targets',
@@ -979,11 +957,11 @@ export const translations = {
 		targetDeletedSuccessfully: 'Target deleted successfully',
 		failedToDeleteTarget: 'Failed to delete target',
 		loadingSalesmen: 'Loading salesmen...',
-		selectSalesman: 'Select salesman',
+		selectSalesMan: 'Select salesman',
 		noSalesmenAvailable: 'No salesmen available',
 		noSalesmenAvailableMessage:
 			'No salesmen available. Please ensure there are active salesmen in the system.',
-		selectSalesmanForIndividualTarget:
+		selectSalesManForIndividualTarget:
 			'Select a salesman to set an individual money target',
 		pleaseSelectMaintenanceRequest:
 			'Please select a maintenance request',
@@ -1476,7 +1454,7 @@ export const translations = {
 					'Unauthorized: Please log in again',
 				salesmenLoadFailedPrefix:
 					'Failed to load salesmen:',
-				selectClientAndSalesman:
+				selectClientAndSalesMan:
 					'Please select client and salesman',
 				missingProducts:
 					'Please add at least one product (from catalog or text description)',
@@ -1524,7 +1502,7 @@ export const translations = {
 		offerCannotBeSentYet:
 			'You can send the offer once SalesManager approval is completed.',
 
-		// Salesman Report Form
+		// SalesMan Report Form
 		submitReport: 'Submit Report',
 		submitReportForDeal:
 			'Submit your report for deal with {clientName}',
@@ -1544,9 +1522,9 @@ export const translations = {
 		uploading: 'Uploading...',
 
 		// Additional Sales Support Dashboard translations
-		offerSentToSalesmanSuccessfully:
+		offerSentToSalesManSuccessfully:
 			'Offer sent to salesman successfully',
-		failedToSendOfferToSalesman: 'Failed to send offer to salesman',
+		failedToSendOfferToSalesMan: 'Failed to send offer to salesman',
 		authenticationRequiredForBackendPdfs:
 			'Authentication required for backend PDFs. Frontend PDFs generated successfully.',
 		allPdfsExportedSuccessfully: 'PDFs exported successfully!',
@@ -1593,7 +1571,7 @@ export const translations = {
 		activePlans: 'Active Plans',
 
 		// Offer Creation Page
-		typeToSearchSalesman: 'Type to search salesman...',
+		typeToSearchSalesMan: 'Type to search salesman...',
 		productName: 'Product name',
 		modelNumber: 'Model number',
 		productDescription: 'Product description...',
@@ -1706,7 +1684,7 @@ export const translations = {
 		activeUsers: 'المستخدمون النشطون',
 		inactiveUsers: 'المستخدمون غير النشطين',
 		successRate: 'معدل النجاح',
-		adminModule: 'وحدة الإدارة',
+		AdminModule: 'وحدة الإدارة',
 		usersManagement: 'إدارة المستخدمين',
 		usersManagementDescription: 'عرض وإدارة جميع المستخدمين',
 		usersManagementDetails:
@@ -1763,28 +1741,6 @@ export const translations = {
 		viewInventory: 'عرض المخزون',
 		accountingDashboardDescription:
 			'تفقد الأداء المالي، الفوترة، ومتابعة المدفوعات.',
-
-		// Monthly Activity Chart
-		monthlyActivityOverview: 'نظرة على النشاط الشهري',
-		monthlyActivityDescription:
-			'أنشطة المستخدمين وأنماط استخدام النظام',
-		numberOfActivities: 'عدد الأنشطة',
-		activitiesLabel: 'نشاط',
-		loginsLabel: 'عمليات تسجيل الدخول',
-		reportsCreatedLabel: 'التقارير المنشأة',
-		dataExportsLabel: 'عمليات تصدير البيانات',
-		janShort: 'يناير',
-		febShort: 'فبراير',
-		marShort: 'مارس',
-		aprShort: 'أبريل',
-		mayShort: 'مايو',
-		junShort: 'يونيو',
-		julShort: 'يوليو',
-		augShort: 'أغسطس',
-		sepShort: 'سبتمبر',
-		octShort: 'أكتوبر',
-		novShort: 'نوفمبر',
-		decShort: 'ديسمبر',
 
 		// Sidebar
 		menu: 'القائمة',
@@ -1923,7 +1879,7 @@ export const translations = {
 			'حدث خطأ في إنشاء المستخدم. يرجى المحاولة مرة أخرى.',
 		tryAgain: 'حاول مرة أخرى',
 		accessDenied: 'تم رفض الوصول',
-		adminAccessRequired:
+		AdminAccessRequired:
 			'تحتاج إلى صلاحيات المدير لإنشاء المستخدمين',
 		goBack: 'العودة',
 		failedToLoadRoles: 'فشل في تحميل الأدوار المتاحة',
@@ -1972,7 +1928,7 @@ export const translations = {
 		doctor: 'طبيب',
 		engineer: 'مهندس',
 		technician: 'فني',
-		admin: 'مدير',
+		Admin: 'مدير',
 		financeManager: 'مدير مالي',
 		financeEmployee: 'موظف مالي',
 		legalManager: 'مدير قانوني',
@@ -1984,7 +1940,7 @@ export const translations = {
 		doctorDescription: 'الطاقم الطبي بما في ذلك الأطباء والفنيين',
 		engineerDescription: 'الطاقم التقني والهندسي',
 		technicianDescription: 'الفنيون الطبيون',
-		adminDescription: 'الأدوار الإدارية والإدارية',
+		AdminDescription: 'الأدوار الإدارية والإدارية',
 		financeManagerDescription: 'الإدارة المالية والمحاسبة',
 		financeEmployeeDescription: 'موظفو وطاقم القسم المالي',
 		legalManagerDescription: 'الشؤون القانونية والامتثال',
@@ -2030,7 +1986,7 @@ export const translations = {
 		departmentAssignment: 'تعيين القسم',
 		departmentWillBeAssigned:
 			'سيتم تعيين القسم تلقائياً بناءً على الدور:',
-		adminDepartment: 'الإدارة (ID: 1)',
+		AdminDepartment: 'الإدارة (ID: 1)',
 		medicalDepartment: 'الطبي (ID: 2)',
 		selectMedicalDepartment: 'اختر القسم الطبي',
 		salesDepartment: 'المبيعات (ID: 3)',
@@ -2059,7 +2015,7 @@ export const translations = {
 			'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل',
 		passwordsDoNotMatchError: 'كلمات المرور غير متطابقة',
 		accessDeniedTitle: 'تم رفض الوصول',
-		adminAccessRequiredMessage: 'مطلوب صلاحيات المدير',
+		AdminAccessRequiredMessage: 'مطلوب صلاحيات المدير',
 
 		// Image Upload
 		profileImage: 'صورة الملف الشخصي',
@@ -2278,7 +2234,7 @@ export const translations = {
 			'أداء الإيرادات من قبل مندوبي المبيعات لـ',
 		revenueAxisLabel: 'الإيرادات (جنيه)',
 		noRevenueData: 'لا توجد بيانات إيرادات متاحة',
-		totalDealsBySalesman: 'إجمالي الصفقات حسب المندوب',
+		totalDealsBySalesMan: 'إجمالي الصفقات حسب المندوب',
 		topPerformersFor: 'أفضل المؤدين لـ',
 		noDealsDataAvailable: 'لا توجد بيانات صفقات متاحة',
 		numberOfDeals: 'عدد الصفقات',
@@ -2363,7 +2319,7 @@ export const translations = {
 		addEquipment: 'إضافة معدات',
 		updateTerms: 'تحديث الشروط',
 		createInstallments: 'إنشاء أقساط',
-		sendToSalesman: 'إرسال إلى مندوب المبيعات',
+		sendToSalesMan: 'إرسال إلى مندوب المبيعات',
 		exportPdf: 'تصدير PDF',
 		model: 'النموذج',
 		provider: 'المزود',
@@ -2491,7 +2447,7 @@ export const translations = {
 			'يمكن للمديرين فقط تعيين أهداف مالية',
 		pleaseEnterValidTargetRevenue:
 			'يرجى إدخال مبلغ إيرادات مستهدف صالح',
-		pleaseSelectSalesmanForIndividualTarget:
+		pleaseSelectSalesManForIndividualTarget:
 			'يرجى اختيار مندوب مبيعات للهدف الفردي المالي',
 		onlySalesmenCanSetActivityTargets:
 			'يمكن لمندوبي المبيعات فقط تعيين أهداف النشاط',
@@ -2506,11 +2462,11 @@ export const translations = {
 		targetDeletedSuccessfully: 'تم حذف الهدف بنجاح',
 		failedToDeleteTarget: 'فشل حذف الهدف',
 		loadingSalesmen: 'جاري تحميل مندوبي المبيعات...',
-		selectSalesman: 'اختر مندوب مبيعات',
+		selectSalesMan: 'اختر مندوب مبيعات',
 		noSalesmenAvailable: 'لا يوجد مندوبو مبيعات متاحون',
 		noSalesmenAvailableMessage:
 			'لا يوجد مندوبو مبيعات متاحون. يرجى التأكد من وجود مندوبي مبيعات نشطين في النظام.',
-		selectSalesmanForIndividualTarget:
+		selectSalesManForIndividualTarget:
 			'اختر مندوب مبيعات لتعيين هدف مالي فردي',
 		pleaseSelectMaintenanceRequest: 'يرجى اختيار طلب صيانة',
 		totalTargets: 'إجمالي الأهداف',
@@ -2982,7 +2938,7 @@ export const translations = {
 					'غير مصرح: يرجى تسجيل الدخول مرة أخرى',
 				salesmenLoadFailedPrefix:
 					'فشل تحميل مندوبي المبيعات:',
-				selectClientAndSalesman:
+				selectClientAndSalesMan:
 					'يرجى اختيار العميل ومندوب المبيعات',
 				missingProducts:
 					'يرجى إضافة منتج واحد على الأقل (من الكتالوج أو وصف نصي)',
@@ -3028,7 +2984,7 @@ export const translations = {
 		offerCannotBeSentYet:
 			'يمكنك إرسال العرض بمجرد اكتمال موافقة مدير المبيعات.',
 
-		// Salesman Report Form
+		// SalesMan Report Form
 		submitReport: 'إرسال التقرير',
 		submitReportForDeal: 'إرسال تقريرك للصفقة مع {clientName}',
 		submitReportWithOffer: 'إرسال تقريرك مع العرض',
@@ -3047,9 +3003,9 @@ export const translations = {
 		uploading: 'جاري الرفع...',
 
 		// Additional Sales Support Dashboard translations
-		offerSentToSalesmanSuccessfully:
+		offerSentToSalesManSuccessfully:
 			'تم إرسال العرض إلى مندوب المبيعات بنجاح',
-		failedToSendOfferToSalesman:
+		failedToSendOfferToSalesMan:
 			'فشل إرسال العرض إلى مندوب المبيعات',
 		authenticationRequiredForBackendPdfs:
 			'المصادقة مطلوبة لملفات PDF من الخادم. تم إنشاء ملفات PDF من الواجهة الأمامية بنجاح.',
@@ -3097,7 +3053,7 @@ export const translations = {
 		activePlans: 'الخطط النشطة',
 
 		// Offer Creation Page
-		typeToSearchSalesman: 'اكتب للبحث عن مندوب مبيعات...',
+		typeToSearchSalesMan: 'اكتب للبحث عن مندوب مبيعات...',
 		productName: 'اسم المنتج',
 		productDescription: 'وصف المنتج...',
 		productDescriptionSpecifications:
