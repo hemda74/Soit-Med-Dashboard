@@ -37,15 +37,15 @@ const GovernorateSelector: React.FC<GovernorateSelectorProps> = ({
 
     // Handle click outside to close dropdown
     useEffect(() => {
+        if (!showDropdown) return;
+
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 onToggleDropdown();
             }
         };
 
-        if (showDropdown) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+        document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
