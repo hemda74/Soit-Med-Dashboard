@@ -77,7 +77,7 @@ class UserDeleteApiService {
 			'Unauthorized access':
 				'You are not authorized to perform this action.',
 			'Access denied. SuperAdmin or Admin role required':
-				'You need admin privileges to delete users.',
+				'You need Admin privileges to delete users.',
 		};
 
 		return (
@@ -99,12 +99,12 @@ class UserDeleteApiService {
 		currentUserId: string,
 		userRole: string
 	): { canDelete: boolean; errorMessage?: string } {
-		// Check if user has admin privileges
+		// Check if user has Admin privileges
 		if (!['SuperAdmin', 'Admin'].includes(userRole)) {
 			return {
 				canDelete: false,
 				errorMessage:
-					'You need admin privileges to delete users.',
+					'You need Admin privileges to delete users.',
 			};
 		}
 

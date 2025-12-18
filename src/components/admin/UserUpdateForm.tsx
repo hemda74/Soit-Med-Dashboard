@@ -114,16 +114,16 @@ export const UserUpdateForm: React.FC<UserUpdateFormProps> = ({
                                     <SelectItem value="Doctor">Doctor</SelectItem>
                                     <SelectItem value="Technician">Technician</SelectItem>
                                     <SelectItem value="Engineer">Engineer</SelectItem>
-                                    <SelectItem value="Salesman">Salesman</SelectItem>
+                                    <SelectItem value="SalesMan">SalesMan</SelectItem>
                                     <SelectItem value="SalesManager">SalesManager</SelectItem>
                                     <SelectItem value="FinanceManager">FinanceManager</SelectItem>
                                     <SelectItem value="FinanceEmployee">FinanceEmployee</SelectItem>
-                                <SelectItem value="LegalManager">LegalManager</SelectItem>
-                                <SelectItem value="LegalEmployee">LegalEmployee</SelectItem>
-                                <SelectItem value="MaintenanceManager">MaintenanceManager</SelectItem>
-                                <SelectItem value="MaintenanceSupport">MaintenanceSupport</SelectItem>
-                                <SelectItem value="SparePartsCoordinator">SparePartsCoordinator</SelectItem>
-                                <SelectItem value="InventoryManager">InventoryManager</SelectItem>
+                                    <SelectItem value="LegalManager">LegalManager</SelectItem>
+                                    <SelectItem value="LegalEmployee">LegalEmployee</SelectItem>
+                                    <SelectItem value="MaintenanceManager">MaintenanceManager</SelectItem>
+                                    <SelectItem value="MaintenanceSupport">MaintenanceSupport</SelectItem>
+                                    <SelectItem value="SparePartsCoordinator">SparePartsCoordinator</SelectItem>
+                                    <SelectItem value="InventoryManager">InventoryManager</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

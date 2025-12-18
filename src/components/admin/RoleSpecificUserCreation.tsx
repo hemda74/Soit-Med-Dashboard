@@ -40,7 +40,7 @@ interface GovernorateInfo {
     name: string;
     createdAt: string;
     isActive: boolean;
-    engineerCount: number;
+    EngineerCount: number;
 }
 
 const RoleSpecificUserCreation: React.FC = () => {
@@ -52,45 +52,45 @@ const RoleSpecificUserCreation: React.FC = () => {
 
     // Role icons mapping
     const ROLE_ICONS = {
-        doctor: Stethoscope,
-        engineer: Wrench,
-        technician: Settings,
+        Doctor: Stethoscope,
+        Engineer: Wrench,
+        Technician: Settings,
         Admin: Shield,
         'FinanceManager': DollarSign,
-        'finance-employee': DollarSign,
+        'FinanceEmployee': DollarSign,
         'LegalManager': Scale,
         'LegalEmployee': Scale,
         SalesMan: ShoppingCart,
         'SalesManager': UserCheck,
         'MaintenanceManager': HardHat,
-        'maintenance-support': Cog,
-        'sales-support': HeadphonesIcon,
-        'spare-parts-coordinator': Package,
+        'MaintenanceSupport': Cog,
+        'SalesSupport': HeadphonesIcon,
+        'SparePartsCoordinator': Package,
         'InventoryManager': Warehouse,
     };
 
     // Role configuration with translations
     const ROLE_CONFIG = {
-        doctor: {
-            name: t('doctor'),
-            description: t('doctorDescription'),
+        Doctor: {
+            name: t('Doctor'),
+            description: t('DoctorDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'hospitalId'],
             requiresHospital: true,
             requiresDepartment: false,
             autoDepartmentId: 2,
         },
-        engineer: {
-            name: t('engineer'),
-            description: t('engineerDescription'),
+        Engineer: {
+            name: t('Engineer'),
+            description: t('EngineerDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'governorateIds'],
             requiresHospital: false,
             requiresDepartment: false,
             requiresGovernorates: true,
             autoDepartmentId: 4,
         },
-        technician: {
-            name: t('technician'),
-            description: t('technicianDescription'),
+        Technician: {
+            name: t('Technician'),
+            description: t('TechnicianDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId', 'department'],
             requiresHospital: true,
             requiresDepartment: false,
@@ -113,7 +113,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             requiresDepartment: false,
             autoDepartmentId: 5,
         },
-        'finance-employee': {
+        'FinanceEmployee': {
             name: t('financeEmployee'),
             description: t('financeEmployeeDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName'],
@@ -164,7 +164,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 4,
             role: 'MaintenanceManager'
         },
-        'maintenance-support': {
+        'MaintenanceSupport': {
             name: t('maintenanceSupport'),
             description: t('maintenanceSupportDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'jobTitle', 'technicalSkills'],
@@ -173,7 +173,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 4,
             role: 'MaintenanceSupport'
         },
-        'sales-support': {
+        'SalesSupport': {
             name: t('salesSupport'),
             description: t('salesSupportDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'phoneNumber', 'personalMail', 'supportSpecialization', 'supportLevel', 'notes'],
@@ -182,7 +182,7 @@ const RoleSpecificUserCreation: React.FC = () => {
             autoDepartmentId: 4,
             role: 'SalesSupport'
         },
-        'spare-parts-coordinator': {
+        'SparePartsCoordinator': {
             name: t('sparePartsCoordinator'),
             description: t('sparePartsCoordinatorDescription'),
             fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty'],
@@ -337,33 +337,33 @@ const RoleSpecificUserCreation: React.FC = () => {
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
                 ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
-                ...(selectedRole === 'doctor' && formData.specialty && { specialty: formData.specialty }),
-                ...(selectedRole === 'engineer' && formData.specialty && { specialty: formData.specialty }),
-                ...(selectedRole === 'engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
-                ...(selectedRole === 'technician' && formData.department && { department: formData.department }),
+                ...(selectedRole === 'Doctor' && formData.specialty && { specialty: formData.specialty }),
+                ...(selectedRole === 'Engineer' && formData.specialty && { specialty: formData.specialty }),
+                ...(selectedRole === 'Engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
+                ...(selectedRole === 'Technician' && formData.department && { department: formData.department }),
                 ...(selectedRole === 'SalesManager' && formData.salesTerritory && { salesTerritory: formData.salesTerritory }),
                 ...(selectedRole === 'SalesManager' && formData.salesTeam && { salesTeam: formData.salesTeam }),
                 ...(selectedRole === 'SalesManager' && formData.salesTarget && { salesTarget: parseFloat(formData.salesTarget) }),
                 ...(selectedRole === 'SalesManager' && formData.managerNotes && { managerNotes: formData.managerNotes }),
-                ...(selectedRole === 'sales-support' && formData.phoneNumber && { phoneNumber: formData.phoneNumber }),
-                ...(selectedRole === 'sales-support' && formData.personalMail && { personalMail: formData.personalMail }),
-                ...(selectedRole === 'sales-support' && formData.supportSpecialization && { supportSpecialization: formData.supportSpecialization }),
-                ...(selectedRole === 'sales-support' && formData.supportLevel && { supportLevel: formData.supportLevel }),
-                ...(selectedRole === 'sales-support' && formData.notes && { notes: formData.notes }),
-                ...(selectedRole === 'spare-parts-coordinator' && formData.specialty && { specialty: formData.specialty }),
+                ...(selectedRole === 'SalesSupport' && formData.phoneNumber && { phoneNumber: formData.phoneNumber }),
+                ...(selectedRole === 'SalesSupport' && formData.personalMail && { personalMail: formData.personalMail }),
+                ...(selectedRole === 'SalesSupport' && formData.supportSpecialization && { supportSpecialization: formData.supportSpecialization }),
+                ...(selectedRole === 'SalesSupport' && formData.supportLevel && { supportLevel: formData.supportLevel }),
+                ...(selectedRole === 'SalesSupport' && formData.notes && { notes: formData.notes }),
+                ...(selectedRole === 'SparePartsCoordinator' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'InventoryManager' && formData.specialty && { specialty: formData.specialty }),
                 ...(formData.profileImage && { profileImage: formData.profileImage }),
                 ...(autoImageAltText && { imageAltText: autoImageAltText }),
             };
 
             switch (selectedRole) {
-                case 'doctor':
+                case 'Doctor':
                     await createDoctor(userData as any, user.token);
                     break;
-                case 'engineer':
+                case 'Engineer':
                     await createEngineer(userData as any, user.token);
                     break;
-                case 'technician':
+                case 'Technician':
                     await createTechnician(userData as any, user.token);
                     break;
                 case 'Admin':
@@ -372,7 +372,7 @@ const RoleSpecificUserCreation: React.FC = () => {
                 case 'FinanceManager':
                     await createFinanceManager(userData as any, user.token);
                     break;
-                case 'finance-employee':
+                case 'FinanceEmployee':
                     await createFinanceEmployee(userData as any, user.token);
                     break;
                 case 'LegalManager':
@@ -390,13 +390,13 @@ const RoleSpecificUserCreation: React.FC = () => {
                 case 'MaintenanceManager':
                     await createMaintenanceManager(userData as any, user.token);
                     break;
-                case 'maintenance-support':
+                case 'MaintenanceSupport':
                     await createMaintenanceSupport(userData as any, user.token);
                     break;
-                case 'sales-support':
+                case 'SalesSupport':
                     await createSalesSupport(userData as any, user.token);
                     break;
-                case 'spare-parts-coordinator':
+                case 'SparePartsCoordinator':
                     await createSparePartsCoordinator(userData as any, user.token);
                     break;
                 case 'InventoryManager':

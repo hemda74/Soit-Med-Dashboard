@@ -153,7 +153,7 @@ IMPORTANT SECURITY NOTICE
 
 For your account security, please change your password immediately after your first login. 
 
-If you have any questions or need assistance, please contact your system administrator.
+If you have any questions or need assistance, please contact your system Administrator.
 
 Best regards,
 Soit-Med Admin Team
@@ -298,7 +298,7 @@ This is an automated message from Soit-Med Admin Panel`;
                         </div>
 
                         {/* Sales Support Specific Fields */}
-                        {selectedRole === 'sales-support' && (
+                        {selectedRole === 'SalesSupport' && (
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4 pb-5 border-b-2 border-border/50 bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20 p-4 rounded-xl -mx-4 px-4">
                                     <div className="p-3 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-md">
@@ -481,7 +481,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     />
                                 </div>
 
-                                {(selectedRole === 'doctor' || selectedRole === 'engineer') && (
+                                {(selectedRole === 'Doctor' || selectedRole === 'engineer') && (
                                     <div className="space-y-2">
                                         <Label htmlFor="specialty" className="text-sm font-medium">
                                             {t('specialty')} <span className="text-destructive">*</span>
@@ -490,7 +490,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                             id="specialty"
                                             value={formData.specialty}
                                             onChange={(e) => onInputChange('specialty', e.target.value)}
-                                            placeholder={selectedRole === 'doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
+                                            placeholder={selectedRole === 'Doctor' ? t('enterMedicalSpecialty') : t('enterEngineeringSpecialty')}
                                             className="h-10"
                                             required
                                         />
@@ -500,7 +500,7 @@ This is an automated message from Soit-Med Admin Panel`;
                         </div>
 
                         {/* Role-Specific Information Section */}
-                        {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'technician' || selectedRole === 'sales-manager' || selectedRole === 'maintenance-manager' || selectedRole === 'maintenance-support' || selectedRole === 'spare-parts-coordinator' || selectedRole === 'inventory-manager') && (
+                        {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'Technician' || selectedRole === 'SalesManager' || selectedRole === 'MaintenanceManager' || selectedRole === 'MaintenanceSupport' || selectedRole === 'SparePartsCoordinator' || selectedRole === 'InventoryManager') && (
                             <div className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-center gap-3 pb-3 border-b">
                                     <h2 className="text-lg font-semibold">Role-Specific Information</h2>
@@ -515,7 +515,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     />
                                 )}
 
-                                {selectedRole === 'technician' && roleConfig.requiresMedicalDepartment && (
+                                {selectedRole === 'Technician' && roleConfig.requiresMedicalDepartment && (
                                     <MedicalDepartmentSelector
                                         selectedDepartment={formData.department || ''}
                                         onDepartmentChange={onDepartmentChange}
@@ -535,7 +535,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     />
                                 )}
 
-                                {selectedRole === 'sales-manager' && (
+                                {selectedRole === 'SalesManager' && (
                                     <div className="col-span-full space-y-6 p-8 bg-gradient-to-br from-muted/30 to-muted/50 rounded-2xl border border-muted/50 shadow-lg">
                                         <h3 className="text-xl font-semibold text-foreground flex items-center gap-3">
                                             <div className="p-2 rounded-lg bg-primary/10">
@@ -602,7 +602,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     </div>
                                 )}
 
-                                {selectedRole === 'maintenance-manager' && (
+                                {selectedRole === 'MaintenanceManager' && (
                                     <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                                         <h3 className="text-base font-semibold">Maintenance Manager Details</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -637,7 +637,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     </div>
                                 )}
 
-                                {selectedRole === 'maintenance-support' && (
+                                {selectedRole === 'MaintenanceSupport' && (
                                     <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                                         <h3 className="text-base font-semibold">Maintenance Support Details</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -673,7 +673,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     </div>
                                 )}
 
-                                {selectedRole === 'spare-parts-coordinator' && (
+                                {selectedRole === 'SparePartsCoordinator' && (
                                     <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                                         <h3 className="text-base font-semibold">Spare Parts Coordinator Details</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -694,7 +694,7 @@ This is an automated message from Soit-Med Admin Panel`;
                                     </div>
                                 )}
 
-                                {selectedRole === 'inventory-manager' && (
+                                {selectedRole === 'InventoryManager' && (
                                     <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                                         <h3 className="text-base font-semibold">Inventory Manager Details</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

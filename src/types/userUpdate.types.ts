@@ -56,7 +56,7 @@ export const VALID_ROLES = [
 	'LegalManager',
 	'LegalEmployee',
 	'SalesManager',
-	'Salesman',
+	'SalesMan',
 ] as const;
 
 export type ValidRole = (typeof VALID_ROLES)[number];

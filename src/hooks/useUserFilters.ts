@@ -16,7 +16,7 @@ export const ROLE_OPTIONS = [
 	'Admin',
 	'Doctor',
 	'Technician',
-	'Salesman',
+	'SalesMan',
 	'SalesManager',
 	'Engineer',
 	'FinanceManager',

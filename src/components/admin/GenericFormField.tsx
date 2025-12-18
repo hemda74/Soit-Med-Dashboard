@@ -24,7 +24,7 @@ interface GovernorateInfo {
     name: string;
     createdAt: string;
     isActive: boolean;
-    engineerCount: number;
+    EngineerCount: number;
 }
 
 interface GenericFormFieldProps {
