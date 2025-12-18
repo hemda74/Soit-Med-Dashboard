@@ -55,6 +55,10 @@ export interface ChatState {
 		file: File,
 		duration: number
 	) => Promise<void>;
+	sendImageMessage: (
+		conversationId: number,
+		file: File
+	) => Promise<void>;
 	markMessagesAsRead: (conversationId: number) => Promise<void>;
 	joinConversation: (conversationId: number) => Promise<void>;
 	leaveConversation: (conversationId: number) => Promise<void>;
@@ -119,12 +123,20 @@ export const useChatStore = create<ChatState>()(
 					(m) => m.id === message.id
 				)
 			) {
-				conversationMessages.push(message);
-				messages.set(
-					conversationId,
-					conversationMessages
+				// Create a new array instead of mutating the existing one
+				const updatedMessages = [...conversationMessages, message];
+				// Sort by createdAt to ensure proper ordering
+				updatedMessages.sort(
+					(a, b) =>
+						new Date(a.createdAt).getTime() -
+						new Date(b.createdAt).getTime()
 				);
-				set({ messages: new Map(messages) });
+				const newMessagesMap = new Map(messages);
+				newMessagesMap.set(
+					conversationId,
+					updatedMessages
+				);
+				set({ messages: newMessagesMap });
 
 				// Update conversation last message
 				const conversations = get().conversations;
@@ -370,6 +382,51 @@ export const useChatStore = create<ChatState>()(
 					error:
 						error.message ||
 						'Failed to send voice message',
+				});
+				throw error;
+			}
+		},
+
+		sendImageMessage: async (conversationId, file) => {
+			try {
+				const response = await chatApi.sendImageMessage(
+					conversationId,
+					file
+				);
+
+				// Validate response structure
+				if (!response || !response.data) {
+					console.error(
+						'Invalid response from sendImageMessage:',
+						response
+					);
+					throw new Error(
+						'Invalid response from server'
+					);
+				}
+
+				// Ensure the message has required properties
+				const message = response.data;
+				if (!message.id) {
+					console.error(
+						'Message missing required id:',
+						message
+					);
+					throw new Error(
+						'Message data is incomplete'
+					);
+				}
+
+				get().addMessage(conversationId, message);
+			} catch (error: any) {
+				console.error(
+					'Error sending image message:',
+					error
+				);
+				set({
+					error:
+						error.message ||
+						'Failed to send image message',
 				});
 				throw error;
 			}

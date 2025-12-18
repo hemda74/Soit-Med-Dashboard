@@ -38,12 +38,12 @@ const ChatPage: React.FC = () => {
 
 		// Check specific roles
 		const superAdmin = roles.includes('SuperAdmin');
-		const admin = roles.includes('Admin');
+		const Admin = roles.includes('Admin');
 		const salesSupport = roles.includes('SalesSupport');
 		const maintenanceSupport = roles.includes('MaintenanceSupport');
 
 		setIsSuperAdmin(superAdmin);
-		setIsAdmin(admin);
+		setIsAdmin(Admin);
 		setIsSalesSupport(salesSupport);
 		setIsMaintenanceSupport(maintenanceSupport);
 
