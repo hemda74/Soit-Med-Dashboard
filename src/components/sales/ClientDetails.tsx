@@ -153,7 +153,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             }
         } catch (error: any) {
             console.error('Failed to load deal details:', error);
-                toast.error(error.message || t('failedToLoadDealDetails'));
+            toast.error(error.message || t('failedToLoadDealDetails'));
         } finally {
             setLoadingDealDetails(false);
         }
@@ -182,7 +182,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
             }
         } catch (error: any) {
             console.error('Failed to load offer details:', error);
-                toast.error(error.message || t('failedToLoadOfferDetails'));
+            toast.error(error.message || t('failedToLoadOfferDetails'));
         } finally {
             setLoadingOfferDetails(false);
             setLoadingEquipment(false);
@@ -259,7 +259,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                         <div className="text-right">
                             <p className="text-sm text-gray-500">{t('assignedTo')}</p>
                             <p className="font-medium">
-                                {client.assignedSalesmanName || t('clientDetails.notAssigned')}
+                                {client.assignedSalesManName || t('clientDetails.notAssigned')}
                             </p>
                         </div>
                     </div>
@@ -471,7 +471,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                 <div>
                                     <label className="text-sm font-medium text-gray-500">{t('assignedTo')}</label>
                                     <p className="text-sm">
-                                        {client.assignedSalesmanName ||
+                                        {client.assignedSalesManName ||
                                             client.assignedTo ||
                                             t('clientDetails.notAssigned')}
                                     </p>
@@ -580,7 +580,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                                     )}
                                                     {dealAny.salesmanName && (
                                                         <p className="text-sm text-gray-500 mt-1">
-                                                            Salesman: {dealAny.salesmanName}
+                                                            SalesMan: {dealAny.salesmanName}
                                                         </p>
                                                     )}
                                                     {(deal.completionNotes || dealAny.failureNotes) && (
@@ -740,7 +740,7 @@ const ClientDetails: React.FC<ClientDetailsProps> = ({ clientId, className = '' 
                                         </div>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-muted-foreground">{t('clientDetails.deals.salesman') || 'Salesman'}</p>
+                                        <p className="text-sm text-muted-foreground">{t('clientDetails.deals.salesman') || 'SalesMan'}</p>
                                         <p className="font-semibold">{selectedDeal.salesmanName || selectedDeal.createdByName || 'Unknown'}</p>
                                     </div>
                                     {selectedDeal.expectedDeliveryDate && (

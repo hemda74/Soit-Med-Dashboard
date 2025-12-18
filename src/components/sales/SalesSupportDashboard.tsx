@@ -241,11 +241,11 @@ const SalesSupportDashboard: React.FC = () => {
 	};
 
 	const canSendSelectedOffer =
-		selectedOffer?.canSendToSalesman ?? selectedOffer?.status === 'Sent';
+		selectedOffer?.canSendToSalesMan ?? selectedOffer?.status === 'Sent';
 	const awaitingSelectedOfferApproval =
 		selectedOffer?.status === 'PendingSalesManagerApproval';
 
-	const handleSendToSalesman = async () => {
+	const handleSendToSalesMan = async () => {
 		if (!selectedOffer) return;
 		if (!canSendSelectedOffer) {
 			toast.error(
@@ -255,15 +255,15 @@ const SalesSupportDashboard: React.FC = () => {
 			return;
 		}
 		try {
-			await salesApi.sendOfferToSalesman(selectedOffer.id);
+			await salesApi.sendOfferToSalesMan(selectedOffer.id);
 			// Refresh offer data
 			const { data } = await salesApi.getOffer(selectedOffer.id);
 			if (data) {
 				setSelectedOffer(data);
 			}
-			toast.success(t('offerSentToSalesmanSuccessfully'));
+			toast.success(t('offerSentToSalesManSuccessfully'));
 		} catch (error: any) {
-			toast.error(error.message || t('failedToSendOfferToSalesman'));
+			toast.error(error.message || t('failedToSendOfferToSalesMan'));
 		}
 	};
 
@@ -1483,7 +1483,7 @@ const SalesSupportDashboard: React.FC = () => {
 								<Separator className="my-4" />
 								<div className="flex justify-end gap-3 pt-4">
 									<Button
-										onClick={handleSendToSalesman}
+										onClick={handleSendToSalesMan}
 										disabled={!canSendSelectedOffer}
 										className="bg-blue-600 hover:bg-blue-700 text-white"
 										title={
@@ -1493,7 +1493,7 @@ const SalesSupportDashboard: React.FC = () => {
 												: undefined
 										}
 									>
-										{t('sendToSalesman') || 'Send to Salesman'}
+										{t('sendToSalesMan') || 'Send to SalesMan'}
 									</Button>
 									<Button
 										variant="outline"

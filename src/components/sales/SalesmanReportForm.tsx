@@ -8,14 +8,14 @@ import toast from 'react-hot-toast';
 import { FileText, Upload, X, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
-interface SalesmanReportFormProps {
+interface SalesManReportFormProps {
 	dealId: string | number;
 	dealClientName?: string;
 	onSuccess?: () => void;
 	onCancel?: () => void;
 }
 
-const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
+const SalesManReportForm: React.FC<SalesManReportFormProps> = ({
 	dealId,
 	dealClientName,
 	onSuccess,
@@ -64,7 +64,7 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 				setUploading(false);
 			}
 
-			const response = await salesApi.submitSalesmanReport(
+			const response = await salesApi.submitSalesManReport(
 				dealId,
 				reportText,
 				attachmentsJson
@@ -186,7 +186,7 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 	);
 };
 
-export default SalesmanReportForm;
+export default SalesManReportForm;
 
 
 

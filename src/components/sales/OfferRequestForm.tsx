@@ -185,8 +185,8 @@ export default function OfferRequestForm({
         if (user?.roles.includes('SuperAdmin')) {
             return clients;
         }
-        // For SalesManager and Salesman, only show their assigned clients
-        return clients.filter(client => client.assignedSalesmanId === user?.id);
+        // For SalesManager and SalesMan, only show their assigned clients
+        return clients.filter(client => client.assignedSalesManId === user?.id);
     };
 
     const getStatusColor = (status: string) => {
@@ -227,7 +227,7 @@ export default function OfferRequestForm({
     ];
 
     const canCreate = () => {
-        return user?.roles.includes('Salesman') || user?.roles.includes('SalesManager') || user?.roles.includes('SuperAdmin');
+        return user?.roles.includes('SalesMan') || user?.roles.includes('SalesManager') || user?.roles.includes('SuperAdmin');
     };
 
     const canUpdate = () => {

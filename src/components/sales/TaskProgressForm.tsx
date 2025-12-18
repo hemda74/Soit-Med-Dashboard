@@ -22,33 +22,33 @@ import type { CreateTaskProgressDto } from '@/types/sales.types';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const createTaskProgressSchema = (t: (key: string) => string) =>
-	z.object({
-		clientId: z.string().min(1, t('taskProgressForm.validation.clientRequired')),
-		taskId: z.string().min(1, t('taskProgressForm.validation.taskRequired')),
-		progressType: z.enum(['Visit', 'Call', 'Email', 'Meeting'], {
-			message: t('taskProgressForm.validation.progressTypeRequired'),
-		}),
-		description: z
-			.string()
-			.min(5, t('taskProgressForm.validation.descriptionMin'))
-			.max(200, t('taskProgressForm.validation.descriptionMax')),
-		progressDate: z.date({
-			errorMap: () => ({ message: t('taskProgressForm.validation.progressDateRequired') }),
-		}),
-		visitResult: z.enum(['Interested', 'NotInterested']).optional(),
-		nextStep: z.enum(['NeedsOffer', 'NeedsDeal']).optional(),
-		followUpDate: z.date().optional(),
-		satisfactionRating: z
-			.number({
-				errorMap: () => ({ message: t('taskProgressForm.validation.satisfactionInvalid') }),
-			})
-			.min(1)
-			.max(5)
-			.optional(),
-		createOfferRequest: z.boolean().optional(),
-		requestedProducts: z.string().optional(),
-		priority: z.enum(['Low', 'Medium', 'High']).optional(),
-	});
+    z.object({
+        clientId: z.string().min(1, t('taskProgressForm.validation.clientRequired')),
+        taskId: z.string().min(1, t('taskProgressForm.validation.taskRequired')),
+        progressType: z.enum(['Visit', 'Call', 'Email', 'Meeting'], {
+            message: t('taskProgressForm.validation.progressTypeRequired'),
+        }),
+        description: z
+            .string()
+            .min(5, t('taskProgressForm.validation.descriptionMin'))
+            .max(200, t('taskProgressForm.validation.descriptionMax')),
+        progressDate: z.date({
+            errorMap: () => ({ message: t('taskProgressForm.validation.progressDateRequired') }),
+        }),
+        visitResult: z.enum(['Interested', 'NotInterested']).optional(),
+        nextStep: z.enum(['NeedsOffer', 'NeedsDeal']).optional(),
+        followUpDate: z.date().optional(),
+        satisfactionRating: z
+            .number({
+                errorMap: () => ({ message: t('taskProgressForm.validation.satisfactionInvalid') }),
+            })
+            .min(1)
+            .max(5)
+            .optional(),
+        createOfferRequest: z.boolean().optional(),
+        requestedProducts: z.string().optional(),
+        priority: z.enum(['Low', 'Medium', 'High']).optional(),
+    });
 
 type TaskProgressFormValues = z.infer<ReturnType<typeof createTaskProgressSchema>>;
 
@@ -60,26 +60,26 @@ interface TaskProgressFormProps {
 }
 
 export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId }: TaskProgressFormProps) {
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [createOfferRequest, setCreateOfferRequest] = useState(false);
-	const { user } = useAuthStore();
-	const { clients, createTaskProgress, getMyClients } = useSalesStore();
-	const { t } = useTranslation();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [createOfferRequest, setCreateOfferRequest] = useState(false);
+    const { user } = useAuthStore();
+    const { clients, createTaskProgress, getMyClients } = useSalesStore();
+    const { t } = useTranslation();
 
-	const taskProgressSchema = useMemo(() => createTaskProgressSchema(t), [t]);
+    const taskProgressSchema = useMemo(() => createTaskProgressSchema(t), [t]);
 
-	const form = useForm<TaskProgressFormValues>({
-		resolver: zodResolver(taskProgressSchema),
-		defaultValues: {
-			clientId: clientId || '',
-			taskId: taskId || '',
-			progressType: 'Visit',
-			description: '',
-			progressDate: new Date(),
-			createOfferRequest: false,
-			priority: 'Medium',
-		},
-	});
+    const form = useForm<TaskProgressFormValues>({
+        resolver: zodResolver(taskProgressSchema),
+        defaultValues: {
+            clientId: clientId || '',
+            taskId: taskId || '',
+            progressType: 'Visit',
+            description: '',
+            progressDate: new Date(),
+            createOfferRequest: false,
+            priority: 'Medium',
+        },
+    });
 
     // Load clients if not already loaded
     React.useEffect(() => {
@@ -121,41 +121,41 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
         if (user?.roles.includes('SuperAdmin')) {
             return clients;
         }
-        // For SalesManager and Salesman, only show their assigned clients
-        return clients.filter(client => client.assignedTo === user?.id || client.assignedSalesmanName === user?.userName);
+        // For SalesManager and SalesMan, only show their assigned clients
+        return clients.filter(client => client.assignedTo === user?.id || client.assignedSalesManName === user?.userName);
     };
 
-	// Mock tasks - in real implementation, this would come from an API
-	const mockTasks = useMemo(
-		() => [
-			{
-				id: '1',
-				title: t('taskProgressForm.mockTasks.initialVisitTitle'),
-				description: t('taskProgressForm.mockTasks.initialVisitDescription'),
-			},
-			{
-				id: '2',
-				title: t('taskProgressForm.mockTasks.productPresentationTitle'),
-				description: t('taskProgressForm.mockTasks.productPresentationDescription'),
-			},
-			{
-				id: '3',
-				title: t('taskProgressForm.mockTasks.followUpCallTitle'),
-				description: t('taskProgressForm.mockTasks.followUpCallDescription'),
-			},
-			{
-				id: '4',
-				title: t('taskProgressForm.mockTasks.proposalDiscussionTitle'),
-				description: t('taskProgressForm.mockTasks.proposalDiscussionDescription'),
-			},
-			{
-				id: '5',
-				title: t('taskProgressForm.mockTasks.contractNegotiationTitle'),
-				description: t('taskProgressForm.mockTasks.contractNegotiationDescription'),
-			},
-		],
-		[t]
-	);
+    // Mock tasks - in real implementation, this would come from an API
+    const mockTasks = useMemo(
+        () => [
+            {
+                id: '1',
+                title: t('taskProgressForm.mockTasks.initialVisitTitle'),
+                description: t('taskProgressForm.mockTasks.initialVisitDescription'),
+            },
+            {
+                id: '2',
+                title: t('taskProgressForm.mockTasks.productPresentationTitle'),
+                description: t('taskProgressForm.mockTasks.productPresentationDescription'),
+            },
+            {
+                id: '3',
+                title: t('taskProgressForm.mockTasks.followUpCallTitle'),
+                description: t('taskProgressForm.mockTasks.followUpCallDescription'),
+            },
+            {
+                id: '4',
+                title: t('taskProgressForm.mockTasks.proposalDiscussionTitle'),
+                description: t('taskProgressForm.mockTasks.proposalDiscussionDescription'),
+            },
+            {
+                id: '5',
+                title: t('taskProgressForm.mockTasks.contractNegotiationTitle'),
+                description: t('taskProgressForm.mockTasks.contractNegotiationDescription'),
+            },
+        ],
+        [t]
+    );
 
     const handleProgressTypeChange = (value: string) => {
         form.setValue('progressType', value as any);
@@ -167,22 +167,22 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
         }
     };
 
-	const handleVisitResultChange = (value: string) => {
-		form.setValue('visitResult', value as any);
+    const handleVisitResultChange = (value: string) => {
+        form.setValue('visitResult', value as any);
 
-		// Auto-suggest next step based on visit result
-		if (value === 'Interested') {
-			form.setValue('nextStep', 'NeedsOffer');
-			setCreateOfferRequest(true);
-			form.setValue('createOfferRequest', true);
-		} else if (value === 'NotInterested') {
-			// No auto-suggest for not interested - let user choose
-			form.setValue('nextStep', undefined);
-		}
-	};
+        // Auto-suggest next step based on visit result
+        if (value === 'Interested') {
+            form.setValue('nextStep', 'NeedsOffer');
+            setCreateOfferRequest(true);
+            form.setValue('createOfferRequest', true);
+        } else if (value === 'NotInterested') {
+            // No auto-suggest for not interested - let user choose
+            form.setValue('nextStep', undefined);
+        }
+    };
 
-	const watchProgressType = form.watch('progressType');
-	const watchFollowUpDate = form.watch('followUpDate');
+    const watchProgressType = form.watch('progressType');
+    const watchFollowUpDate = form.watch('followUpDate');
 
     return (
         <Card className="w-full max-w-2xl mx-auto">
