@@ -83,11 +83,11 @@ export function useWeeklyPlans(): UseWeeklyPlansReturn {
 
 	// Check access permissions
 	const hasAccess = hasAnyRole([
-		'Salesman',
+		'SalesMan',
 		'SalesManager',
 		'SuperAdmin',
 	]);
-	const canCreate = hasAnyRole(['Salesman']);
+	const canCreate = hasAnyRole(['SalesMan']);
 	const canReview = hasAnyRole(['SalesManager', 'SuperAdmin']);
 
 	const [state, setState] = useState<UseWeeklyPlansState>({

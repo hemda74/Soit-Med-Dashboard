@@ -81,7 +81,7 @@ export const WeeklyPlansScreen: React.FC = () => {
     // Fetch salesmen for filter dropdown
     useEffect(() => {
         const fetchSalesmen = async () => {
-            if (!canReview) return; // Only fetch for managers/admins
+            if (!canReview) return; // Only fetch for managers/Admins
 
             try {
                 setUsersLoading(true);
@@ -248,145 +248,145 @@ export const WeeklyPlansScreen: React.FC = () => {
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {canReview && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Employee
-                            </label>
-                            <Select
-                                value={
-                                    filters.employeeId || 'all'
-                                }
-                                onValueChange={(value) =>
-                                    handleFilterChange({
-                                        employeeId:
-                                            value === 'all'
-                                                ? undefined
-                                                : value,
-                                    })
-                                }
-                                disabled={usersLoading}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue
-                                        placeholder={
-                                            usersLoading
-                                                ? 'Loading...'
-                                                : 'All employees'
+                            {canReview && (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Employee
+                                    </label>
+                                    <Select
+                                        value={
+                                            filters.employeeId || 'all'
                                         }
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        All employees
-                                    </SelectItem>
-                                    {availableUsers.map(
-                                        (salesman) => (
-                                            <SelectItem
-                                                key={salesman.id}
-                                                value={salesman.id}
-                                            >
-                                                {salesman.firstName} {salesman.lastName}
+                                        onValueChange={(value) =>
+                                            handleFilterChange({
+                                                employeeId:
+                                                    value === 'all'
+                                                        ? undefined
+                                                        : value,
+                                            })
+                                        }
+                                        disabled={usersLoading}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue
+                                                placeholder={
+                                                    usersLoading
+                                                        ? 'Loading...'
+                                                        : 'All employees'
+                                                }
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                All employees
                                             </SelectItem>
-                                        )
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
+                                            {availableUsers.map(
+                                                (salesman) => (
+                                                    <SelectItem
+                                                        key={salesman.id}
+                                                        value={salesman.id}
+                                                    >
+                                                        {salesman.firstName} {salesman.lastName}
+                                                    </SelectItem>
+                                                )
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Start Date
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="date"
-                                value={filters.weekStartDate || ''}
-                                onChange={(e) =>
-                                    handleFilterChange({
-                                        weekStartDate:
-                                            e.target
-                                                .value,
-                                    })
-                                }
-                                className="pl-10"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            End Date
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="date"
-                                value={filters.weekEndDate || ''}
-                                onChange={(e) =>
-                                    handleFilterChange({
-                                        weekEndDate:
-                                            e.target
-                                                .value,
-                                    })
-                                }
-                                className="pl-10"
-                            />
-                        </div>
-                    </div>
-
-                    {canReview && (
-                        <>
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Review Status
+                                    Start Date
                                 </label>
-                                <Select
-                                    value={
-                                        filters.hasManagerReview ===
-                                            undefined
-                                            ? 'all'
-                                            : filters.hasManagerReview
-                                                ? 'reviewed'
-                                                : 'pending'
-                                    }
-                                    onValueChange={(
-                                        value
-                                    ) =>
-                                        handleFilterChange(
-                                            {
-                                                hasManagerReview:
-                                                    value ===
-                                                        'all'
-                                                        ? undefined
-                                                        : value ===
-                                                        'reviewed',
-                                            }
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder={t('allPlans')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            All plans
-                                        </SelectItem>
-                                        <SelectItem value="reviewed">
-                                            Reviewed
-                                        </SelectItem>
-                                        <SelectItem value="pending">
-                                            Pending
-                                            review
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        type="date"
+                                        value={filters.weekStartDate || ''}
+                                        onChange={(e) =>
+                                            handleFilterChange({
+                                                weekStartDate:
+                                                    e.target
+                                                        .value,
+                                            })
+                                        }
+                                        className="pl-10"
+                                    />
+                                </div>
                             </div>
 
-                        </>
-                    )}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    End Date
+                                </label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        type="date"
+                                        value={filters.weekEndDate || ''}
+                                        onChange={(e) =>
+                                            handleFilterChange({
+                                                weekEndDate:
+                                                    e.target
+                                                        .value,
+                                            })
+                                        }
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+
+                            {canReview && (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Review Status
+                                        </label>
+                                        <Select
+                                            value={
+                                                filters.hasManagerReview ===
+                                                    undefined
+                                                    ? 'all'
+                                                    : filters.hasManagerReview
+                                                        ? 'reviewed'
+                                                        : 'pending'
+                                            }
+                                            onValueChange={(
+                                                value
+                                            ) =>
+                                                handleFilterChange(
+                                                    {
+                                                        hasManagerReview:
+                                                            value ===
+                                                                'all'
+                                                                ? undefined
+                                                                : value ===
+                                                                'reviewed',
+                                                    }
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('allPlans')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">
+                                                    All plans
+                                                </SelectItem>
+                                                <SelectItem value="reviewed">
+                                                    Reviewed
+                                                </SelectItem>
+                                                <SelectItem value="pending">
+                                                    Pending
+                                                    review
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                </>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -455,13 +455,12 @@ export const WeeklyPlansScreen: React.FC = () => {
                                 return (
                                     <Card
                                         key={plan.id}
-                                        className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
-                                            isComplete
+                                        className={`hover:shadow-xl transition-all duration-300 border-l-4 ${isComplete
                                                 ? 'border-l-green-500 dark:border-l-green-400'
                                                 : isPendingReview
-                                                ? 'border-l-yellow-500 dark:border-l-yellow-400'
-                                                : 'border-l-indigo-500 dark:border-l-indigo-400'
-                                        }`}
+                                                    ? 'border-l-yellow-500 dark:border-l-yellow-400'
+                                                    : 'border-l-indigo-500 dark:border-l-indigo-400'
+                                            }`}
                                     >
                                         <CardContent className="p-6">
                                             <div className="space-y-4">
@@ -546,11 +545,10 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                     </div>
                                                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                                                         <div
-                                                            className={`h-3 rounded-full transition-all duration-500 ${
-                                                                isComplete
+                                                            className={`h-3 rounded-full transition-all duration-500 ${isComplete
                                                                     ? 'bg-gradient-to-r from-green-500 to-green-600'
                                                                     : 'bg-gradient-to-r from-indigo-500 to-indigo-600'
-                                                            }`}
+                                                                }`}
                                                             style={{
                                                                 width: `${progressPercentage}%`,
                                                             }}
@@ -659,67 +657,67 @@ export const WeeklyPlansScreen: React.FC = () => {
 
                 {/* Modals */}
                 {showCreateModal && (
-                <CreateWeeklyPlanModal
-                    onClose={() => setShowCreateModal(false)}
-                    onSubmit={createPlan}
-                />
-            )}
+                    <CreateWeeklyPlanModal
+                        onClose={() => setShowCreateModal(false)}
+                        onSubmit={createPlan}
+                    />
+                )}
 
-            {viewingPlan && (
-                <ViewWeeklyPlanModal
-                    plan={viewingPlan}
-                    onClose={() => setViewingPlan(null)}
-                />
-            )}
+                {viewingPlan && (
+                    <ViewWeeklyPlanModal
+                        plan={viewingPlan}
+                        onClose={() => setViewingPlan(null)}
+                    />
+                )}
 
-            {editingPlan && (
-                <EditWeeklyPlanModal
-                    plan={editingPlan}
-                    onClose={() => setEditingPlan(null)}
-                    onSubmit={async (data) => {
-                        const success = await updatePlan(
-                            editingPlan.id,
-                            data
-                        );
-                        if (success) {
-                            setEditingPlan(null);
-                        }
-                        return success;
-                    }}
-                />
-            )}
+                {editingPlan && (
+                    <EditWeeklyPlanModal
+                        plan={editingPlan}
+                        onClose={() => setEditingPlan(null)}
+                        onSubmit={async (data) => {
+                            const success = await updatePlan(
+                                editingPlan.id,
+                                data
+                            );
+                            if (success) {
+                                setEditingPlan(null);
+                            }
+                            return success;
+                        }}
+                    />
+                )}
 
-            {deletingPlan && (
-                <DeleteWeeklyPlanModal
-                    plan={deletingPlan}
-                    onClose={() => setDeletingPlan(null)}
-                    onConfirm={async () => {
-                        const success = await deletePlan(
-                            deletingPlan.id
-                        );
-                        if (success) {
-                            setDeletingPlan(null);
-                        }
-                        return success;
-                    }}
-                />
-            )}
+                {deletingPlan && (
+                    <DeleteWeeklyPlanModal
+                        plan={deletingPlan}
+                        onClose={() => setDeletingPlan(null)}
+                        onConfirm={async () => {
+                            const success = await deletePlan(
+                                deletingPlan.id
+                            );
+                            if (success) {
+                                setDeletingPlan(null);
+                            }
+                            return success;
+                        }}
+                    />
+                )}
 
-            {reviewingPlan && (
-                <ReviewWeeklyPlanModal
-                    plan={reviewingPlan}
-                    onClose={() => setReviewingPlan(null)}
-                    onSubmit={async (data) => {
-                        const success = await reviewPlan(
-                            reviewingPlan.id,
-                            data
-                        );
-                        if (success) {
-                            setReviewingPlan(null);
-                        }
-                        return success;
-                    }}
-                />
+                {reviewingPlan && (
+                    <ReviewWeeklyPlanModal
+                        plan={reviewingPlan}
+                        onClose={() => setReviewingPlan(null)}
+                        onSubmit={async (data) => {
+                            const success = await reviewPlan(
+                                reviewingPlan.id,
+                                data
+                            );
+                            if (success) {
+                                setReviewingPlan(null);
+                            }
+                            return success;
+                        }}
+                    />
                 )}
             </div>
         </div>
