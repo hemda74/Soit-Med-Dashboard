@@ -1,12 +1,12 @@
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SalesmanStatisticsDTO } from "@/types/sales.types";
+import type { SalesManStatisticsDTO } from "@/types/sales.types";
 import { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface VisitsTrendChartProps {
-	data: SalesmanStatisticsDTO[];
+	data: SalesManStatisticsDTO[];
 	year?: number;
 	quarter?: number;
 	className?: string;

@@ -1,11 +1,11 @@
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SalesmanStatisticsDTO } from "@/types/sales.types";
+import type { SalesManStatisticsDTO } from "@/types/sales.types";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface TotalDealsChartProps {
-	data: SalesmanStatisticsDTO[];
+	data: SalesManStatisticsDTO[];
 	year?: number;
 	quarter?: number;
 	className?: string;
@@ -130,7 +130,7 @@ export default function TotalDealsChart({ data, year, quarter, className }: Tota
 	return (
 		<Card className={className}>
 			<CardHeader>
-				<CardTitle>{t('totalDealsBySalesman')}</CardTitle>
+				<CardTitle>{t('totalDealsBySalesMan')}</CardTitle>
 				<CardDescription>
 					{t('topPerformersFor')} {periodLabel} • {t('total')}: {totalDeals} {t('deals')}
 				</CardDescription>

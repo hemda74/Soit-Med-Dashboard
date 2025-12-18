@@ -1,12 +1,12 @@
 import Chart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SalesmanStatisticsDTO } from "@/types/sales.types";
+import type { SalesManStatisticsDTO } from "@/types/sales.types";
 import { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface ConversionRateChartProps {
-	data: SalesmanStatisticsDTO[];
+	data: SalesManStatisticsDTO[];
 	year?: number;
 	quarter?: number;
 	className?: string;
@@ -124,8 +124,8 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 	], [conversionData, language, t]);
 
 	const periodLabel = quarter ? `Q${quarter} ${year}` : year ? `${year}` : t('allTime');
-	const avgSuccessRate = data.length > 0 
-		? data.reduce((sum, stat) => sum + stat.successRate, 0) / data.length 
+	const avgSuccessRate = data.length > 0
+		? data.reduce((sum, stat) => sum + stat.successRate, 0) / data.length
 		: 0;
 	const avgOfferAcceptance = data.length > 0
 		? data.reduce((sum, stat) => sum + stat.offerAcceptanceRate, 0) / data.length
