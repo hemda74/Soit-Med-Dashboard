@@ -114,8 +114,8 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
         if (user?.roles.includes('SuperAdmin')) {
             return clients;
         }
-        // For SalesManager and Salesman, only show their assigned clients
-        return clients.filter(client => client.assignedSalesmanId === user?.id);
+        // For SalesManager and SalesMan, only show their assigned clients
+        return clients.filter(client => client.assignedSalesManId === user?.id);
     };
 
     return (
@@ -134,8 +134,8 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                                     <FormLabel>{t('dealForm.clientLabel')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!clientId}>
                                         <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={t('dealForm.clientPlaceholder')} />
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('dealForm.clientPlaceholder')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -237,8 +237,8 @@ export default function DealForm({ deal, onSuccess, onCancel, clientId, offerId 
                                 {isSubmitting
                                     ? t('saving')
                                     : deal
-                                    ? t('dealForm.updateButton')
-                                    : t('dealForm.createButton')}
+                                        ? t('dealForm.updateButton')
+                                        : t('dealForm.createButton')}
                             </Button>
                         </div>
                     </form>

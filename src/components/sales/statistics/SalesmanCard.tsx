@@ -3,14 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Users, Calendar, Target, CheckCircle, DollarSign } from 'lucide-react';
-import type { SalesmanStatisticsDTO } from '@/types/sales.types';
+import type { SalesManStatisticsDTO } from '@/types/sales.types';
 
-interface SalesmanCardProps {
-    salesman: SalesmanStatisticsDTO;
-    onViewDetails: (salesman: SalesmanStatisticsDTO) => void;
+interface SalesManCardProps {
+    salesman: SalesManStatisticsDTO;
+    onViewDetails: (salesman: SalesManStatisticsDTO) => void;
 }
 
-const SalesmanCard: React.FC<SalesmanCardProps> = ({ salesman, onViewDetails }) => {
+const SalesManCard: React.FC<SalesManCardProps> = ({ salesman, onViewDetails }) => {
     return (
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/50 group">
             <CardContent className="p-6">
@@ -78,6 +78,6 @@ const SalesmanCard: React.FC<SalesmanCardProps> = ({ salesman, onViewDetails }) 
     );
 };
 
-export default SalesmanCard;
+export default SalesManCard;
 
 

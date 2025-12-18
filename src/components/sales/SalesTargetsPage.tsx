@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Target, Plus, Pencil, Trash2, Users, User, DollarSign, Activity } from 'lucide-react'
 import { salesApi } from '@/services/sales/salesApi'
 import { useAuthStore } from '@/stores/authStore'
-import type { SalesmanTargetDTO, CreateSalesmanTargetDTO, TargetType } from '@/types/sales.types'
+import type { SalesManTargetDTO, CreateSalesManTargetDTO, TargetType } from '@/types/sales.types'
 import { TargetType as TargetTypeEnum } from '@/types/sales.types'
 import type { EmployeeInfo } from '@/types/weeklyPlan.types'
 import toast from 'react-hot-toast'
@@ -22,16 +22,16 @@ export default function SalesTargetsPage() {
     usePerformance('SalesTargetsPage');
     const { t } = useTranslation();
     const { user } = useAuthStore()
-    const [targets, setTargets] = useState<SalesmanTargetDTO[]>([])
+    const [targets, setTargets] = useState<SalesManTargetDTO[]>([])
     const [salesmen, setSalesmen] = useState<EmployeeInfo[]>([])
     const [loading, setLoading] = useState(false)
     const [loadingSalesmen, setLoadingSalesmen] = useState(false)
     const [showDialog, setShowDialog] = useState(false)
-    const [editingTarget, setEditingTarget] = useState<SalesmanTargetDTO | null>(null)
+    const [editingTarget, setEditingTarget] = useState<SalesManTargetDTO | null>(null)
     const [targetCategory, setTargetCategory] = useState<'money' | 'activity'>('activity')
     const [targetScope, setTargetScope] = useState<'individual' | 'team'>('individual')
     const [periodType, setPeriodType] = useState<'quarterly' | 'yearly'>('quarterly')
-    const [selectedSalesman, setSelectedSalesman] = useState<string>('')
+    const [selectedSalesMan, setSelectedSalesMan] = useState<string>('')
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
     const [selectedQuarter, setSelectedQuarter] = useState<number>(1)
 
@@ -46,7 +46,7 @@ export default function SalesTargetsPage() {
     })
 
     const isManager = user?.roles.includes('SalesManager') || user?.roles.includes('SuperAdmin')
-    const isSalesman = user?.roles.includes('Salesman')
+    const isSalesMan = user?.roles.includes('SalesMan')
 
     useEffect(() => {
         fetchSalesmen()
@@ -62,11 +62,11 @@ export default function SalesTargetsPage() {
     const fetchTargets = async () => {
         try {
             setLoading(true)
-            const allTargets: SalesmanTargetDTO[] = []
+            const allTargets: SalesManTargetDTO[] = []
 
             for (const salesman of salesmen) {
                 try {
-                    const response = await salesApi.getSalesmanTargets(salesman.id, selectedYear)
+                    const response = await salesApi.getSalesManTargets(salesman.id, selectedYear)
                     if (response.success && response.data) {
                         allTargets.push(...response.data)
                     }
@@ -98,7 +98,7 @@ export default function SalesTargetsPage() {
             }
 
             // Deduplicate targets by id to avoid duplicate keys
-            const uniqueTargetsMap = new Map<number, SalesmanTargetDTO>()
+            const uniqueTargetsMap = new Map<number, SalesManTargetDTO>()
             allTargets.forEach(target => {
                 if (!uniqueTargetsMap.has(target.id)) {
                     uniqueTargetsMap.set(target.id, target)
@@ -154,10 +154,10 @@ export default function SalesTargetsPage() {
         setTargetScope('individual')
         setPeriodType('quarterly')
         // For activity targets set by salesman, auto-select themselves
-        if (category === 'activity' && isSalesman) {
-            setSelectedSalesman(user?.id || '')
+        if (category === 'activity' && isSalesMan) {
+            setSelectedSalesMan(user?.id || '')
         } else {
-            setSelectedSalesman('')
+            setSelectedSalesMan('')
         }
         setSelectedQuarter(1)
         setFormData({
@@ -172,12 +172,12 @@ export default function SalesTargetsPage() {
         setShowDialog(true)
     }
 
-    const handleEditTarget = (target: SalesmanTargetDTO) => {
+    const handleEditTarget = (target: SalesManTargetDTO) => {
         setEditingTarget(target)
         setTargetCategory(target.targetType === TargetTypeEnum.Money ? 'money' : 'activity')
         setTargetScope(target.isTeamTarget ? 'team' : 'individual')
         setPeriodType(target.quarter ? 'quarterly' : 'yearly')
-        setSelectedSalesman(target.salesmanId || '')
+        setSelectedSalesMan(target.salesmanId || '')
         setSelectedQuarter(target.quarter || 1)
         setFormData({
             targetVisits: target.targetVisits.toString(),
@@ -203,15 +203,15 @@ export default function SalesTargetsPage() {
                 return
             }
             // For individual money targets, salesman must be selected
-            if (targetScope === 'individual' && !selectedSalesman) {
-                toast.error(t('pleaseSelectSalesmanForIndividualTarget'))
+            if (targetScope === 'individual' && !selectedSalesMan) {
+                toast.error(t('pleaseSelectSalesManForIndividualTarget'))
                 return
             }
         }
 
         // Validate required fields for activity targets
         if (targetCategory === 'activity') {
-            if (!isSalesman) {
+            if (!isSalesMan) {
                 toast.error(t('onlySalesmenCanSetActivityTargets'))
                 return
             }
@@ -220,16 +220,16 @@ export default function SalesTargetsPage() {
                 return
             }
             // For activity targets set by salesman, ensure they're setting for themselves
-            if (isSalesman && !editingTarget && targetScope === 'individual') {
-                if (selectedSalesman !== user?.id) {
+            if (isSalesMan && !editingTarget && targetScope === 'individual') {
+                if (selectedSalesMan !== user?.id) {
                     toast.error(t('youCanOnlySetActivityTargetsForYourself'))
                     return
                 }
             }
         }
 
-        const targetData: CreateSalesmanTargetDTO = {
-            salesmanId: targetScope === 'individual' ? selectedSalesman : undefined,
+        const targetData: CreateSalesManTargetDTO = {
+            salesmanId: targetScope === 'individual' ? selectedSalesMan : undefined,
             year: selectedYear,
             quarter: periodType === 'quarterly' ? selectedQuarter : undefined,
             targetType: targetCategory === 'money' ? TargetTypeEnum.Money : TargetTypeEnum.Activity,
@@ -246,10 +246,10 @@ export default function SalesTargetsPage() {
         try {
             setLoading(true)
             if (editingTarget) {
-                await salesApi.updateSalesmanTarget(editingTarget.id, targetData)
+                await salesApi.updateSalesManTarget(editingTarget.id, targetData)
                 toast.success(t('targetUpdatedSuccessfully'))
             } else {
-                await salesApi.createSalesmanTarget(targetData)
+                await salesApi.createSalesManTarget(targetData)
                 toast.success(t('targetCreatedSuccessfully'))
             }
             setShowDialog(false)
@@ -262,14 +262,14 @@ export default function SalesTargetsPage() {
         }
     }
 
-    const handleDeleteTarget = async (target: SalesmanTargetDTO) => {
+    const handleDeleteTarget = async (target: SalesManTargetDTO) => {
         if (!window.confirm(t('areYouSureDeleteTarget'))) {
             return
         }
 
         try {
             setLoading(true)
-            await salesApi.deleteSalesmanTarget(target.id)
+            await salesApi.deleteSalesManTarget(target.id)
             toast.success(t('targetDeletedSuccessfully'))
             fetchTargets()
         } catch (error: any) {
@@ -313,7 +313,7 @@ export default function SalesTargetsPage() {
                             {t('createMoneyTarget')}
                         </Button>
                     )}
-                    {isSalesman && (
+                    {isSalesMan && (
                         <Button onClick={() => handleCreateTarget('activity')} className="flex items-center gap-2" variant="outline">
                             <Activity className="h-4 w-4" />
                             {t('setMyActivityTarget')}
@@ -589,7 +589,7 @@ export default function SalesTargetsPage() {
                                     <div>
                                         <p className="font-semibold text-blue-900 dark:text-blue-100">{t('creatingMoneyTarget')}</p>
                                         <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                                            As a manager, you can set money targets for individual salesmen or for the entire team. 
+                                            As a manager, you can set money targets for individual salesmen or for the entire team.
                                             {t('selectIndividualToSetTarget')}
                                         </p>
                                     </div>
@@ -609,7 +609,7 @@ export default function SalesTargetsPage() {
                             </div>
                             <div>
                                 <Label>{t('targetScope')}</Label>
-                                <Select value={targetScope} onValueChange={(value: 'individual' | 'team') => setTargetScope(value)} disabled={!!editingTarget || (targetCategory === 'activity' && isSalesman)}>
+                                <Select value={targetScope} onValueChange={(value: 'individual' | 'team') => setTargetScope(value)} disabled={!!editingTarget || (targetCategory === 'activity' && isSalesMan)}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="individual"><div className="flex items-center gap-2"><User className="h-4 w-4" />{t('individual')}</div></SelectItem>
@@ -646,13 +646,13 @@ export default function SalesTargetsPage() {
                         {targetScope === 'individual' && (
                             <div>
                                 <Label>{t('salesman')} {targetCategory === 'money' && '*'}</Label>
-                                <Select 
-                                    value={selectedSalesman} 
-                                    onValueChange={setSelectedSalesman} 
-                                    disabled={!!editingTarget || (targetCategory === 'activity' && isSalesman) || loadingSalesmen}
+                                <Select
+                                    value={selectedSalesMan}
+                                    onValueChange={setSelectedSalesMan}
+                                    disabled={!!editingTarget || (targetCategory === 'activity' && isSalesMan) || loadingSalesmen}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder={loadingSalesmen ? t('loadingSalesmen') : t('selectSalesman')} />
+                                        <SelectValue placeholder={loadingSalesmen ? t('loadingSalesmen') : t('selectSalesMan')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {salesmen.length > 0 ? (
@@ -670,13 +670,13 @@ export default function SalesTargetsPage() {
                                 </Select>
                                 {targetCategory === 'money' && (
                                     <p className="text-sm text-muted-foreground mt-1">
-                                        {salesmen.length === 0 
+                                        {salesmen.length === 0
                                             ? t('noSalesmenAvailableMessage')
-                                            : t('selectSalesmanForIndividualTarget')
+                                            : t('selectSalesManForIndividualTarget')
                                         }
                                     </p>
                                 )}
-                                {targetCategory === 'activity' && isSalesman && !editingTarget && (
+                                {targetCategory === 'activity' && isSalesMan && !editingTarget && (
                                     <p className="text-sm text-muted-foreground mt-1">{t('youCanOnlySetActivityTargetsForYourself')}</p>
                                 )}
                             </div>
@@ -699,11 +699,11 @@ export default function SalesTargetsPage() {
                         {targetCategory === 'money' ? (
                             <div>
                                 <Label>{t('targetRevenueMoney')} *</Label>
-                                <Input 
-                                    type="number" 
-                                    value={formData.targetRevenue} 
-                                    onChange={(e) => setFormData({ ...formData, targetRevenue: e.target.value })} 
-                                    placeholder="100000" 
+                                <Input
+                                    type="number"
+                                    value={formData.targetRevenue}
+                                    onChange={(e) => setFormData({ ...formData, targetRevenue: e.target.value })}
+                                    placeholder="100000"
                                     step="0.01"
                                 />
                             </div>
@@ -730,11 +730,11 @@ export default function SalesTargetsPage() {
     )
 }
 
-function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; onEdit: (target: SalesmanTargetDTO) => void; onDelete: (target: SalesmanTargetDTO) => void }) {
+function TargetCard({ target, onEdit, onDelete }: { target: SalesManTargetDTO; onEdit: (target: SalesManTargetDTO) => void; onDelete: (target: SalesManTargetDTO) => void }) {
     const { t } = useTranslation();
     const isMoneyTarget = target.targetType === TargetTypeEnum.Money
-    const creatorName = target.createdByManagerName || target.createdBySalesmanName || 'Unknown'
-    
+    const creatorName = target.createdByManagerName || target.createdBySalesManName || 'Unknown'
+
     return (
         <Card className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] hover:shadow-lg transition-all duration-200 overflow-hidden">
             <CardContent className="p-5 md:p-6">
@@ -774,17 +774,17 @@ function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; o
                         )}
                     </div>
                     <div className="flex gap-1">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onEdit(target)}
                             className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
                         >
                             <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => onDelete(target)}
                             className="h-8 w-8 p-0 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
                         >
@@ -795,9 +795,9 @@ function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; o
 
                 {/* Title */}
                 <h3 className="font-semibold text-lg text-gray-800 dark:text-white/90 mb-4">
-                    {target.isTeamTarget ? t('teamTarget') : target.salesmanName || t('unknownSalesman')}
+                    {target.isTeamTarget ? t('teamTarget') : target.salesmanName || t('unknownSalesMan')}
                 </h3>
-                
+
                 {/* Content based on target type */}
                 {isMoneyTarget ? (
                     <div className="space-y-3">
@@ -841,7 +841,7 @@ function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; o
                         )}
                     </div>
                 )}
-                
+
                 {/* Notes */}
                 {target.notes && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
@@ -849,7 +849,7 @@ function TargetCard({ target, onEdit, onDelete }: { target: SalesmanTargetDTO; o
                         <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{target.notes}</p>
                     </div>
                 )}
-                
+
                 {/* Footer */}
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                     <p className="text-xs text-gray-500 dark:text-gray-400">

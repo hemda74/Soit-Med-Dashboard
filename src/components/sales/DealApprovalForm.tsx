@@ -130,7 +130,7 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                     <div className="text-center text-muted-foreground">
                         <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
                         <p className="text-lg font-medium mb-2">You don't have permission to approve this deal.</p>
-                        <p className="text-sm">Please contact your administrator if you believe this is an error.</p>
+                        <p className="text-sm">Please contact your Administrator if you believe this is an error.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -337,7 +337,7 @@ export default function DealApprovalForm({ deal, onSuccess, onCancel }: DealAppr
                                                     Super Admin Required
                                                 </FormLabel>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Mark if this deal requires additional super admin review
+                                                    Mark if this deal requires additional super Admin review
                                                 </p>
                                             </div>
                                         </FormItem>

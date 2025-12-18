@@ -114,8 +114,8 @@ export default function DealCompletionForm({ deal, onSuccess, onCancel }: DealCo
         // SalesManager can complete team deals
         if (user.roles.includes('SalesManager')) return true;
 
-        // Salesman can complete their own deals
-        if (user.roles.includes('Salesman')) {
+        // SalesMan can complete their own deals
+        if (user.roles.includes('SalesMan')) {
             return deal.createdBy === user.id;
         }
 

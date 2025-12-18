@@ -238,7 +238,7 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
     };
 
     const handleEditOffer = () => {
-        navigate(`/sales-manager/offers/${offer.id}/edit`);
+        navigate(`/SalesManager/offers/${offer.id}/edit`);
     };
 
     const handleExportPdf = async (language: 'en' | 'ar' = 'en') => {
@@ -697,7 +697,7 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
                                     <FormLabel>Comments {action === 'approve' ? '(Optional)' : ''}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder={action === 'approve' 
+                                            placeholder={action === 'approve'
                                                 ? 'Add any comments or notes about this approval...'
                                                 : 'Add any additional comments...'}
                                             className="min-h-[120px]"
@@ -724,10 +724,10 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
                                 className={action === 'reject' ? 'bg-red-600 hover:bg-red-700' : ''}
                             >
                                 <XCircle className="h-4 w-4 mr-2" />
-                                {isSubmitting && action === 'reject' 
-                                    ? 'Rejecting...' 
-                                    : action === 'reject' 
-                                        ? 'Confirm Rejection' 
+                                {isSubmitting && action === 'reject'
+                                    ? 'Rejecting...'
+                                    : action === 'reject'
+                                        ? 'Confirm Rejection'
                                         : 'Reject'}
                             </Button>
                             <Button

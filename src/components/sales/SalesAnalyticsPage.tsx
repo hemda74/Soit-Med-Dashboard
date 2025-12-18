@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BarChart3, TrendingUp, DollarSign, Users, Activity, Target, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { SalesmanStatisticsDTO } from '@/types/sales.types';
+import type { SalesManStatisticsDTO } from '@/types/sales.types';
 import { usePerformance } from '@/hooks/usePerformance';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
@@ -17,7 +17,7 @@ import {
 	ConversionRateChart,
 	DealStatusChart,
 } from '@/components/charts/sales';
-import SalesmanCard from './statistics/SalesmanCard';
+import SalesManCard from './statistics/SalesManCard';
 import ProgressChart from './statistics/ProgressChart';
 import PerformanceChart from './statistics/PerformanceChart';
 
@@ -81,10 +81,10 @@ export default function SalesAnalyticsPage() {
 	const { t } = useTranslation();
 	const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 	const [selectedQuarter, setSelectedQuarter] = useState<number | undefined>(undefined);
-	const [statistics, setStatistics] = useState<SalesmanStatisticsDTO[]>([]);
+	const [statistics, setStatistics] = useState<SalesManStatisticsDTO[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [activeTab, setActiveTab] = useState<string>('overview');
-	const [selectedSalesman, setSelectedSalesman] = useState<SalesmanStatisticsDTO | null>(null);
+	const [selectedSalesMan, setSelectedSalesMan] = useState<SalesManStatisticsDTO | null>(null);
 	const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
 	useEffect(() => {
@@ -94,7 +94,7 @@ export default function SalesAnalyticsPage() {
 	const loadStatistics = async () => {
 		setLoading(true);
 		try {
-			const response = await salesApi.getAllSalesmanStatistics(selectedYear, selectedQuarter);
+			const response = await salesApi.getAllSalesManStatistics(selectedYear, selectedQuarter);
 			if (response.success && Array.isArray(response.data)) {
 				const salesmanStats = response.data.filter((stat: any) => {
 					return stat && stat.salesmanId && typeof stat.salesmanId === 'string';
@@ -163,14 +163,14 @@ export default function SalesAnalyticsPage() {
 		};
 	}, [statistics]);
 
-	const handleSalesmanClick = (salesman: SalesmanStatisticsDTO) => {
-		setSelectedSalesman(salesman);
+	const handleSalesManClick = (salesman: SalesManStatisticsDTO) => {
+		setSelectedSalesMan(salesman);
 		setIsDetailsOpen(true);
 	};
 
 	const closeDetails = () => {
 		setIsDetailsOpen(false);
-		setTimeout(() => setSelectedSalesman(null), 150);
+		setTimeout(() => setSelectedSalesMan(null), 150);
 	};
 
 	// Chart props to avoid repetition
@@ -310,10 +310,10 @@ export default function SalesAnalyticsPage() {
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							{statistics.map((salesman) => (
-								<SalesmanCard
+								<SalesManCard
 									key={salesman.salesmanId}
 									salesman={salesman}
-									onViewDetails={handleSalesmanClick}
+									onViewDetails={handleSalesManClick}
 								/>
 							))}
 						</div>
@@ -407,39 +407,39 @@ export default function SalesAnalyticsPage() {
 				</TabsContent>
 			</Tabs>
 
-			{/* Selected Salesman Details Dialog */}
+			{/* Selected SalesMan Details Dialog */}
 			<Dialog open={isDetailsOpen} onOpenChange={(open) => (open ? setIsDetailsOpen(true) : closeDetails())}>
 				<DialogContent className="max-w-3xl">
-					{selectedSalesman && (
+					{selectedSalesMan && (
 						<>
 							<DialogHeader>
-								<DialogTitle>{selectedSalesman.salesmanName} - {t('detailedStatistics')}</DialogTitle>
+								<DialogTitle>{selectedSalesMan.salesmanName} - {t('detailedStatistics')}</DialogTitle>
 							</DialogHeader>
 							<div className="space-y-4">
 								<div className="grid gap-4 md:grid-cols-2">
 									<ProgressChart
 										title="Visits Progress"
-										current={selectedSalesman.totalVisits}
+										current={selectedSalesMan.totalVisits}
 										target={100}
-										progress={(selectedSalesman.totalVisits / 100) * 100}
+										progress={(selectedSalesMan.totalVisits / 100) * 100}
 									/>
 									<ProgressChart
 										title="Offers Progress"
-										current={selectedSalesman.totalOffers}
+										current={selectedSalesMan.totalOffers}
 										target={50}
-										progress={(selectedSalesman.totalOffers / 50) * 100}
+										progress={(selectedSalesMan.totalOffers / 50) * 100}
 									/>
 									<ProgressChart
 										title="Deals Progress"
-										current={selectedSalesman.totalDeals}
+										current={selectedSalesMan.totalDeals}
 										target={20}
-										progress={(selectedSalesman.totalDeals / 20) * 100}
+										progress={(selectedSalesMan.totalDeals / 20) * 100}
 									/>
 									<ProgressChart
 										title="Revenue Progress"
-										current={selectedSalesman.totalDealValue}
+										current={selectedSalesMan.totalDealValue}
 										target={1000000}
-										progress={(selectedSalesman.totalDealValue / 1000000) * 100}
+										progress={(selectedSalesMan.totalDealValue / 1000000) * 100}
 										unit=" EGP"
 									/>
 								</div>
