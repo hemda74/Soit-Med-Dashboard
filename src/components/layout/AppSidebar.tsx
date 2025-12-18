@@ -18,7 +18,7 @@ const hasPath = (item: NavItem): item is NavItem & { path: string } =>
  */
 const isPathActive = (currentPath: string, targetPath: string): boolean => {
   if (currentPath === targetPath) return true;
-  // Handle nested routes - e.g., /sales-manager/deals/123 matches /sales-manager/deals
+  // Handle nested routes - e.g., /SalesManager/deals/123 matches /SalesManager/deals
   return currentPath.startsWith(targetPath + '/');
 };
 
