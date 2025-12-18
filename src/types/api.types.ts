@@ -26,7 +26,7 @@ export interface UserStatistics {
 		Admin: number;
 		Doctor: number;
 		Technician: number;
-		Salesman: number;
+		SalesMan: number;
 		SalesManager: number;
 		Engineer: number;
 		FinanceManager: number;

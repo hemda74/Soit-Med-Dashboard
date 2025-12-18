@@ -14,7 +14,7 @@ export interface Client {
 	createdBy: string;
 	assignedTo?: string;
 	assignedToName?: string; // For display purposes - salesman name
-	assignedSalesmanName?: string; // Legacy - kept for backward compatibility
+	assignedSalesManName?: string; // Legacy - kept for backward compatibility
 	createdAt: string;
 	updatedAt: string;
 	// Sales tracking - Updated to match new business logic
@@ -50,7 +50,7 @@ export interface UpdateClientDto {
 export interface ClientSearchFilters {
 	query?: string;
 	classification?: 'A' | 'B' | 'C' | 'D';
-	assignedSalesmanId?: string;
+	assignedSalesManId?: string;
 	city?: string;
 	governorateId?: number;
 	equipmentCategories?: string[]; // Filter by multiple equipment categories (e.g., ["Mobile X Ray", "Ultrasound"])
@@ -72,7 +72,7 @@ export interface ClientSearchResult {
 	hasPreviousPage: boolean;
 }
 
-export interface Salesman {
+export interface SalesMan {
 	id: string;
 	firstName?: string;
 	lastName?: string;
@@ -439,7 +439,7 @@ export interface SalesAnalytics {
 	totalTravelCost: number;
 	// Performance metrics
 	visitsPerClient: number;
-	clientsPerSalesman: number;
+	clientsPerSalesMan: number;
 	successRate: number;
 	offerConversionRate: number;
 	dealConversionRate: number;
@@ -601,7 +601,7 @@ export interface SalesDashboardData {
 	// Pending approvals
 	pendingApprovals: Array<{
 		id: string;
-		type: 'deal_manager_approval' | 'deal_superadmin_approval';
+		type: 'deal_manager_approval' | 'deal_superAdmin_approval';
 		description: string;
 		clientName: string;
 		salesmanName: string;
@@ -680,7 +680,7 @@ export interface PaginatedApiResponseWithMeta<T> {
 
 // ==================== SALESMAN STATISTICS ====================
 
-export interface SalesmanStatisticsDTO {
+export interface SalesManStatisticsDTO {
 	salesmanId: string;
 	salesmanName: string;
 	year: number;
@@ -708,7 +708,7 @@ export enum TargetType {
 	Activity = 2,
 }
 
-export interface SalesmanTargetDTO {
+export interface SalesManTargetDTO {
 	id: number;
 	salesmanId: string | null;
 	salesmanName: string;
@@ -730,15 +730,15 @@ export interface SalesmanTargetDTO {
 	notes?: string;
 	createdAt: string; // ISO 8601
 	createdByManagerName?: string;
-	createdBySalesmanName?: string; // For self-set targets
+	createdBySalesManName?: string; // For self-set targets
 }
 
-export interface SalesmanProgressDTO {
-	currentStatistics: SalesmanStatisticsDTO;
-	individualMoneyTarget?: SalesmanTargetDTO;
-	individualActivityTarget?: SalesmanTargetDTO;
-	teamMoneyTarget?: SalesmanTargetDTO;
-	teamActivityTarget?: SalesmanTargetDTO;
+export interface SalesManProgressDTO {
+	currentStatistics: SalesManStatisticsDTO;
+	individualMoneyTarget?: SalesManTargetDTO;
+	individualActivityTarget?: SalesManTargetDTO;
+	teamMoneyTarget?: SalesManTargetDTO;
+	teamActivityTarget?: SalesManTargetDTO;
 
 	// Progress Percentages (0-100, can exceed 100%)
 	visitsProgress: number;
@@ -749,7 +749,7 @@ export interface SalesmanProgressDTO {
 	revenueProgress?: number;
 }
 
-export interface CreateSalesmanTargetDTO {
+export interface CreateSalesManTargetDTO {
 	salesmanId?: string; // null or omit for team target
 	year: number;
 	quarter?: number; // 1-4, omit for yearly
@@ -784,7 +784,7 @@ export interface DateRangeFilter {
 	endDate?: string;
 }
 
-export interface SalesmanFilter {
+export interface SalesManFilter {
 	salesmanId?: string;
 	salesmanName?: string;
 }
@@ -829,7 +829,7 @@ export interface Offer {
 	salesManagerComments?: string;
 	salesManagerRejectionReason?: string;
 	isSalesManagerApproved?: boolean;
-	canSendToSalesman?: boolean;
+	canSendToSalesMan?: boolean;
 }
 
 // ==================== ENHANCED OFFER FEATURES ====================
