@@ -10,7 +10,7 @@ export interface User extends AuthUser {
 }
 
 // Roles that are not authorized to access the application
-const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'Salesman'];
+const RESTRICTED_ROLES = ['Doctor', 'Engineer', 'Technician', 'SalesMan'];
 
 interface AuthState {
 	user: User | null;
@@ -303,9 +303,17 @@ export const useAuthStore = create<AuthState>()(
 				// Permissions (case-insensitive)
 				hasRole: (role: string) => {
 					const { user } = get();
-					if (!user?.roles || !Array.isArray(user.roles)) return false;
+					if (
+						!user?.roles ||
+						!Array.isArray(user.roles)
+					)
+						return false;
 					const roleLower = role.toLowerCase();
-					return user.roles.some(r => r.toLowerCase() === roleLower);
+					return user.roles.some(
+						(r) =>
+							r.toLowerCase() ===
+							roleLower
+					);
 				},
 
 				hasAnyRole: (roles: string[]) => {
@@ -316,9 +324,13 @@ export const useAuthStore = create<AuthState>()(
 						!Array.isArray(user.roles)
 					)
 						return false;
-					const userRolesLower = user.roles.map(r => r.toLowerCase());
+					const userRolesLower = user.roles.map(
+						(r) => r.toLowerCase()
+					);
 					return roles.some((role) =>
-						userRolesLower.includes(role.toLowerCase())
+						userRolesLower.includes(
+							role.toLowerCase()
+						)
 					);
 				},
 
