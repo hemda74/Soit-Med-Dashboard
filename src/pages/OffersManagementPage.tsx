@@ -56,7 +56,7 @@ interface PaginatedOffersResponse {
 	hasNextPage: boolean;
 }
 
-interface Salesman {
+interface SalesMan {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -82,8 +82,8 @@ const OffersManagementPage: React.FC = () => {
 
 	// Filters
 	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [salesmanFilter, setSalesmanFilter] = useState<string>('all');
-	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [salesmanFilter, setSalesManFilter] = useState<string>('all');
+	const [salesmen, setSalesmen] = useState<SalesMan[]>([]);
 	const [loadingSalesmen, setLoadingSalesmen] = useState(false);
 
 	// Offer Details Modal
@@ -140,7 +140,7 @@ const OffersManagementPage: React.FC = () => {
 						lastName: salesman.lastName || salesman?.user?.lastName || '',
 						userName: salesman.userName || salesman?.user?.userName || '',
 					}))
-					.filter((salesman: Salesman) => salesman.id);
+					.filter((salesman: SalesMan) => salesman.id);
 
 				setSalesmen(normalizedSalesmen);
 			}
@@ -274,9 +274,9 @@ const OffersManagementPage: React.FC = () => {
 		}
 	}, [canAccessPage, pagination.page, pagination.pageSize, statusFilter, salesmanFilter, loadOffers]);
 
-	const handleFilterChange = (newStatus: string, newSalesman: string) => {
+	const handleFilterChange = (newStatus: string, newSalesMan: string) => {
 		setStatusFilter(newStatus);
-		setSalesmanFilter(newSalesman);
+		setSalesManFilter(newSalesMan);
 		setPagination(prev => ({ ...prev, page: 1 }));
 	};
 
@@ -428,7 +428,7 @@ const OffersManagementPage: React.FC = () => {
 		loadEquipmentImages();
 	}, [offerEquipment, selectedOffer?.id]);
 
-	const handleSendToSalesman = async () => {
+	const handleSendToSalesMan = async () => {
 		if (!selectedOffer) return;
 		if (selectedOffer.status !== 'Draft') {
 			toast.error(t('onlyDraftOffersCanBeSent') || 'Only draft offers can be sent to salesman');
@@ -437,7 +437,7 @@ const OffersManagementPage: React.FC = () => {
 
 		try {
 			setProcessingAction('send');
-			const response = await salesApi.sendOfferToSalesman(selectedOffer.id.toString());
+			const response = await salesApi.sendOfferToSalesMan(selectedOffer.id.toString());
 			if (response.success) {
 				toast.success(t('offerSentSuccessfully') || 'Offer sent to salesman successfully');
 				loadOffers();
@@ -811,7 +811,7 @@ const OffersManagementPage: React.FC = () => {
 							<Button
 								onClick={() => {
 									setStatusFilter('all');
-									setSalesmanFilter('all');
+									setSalesManFilter('all');
 									setPagination(prev => ({ ...prev, page: 1 }));
 								}}
 								variant="outline"
@@ -910,7 +910,7 @@ const OffersManagementPage: React.FC = () => {
 													variant="outline"
 													size="sm"
 													onClick={() => {
-														navigate(`/sales-manager/offers/${offer.id}/edit`);
+														navigate(`/SalesManager/offers/${offer.id}/edit`);
 													}}
 													className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
 												>
@@ -928,7 +928,7 @@ const OffersManagementPage: React.FC = () => {
 														if (response.success && response.data) {
 															setSelectedOffer(response.data);
 															setTimeout(() => {
-																handleSendToSalesman();
+																handleSendToSalesMan();
 															}, 100);
 														}
 													}}
@@ -1371,7 +1371,7 @@ const OffersManagementPage: React.FC = () => {
 									<Button
 										variant="outline"
 										onClick={() => {
-											navigate(`/sales-manager/offers/${selectedOffer.id}/edit`);
+											navigate(`/SalesManager/offers/${selectedOffer.id}/edit`);
 										}}
 										className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
 									>
@@ -1384,12 +1384,12 @@ const OffersManagementPage: React.FC = () => {
 									<>
 										<Button
 											variant="default"
-											onClick={handleSendToSalesman}
+											onClick={handleSendToSalesMan}
 											disabled={processingAction !== null}
 											className="bg-blue-600 hover:bg-blue-700 text-white"
 										>
 											<CheckCircle className="h-4 w-4 mr-2" />
-											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesman') || 'Send to Salesman'}
+											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesMan') || 'Send to SalesMan'}
 										</Button>
 										<TooltipProvider>
 											<Tooltip>

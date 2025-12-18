@@ -7,7 +7,7 @@ import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { FileText, Building2, DollarSign, Calendar, Eye } from 'lucide-react';
-import SalesmanReportForm from '@/components/sales/SalesmanReportForm';
+import SalesManReportForm from '@/components/sales/SalesManReportForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -40,7 +40,7 @@ const DealReportsPage: React.FC = () => {
 
 		try {
 			setLoading(true);
-			const response = await salesApi.getDeals('AwaitingSalesmanReport');
+			const response = await salesApi.getDeals('AwaitingSalesManReport');
 
 			if (response.success && response.data) {
 				const normalizedDeals = response.data.map((deal: any) => ({
@@ -193,7 +193,7 @@ const DealReportsPage: React.FC = () => {
 						<DialogTitle className="text-xl">Submit Report</DialogTitle>
 					</DialogHeader>
 					{selectedDeal && (
-						<SalesmanReportForm
+						<SalesManReportForm
 							dealId={selectedDeal.id}
 							dealClientName={selectedDeal.clientName}
 							onSuccess={handleSubmitReport}
