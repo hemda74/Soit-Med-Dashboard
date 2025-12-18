@@ -49,7 +49,7 @@ export default defineConfig({
 							return 'sales-dashboard';
 						}
 						if (id.includes('SuperAdmin')) {
-							return 'admin-dashboard';
+							return 'Admin-dashboard';
 						}
 						if (
 							id.includes(
