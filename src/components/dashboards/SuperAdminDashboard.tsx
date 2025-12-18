@@ -182,7 +182,7 @@ const SuperAdminDashboard: React.FC = () => {
                 'Dive into detailed user analytics, growth trends, activity breakdowns, and system health insights directly from the Users Management screen.',
             primaryLabel: t('viewUsers'),
             secondaryLabel: t('goToUsersAnalytics') || 'Open Users Analytics',
-            path: '/admin/users',
+            path: '/Admin/users',
             statLabel: t('activeUsers') || 'Active Users',
             statValue: statisticsLoading ? '...' : formatNumber(statistics?.activeUsers),
             statTrend: statistics ? `${activeUsersPercentage}% ${t('active') || 'active'}` : undefined,
@@ -220,7 +220,7 @@ const SuperAdminDashboard: React.FC = () => {
                 t('dealApprovalsDescription') ||
                 'Review, approve, or reject high-priority deals awaiting your decision.',
             primaryLabel: t('reviewDeals') || 'Review Deals',
-            path: '/super-admin/deal-approvals',
+            path: '/super-Admin/deal-approvals',
             statLabel: t('awaitingApproval') || 'Awaiting approval',
             statValue: pendingApprovalsCount,
             statTrend:
@@ -294,7 +294,7 @@ const SuperAdminDashboard: React.FC = () => {
                 t('inventoryManagerDescription') ||
                 'Monitor stock levels, logistics, and fulfillment for all warehouses.',
             primaryLabel: t('viewInventory') || 'View Inventory',
-            path: '/inventory-manager',
+            path: '/InventoryManager',
             colorScheme: {
                 iconBg: 'bg-violet-500/10 dark:bg-violet-500/20',
                 iconColor: 'text-violet-600 dark:text-violet-400',

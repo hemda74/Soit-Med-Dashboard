@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAllSalesmanStatistics } from '@/hooks/useSalesmanStatistics';
-import SalesmanCard from '@/components/sales/statistics/SalesmanCard';
+import { useAllSalesManStatistics } from '@/hooks/useSalesManStatistics';
+import SalesManCard from '@/components/sales/statistics/SalesManCard';
 import ProgressChart from '@/components/sales/statistics/ProgressChart';
 import PerformanceChart from '@/components/sales/statistics/PerformanceChart';
 import { TotalDealsChart, RevenueTrendChart } from '@/components/charts';
 import { BarChart3, TrendingUp, Users, Target, DollarSign, CheckCircle } from 'lucide-react';
-import type { SalesmanStatisticsDTO } from '@/types/sales.types';
+import type { SalesManStatisticsDTO } from '@/types/sales.types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -16,10 +16,10 @@ const SalesStatisticsSection: React.FC = () => {
 	const currentYear = new Date().getFullYear();
 	const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 	const [selectedQuarter, setSelectedQuarter] = useState<number | undefined>(undefined);
-	const [selectedSalesman, setSelectedSalesman] = useState<SalesmanStatisticsDTO | null>(null);
+	const [selectedSalesMan, setSelectedSalesMan] = useState<SalesManStatisticsDTO | null>(null);
 	const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-	const { data: statistics = [], isLoading, error } = useAllSalesmanStatistics(selectedYear, selectedQuarter);
+	const { data: statistics = [], isLoading, error } = useAllSalesManStatistics(selectedYear, selectedQuarter);
 
 	// Calculate aggregate statistics
 	const aggregateStats = useMemo(() => {
@@ -63,15 +63,15 @@ const SalesStatisticsSection: React.FC = () => {
 		};
 	}, [statistics]);
 
-	const handleSalesmanClick = (salesman: SalesmanStatisticsDTO) => {
-		setSelectedSalesman(salesman);
+	const handleSalesManClick = (salesman: SalesManStatisticsDTO) => {
+		setSelectedSalesMan(salesman);
 		setIsDetailsOpen(true);
 	};
 
 	const closeDetails = () => {
 		setIsDetailsOpen(false);
 		// Delay clearing to allow dialog close animation
-		setTimeout(() => setSelectedSalesman(null), 150);
+		setTimeout(() => setSelectedSalesMan(null), 150);
 	};
 
 	// Generate year options (current year and 2 previous years)
@@ -218,15 +218,15 @@ const SalesStatisticsSection: React.FC = () => {
 
 			{/* Sales Statistics Charts - Real Data */}
 			<div className="grid gap-6 lg:grid-cols-2">
-				<TotalDealsChart 
-					data={statistics} 
-					year={selectedYear} 
-					quarter={selectedQuarter} 
+				<TotalDealsChart
+					data={statistics}
+					year={selectedYear}
+					quarter={selectedQuarter}
 				/>
-				<RevenueTrendChart 
-					data={statistics} 
-					year={selectedYear} 
-					quarter={selectedQuarter} 
+				<RevenueTrendChart
+					data={statistics}
+					year={selectedYear}
+					quarter={selectedQuarter}
 				/>
 			</div>
 
@@ -259,10 +259,10 @@ const SalesStatisticsSection: React.FC = () => {
 					) : (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							{statistics.map((salesman) => (
-								<SalesmanCard
+								<SalesManCard
 									key={salesman.salesmanId}
 									salesman={salesman}
-									onViewDetails={handleSalesmanClick}
+									onViewDetails={handleSalesManClick}
 								/>
 							))}
 						</div>
@@ -270,39 +270,39 @@ const SalesStatisticsSection: React.FC = () => {
 				</CardContent>
 			</Card>
 
-			{/* Selected Salesman Details */}
+			{/* Selected SalesMan Details */}
 			<Dialog open={isDetailsOpen} onOpenChange={(open) => (open ? setIsDetailsOpen(true) : closeDetails())}>
 				<DialogContent className="max-w-3xl">
-					{selectedSalesman && (
+					{selectedSalesMan && (
 						<>
 							<DialogHeader>
-								<DialogTitle>{selectedSalesman.salesmanName} - Detailed Statistics</DialogTitle>
+								<DialogTitle>{selectedSalesMan.salesmanName} - Detailed Statistics</DialogTitle>
 							</DialogHeader>
 							<div className="space-y-4">
 								<div className="grid gap-4 md:grid-cols-2">
 									<ProgressChart
 										title="Visits Progress"
-										current={selectedSalesman.totalVisits}
+										current={selectedSalesMan.totalVisits}
 										target={100}
-										progress={(selectedSalesman.totalVisits / 100) * 100}
+										progress={(selectedSalesMan.totalVisits / 100) * 100}
 									/>
 									<ProgressChart
 										title="Offers Progress"
-										current={selectedSalesman.totalOffers}
+										current={selectedSalesMan.totalOffers}
 										target={50}
-										progress={(selectedSalesman.totalOffers / 50) * 100}
+										progress={(selectedSalesMan.totalOffers / 50) * 100}
 									/>
 									<ProgressChart
 										title="Deals Progress"
-										current={selectedSalesman.totalDeals}
+										current={selectedSalesMan.totalDeals}
 										target={20}
-										progress={(selectedSalesman.totalDeals / 20) * 100}
+										progress={(selectedSalesMan.totalDeals / 20) * 100}
 									/>
 									<ProgressChart
 										title="Revenue Progress"
-										current={selectedSalesman.totalDealValue}
+										current={selectedSalesMan.totalDealValue}
 										target={1000000}
-										progress={(selectedSalesman.totalDealValue / 1000000) * 100}
+										progress={(selectedSalesMan.totalDealValue / 1000000) * 100}
 										unit=" EGP"
 									/>
 								</div>
