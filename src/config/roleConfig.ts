@@ -94,9 +94,9 @@ export interface RoleConfig {
  * Adding new roles or modifying existing ones only requires updating this configuration.
  */
 export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
-	doctor: {
-		name: 'doctor',
-		description: 'doctorDescription',
+	Doctor: {
+		name: 'Doctor',
+		description: 'DoctorDescription',
 		icon: Stethoscope,
 		requirements: {
 			requiresHospital: true,
@@ -201,12 +201,12 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 1,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/doctor',
+		apiEndpoint: '/RoleSpecificUser/Doctor',
 	},
 
-	engineer: {
-		name: 'engineer',
-		description: 'engineerDescription',
+	Engineer: {
+		name: 'Engineer',
+		description: 'EngineerDescription',
 		icon: Wrench,
 		requirements: {
 			requiresHospital: false,
@@ -311,12 +311,12 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 1,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/engineer',
+		apiEndpoint: '/RoleSpecificUser/Engineer',
 	},
 
-	technician: {
-		name: 'technician',
-		description: 'technicianDescription',
+	Technician: {
+		name: 'Technician',
+		description: 'TechnicianDescription',
 		icon: Settings,
 		requirements: {
 			requiresHospital: true,
@@ -421,12 +421,12 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/technician',
+		apiEndpoint: '/RoleSpecificUser/Technician',
 	},
 
-	admin: {
-		name: 'admin',
-		description: 'adminDescription',
+	Admin: {
+		name: 'Admin',
+		description: 'AdminDescription',
 		icon: Shield,
 		requirements: {
 			requiresHospital: false,
@@ -511,10 +511,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/admin',
+		apiEndpoint: '/RoleSpecificUser/Admin',
 	},
 
-	'finance-manager': {
+	FinanceManager: {
 		name: 'financeManager',
 		description: 'financeManagerDescription',
 		icon: DollarSign,
@@ -601,10 +601,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/finance-manager',
+		apiEndpoint: '/RoleSpecificUser/FinanceManager',
 	},
 
-	'finance-employee': {
+	'FinanceEmployee': {
 		name: 'financeEmployee',
 		description: 'financeEmployeeDescription',
 		icon: DollarSign,
@@ -691,10 +691,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/finance-employee',
+		apiEndpoint: '/RoleSpecificUser/FinanceEmployee',
 	},
 
-	'legal-manager': {
+	LegalManager: {
 		name: 'legalManager',
 		description: 'legalManagerDescription',
 		icon: Scale,
@@ -781,10 +781,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/legal-manager',
+		apiEndpoint: '/RoleSpecificUser/LegalManager',
 	},
 
-	'legal-employee': {
+	LegalEmployee: {
 		name: 'legalEmployee',
 		description: 'legalEmployeeDescription',
 		icon: Scale,
@@ -871,7 +871,7 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/legal-employee',
+		apiEndpoint: '/RoleSpecificUser/LegalEmployee',
 	},
 
 	salesman: {
@@ -884,7 +884,7 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 			requiresGovernorates: false,
 			requiresMedicalDepartment: false,
 			autoDepartmentId: 3,
-			role: 'Salesman',
+			role: 'SalesMan',
 		},
 		fields: [
 			// Personal Information
@@ -962,10 +962,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/salesman',
+		apiEndpoint: '/RoleSpecificUser/SalesMan',
 	},
 
-	'sales-manager': {
+	SalesManager: {
 		name: 'salesManager',
 		description: 'salesManagerDescription',
 		icon: UserCheck,
@@ -1087,10 +1087,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 4,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/sales-manager',
+		apiEndpoint: '/RoleSpecificUser/SalesManager',
 	},
 
-	'maintenance-manager': {
+	MaintenanceManager: {
 		name: 'maintenanceManager',
 		description: 'maintenanceManagerDescription',
 		icon: HardHat,
@@ -1198,10 +1198,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/maintenance-manager',
+		apiEndpoint: '/RoleSpecificUser/MaintenanceManager',
 	},
 
-	'maintenance-support': {
+	'MaintenanceSupport': {
 		name: 'maintenanceSupport',
 		description: 'maintenanceSupportDescription',
 		icon: Cog,
@@ -1309,10 +1309,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 2,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/maintenance-support',
+		apiEndpoint: '/RoleSpecificUser/MaintenanceSupport',
 	},
 
-	'sales-support': {
+	'SalesSupport': {
 		name: 'salesSupport',
 		description: 'salesSupportDescription',
 		icon: HeadphonesIcon,
@@ -1482,10 +1482,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 4,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/sales-support',
+		apiEndpoint: '/RoleSpecificUser/SalesSupport',
 	},
 
-	'spare-parts-coordinator': {
+	'SparePartsCoordinator': {
 		name: 'sparePartsCoordinator',
 		description: 'sparePartsCoordinatorDescription',
 		icon: Package,
@@ -1584,10 +1584,10 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 1,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/spare-parts-coordinator',
+		apiEndpoint: '/RoleSpecificUser/SparePartsCoordinator',
 	},
 
-	'inventory-manager': {
+	InventoryManager: {
 		name: 'inventoryManager',
 		description: 'inventoryManagerDescription',
 		icon: Warehouse,
@@ -1686,7 +1686,7 @@ export const ROLE_CONFIGURATIONS: Record<RoleSpecificUserRole, RoleConfig> = {
 				order: 1,
 			},
 		],
-		apiEndpoint: '/RoleSpecificUser/inventory-manager',
+		apiEndpoint: '/RoleSpecificUser/InventoryManager',
 	},
 };
 
