@@ -19,7 +19,7 @@ export const createEngineer = async (
 	},
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
-	console.log('Creating engineer:', userData);
+	console.log('Creating Engineer:', userData);
 	console.log(
 		'Using endpoint:',
 		API_ENDPOINTS.ROLE_SPECIFIC_USER.ENGINEER

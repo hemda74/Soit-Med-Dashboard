@@ -75,7 +75,7 @@ export const createUserByRole = async (
 	token: string
 ): Promise<RoleSpecificUserResponse> => {
 	switch (role) {
-		case 'doctor': {
+		case 'Doctor': {
 			const { createDoctor } = await import(
 				'./medicalRoleApi'
 			);
@@ -84,7 +84,7 @@ export const createUserByRole = async (
 				token
 			);
 		}
-		case 'engineer': {
+		case 'Engineer': {
 			const { createEngineer } = await import(
 				'./technicalRoleApi'
 			);
@@ -93,7 +93,7 @@ export const createUserByRole = async (
 				token
 			);
 		}
-		case 'technician': {
+		case 'Technician': {
 			const { createTechnician } = await import(
 				'./medicalRoleApi'
 			);
@@ -102,71 +102,71 @@ export const createUserByRole = async (
 				token
 			);
 		}
-		case 'admin': {
-			const { createAdmin } = await import('./adminRoleApi');
+		case 'Admin': {
+			const { createAdmin } = await import('./AdminRoleApi');
 			return createAdmin(userData, token);
 		}
-		case 'finance-manager': {
+		case 'FinanceManager': {
 			const { createFinanceManager } = await import(
 				'./financeRoleApi'
 			);
 			return createFinanceManager(userData, token);
 		}
-		case 'finance-employee': {
+		case 'FinanceEmployee': {
 			const { createFinanceEmployee } = await import(
 				'./financeRoleApi'
 			);
 			return createFinanceEmployee(userData, token);
 		}
-		case 'legal-manager': {
+		case 'LegalManager': {
 			const { createLegalManager } = await import(
 				'./legalRoleApi'
 			);
 			return createLegalManager(userData, token);
 		}
-		case 'legal-employee': {
+		case 'LegalEmployee': {
 			const { createLegalEmployee } = await import(
 				'./legalRoleApi'
 			);
 			return createLegalEmployee(userData, token);
 		}
-		case 'salesman': {
-			const { createSalesman } = await import(
+		case 'SalesMan': {
+			const { createSalesMan } = await import(
 				'./salesRoleApi'
 			);
-			return createSalesman(userData, token);
+			return createSalesMan(userData, token);
 		}
-		case 'sales-manager': {
+		case 'SalesManager': {
 			const { createSalesManager } = await import(
 				'./salesRoleApi'
 			);
 			return createSalesManager(userData, token);
 		}
-		case 'maintenance-manager': {
+		case 'MaintenanceManager': {
 			const { createMaintenanceManager } = await import(
 				'./maintenanceRoleApi'
 			);
 			return createMaintenanceManager(userData, token);
 		}
-		case 'maintenance-support': {
+		case 'MaintenanceSupport': {
 			const { createMaintenanceSupport } = await import(
 				'./maintenanceRoleApi'
 			);
 			return createMaintenanceSupport(userData, token);
 		}
-		case 'sales-support': {
+		case 'SalesSupport': {
 			const { createSalesSupport } = await import(
 				'./salesSupportRoleApi'
 			);
 			return createSalesSupport(userData, token);
 		}
-		case 'spare-parts-coordinator': {
+		case 'SparePartsCoordinator': {
 			const { createSparePartsCoordinator } = await import(
 				'./maintenanceRoleApi'
 			);
 			return createSparePartsCoordinator(userData, token);
 		}
-		case 'inventory-manager': {
+		case 'InventoryManager': {
 			const { createInventoryManager } = await import(
 				'./maintenanceRoleApi'
 			);
@@ -192,7 +192,7 @@ export const changeRoleSpecificPassword = async (
 	);
 };
 
-// Super admin password update API function
+// Super Admin password update API function
 export const updateUserPasswordBySuperAdmin = async (
 	userId: string,
 	newPassword: string,
@@ -257,7 +257,7 @@ export const getGovernorates = async (
 		name: string;
 		createdAt: string;
 		isActive: boolean;
-		engineerCount: number;
+		EngineerCount: number;
 	}[]
 > => {
 	return apiRequest<
@@ -266,7 +266,7 @@ export const getGovernorates = async (
 			name: string;
 			createdAt: string;
 			isActive: boolean;
-			engineerCount: number;
+			EngineerCount: number;
 		}[]
 	>(API_ENDPOINTS.GOVERNORATE.ALL, { method: 'GET' }, token);
 };

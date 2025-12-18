@@ -1,10 +1,10 @@
-// Sales role-specific user creation API services (Salesman, Sales Manager)
+// Sales role-specific user creation API services (SalesMan, Sales Manager)
 
 import { apiRequest } from '../shared/apiClient';
 import { API_ENDPOINTS } from '../shared/endpoints';
 import type { RoleSpecificUserResponse } from '@/types/roleSpecificUser.types';
 
-export const createSalesman = async (
+export const createSalesMan = async (
 	userData: {
 		email: string;
 		password: string;

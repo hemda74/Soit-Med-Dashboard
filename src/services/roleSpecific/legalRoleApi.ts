@@ -84,7 +84,7 @@ export const createLegalEmployee = async (
 	console.log('Creating legal employee:', userData);
 	console.log(
 		'Using endpoint:',
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.LEGAL_EMPLOYEE
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.LegalEmployee
 	);
 
 	// Create FormData for multipart/form-data request
@@ -123,7 +123,7 @@ export const createLegalEmployee = async (
 	}
 
 	return apiRequest<RoleSpecificUserResponse>(
-		API_ENDPOINTS.ROLE_SPECIFIC_USER.LEGAL_EMPLOYEE,
+		API_ENDPOINTS.ROLE_SPECIFIC_USER.LegalEmployee,
 		{
 			method: 'POST',
 			body: formData,
