@@ -57,7 +57,7 @@ export function useUsersForFilter(): UseUsersForFilterReturn {
 					? err.message
 					: 'Failed to fetch users';
 			// If 403 Forbidden, the user doesn't have permission to access this endpoint
-			// This is expected for non-admin users - just log it and continue
+			// This is expected for non-Admin users - just log it and continue
 			if (errorMessage.includes('403')) {
 				console.warn(
 					'SalesManager does not have permission to access /api/User/all. This is expected behavior.'

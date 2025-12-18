@@ -2,7 +2,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
 
-// Medical department options for technicians
+// Medical department options for Technicians
 const MEDICAL_DEPARTMENTS = [
     'Radiology',
     'Laboratory',

@@ -1,18 +1,17 @@
-// Types for the admin user creation flow
+// Types for the Admin user creation flow
 
 export type UserRole =
 	| 'SuperAdmin'
 	| 'Admin'
 	| 'Doctor'
 	| 'Technician'
-	| 'Salesman'
+	| 'SalesMan'
 	| 'SalesManager'
 	| 'Engineer'
 	| 'FinanceManager'
 	| 'FinanceEmployee'
 	| 'LegalManager'
-	| 'LegalEmployee'
-	| 'admin';
+	| 'LegalEmployee';
 
 // Role object from API
 export interface RoleObject {
@@ -76,7 +75,7 @@ export interface Governorate {
 	name: string;
 	createdAt: string;
 	isActive: boolean;
-	engineerCount: number;
+	EngineerCount: number;
 }
 
 export interface Department {
@@ -123,7 +122,7 @@ export interface LegalManagerUserData extends BaseUserData {
 	legalSpecialty?: string;
 }
 
-export interface SalesmanUserData extends BaseUserData {
+export interface SalesManUserData extends BaseUserData {
 	territory?: string;
 	salesTarget?: number;
 }
@@ -137,7 +136,7 @@ export type UserCreationData =
 	| AdminUserData
 	| FinanceManagerUserData
 	| LegalManagerUserData
-	| SalesmanUserData;
+	| SalesManUserData;
 
 // User creation response
 export interface UserCreationResponse {
@@ -149,9 +148,9 @@ export interface UserCreationResponse {
 	createdAt: string;
 	message: string;
 	// Role-specific response fields
-	doctorId?: number;
-	technicianId?: number;
-	engineerId?: number;
+	DoctorId?: number;
+	TechnicianId?: number;
+	EngineerId?: number;
 	salesmanId?: number;
 	specialty?: string;
 	hospitalName?: string;

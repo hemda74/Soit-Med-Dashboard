@@ -34,7 +34,7 @@ export function UserSearchInput({
     const [searchValue, setSearchValue] = useState('');
     const { user } = useAuthStore();
 
-    // Check if current user is super admin
+    // Check if current user is super Admin
     const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
 
     const handleSearch = (e: React.FormEvent) => {
