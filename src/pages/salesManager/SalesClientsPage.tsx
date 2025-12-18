@@ -28,7 +28,7 @@ import { MagnifyingGlassIcon, BuildingOfficeIcon, PhoneIcon, XMarkIcon, ChevronD
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Pagination from '@/components/Pagination';
-import type { ClientSearchFilters, Salesman, Governorate } from '@/types/sales.types';
+import type { ClientSearchFilters, SalesMan, Governorate } from '@/types/sales.types';
 import ClientDetails from '@/components/sales/ClientDetails';
 import { getGovernorates } from '@/services/roleSpecific/baseRoleSpecificApi';
 import { getAuthToken } from '@/utils/authUtils';
@@ -43,7 +43,7 @@ const SalesClientsPage: React.FC = () => {
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [classification, setClassification] = useState<string>('all');
-	const [assignedSalesmanId, setAssignedSalesmanId] = useState<string>('all');
+	const [assignedSalesManId, setAssignedSalesManId] = useState<string>('all');
 	const [city, setCity] = useState<string>('');
 	const [governorateId, setGovernorateId] = useState<string>('all');
 	const [equipmentCategories, setEquipmentCategories] = useState<string[]>([]);
@@ -60,7 +60,7 @@ const SalesClientsPage: React.FC = () => {
 	// Reset page when filters change
 	useEffect(() => {
 		setPage(1);
-	}, [debouncedSearchTerm, classification, assignedSalesmanId, debouncedCity, governorateId, equipmentCategories.length]);
+	}, [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories.length]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -97,7 +97,7 @@ const SalesClientsPage: React.FC = () => {
 		retry: 2,
 	});
 
-	const salesmen: Salesman[] = salesmenData || [];
+	const salesmen: SalesMan[] = salesmenData || [];
 
 	// Fetch governorates
 	const { data: governoratesData } = useQuery({
@@ -161,13 +161,13 @@ const SalesClientsPage: React.FC = () => {
 	const filters: ClientSearchFilters = useMemo(() => ({
 		query: debouncedSearchTerm || undefined,
 		classification: classification && classification !== 'all' ? (classification as 'A' | 'B' | 'C' | 'D') : undefined,
-		assignedSalesmanId: assignedSalesmanId && assignedSalesmanId !== 'all' ? assignedSalesmanId : undefined,
+		assignedSalesManId: assignedSalesManId && assignedSalesManId !== 'all' ? assignedSalesManId : undefined,
 		city: debouncedCity || undefined,
 		governorateId: governorateId && governorateId !== 'all' ? Number(governorateId) : undefined,
 		equipmentCategories: equipmentCategories.length > 0 ? equipmentCategories : undefined,
 		page,
 		pageSize,
-	}), [debouncedSearchTerm, classification, assignedSalesmanId, debouncedCity, governorateId, equipmentCategories, page, pageSize]);
+	}), [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories, page, pageSize]);
 
 	// Fetch clients
 	const {
@@ -191,16 +191,16 @@ const SalesClientsPage: React.FC = () => {
 	const pagination = clientsData?.data && typeof clientsData.data === 'object' && 'clients' in clientsData.data
 		? clientsData.data
 		: {
-		totalCount: 0,
+			totalCount: 0,
 			page: filters.page || 1,
 			pageSize: filters.pageSize || 20,
-		totalPages: 0,
-		hasNextPage: false,
-		hasPreviousPage: false,
-	};
+			totalPages: 0,
+			hasNextPage: false,
+			hasPreviousPage: false,
+		};
 
 	// Helper functions
-	const getSalesmanDisplayName = useCallback((salesman: Salesman): string => {
+	const getSalesManDisplayName = useCallback((salesman: SalesMan): string => {
 		const fullName = `${salesman.firstName || ''} ${salesman.lastName || ''}`.trim();
 		return fullName || salesman.userName || salesman.email || 'Unknown';
 	}, []);
@@ -219,8 +219,8 @@ const SalesClientsPage: React.FC = () => {
 		setPage(1);
 	}, []);
 
-	const handleSalesmanChange = useCallback((value: string) => {
-		setAssignedSalesmanId(value);
+	const handleSalesManChange = useCallback((value: string) => {
+		setAssignedSalesManId(value);
 		setPage(1);
 	}, []);
 
@@ -332,10 +332,10 @@ const SalesClientsPage: React.FC = () => {
 							</SelectContent>
 						</Select>
 
-						{/* Salesman Filter */}
+						{/* SalesMan Filter */}
 						<Select
-							value={assignedSalesmanId}
-							onValueChange={handleSalesmanChange}
+							value={assignedSalesManId}
+							onValueChange={handleSalesManChange}
 						>
 							<SelectTrigger>
 								<SelectValue
@@ -352,7 +352,7 @@ const SalesClientsPage: React.FC = () => {
 								</SelectItem>
 								{salesmen.map((salesman) => (
 									<SelectItem key={salesman.id} value={salesman.id}>
-										{getSalesmanDisplayName(salesman)}
+										{getSalesManDisplayName(salesman)}
 									</SelectItem>
 								))}
 							</SelectContent>

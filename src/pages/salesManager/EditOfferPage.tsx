@@ -44,7 +44,7 @@ const updateOfferSchema = z.object({
 
 type UpdateOfferFormValues = z.infer<typeof updateOfferSchema>;
 
-interface Salesman {
+interface SalesMan {
 	id: string;
 	firstName?: string;
 	lastName?: string;
@@ -61,7 +61,7 @@ const EditOfferPage: React.FC = () => {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [offer, setOffer] = useState<any>(null);
-	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [salesmen, setSalesmen] = useState<SalesMan[]>([]);
 	const [paymentTerm, setPaymentTerm] = useState('');
 	const [deliveryTerm, setDeliveryTerm] = useState('');
 	const [warrantyTerm, setWarrantyTerm] = useState('');
@@ -97,11 +97,11 @@ const EditOfferPage: React.FC = () => {
 			setLoading(true);
 			setError(null);
 			const response = await salesApi.getOffer(id);
-			
+
 			if (response.success && response.data) {
 				const offerData = response.data;
 				setOffer(offerData);
-				
+
 				// Set form values
 				form.reset({
 					products: offerData.products || '',
@@ -195,7 +195,7 @@ const EditOfferPage: React.FC = () => {
 		try {
 			setSaving(true);
 			const response = await salesApi.updateOfferBySalesManager(id, data);
-			
+
 			if (response.success) {
 				toast.success(t('offerUpdatedSuccessfully'));
 				navigate(-1); // Go back to previous page

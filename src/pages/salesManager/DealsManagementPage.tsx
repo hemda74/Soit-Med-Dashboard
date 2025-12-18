@@ -68,7 +68,7 @@ interface Deal {
 	};
 }
 
-interface Salesman {
+interface SalesMan {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -93,8 +93,8 @@ const DealsManagementPage: React.FC = () => {
 
 	// Filters
 	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [salesmanFilter, setSalesmanFilter] = useState<string>('all');
-	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [salesmanFilter, setSalesManFilter] = useState<string>('all');
+	const [salesmen, setSalesmen] = useState<SalesMan[]>([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 	const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -296,7 +296,7 @@ const DealsManagementPage: React.FC = () => {
 								<SelectItem value="Rejected">Rejected</SelectItem>
 							</SelectContent>
 						</Select>
-						<Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+						<Select value={salesmanFilter} onValueChange={setSalesManFilter}>
 							<SelectTrigger>
 								<SelectValue placeholder="Filter by salesman" />
 							</SelectTrigger>
@@ -382,7 +382,7 @@ const DealsManagementPage: React.FC = () => {
 													</p>
 												</div>
 												<div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-100 dark:border-blue-900/40">
-													<p className="text-xs text-blue-700 dark:text-blue-300">Salesman</p>
+													<p className="text-xs text-blue-700 dark:text-blue-300">SalesMan</p>
 													<p className="mt-1 font-semibold text-blue-900 dark:text-blue-100">
 														{deal.salesmanName || deal.createdByName || 'Unknown'}
 													</p>
@@ -535,7 +535,7 @@ const DealsManagementPage: React.FC = () => {
 										<div className="mt-1">{getStatusBadge(selectedDeal.status)}</div>
 									</div>
 									<div>
-										<p className="text-sm text-muted-foreground">Salesman</p>
+										<p className="text-sm text-muted-foreground">SalesMan</p>
 										<p className="font-semibold">{selectedDeal.salesmanName || selectedDeal.createdByName || 'Unknown'}</p>
 									</div>
 									<div>
