@@ -324,7 +324,7 @@ export interface SalesActions {
 	getMyOffers: (filters?: { status?: string }) => Promise<void>;
 	getOffer: (offerId: string) => Promise<void>;
 	updateOffer: (offerId: string, data: UpdateOfferDto) => Promise<void>;
-	sendOfferToSalesman: (offerId: string) => Promise<void>;
+	sendOfferToSalesMan: (offerId: string) => Promise<void>;
 	recordClientResponse: (
 		offerId: string,
 		data: ClientResponseDto
@@ -1515,14 +1515,14 @@ export const useSalesStore = create<SalesStore>()(
 					}
 				},
 
-				sendOfferToSalesman: async (offerId) => {
+				sendOfferToSalesMan: async (offerId) => {
 					set({
 						offersLoading: true,
 						offersError: null,
 					});
 					try {
 						const response =
-							await salesApi.sendOfferToSalesman(
+							await salesApi.sendOfferToSalesMan(
 								offerId
 							);
 						set((state) => ({
