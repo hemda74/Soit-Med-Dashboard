@@ -8,7 +8,7 @@ export const API_ENDPOINTS = {
 		CURRENT_USER: '/User/me',
 		CHANGE_PASSWORD: '/Account/change-password',
 		SUPERADMIN_UPDATE_PASSWORD:
-			'/Account/superadmin-update-password',
+			'/Account/superAdmin-update-password',
 		FORGOT_PASSWORD: '/Account/forgot-password',
 		VERIFY_CODE: '/Account/verify-code',
 		RESET_PASSWORD: '/Account/reset-password',
@@ -54,20 +54,21 @@ export const API_ENDPOINTS = {
 	// Role-Specific User Creation
 	ROLE_SPECIFIC_USER: {
 		BASE: '/RoleSpecificUser',
-		DOCTOR: '/RoleSpecificUser/doctor',
-		ENGINEER: '/RoleSpecificUser/engineer',
-		TECHNICIAN: '/RoleSpecificUser/technician',
-		ADMIN: '/RoleSpecificUser/admin',
-		FINANCE_MANAGER: '/RoleSpecificUser/finance-manager',
-		FINANCE_EMPLOYEE: '/RoleSpecificUser/finance-employee',
-		LEGAL_MANAGER: '/RoleSpecificUser/legal-manager',
-		LEGAL_EMPLOYEE: '/RoleSpecificUser/legal-employee',
-		SALESMAN: '/RoleSpecificUser/salesman',
-		SALES_MANAGER: '/RoleSpecificUser/sales-manager',
-		MAINTENANCE_MANAGER: '/RoleSpecificUser/maintenance-manager',
-		MAINTENANCE_SUPPORT: '/RoleSpecificUser/maintenance-support',
-		SPARE_PARTS_COORDINATOR: '/RoleSpecificUser/spare-parts-coordinator',
-		INVENTORY_MANAGER: '/RoleSpecificUser/inventory-manager',
+		DOCTOR: '/RoleSpecificUser/Doctor',
+		ENGINEER: '/RoleSpecificUser/Engineer',
+		TECHNICIAN: '/RoleSpecificUser/Technician',
+		ADMIN: '/RoleSpecificUser/Admin',
+		FINANCE_MANAGER: '/RoleSpecificUser/FinanceManager',
+		FINANCE_EMPLOYEE: '/RoleSpecificUser/FinanceEmployee',
+		LEGAL_MANAGER: '/RoleSpecificUser/LegalManager',
+		LegalEmployee: '/RoleSpecificUser/LegalEmployee',
+		SALESMAN: '/RoleSpecificUser/SalesMan',
+		SALES_MANAGER: '/RoleSpecificUser/SalesManager',
+		MAINTENANCE_MANAGER: '/RoleSpecificUser/MaintenanceManager',
+		MAINTENANCE_SUPPORT: '/RoleSpecificUser/MaintenanceSupport',
+		SPARE_PARTS_COORDINATOR:
+			'/RoleSpecificUser/SparePartsCoordinator',
+		INVENTORY_MANAGER: '/RoleSpecificUser/InventoryManager',
 	},
 
 	// Weekly Plan (New To-Do List System)
@@ -168,16 +169,17 @@ export const API_ENDPOINTS = {
 		DEALS: {
 			BASE: '/api/Deal',
 			BY_ID: (id: string) => `/api/Deal/${id}`,
-			BY_CLIENT: (clientId: string) => `/api/Deal/by-client/${clientId}`,
+			BY_CLIENT: (clientId: string) =>
+				`/api/Deal/by-client/${clientId}`,
 			MANAGER_APPROVAL: (id: string) =>
 				`/api/Deal/${id}/manager-approval`,
 			SUPERADMIN_APPROVAL: (id: string) =>
-				`/api/Deal/${id}/superadmin-approval`,
+				`/api/Deal/${id}/superAdmin-approval`,
 			PENDING_MANAGER: '/api/Deal/pending-manager-approvals',
 			PENDING_SUPERADMIN:
-				'/api/Deal/pending-superadmin-approvals',
+				'/api/Deal/pending-superAdmin-approvals',
 			BY_SALESMAN: (salesmanId: string) =>
-				`/api/Deal/by-salesman/${salesmanId}`,
+				`/api/Deal/by-SalesMan/${salesmanId}`,
 			COMPLETE: (id: string) => `/api/Deal/${id}/complete`,
 			FAIL: (id: string) => `/api/Deal/${id}/fail`,
 		},
@@ -189,7 +191,7 @@ export const API_ENDPOINTS = {
 			MY_OFFERS: '/api/Offer/my-offers',
 			SALESMEN: '/api/Offer/salesmen',
 			BY_SALESMAN: (salesmanId: string) =>
-				`/api/Offer/by-salesman/${salesmanId}`,
+				`/api/Offer/by-SalesMan/${salesmanId}`,
 			REQUEST_DETAILS: (requestId: number | string) =>
 				`/api/Offer/request/${requestId}/details`,
 			// Enhanced Offer Features
@@ -216,7 +218,8 @@ export const API_ENDPOINTS = {
 				`/api/Offer/${id}/send-to-salesman`,
 			SALESMANAGER_APPROVAL: (id: number | string) =>
 				`/api/Offer/${id}/salesmanager-approval`,
-			PENDING_SALESMANAGER_APPROVALS: '/api/Offer/pending-salesmanager-approvals',
+			PENDING_SALESMANAGER_APPROVALS:
+				'/api/Offer/pending-salesmanager-approvals',
 		},
 		// Offer Requests (NEW)
 		OFFER_REQUESTS: {
@@ -230,7 +233,7 @@ export const API_ENDPOINTS = {
 			ASSIGNED: (supportId: string) =>
 				`/api/OfferRequest/assigned/${supportId}`,
 			BY_SALESMAN: (salesmanId: string) =>
-				`/api/OfferRequest/salesman/${salesmanId}`,
+				`/api/OfferRequest/SalesMan/${salesmanId}`,
 		},
 		// Task Progress (NEW)
 		TASK_PROGRESS: {
@@ -287,7 +290,7 @@ export const API_ENDPOINTS = {
 			CUSTOMER_MY_REQUESTS:
 				'/api/MaintenanceRequest/customer/my-requests',
 			ENGINEER_MY_ASSIGNED:
-				'/api/MaintenanceRequest/engineer/my-assigned',
+				'/api/MaintenanceRequest/Engineer/my-assigned',
 			PENDING: '/api/MaintenanceRequest/pending',
 			ASSIGN: (id: number) =>
 				`/api/MaintenanceRequest/${id}/assign`,
@@ -301,8 +304,8 @@ export const API_ENDPOINTS = {
 			BASE: '/api/MaintenanceVisit',
 			BY_REQUEST: (requestId: number) =>
 				`/api/MaintenanceVisit/request/${requestId}`,
-			BY_ENGINEER: (engineerId: string) =>
-				`/api/MaintenanceVisit/engineer/${engineerId}`,
+			BY_ENGINEER: (EngineerId: string) =>
+				`/api/MaintenanceVisit/Engineer/${EngineerId}`,
 		},
 		// Maintenance Attachments
 		ATTACHMENT: {

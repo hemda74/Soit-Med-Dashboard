@@ -226,10 +226,10 @@ class SalesApiService {
 				'classification',
 				filters.classification
 			);
-		if (filters.assignedSalesmanId)
+		if (filters.assignedSalesManId)
 			queryParams.append(
-				'assignedSalesmanId',
-				filters.assignedSalesmanId
+				'assignedSalesManId',
+				filters.assignedSalesManId
 			);
 		if (filters.city) queryParams.append('city', filters.city);
 		if (filters.governorateId)
@@ -346,11 +346,11 @@ class SalesApiService {
 
 	/**
 	 * Get my clients (for current user)
-	 * NOTE: This method is for Salesman app, not used in this dashboard
+	 * NOTE: This method is for SalesMan app, not used in this dashboard
 	 * SalesManager/SuperAdmin use searchClients instead
 	 */
 	async getMyClients(
-		filters: Omit<ClientSearchFilters, 'assignedSalesmanId'> = {}
+		filters: Omit<ClientSearchFilters, 'assignedSalesManId'> = {}
 	): Promise<PaginatedApiResponse<ClientSearchResult>> {
 		// For Sales Support, return empty result if no filters to avoid 400 error
 		const hasAnyFilter = Object.keys(filters).length > 0;
@@ -415,7 +415,7 @@ class SalesApiService {
 			);
 
 		const queryString = queryParams.toString();
-		// NOTE: MY_CLIENTS endpoint is for Salesman app, not used in this dashboard
+		// NOTE: MY_CLIENTS endpoint is for SalesMan app, not used in this dashboard
 		// SalesManager/SuperAdmin should use searchClients instead
 		const endpoint = queryString
 			? `${API_ENDPOINTS.SALES.CLIENT.SEARCH}?${queryString}`
@@ -1269,7 +1269,7 @@ class SalesApiService {
 
 	/**
 	 * Get sales manager dashboard
-	 * Uses /api/SalesmanStatistics/all to get team statistics for dashboard
+	 * Uses /api/SalesManStatistics/all to get team statistics for dashboard
 	 */
 	async getSalesManagerDashboard(
 		year?: number,
@@ -1289,9 +1289,9 @@ class SalesApiService {
 			params.append('quarter', quarter.toString());
 		}
 
-		// Use SalesmanStatistics/all endpoint as per backend API docs
+		// Use SalesManStatistics/all endpoint as per backend API docs
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/all?${params.toString()}`,
+			`/api/SalesManStatistics/all?${params.toString()}`,
 			{
 				method: 'GET',
 			}
@@ -1494,14 +1494,16 @@ class SalesApiService {
 		);
 	}
 
-	async markClientAccountCreated(dealId: string | number): Promise<ApiResponse<any>> {
+	async markClientAccountCreated(
+		dealId: string | number
+	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			`${API_ENDPOINTS.SALES.DEALS.BASE}/${dealId}/mark-account-created`,
 			{ method: 'POST' }
 		);
 	}
 
-	async submitSalesmanReport(
+	async submitSalesManReport(
 		dealId: string | number,
 		reportText: string,
 		reportAttachments?: string
@@ -1682,7 +1684,7 @@ class SalesApiService {
 		);
 	}
 
-	async sendOfferToSalesman(offerId: string): Promise<ApiResponse<any>> {
+	async sendOfferToSalesMan(offerId: string): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
 			API_ENDPOINTS.SALES.OFFERS.SEND_TO_SALESMAN(offerId),
 			{
@@ -2498,7 +2500,7 @@ class SalesApiService {
 
 	// ==================== SALESMAN STATISTICS ====================
 
-	async getAllSalesmanStatistics(
+	async getAllSalesManStatistics(
 		year: number,
 		quarter?: number
 	): Promise<ApiResponse<any[]>> {
@@ -2507,11 +2509,11 @@ class SalesApiService {
 			params.append('quarter', quarter.toString());
 		}
 		return this.makeRequest<ApiResponse<any[]>>(
-			`/api/SalesmanStatistics/all?${params.toString()}`
+			`/api/SalesManStatistics/all?${params.toString()}`
 		);
 	}
 
-	async getSalesmanStatistics(
+	async getSalesManStatistics(
 		salesmanId: string,
 		year: number,
 		quarter?: number
@@ -2521,11 +2523,11 @@ class SalesApiService {
 			params.append('quarter', quarter.toString());
 		}
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/${salesmanId}?${params.toString()}`
+			`/api/SalesManStatistics/${salesmanId}?${params.toString()}`
 		);
 	}
 
-	async getSalesmanProgress(
+	async getSalesManProgress(
 		salesmanId: string,
 		year: number,
 		quarter?: number
@@ -2535,13 +2537,13 @@ class SalesApiService {
 			params.append('quarter', quarter.toString());
 		}
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/${salesmanId}/progress?${params.toString()}`
+			`/api/SalesManStatistics/${salesmanId}/progress?${params.toString()}`
 		);
 	}
 
-	async createSalesmanTarget(data: any): Promise<ApiResponse<any>> {
+	async createSalesManTarget(data: any): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			'/api/SalesmanStatistics/targets',
+			'/api/SalesManStatistics/targets',
 			{
 				method: 'POST',
 				body: JSON.stringify(data),
@@ -2549,12 +2551,12 @@ class SalesApiService {
 		);
 	}
 
-	async updateSalesmanTarget(
+	async updateSalesManTarget(
 		targetId: number,
 		data: any
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/targets/${targetId}`,
+			`/api/SalesManStatistics/targets/${targetId}`,
 			{
 				method: 'PUT',
 				body: JSON.stringify(data),
@@ -2562,24 +2564,24 @@ class SalesApiService {
 		);
 	}
 
-	async deleteSalesmanTarget(
+	async deleteSalesManTarget(
 		targetId: number
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/targets/${targetId}`,
+			`/api/SalesManStatistics/targets/${targetId}`,
 			{
 				method: 'DELETE',
 			}
 		);
 	}
 
-	async getSalesmanTargets(
+	async getSalesManTargets(
 		salesmanId: string,
 		year: number
 	): Promise<ApiResponse<any[]>> {
 		const params = new URLSearchParams({ year: year.toString() });
 		return this.makeRequest<ApiResponse<any[]>>(
-			`/api/SalesmanStatistics/targets/salesman/${salesmanId}?${params.toString()}`
+			`/api/SalesManStatistics/targets/SalesMan/${salesmanId}?${params.toString()}`
 		);
 	}
 
@@ -2592,7 +2594,7 @@ class SalesApiService {
 			params.append('quarter', quarter.toString());
 		}
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/targets/team?${params.toString()}`
+			`/api/SalesManStatistics/targets/team?${params.toString()}`
 		);
 	}
 
@@ -2612,8 +2614,8 @@ class SalesApiService {
 		}
 		const queryString = params.toString();
 		const endpoint = queryString
-			? `/api/SalesmanStatistics/my-statistics?${queryString}`
-			: '/api/SalesmanStatistics/my-statistics';
+			? `/api/SalesManStatistics/my-statistics?${queryString}`
+			: '/api/SalesManStatistics/my-statistics';
 		return this.makeRequest<ApiResponse<any>>(endpoint);
 	}
 
@@ -2633,8 +2635,8 @@ class SalesApiService {
 		}
 		const queryString = params.toString();
 		const endpoint = queryString
-			? `/api/SalesmanStatistics/my-progress?${queryString}`
-			: '/api/SalesmanStatistics/my-progress';
+			? `/api/SalesManStatistics/my-progress?${queryString}`
+			: '/api/SalesManStatistics/my-progress';
 		return this.makeRequest<ApiResponse<any>>(endpoint);
 	}
 
@@ -2648,20 +2650,20 @@ class SalesApiService {
 		}
 		const queryString = params.toString();
 		const endpoint = queryString
-			? `/api/SalesmanStatistics/my-targets?${queryString}`
-			: '/api/SalesmanStatistics/my-targets';
+			? `/api/SalesManStatistics/my-targets?${queryString}`
+			: '/api/SalesManStatistics/my-targets';
 		return this.makeRequest<ApiResponse<any[]>>(endpoint);
 	}
 
 	/**
 	 * Patch salesman target (partial update)
 	 */
-	async patchSalesmanTarget(
+	async patchSalesManTarget(
 		targetId: number,
 		data: Partial<any>
 	): Promise<ApiResponse<any>> {
 		return this.makeRequest<ApiResponse<any>>(
-			`/api/SalesmanStatistics/targets/${targetId}`,
+			`/api/SalesManStatistics/targets/${targetId}`,
 			{
 				method: 'PATCH',
 				body: JSON.stringify(data),
@@ -2669,7 +2671,7 @@ class SalesApiService {
 		);
 	}
 
-	async getOffersBySalesman(
+	async getOffersBySalesMan(
 		salesmanId: string
 	): Promise<ApiResponse<any[]>> {
 		return this.makeRequest<ApiResponse<any[]>>(
@@ -2681,7 +2683,7 @@ class SalesApiService {
 	/**
 	 * Get offer requests by salesman
 	 */
-	async getOfferRequestsBySalesman(
+	async getOfferRequestsBySalesMan(
 		salesmanId: string,
 		filters: { status?: string } = {}
 	): Promise<ApiResponse<any[]>> {
@@ -2706,7 +2708,7 @@ class SalesApiService {
 	/**
 	 * Get deals by salesman
 	 */
-	async getDealsBySalesman(
+	async getDealsBySalesMan(
 		salesmanId: string,
 		filters: { status?: string } = {}
 	): Promise<ApiResponse<any[]>> {
