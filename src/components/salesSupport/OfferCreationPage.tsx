@@ -63,8 +63,8 @@ export default function OfferCreationPage() {
     // Offer form state
     const [clientId, setClientId] = useState<string>('')
     const [clientName, setClientName] = useState<string>('')
-    const [assignedToSalesmanId, setAssignedToSalesmanId] = useState<string>('')
-    const [assignedToSalesmanName, setAssignedToSalesmanName] = useState<string>('')
+    const [assignedToSalesManId, setAssignedToSalesManId] = useState<string>('')
+    const [assignedToSalesManName, setAssignedToSalesManName] = useState<string>('')
     const [products, setProducts] = useState<string>('')
     const [productItems, setProductItems] = useState<Array<{ name: string; model?: string; factory?: string; country?: string; year?: number | string; price: number | string; imageUrl?: string; providerImagePath?: string; description?: string; inStock?: boolean }>>([])
     const emptyProduct = { name: '', model: '', factory: '', country: '', year: '', price: '', imageUrl: '', providerImagePath: '', description: '', inStock: true as boolean }
@@ -214,7 +214,7 @@ export default function OfferCreationPage() {
 
                 // Auto-assign to requester (will be customer if from customer app, or salesman if from salesman)
                 const requesterId = data.requestedBy || ''
-                setAssignedToSalesmanId(requesterId)
+                setAssignedToSalesManId(requesterId)
 
                 // Check if this is a customer request - if requestedBy matches a customer pattern or we can infer from context
                 // For now, we'll check if the request comes with client info and assume customer requests should be assigned to the requester
@@ -265,9 +265,9 @@ export default function OfferCreationPage() {
         }
     }, [requestId])
 
-    // Salesman search (server-side using /api/Offer/salesmen)
+    // SalesMan search (server-side using /api/Offer/salesmen)
     const [salesmen, setSalesmen] = useState<any[]>([])
-    const [salesmanQuery, setSalesmanQuery] = useState('')
+    const [salesmanQuery, setSalesManQuery] = useState('')
     const [loadingSalesmen, setLoadingSalesmen] = useState(false)
 
     useEffect(() => {
@@ -303,16 +303,16 @@ export default function OfferCreationPage() {
     // Create offer
     const createOffer = async (formData: OfferFormInputs) => {
         // Validation - clientId comes from request
-        // For customer requests, assignedToSalesmanId is auto-set to requester
+        // For customer requests, assignedToSalesManId is auto-set to requester
         // For salesman requests, we need to validate
-        if (!isCustomerRequest && !assignedToSalesmanId) {
-            toast.error(translate('offerCreationPage.errors.selectSalesman', 'Please assign to a salesman'))
+        if (!isCustomerRequest && !assignedToSalesManId) {
+            toast.error(translate('offerCreationPage.errors.selectSalesMan', 'Please assign to a salesman'))
             return
         }
 
         // For customer requests, ensure assignedTo is set to requester
         if (isCustomerRequest && requestDetails?.requestedBy) {
-            setAssignedToSalesmanId(requestDetails.requestedBy)
+            setAssignedToSalesManId(requestDetails.requestedBy)
         }
 
         // ClientId should come from request, but validate it exists
@@ -373,7 +373,7 @@ export default function OfferCreationPage() {
                 // Use CreateOfferWithItems to preserve product images
                 payload = {
                     clientId: Number(clientId),
-                    assignedTo: assignedToSalesmanId,
+                    assignedTo: assignedToSalesManId,
                     products: productItems.map(p => ({
                         name: p.name,
                         model: p.model || '',
@@ -395,7 +395,7 @@ export default function OfferCreationPage() {
                 // Use selectedOfferRequestId (from dropdown) or requestId (from URL)
                 const offerRequestIdToUse = selectedOfferRequestId || requestId;
                 if (offerRequestIdToUse) payload.offerRequestId = Number(offerRequestIdToUse);
-                
+
                 // Calculate and apply discount
                 const discount = formData.discountAmount ? Number(formData.discountAmount) : 0;
                 if (discount > 0) {
@@ -410,7 +410,7 @@ export default function OfferCreationPage() {
                 // Fallback to simple createOffer for text-based products
                 payload = {
                     clientId: Number(clientId),
-                    assignedTo: assignedToSalesmanId,
+                    assignedTo: assignedToSalesManId,
                     products: productsString,
                     totalAmount: calculatedTotal,
                     validUntil: validUntilDates,
@@ -421,7 +421,7 @@ export default function OfferCreationPage() {
                 // Use selectedOfferRequestId (from dropdown) or requestId (from URL)
                 const offerRequestIdToUse = selectedOfferRequestId || requestId;
                 if (offerRequestIdToUse) payload.offerRequestId = Number(offerRequestIdToUse);
-                
+
                 // Calculate and apply discount
                 const discount = formData.discountAmount ? Number(formData.discountAmount) : 0;
                 if (discount > 0) {
@@ -440,11 +440,11 @@ export default function OfferCreationPage() {
         }
     }
 
-    const canSendCurrentOffer = offer?.canSendToSalesman ?? offer?.status === 'Sent'
+    const canSendCurrentOffer = offer?.canSendToSalesMan ?? offer?.status === 'Sent'
     const awaitingSalesManagerApproval = offer?.status === 'PendingSalesManagerApproval'
 
     // Send and Export
-    const sendToSalesman = async () => {
+    const sendToSalesMan = async () => {
         if (!offer) return
         if (!canSendCurrentOffer) {
             toast.error('SalesManager must approve the offer before it can be sent to the assigned salesman.')
@@ -452,7 +452,7 @@ export default function OfferCreationPage() {
         }
 
         try {
-            await salesApi.sendOfferToSalesman(offer.id)
+            await salesApi.sendOfferToSalesMan(offer.id)
             const { data } = await salesApi.getOffer(offer.id)
             setOffer(data)
             toast.success('Sent to salesman')
@@ -572,12 +572,12 @@ export default function OfferCreationPage() {
                         {/* Only show salesman field if NOT a customer request */}
                         {!isCustomerRequest && (
                             <div>
-                                <Label>Assign To Salesman *</Label>
+                                <Label>Assign To SalesMan *</Label>
                                 <Input
                                     value={salesmanQuery}
-                                    onChange={(e) => setSalesmanQuery(e.target.value)}
-                                    placeholder={t('typeToSearchSalesman')}
-                                    className={!assignedToSalesmanId ? 'border-yellow-400' : ''}
+                                    onChange={(e) => setSalesManQuery(e.target.value)}
+                                    placeholder={t('typeToSearchSalesMan')}
+                                    className={!assignedToSalesManId ? 'border-yellow-400' : ''}
                                 />
                                 {loadingSalesmen && (
                                     <div className="mt-2 px-3 py-2 text-sm text-gray-500">
@@ -595,10 +595,10 @@ export default function OfferCreationPage() {
                                                 key={u.id}
                                                 className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900 cursor-pointer border-b last:border-b-0"
                                                 onClick={() => {
-                                                    setAssignedToSalesmanId(String(u.id));
+                                                    setAssignedToSalesManId(String(u.id));
                                                     const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email || '';
-                                                    setAssignedToSalesmanName(fullName);
-                                                    setSalesmanQuery(fullName);
+                                                    setAssignedToSalesManName(fullName);
+                                                    setSalesManQuery(fullName);
                                                 }}
                                             >
                                                 <div className="text-sm font-medium">{`${u.firstName || ''} ${u.lastName || ''}`.trim() || u.userName || u.email}</div>
@@ -612,16 +612,16 @@ export default function OfferCreationPage() {
                                         No salesmen found matching "{salesmanQuery}"
                                     </div>
                                 )}
-                                {assignedToSalesmanId && assignedToSalesmanName && (
+                                {assignedToSalesManId && assignedToSalesManName && (
                                     <div className="mt-1 px-2 py-1 bg-green-50 dark:bg-green-900 rounded text-xs text-green-700 dark:text-green-200">
-                                        ✓ Selected: {assignedToSalesmanName}
+                                        ✓ Selected: {assignedToSalesManName}
                                     </div>
                                 )}
                             </div>
                         )}
 
                         {/* Show assigned to info for customer requests */}
-                        {isCustomerRequest && assignedToSalesmanId && (
+                        {isCustomerRequest && assignedToSalesManId && (
                             <div className="md:col-span-2">
                                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                                     <div className="flex items-center gap-2">
@@ -1245,11 +1245,11 @@ export default function OfferCreationPage() {
                     </div>
                     <div className="mt-6 flex flex-col gap-3">
                         {/* Validation warnings */}
-                        {!isCustomerRequest && !assignedToSalesmanId && (
+                        {!isCustomerRequest && !assignedToSalesManId && (
                             <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">⚠️ Required field:</p>
                                 <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 ml-4 list-disc">
-                                    {!assignedToSalesmanId && <li>Please assign to a salesman</li>}
+                                    {!assignedToSalesManId && <li>Please assign to a salesman</li>}
                                 </ul>
                             </div>
                         )}
@@ -1263,10 +1263,10 @@ export default function OfferCreationPage() {
                         <div className="flex gap-2 items-center">
                             <Button
                                 onClick={() => handleSubmit(createOffer)()}
-                                disabled={creatingOffer || !clientId || (!isCustomerRequest && !assignedToSalesmanId)}
+                                disabled={creatingOffer || !clientId || (!isCustomerRequest && !assignedToSalesManId)}
                                 className="px-6"
                                 size="lg"
-                                title={!clientId ? 'Client information is required from the offer request' : (!isCustomerRequest && !assignedToSalesmanId) ? 'Please assign to a salesman' : undefined}
+                                title={!clientId ? 'Client information is required from the offer request' : (!isCustomerRequest && !assignedToSalesManId) ? 'Please assign to a salesman' : undefined}
                             >
                                 {creatingOffer ? (
                                     <>
@@ -1307,11 +1307,11 @@ export default function OfferCreationPage() {
                         <CardContent>
                             <div className="flex items-center gap-2">
                                 <Button
-                                    onClick={sendToSalesman}
+                                    onClick={sendToSalesMan}
                                     disabled={!canSendCurrentOffer}
                                     title={!canSendCurrentOffer ? 'SalesManager has not approved this offer yet' : undefined}
                                 >
-                                    Send to Salesman
+                                    Send to SalesMan
                                 </Button>
                                 <Button variant="outline" onClick={exportPdf}>
                                     Export PDF

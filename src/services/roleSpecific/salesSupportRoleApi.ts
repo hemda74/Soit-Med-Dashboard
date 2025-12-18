@@ -57,7 +57,7 @@ export const createSalesSupport = async (
 		console.log(`${key}:`, value);
 	}
 
-	const endpoint = `${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support`;
+	const endpoint = `${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport`;
 
 	return apiRequest<SalesSupportUserResponse>(
 		endpoint,
@@ -80,7 +80,7 @@ export const getSalesSupport = async (
 	token: string
 ): Promise<SalesSupportUserResponse> => {
 	return apiRequest<SalesSupportUserResponse>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/${userId}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/${userId}`,
 		{
 			method: 'GET',
 		},
@@ -123,7 +123,7 @@ export const updateSalesSupport = async (
 	});
 
 	return apiRequest<SalesSupportUserResponse>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/${userId}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/${userId}`,
 		{
 			method: 'PUT',
 			body: formData,
@@ -143,7 +143,7 @@ export const deleteSalesSupport = async (
 	token: string
 ): Promise<{ success: boolean; message: string }> => {
 	return apiRequest<{ success: boolean; message: string }>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/${userId}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/${userId}`,
 		{
 			method: 'DELETE',
 		},
@@ -160,7 +160,7 @@ export const getAllSalesSupport = async (
 	token: string
 ): Promise<SalesSupportUserResponse[]> => {
 	return apiRequest<SalesSupportUserResponse[]>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport`,
 		{
 			method: 'GET',
 		},
@@ -179,7 +179,7 @@ export const getSalesSupportByDepartment = async (
 	token: string
 ): Promise<SalesSupportUserResponse[]> => {
 	return apiRequest<SalesSupportUserResponse[]>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/department/${departmentId}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/department/${departmentId}`,
 		{
 			method: 'GET',
 		},
@@ -198,7 +198,7 @@ export const getSalesSupportByLevel = async (
 	token: string
 ): Promise<SalesSupportUserResponse[]> => {
 	return apiRequest<SalesSupportUserResponse[]>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/level/${supportLevel}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/level/${supportLevel}`,
 		{
 			method: 'GET',
 		},
@@ -217,7 +217,7 @@ export const getSalesSupportBySpecialization = async (
 	token: string
 ): Promise<SalesSupportUserResponse[]> => {
 	return apiRequest<SalesSupportUserResponse[]>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/specialization/${specialization}`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/specialization/${specialization}`,
 		{
 			method: 'GET',
 		},
@@ -249,7 +249,7 @@ export const getSalesSupportStatistics = async (
 		bySpecialization: Record<string, number>;
 		byDepartment: Record<string, number>;
 	}>(
-		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/sales-support/statistics`,
+		`${API_ENDPOINTS.ROLE_SPECIFIC_USER.BASE}/SalesSupport/statistics`,
 		{
 			method: 'GET',
 		},
