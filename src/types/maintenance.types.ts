@@ -99,8 +99,8 @@ export interface CreateMaintenanceVisitDTO {
 export interface MaintenanceVisitResponseDTO {
 	id: number;
 	maintenanceRequestId: number;
-	engineerId: string;
-	engineerName: string;
+	EngineerId: string;
+	EngineerName: string;
 	qrCode?: string;
 	serialCode?: string;
 	report?: string;
@@ -195,8 +195,8 @@ export interface MaintenanceRequestRatingResponseDTO {
 	maintenanceRequestId: number;
 	customerId: string;
 	customerName: string;
-	engineerId: string;
-	engineerName: string;
+	EngineerId: string;
+	EngineerName: string;
 	rating: number;
 	comment?: string;
 	createdAt: string;
@@ -204,7 +204,7 @@ export interface MaintenanceRequestRatingResponseDTO {
 
 // Assignment Types
 export interface AssignMaintenanceRequestDTO {
-	engineerId: string;
+	EngineerId: string;
 }
 
 // Status Update Types
@@ -222,7 +222,7 @@ export interface CancelMaintenanceRequestDTO {
 export interface MaintenanceRequestFilters {
 	status?: MaintenanceRequestStatus;
 	customerId?: string;
-	engineerId?: string;
+	EngineerId?: string;
 	equipmentId?: number;
 	hospitalId?: string;
 	fromDate?: string;

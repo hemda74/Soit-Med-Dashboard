@@ -148,7 +148,7 @@ class MaintenanceApiService {
 	}
 
 	/**
-	 * Get engineer's assigned requests
+	 * Get Engineer's assigned requests
 	 */
 	async getEngineerRequests(): Promise<
 		ApiResponse<MaintenanceRequestResponseDTO[]>
@@ -174,7 +174,7 @@ class MaintenanceApiService {
 	}
 
 	/**
-	 * Assign maintenance request to engineer
+	 * Assign maintenance request to Engineer
 	 */
 	async assignToEngineer(
 		requestId: number,
@@ -248,14 +248,14 @@ class MaintenanceApiService {
 	}
 
 	/**
-	 * Get visits by engineer
+	 * Get visits by Engineer
 	 */
 	async getVisitsByEngineer(
-		engineerId: string
+		EngineerId: string
 	): Promise<ApiResponse<MaintenanceVisitResponseDTO[]>> {
 		return this.makeRequest<
 			ApiResponse<MaintenanceVisitResponseDTO[]>
-		>(API_ENDPOINTS.MAINTENANCE.VISIT.BY_ENGINEER(engineerId), {
+		>(API_ENDPOINTS.MAINTENANCE.VISIT.BY_ENGINEER(EngineerId), {
 			method: 'GET',
 		});
 	}

@@ -1,8 +1,8 @@
 // Maintenance Support Dashboard Component
 
 import React, { useState, useEffect } from 'react';
-import { 
-	usePendingRequests, 
+import {
+	usePendingRequests,
 	useAssignToEngineer,
 	useUpdateMaintenanceRequestStatus,
 	useCancelMaintenanceRequest,
@@ -45,8 +45,8 @@ import {
 } from '@/components/ui/select';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import type { 
-	MaintenanceRequestResponseDTO, 
+import type {
+	MaintenanceRequestResponseDTO,
 	AssignMaintenanceRequestDTO,
 	UpdateMaintenanceRequestStatusDTO,
 	CancelMaintenanceRequestDTO,
@@ -80,7 +80,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
 	const [statusNotes, setStatusNotes] = useState('');
 	const [cancelReason, setCancelReason] = useState('');
 	const [statusFilter, setStatusFilter] = useState<MaintenanceRequestStatus | 'all'>('all');
-	const [engineers, setEngineers] = useState<Engineer[]>([]);
+	const [Engineers, setEngineers] = useState<Engineer[]>([]);
 	const [loadingEngineers, setLoadingEngineers] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 
@@ -94,7 +94,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
 	);
 	const { data: visits = [] } = useVisitsByRequest(selectedRequest?.id || 0);
 
-	// Load engineers
+	// Load Engineers
 	useEffect(() => {
 		const loadEngineers = async () => {
 			if (!user?.token) return;
@@ -111,8 +111,8 @@ const MaintenanceSupportDashboard: React.FC = () => {
 					setEngineers(response.data);
 				}
 			} catch (error: any) {
-				console.error('Failed to load engineers:', error);
-				toast.error('Failed to load engineers');
+				console.error('Failed to load Engineers:', error);
+				toast.error('Failed to load Engineers');
 			} finally {
 				setLoadingEngineers(false);
 			}
@@ -127,7 +127,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
 		if (statusFilter !== 'all' && request.status !== statusFilter) {
 			return false;
 		}
-		
+
 		// Search query filter
 		if (!searchQuery) return true;
 		const query = searchQuery.toLowerCase();
@@ -143,12 +143,12 @@ const MaintenanceSupportDashboard: React.FC = () => {
 	// Handle assign
 	const handleAssign = async () => {
 		if (!selectedRequest || !selectedEngineerId) {
-			toast.error('Please select an engineer');
+			toast.error('Please select an Engineer');
 			return;
 		}
 
 		const assignData: AssignMaintenanceRequestDTO = {
-			engineerId: selectedEngineerId,
+			EngineerId: selectedEngineerId,
 		};
 
 		try {
@@ -217,11 +217,11 @@ const MaintenanceSupportDashboard: React.FC = () => {
 		setShowDetailsModal(true);
 	};
 
-	// Get engineer name
-	const getEngineerName = (engineerId: string) => {
-		const engineer = engineers.find((e) => e.id === engineerId);
-		if (!engineer) return 'Unknown';
-		return engineer.fullName || `${engineer.firstName || ''} ${engineer.lastName || ''}`.trim() || engineer.userName;
+	// Get Engineer name
+	const getEngineerName = (EngineerId: string) => {
+		const Engineer = Engineers.find((e) => e.id === EngineerId);
+		if (!Engineer) return 'Unknown';
+		return Engineer.fullName || `${Engineer.firstName || ''} ${Engineer.lastName || ''}`.trim() || Engineer.userName;
 	};
 
 	// Statistics
@@ -240,7 +240,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
 						Maintenance Support Dashboard
 					</h1>
 					<p className="text-gray-600 dark:text-gray-400 mt-2">
-						Manage maintenance requests and assign engineers
+						Manage maintenance requests and assign Engineers
 					</p>
 				</div>
 			</div>
@@ -431,19 +431,19 @@ const MaintenanceSupportDashboard: React.FC = () => {
 												>
 													Update Status
 												</Button>
-												{request.status !== StatusEnum.Cancelled && 
-												 request.status !== StatusEnum.Completed && (
-													<Button
-														variant="destructive"
-														onClick={() => {
-															setSelectedRequest(request);
-															setShowCancelDialog(true);
-														}}
-														className="w-full"
-													>
-														Cancel
-													</Button>
-												)}
+												{request.status !== StatusEnum.Cancelled &&
+													request.status !== StatusEnum.Completed && (
+														<Button
+															variant="destructive"
+															onClick={() => {
+																setSelectedRequest(request);
+																setShowCancelDialog(true);
+															}}
+															className="w-full"
+														>
+															Cancel
+														</Button>
+													)}
 											</div>
 										</div>
 									</CardContent>
@@ -460,7 +460,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
 					<DialogHeader>
 						<DialogTitle>Assign Engineer</DialogTitle>
 						<DialogDescription>
-							Select an engineer to assign this maintenance request
+							Select an Engineer to assign this maintenance request
 						</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
@@ -482,14 +482,14 @@ const MaintenanceSupportDashboard: React.FC = () => {
 								disabled={loadingEngineers}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder="Choose an engineer..." />
+									<SelectValue placeholder="Choose an Engineer..." />
 								</SelectTrigger>
 								<SelectContent>
-									{engineers.map((engineer) => (
-										<SelectItem key={engineer.id} value={engineer.id}>
-											{engineer.fullName ||
-												`${engineer.firstName || ''} ${engineer.lastName || ''}`.trim() ||
-												engineer.userName}
+									{Engineers.map((Engineer) => (
+										<SelectItem key={Engineer.id} value={Engineer.id}>
+											{Engineer.fullName ||
+												`${Engineer.firstName || ''} ${Engineer.lastName || ''}`.trim() ||
+												Engineer.userName}
 										</SelectItem>
 									))}
 								</SelectContent>
