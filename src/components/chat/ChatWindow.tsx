@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
 import type { ChatConversationResponseDTO } from '@/types/chat.types';
@@ -47,36 +47,58 @@ interface ChatWindowProps {
 	conversation: ChatConversationResponseDTO;
 }
 
+// Constant empty array to avoid creating new references
+const EMPTY_MESSAGES: never[] = [];
+
+// Create a stable selector function factory
+const createMessagesSelector = (conversationId: number) => {
+	return (state: ReturnType<typeof useChatStore.getState>) => {
+		return state.messages.get(conversationId) || EMPTY_MESSAGES;
+	};
+};
+
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 	const { t, language } = useTranslation();
 	const isRTL = language === 'ar';
 	const { user } = useAuthStore();
-	const {
-		messages,
-		typingUsers,
-		loadMessages,
-		sendTypingIndicator,
-		markMessagesAsRead,
-	} = useChatStore();
+	const conversationId = conversation.id;
+	
+	// Get messages using a memoized selector
+	const messagesSelector = useMemo(
+		() => createMessagesSelector(conversationId),
+		[conversationId]
+	);
+	const conversationMessages = useChatStore(messagesSelector);
+	
+	// Get typing status with a simple selector
+	const typingUsersMap = useChatStore((state) => state.typingUsers);
+	const isTypingInThisConversation = useMemo(() => {
+		const typingSet = typingUsersMap.get(conversationId);
+		return (typingSet?.size || 0) > 0;
+	}, [typingUsersMap, conversationId]);
+	
+	const loadMessages = useChatStore((state) => state.loadMessages);
+	const markMessagesAsRead = useChatStore((state) => state.markMessagesAsRead);
+	const sendTypingIndicator = useChatStore((state) => state.sendTypingIndicator);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-	const conversationMessages = messages.get(conversation.id) || [];
-	const isTypingInThisConversation = typingUsers.get(conversation.id)?.size > 0;
+	const loadedConversationIdRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		// Load messages immediately when conversation changes
-		// Always load page 1 (fresh load) when conversation changes
-		console.log('ChatWindow - Conversation changed, loading messages for:', conversation.id);
-		loadMessages(conversation.id, 1);
-		markMessagesAsRead(conversation.id);
+		// Only load messages if this is a different conversation
+		if (loadedConversationIdRef.current !== conversationId) {
+			loadedConversationIdRef.current = conversationId;
+			console.log('ChatWindow - Conversation changed, loading messages for:', conversationId);
+			loadMessages(conversationId, 1);
+			markMessagesAsRead(conversationId);
 
-		// Auto-scroll to bottom after messages load
-		setTimeout(() => {
-			messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-		}, 300);
-	}, [conversation.id]);
+			// Auto-scroll to bottom after messages load
+			setTimeout(() => {
+				messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+			}, 300);
+		}
+	}, [conversationId, loadMessages, markMessagesAsRead]);
 
 	useEffect(() => {
 		// Auto-scroll to bottom when messages change
@@ -90,9 +112,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 	useEffect(() => {
 		// Mark messages as read when viewing
 		if (conversationMessages.length > 0) {
-			markMessagesAsRead(conversation.id);
+			markMessagesAsRead(conversationId);
 		}
-	}, [conversationMessages.length, conversation.id]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [conversationMessages.length, conversationId]);
 
 	const isUserAdmin = user?.roles.some((role) => ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport', 'MaintenanceSupport'].includes(role)) || false;
 	const isSuperAdmin = user?.roles.includes('SuperAdmin') || false;
@@ -152,9 +175,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 
 	const formatDateHeader = (date: Date) => {
 		if (isToday(date)) {
-			return t('chat.today') || 'Today';
+			return t('chatMessages.today') || 'Today';
 		} else if (isYesterday(date)) {
-			return t('chat.yesterday') || 'Yesterday';
+			return t('chatMessages.yesterday') || 'Yesterday';
 		} else {
 			return format(date, 'EEEE, MMMM dd, yyyy');
 		}
@@ -211,7 +234,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 									<Circle className="h-1.5 w-1.5 fill-current text-primary animate-pulse [animation-delay:0.4s]" />
 								</div>
 								<p className="text-sm text-muted-foreground italic">
-									{t('chat.typing') || 'Typing...'}
+									{t('chatMessages.typing') || 'Typing...'}
 								</p>
 							</div>
 						)}
@@ -233,10 +256,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 							<Logo asLink={false} className="h-12 w-auto opacity-50" />
 						</div>
 						<p className="text-muted-foreground font-medium text-lg">
-							{t('chat.noMessages') || 'No messages yet'}
+							{t('chatMessages.noMessages') || 'No messages yet'}
 						</p>
 						<p className="text-sm text-muted-foreground/70 mt-1">
-							{t('chat.startConversation') || 'Start the conversation by sending a message'}
+							{t('chatMessages.startConversation') || 'Start the conversation by sending a message'}
 						</p>
 					</div>
 				) : (
@@ -278,9 +301,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation }) => {
 										<div className={cn("flex items-end gap-2", isOwn ? 'flex-row-reverse' : 'flex-row')}>
 											{message.messageType === 'Text' ? (
 												<MessageBubble message={message} isOwn={isOwn} showTime={showTime} />
-											) : (
+											) : message.messageType === 'Voice' ? (
 												<VoiceMessagePlayer message={message} isOwn={isOwn} />
-											)}
+											) : message.messageType === 'Image' ? (
+												<div className={cn(
+													"rounded-lg overflow-hidden max-w-xs",
+													isOwn ? "bg-primary/10" : "bg-muted"
+												)}>
+													{message.imageFileUrl ? (
+														<img
+															src={message.imageFileUrl}
+															alt={message.imageFileName || 'Image'}
+															className="w-full h-auto max-h-64 object-cover"
+														/>
+													) : message.imageFilePath ? (
+														<img
+															src={`${import.meta.env.VITE_API_BASE_URL || ''}/${message.imageFilePath}`}
+															alt={message.imageFileName || 'Image'}
+															className="w-full h-auto max-h-64 object-cover"
+														/>
+													) : null}
+												</div>
+											) : null}
 										</div>
 									</div>
 								);

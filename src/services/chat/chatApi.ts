@@ -9,7 +9,7 @@ import type {
 
 export const chatApi = {
 	/**
-	 * Get all conversations (admin) or user's conversation (customer)
+	 * Get all conversations (Admin) or user's conversation (customer)
 	 */
 	async getConversations(): Promise<{
 		data: ChatConversationResponseDTO[];
@@ -56,7 +56,7 @@ export const chatApi = {
 	 */
 	async getOrCreateConversation(
 		customerId?: string,
-		adminId?: string
+		AdminId?: string
 	): Promise<{ data: ChatConversationResponseDTO }> {
 		const token = getAuthToken();
 		if (!token) {
@@ -66,7 +66,7 @@ export const chatApi = {
 			'/Chat/conversations',
 			{
 				customerId,
-				adminId,
+				AdminId,
 			},
 			token
 		);
@@ -91,11 +91,11 @@ export const chatApi = {
 	},
 
 	/**
-	 * Assign admin to conversation
+	 * Assign Admin to conversation
 	 */
 	async assignAdmin(
 		conversationId: number,
-		adminId: string
+		AdminId: string
 	): Promise<{ data: ChatConversationResponseDTO }> {
 		const token = getAuthToken();
 		if (!token) {
@@ -104,7 +104,7 @@ export const chatApi = {
 		const response = await apiClient.put(
 			`/Chat/conversations/${conversationId}/assign`,
 			{
-				adminId,
+				AdminId,
 			},
 			token
 		);
@@ -238,6 +238,53 @@ export const chatApi = {
 		formData.append('file', file);
 		formData.append('conversationId', conversationId.toString());
 		formData.append('voiceDuration', voiceDuration.toString());
+
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${token}`,
+				// Don't set Content-Type - browser sets it automatically with boundary
+			},
+			body: formData,
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			let errorData: any;
+			try {
+				errorData = JSON.parse(errorText);
+			} catch {
+				errorData = {
+					message:
+						errorText ||
+						`HTTP ${response.status}: Request failed`,
+				};
+			}
+			throw errorData;
+		}
+
+		const responseData = await response.json();
+		return responseData;
+	},
+
+	/**
+	 * Send image message
+	 */
+	async sendImageMessage(
+		conversationId: number,
+		file: File
+	): Promise<{ data: ChatMessageResponseDTO }> {
+		const token = getAuthToken();
+		if (!token) {
+			throw new Error('No active session. Please log in.');
+		}
+
+		const { getApiUrl } = await import('@/config/api');
+
+		const url = getApiUrl('/Chat/messages/image');
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('conversationId', conversationId.toString());
 
 		const response = await fetch(url, {
 			method: 'POST',

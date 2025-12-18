@@ -8,8 +8,8 @@ export interface ChatConversationResponseDTO {
 	customerLastName?: string;
 	customerEmail?: string;
 	customerImageUrl?: string;
-	adminId?: string;
-	adminName?: string;
+	AdminId?: string;
+	AdminName?: string;
 	chatType: number; // 0 = Support, 1 = Sales, 2 = Maintenance
 	chatTypeName: string; // "Support", "Sales", "Maintenance"
 	lastMessageAt: string;
@@ -25,11 +25,15 @@ export interface ChatMessageResponseDTO {
 	conversationId: number;
 	senderId: string;
 	senderName?: string;
-	messageType: 'Text' | 'Voice';
+	messageType: 'Text' | 'Voice' | 'Image';
 	content?: string;
 	voiceFilePath?: string;
 	voiceFileUrl?: string;
 	voiceDuration?: number;
+	imageFilePath?: string;
+	imageFileUrl?: string;
+	imageFileName?: string;
+	imageFileSize?: number;
 	isRead: boolean;
 	readAt?: string;
 	createdAt: string;
@@ -51,4 +55,3 @@ export interface TypingIndicator {
 	userId: string;
 	isTyping: boolean;
 }
-

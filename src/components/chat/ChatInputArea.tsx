@@ -3,7 +3,7 @@ import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
+import { Send, Image as ImageIcon } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,7 @@ interface ChatInputAreaProps {
 }
 
 const ChatInputArea: React.FC<ChatInputAreaProps> = ({ conversationId }) => {
-	const { sendTextMessage, sendTypingIndicator } = useChatStore();
+	const { sendTextMessage, sendImageMessage, sendTypingIndicator } = useChatStore();
 	const { t, language } = useTranslation();
 	const isRTL = language === 'ar';
 	const [messageText, setMessageText] = useState('');
@@ -76,12 +76,55 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({ conversationId }) => {
 		}
 	};
 
+	const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		// Validate file type
+		if (!file.type.startsWith('image/')) {
+			alert(t('chatTranslations.image.invalidType') || 'Please select an image file');
+			return;
+		}
+
+		// Validate file size (10MB max)
+		if (file.size > 10 * 1024 * 1024) {
+			alert(t('chatTranslations.image.tooLarge') || 'Image size must be less than 10MB');
+			return;
+		}
+
+		try {
+			await sendImageMessage(conversationId, file);
+		} catch (error) {
+			console.error('Failed to send image:', error);
+			alert(t('chatTranslations.image.failedToSend') || 'Failed to send image');
+		}
+
+		// Reset input
+		e.target.value = '';
+	};
+
 	return (
 		<div className={cn(
 			"flex items-end gap-3 p-3 rounded-xl border border-border bg-background shadow-sm",
 			"focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all",
 			isRTL && "flex-row-reverse"
 		)}>
+			<input
+				type="file"
+				accept="image/*"
+				onChange={handleImageSelect}
+				className="hidden"
+				id={`image-input-${conversationId}`}
+			/>
+			<label
+				htmlFor={`image-input-${conversationId}`}
+				className={cn(
+					"cursor-pointer p-2 rounded-lg hover:bg-muted transition-colors",
+					"flex items-center justify-center"
+				)}
+			>
+				<ImageIcon className="h-5 w-5 text-muted-foreground hover:text-primary" />
+			</label>
 			<Textarea
 				ref={textareaRef}
 				value={messageText}
