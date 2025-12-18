@@ -6,6 +6,10 @@ export * from './notificationStore';
 export * from './apiStore';
 export * from './statisticsStore';
 export * from './salesStore';
+export * from './chatStore';
+export * from './maintenanceStore';
+export * from './paymentStore';
+export * from './accountingStore';
 
 // Re-export commonly used hooks for convenience
 export { useAuthStore } from './authStore';
