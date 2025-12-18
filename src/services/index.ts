@@ -19,7 +19,7 @@ export * from './auth/authApi';
 export * from './roleSpecific/baseRoleSpecificApi';
 export * from './roleSpecific/medicalRoleApi';
 export * from './roleSpecific/technicalRoleApi';
-export * from './roleSpecific/adminRoleApi';
+export * from './roleSpecific/AdminRoleApi';
 export * from './roleSpecific/financeRoleApi';
 export * from './roleSpecific/legalRoleApi';
 export * from './roleSpecific/salesRoleApi';
