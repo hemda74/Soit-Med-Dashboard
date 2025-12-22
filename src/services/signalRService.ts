@@ -40,8 +40,10 @@ class SignalRService {
 			}
 
 			// Build SignalR URL - uses VITE_SIGNALR_URL or falls back to VITE_API_BASE_URL
-			// Format: http://localhost:5117/notificationHub or http://192.168.1.182:5117/notificationHub
-			const baseUrl = import.meta.env.VITE_SIGNALR_URL || getApiBaseUrl();
+			// Format: http://localhost:5117/notificationHub or http://10.10.9.104:5117/notificationHub
+			const baseUrl =
+				import.meta.env.VITE_SIGNALR_URL ||
+				getApiBaseUrl();
 			const hubUrl = `${baseUrl}/notificationHub`;
 
 			// Build connection with token in both accessTokenFactory and headers (as per guide)

@@ -14,7 +14,7 @@ src/components/
 │   │   └── types/         # Feature-specific types
 │   ├── users/             # User management components
 │   ├── sales/             # Sales reports components
-│   ├── admin/             # Admin panel components
+│   ├── Admin/             # Admin panel components
 │   └── layout/            # Layout components
 ├── shared/                # Shared components across features
 │   ├── components/        # Reusable UI components
@@ -183,7 +183,7 @@ src/components/
 │   │   └── types/         # Feature-specific types
 │   ├── users/             # User management components
 │   ├── sales/             # Sales reports components
-│   ├── admin/             # Admin panel components
+│   ├── Admin/             # Admin panel components
 │   └── layout/            # Layout components
 ├── shared/                # Shared components across features
 │   ├── components/        # Reusable UI components
@@ -352,7 +352,7 @@ src/components/
 │   │   └── types/         # Feature-specific types
 │   ├── users/             # User management components
 │   ├── sales/             # Sales reports components
-│   ├── admin/             # Admin panel components
+│   ├── Admin/             # Admin panel components
 │   └── layout/            # Layout components
 ├── shared/                # Shared components across features
 │   ├── components/        # Reusable UI components
@@ -506,6 +506,3 @@ export const LoginForm = () => {
       - Container Components: `[ComponentName]`
 5. **Document components**: Add JSDoc comments for complex components
 6. **Test both layers**: Test hooks and UI components separately
-
-
-

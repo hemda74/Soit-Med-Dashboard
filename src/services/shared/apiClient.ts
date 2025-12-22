@@ -37,6 +37,10 @@ export async function apiRequest<T>(
 
 			try {
 				errorData = JSON.parse(errorText);
+				// Ensure status is always included
+				if (!errorData.status) {
+					errorData.status = response.status;
+				}
 			} catch {
 				errorData = {
 					message:
@@ -44,6 +48,11 @@ export async function apiRequest<T>(
 						`HTTP ${response.status}: Request failed`,
 					status: response.status,
 				};
+			}
+
+			// Add helpful message for 403 errors
+			if (response.status === 403) {
+				errorData.message = errorData.message || 'Access denied. You do not have permission to perform this action.';
 			}
 
 			throw errorData;

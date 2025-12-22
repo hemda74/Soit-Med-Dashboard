@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PhoneIcon, EnvelopeIcon, MapPinIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { PhoneIcon, MapPinIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SalesSupportClientDetailsProps {
     client: any;
@@ -16,6 +17,7 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
     offers = [],
     offersLoading
 }) => {
+    const { t } = useTranslation();
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'Draft':
@@ -79,7 +81,7 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
                             <div className="flex items-center gap-3">
                                 <BuildingOfficeIcon className="h-5 w-5 text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Organization</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('organization')}</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {client.organizationName}
                                     </p>
@@ -92,7 +94,7 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
                             <div className="flex items-center gap-3">
                                 <MapPinIcon className="h-5 w-5 text-gray-400" />
                                 <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Classification</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('classification')}</p>
                                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {client.classification}
                                     </p>
@@ -173,7 +175,7 @@ const SalesSupportClientDetails: React.FC<SalesSupportClientDetailsProps> = ({
                         </div>
                     ) : (
                         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <p>No offers found for this client</p>
+                            <p>{t('noOffersFoundForClient')}</p>
                         </div>
                     )}
                 </CardContent>

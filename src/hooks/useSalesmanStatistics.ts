@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { salesApi } from '@/services/sales/salesApi';
-import type { SalesmanStatisticsDTO, SalesmanProgressDTO } from '@/types/sales.types';
+import type {
+	SalesManStatisticsDTO,
+	SalesManProgressDTO,
+} from '@/types/sales.types';
 
 // Query keys
 export const salesmanStatisticsKeys = {
@@ -8,38 +11,87 @@ export const salesmanStatisticsKeys = {
 	allStatistics: (year?: number, quarter?: number) =>
 		[...salesmanStatisticsKeys.all, 'all', year, quarter] as const,
 	salesman: (salesmanId: string, year?: number, quarter?: number) =>
-		[...salesmanStatisticsKeys.all, 'salesman', salesmanId, year, quarter] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'salesman',
+			salesmanId,
+			year,
+			quarter,
+		] as const,
 	progress: (salesmanId: string, year?: number, quarter?: number) =>
-		[...salesmanStatisticsKeys.all, 'progress', salesmanId, year, quarter] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'progress',
+			salesmanId,
+			year,
+			quarter,
+		] as const,
 	myStatistics: (year?: number, quarter?: number) =>
-		[...salesmanStatisticsKeys.all, 'my-statistics', year, quarter] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'my-statistics',
+			year,
+			quarter,
+		] as const,
 	myProgress: (year?: number, quarter?: number) =>
-		[...salesmanStatisticsKeys.all, 'my-progress', year, quarter] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'my-progress',
+			year,
+			quarter,
+		] as const,
 	myTargets: (year?: number) =>
 		[...salesmanStatisticsKeys.all, 'my-targets', year] as const,
 	salesmanTargets: (salesmanId: string, year?: number) =>
-		[...salesmanStatisticsKeys.all, 'targets', 'salesman', salesmanId, year] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'targets',
+			'salesman',
+			salesmanId,
+			year,
+		] as const,
 	teamTargets: (year?: number, quarter?: number) =>
-		[...salesmanStatisticsKeys.all, 'targets', 'team', year, quarter] as const,
+		[
+			...salesmanStatisticsKeys.all,
+			'targets',
+			'team',
+			year,
+			quarter,
+		] as const,
 };
 
 /**
  * Get all salesman statistics
  */
-export const useAllSalesmanStatistics = (year: number, quarter?: number) => {
-	return useQuery<SalesmanStatisticsDTO[]>({
+export const useAllSalesManStatistics = (year: number, quarter?: number) => {
+	return useQuery<SalesManStatisticsDTO[]>({
 		queryKey: salesmanStatisticsKeys.allStatistics(year, quarter),
 		queryFn: async () => {
-			const response = await salesApi.getAllSalesmanStatistics(year, quarter);
+			const response =
+				await salesApi.getAllSalesManStatistics(
+					year,
+					quarter
+				);
 			if (response.success && Array.isArray(response.data)) {
 				// Some backends return statistics for every system user.
-				// Keep only entries that contain a valid salesmanId (string) to match Salesman users.
+				// Keep only entries that contain a valid salesmanId (string) to match SalesMan users.
 				return response.data.filter(
-					(stat: SalesmanStatisticsDTO | null | undefined) =>
-						!!stat?.salesmanId && typeof stat.salesmanId === 'string' && stat.salesmanId.trim().length > 0
+					(
+						stat:
+							| SalesManStatisticsDTO
+							| null
+							| undefined
+					) =>
+						!!stat?.salesmanId &&
+						typeof stat.salesmanId ===
+							'string' &&
+						stat.salesmanId.trim().length >
+							0
 				);
 			}
-			throw new Error(response.message || 'Failed to fetch statistics');
+			throw new Error(
+				response.message || 'Failed to fetch statistics'
+			);
 		},
 		staleTime: 2 * 60 * 1000, // 2 minutes
 		retry: 2,
@@ -49,19 +101,29 @@ export const useAllSalesmanStatistics = (year: number, quarter?: number) => {
 /**
  * Get specific salesman statistics
  */
-export const useSalesmanStatistics = (
+export const useSalesManStatistics = (
 	salesmanId: string,
 	year: number,
 	quarter?: number
 ) => {
-	return useQuery<SalesmanStatisticsDTO>({
-		queryKey: salesmanStatisticsKeys.salesman(salesmanId, year, quarter),
+	return useQuery<SalesManStatisticsDTO>({
+		queryKey: salesmanStatisticsKeys.salesman(
+			salesmanId,
+			year,
+			quarter
+		),
 		queryFn: async () => {
-			const response = await salesApi.getSalesmanStatistics(salesmanId, year, quarter);
+			const response = await salesApi.getSalesManStatistics(
+				salesmanId,
+				year,
+				quarter
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch statistics');
+			throw new Error(
+				response.message || 'Failed to fetch statistics'
+			);
 		},
 		enabled: !!salesmanId,
 		staleTime: 2 * 60 * 1000,
@@ -72,19 +134,29 @@ export const useSalesmanStatistics = (
 /**
  * Get salesman progress with targets
  */
-export const useSalesmanProgress = (
+export const useSalesManProgress = (
 	salesmanId: string,
 	year: number,
 	quarter?: number
 ) => {
-	return useQuery<SalesmanProgressDTO>({
-		queryKey: salesmanStatisticsKeys.progress(salesmanId, year, quarter),
+	return useQuery<SalesManProgressDTO>({
+		queryKey: salesmanStatisticsKeys.progress(
+			salesmanId,
+			year,
+			quarter
+		),
 		queryFn: async () => {
-			const response = await salesApi.getSalesmanProgress(salesmanId, year, quarter);
+			const response = await salesApi.getSalesManProgress(
+				salesmanId,
+				year,
+				quarter
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch progress');
+			throw new Error(
+				response.message || 'Failed to fetch progress'
+			);
 		},
 		enabled: !!salesmanId,
 		staleTime: 2 * 60 * 1000,
@@ -96,14 +168,19 @@ export const useSalesmanProgress = (
  * Get my statistics (current user)
  */
 export const useMyStatistics = (year?: number, quarter?: number) => {
-	return useQuery<SalesmanStatisticsDTO>({
+	return useQuery<SalesManStatisticsDTO>({
 		queryKey: salesmanStatisticsKeys.myStatistics(year, quarter),
 		queryFn: async () => {
-			const response = await salesApi.getMyStatistics(year, quarter);
+			const response = await salesApi.getMyStatistics(
+				year,
+				quarter
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch statistics');
+			throw new Error(
+				response.message || 'Failed to fetch statistics'
+			);
 		},
 		staleTime: 2 * 60 * 1000,
 		retry: 2,
@@ -114,14 +191,19 @@ export const useMyStatistics = (year?: number, quarter?: number) => {
  * Get my progress (current user)
  */
 export const useMyProgress = (year?: number, quarter?: number) => {
-	return useQuery<SalesmanProgressDTO>({
+	return useQuery<SalesManProgressDTO>({
 		queryKey: salesmanStatisticsKeys.myProgress(year, quarter),
 		queryFn: async () => {
-			const response = await salesApi.getMyProgress(year, quarter);
+			const response = await salesApi.getMyProgress(
+				year,
+				quarter
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch progress');
+			throw new Error(
+				response.message || 'Failed to fetch progress'
+			);
 		},
 		staleTime: 2 * 60 * 1000,
 		retry: 2,
@@ -139,7 +221,9 @@ export const useMyTargets = (year?: number) => {
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch targets');
+			throw new Error(
+				response.message || 'Failed to fetch targets'
+			);
 		},
 		staleTime: 5 * 60 * 1000, // 5 minutes (targets change less frequently)
 		retry: 2,
@@ -149,15 +233,23 @@ export const useMyTargets = (year?: number) => {
 /**
  * Get salesman targets
  */
-export const useSalesmanTargets = (salesmanId: string, year?: number) => {
+export const useSalesManTargets = (salesmanId: string, year?: number) => {
 	return useQuery({
-		queryKey: salesmanStatisticsKeys.salesmanTargets(salesmanId, year),
+		queryKey: salesmanStatisticsKeys.salesmanTargets(
+			salesmanId,
+			year
+		),
 		queryFn: async () => {
-			const response = await salesApi.getSalesmanTargets(salesmanId, year || new Date().getFullYear());
+			const response = await salesApi.getSalesManTargets(
+				salesmanId,
+				year || new Date().getFullYear()
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch targets');
+			throw new Error(
+				response.message || 'Failed to fetch targets'
+			);
 		},
 		enabled: !!salesmanId,
 		staleTime: 5 * 60 * 1000,
@@ -172,14 +264,19 @@ export const useTeamTargets = (year: number, quarter?: number) => {
 	return useQuery({
 		queryKey: salesmanStatisticsKeys.teamTargets(year, quarter),
 		queryFn: async () => {
-			const response = await salesApi.getTeamTarget(year, quarter);
+			const response = await salesApi.getTeamTarget(
+				year,
+				quarter
+			);
 			if (response.success) {
 				return response.data;
 			}
-			throw new Error(response.message || 'Failed to fetch team targets');
+			throw new Error(
+				response.message ||
+					'Failed to fetch team targets'
+			);
 		},
 		staleTime: 5 * 60 * 1000,
 		retry: 2,
 	});
 };
-

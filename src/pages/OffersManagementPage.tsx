@@ -29,8 +29,7 @@ import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { OfferEquipment } from '@/types/sales.types';
-import { getStaticFileUrl } from '@/utils/apiConfig';
-import { downloadOfferPDF } from '@/utils/pdfGenerator';
+import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
 import toast from 'react-hot-toast';
 import { usePerformance } from '@/hooks/usePerformance';
 import ProviderLogo from '@/components/sales/ProviderLogo';
@@ -57,7 +56,7 @@ interface PaginatedOffersResponse {
 	hasNextPage: boolean;
 }
 
-interface Salesman {
+interface SalesMan {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -83,8 +82,8 @@ const OffersManagementPage: React.FC = () => {
 
 	// Filters
 	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [salesmanFilter, setSalesmanFilter] = useState<string>('all');
-	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [salesmanFilter, setSalesManFilter] = useState<string>('all');
+	const [salesmen, setSalesmen] = useState<SalesMan[]>([]);
 	const [loadingSalesmen, setLoadingSalesmen] = useState(false);
 
 	// Offer Details Modal
@@ -141,7 +140,7 @@ const OffersManagementPage: React.FC = () => {
 						lastName: salesman.lastName || salesman?.user?.lastName || '',
 						userName: salesman.userName || salesman?.user?.userName || '',
 					}))
-					.filter((salesman: Salesman) => salesman.id);
+					.filter((salesman: SalesMan) => salesman.id);
 
 				setSalesmen(normalizedSalesmen);
 			}
@@ -275,9 +274,9 @@ const OffersManagementPage: React.FC = () => {
 		}
 	}, [canAccessPage, pagination.page, pagination.pageSize, statusFilter, salesmanFilter, loadOffers]);
 
-	const handleFilterChange = (newStatus: string, newSalesman: string) => {
+	const handleFilterChange = (newStatus: string, newSalesMan: string) => {
 		setStatusFilter(newStatus);
-		setSalesmanFilter(newSalesman);
+		setSalesManFilter(newSalesMan);
 		setPagination(prev => ({ ...prev, page: 1 }));
 	};
 
@@ -429,7 +428,7 @@ const OffersManagementPage: React.FC = () => {
 		loadEquipmentImages();
 	}, [offerEquipment, selectedOffer?.id]);
 
-	const handleSendToSalesman = async () => {
+	const handleSendToSalesMan = async () => {
 		if (!selectedOffer) return;
 		if (selectedOffer.status !== 'Draft') {
 			toast.error(t('onlyDraftOffersCanBeSent') || 'Only draft offers can be sent to salesman');
@@ -438,7 +437,7 @@ const OffersManagementPage: React.FC = () => {
 
 		try {
 			setProcessingAction('send');
-			const response = await salesApi.sendOfferToSalesman(selectedOffer.id.toString());
+			const response = await salesApi.sendOfferToSalesMan(selectedOffer.id.toString());
 			if (response.success) {
 				toast.success(t('offerSentSuccessfully') || 'Offer sent to salesman successfully');
 				loadOffers();
@@ -543,117 +542,63 @@ const OffersManagementPage: React.FC = () => {
 	const handleExportPdf = async () => {
 		if (!selectedOffer) return;
 		try {
-			// Handle arrays - convert to string for PDF display
-			const formatArray = (arr: string[] | string | undefined): string => {
-				if (!arr) return '';
-				if (Array.isArray(arr)) {
-					return arr.filter(item => item && item.trim()).join('; ');
-				}
-				if (typeof arr === 'string') {
-					try {
-						const parsed = JSON.parse(arr);
-						if (Array.isArray(parsed)) {
-							return parsed.filter(item => item && item.trim()).join('; ');
-						}
-					} catch {
-						// Not JSON, return as is
-					}
-				}
-				return String(arr);
+			// Generate PDF from backend (both EN and AR)
+			const authState = useAuthStore.getState();
+			const token = authState.user?.token;
+
+			if (!token) {
+				toast.error(t('authenticationRequiredForBackendPdfs') || 'Authentication required for PDF export');
+				return;
 			}
 
-			// Fetch equipment data for PDF
-			let equipmentData: any[] = [];
-			try {
-				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
-				if (equipmentResponse.success && equipmentResponse.data) {
-					// Normalize equipment data to match PDF generator interface
-					// VERIFICATION: Log raw API response first
-					console.log('=== PDF EXPORT: Raw API Response ===');
-					if (equipmentResponse.data && equipmentResponse.data.length > 0) {
-						const firstItem: any = equipmentResponse.data[0];
-						console.log('First equipment item from API:', firstItem);
-						console.log('All keys in first equipment item:', Object.keys(firstItem));
-						console.log('Provider-related fields:', {
-							providerImagePath: firstItem.providerImagePath,
-							ProviderImagePath: firstItem.ProviderImagePath,
-							providerLogoPath: firstItem.providerLogoPath,
-							ProviderLogoPath: firstItem.ProviderLogoPath,
-							provider: firstItem.provider,
-							Provider: firstItem.Provider,
+			const apiBaseUrl = getApiBaseUrl();
+			const languages = ['en', 'ar'];
+
+			for (const lang of languages) {
+				try {
+					const response = await fetch(
+						`${apiBaseUrl}/api/Offer/${selectedOffer.id}/pdf?language=${lang}`,
+						{
+							method: 'GET',
+							headers: {
+								'Authorization': `Bearer ${token}`,
+								'Accept': 'application/pdf',
+							},
+						}
+					);
+
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error(`Backend PDF generation failed for ${lang}:`, {
+							status: response.status,
+							statusText: response.statusText,
+							error: errorText
 						});
+						continue;
 					}
 
-					equipmentData = equipmentResponse.data.map((eq: any) => {
-						const mapped = {
-							id: eq.id,
-							name: eq.name || 'N/A',
-							model: eq.model,
-							provider: eq.provider || eq.Provider || eq.manufacturer,
-							country: eq.country || eq.Country,
-							year: eq.year ?? eq.Year,
-							price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-							description: eq.description || eq.Description || eq.specifications,
-							inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-							imagePath: eq.imagePath || eq.ImagePath,
-							providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-						};
+					const pdfBlob = await response.blob();
 
-						// Log mapping for each item
-						if (!mapped.providerImagePath) {
-							console.warn(`[PDF EXPORT] No providerImagePath found for ${mapped.name}:`, {
-								allKeys: Object.keys(eq),
-								providerFields: {
-									providerImagePath: eq.providerImagePath,
-									ProviderImagePath: eq.ProviderImagePath,
-									providerLogoPath: eq.providerLogoPath,
-									ProviderLogoPath: eq.ProviderLogoPath,
-								}
-							});
-						}
+					if (!pdfBlob || pdfBlob.size === 0) {
+						console.error(`Received empty PDF file for ${lang}`);
+						continue;
+					}
 
-						return mapped;
-					});
-
-					// VERIFICATION: Log equipment data before PDF generation
-					console.log('=== PDF EXPORT: Equipment Data Verification ===');
-					console.log('Equipment count:', equipmentData.length);
-					equipmentData.forEach((eq: any, idx: number) => {
-						console.log(`Equipment ${idx + 1}:`, {
-							name: eq.name,
-							provider: eq.provider,
-							providerImagePath: eq.providerImagePath || 'NOT FOUND',
-							imagePath: eq.imagePath || 'NOT FOUND',
-							allFields: Object.keys(eq)
-						});
-					});
-					console.log('=== END VERIFICATION ===');
+					const url = window.URL.createObjectURL(pdfBlob);
+					const link = document.createElement('a');
+					link.href = url;
+					const langSuffix = lang === 'ar' ? 'AR' : 'EN';
+					link.download = `Offer_${selectedOffer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(url);
+				} catch (error: any) {
+					console.error(`Error generating backend PDF for ${lang}:`, error);
 				}
-			} catch (e) {
-				console.warn('Equipment data not available for PDF:', e);
 			}
 
-			await downloadOfferPDF({
-				id: selectedOffer.id,
-				clientName: selectedOffer.clientName || 'Client',
-				clientType: undefined,
-				clientLocation: undefined,
-				products: selectedOffer.products || '',
-				totalAmount: selectedOffer.totalAmount ?? 0,
-				discountAmount: (selectedOffer as any).discountAmount ?? 0,
-				validUntil: formatArray((selectedOffer as any).validUntil),
-				paymentTerms: formatArray((selectedOffer as any).paymentTerms),
-				deliveryTerms: formatArray((selectedOffer as any).deliveryTerms),
-				warrantyTerms: formatArray((selectedOffer as any).warrantyTerms),
-				createdAt: (selectedOffer as any).createdAt || new Date().toISOString(),
-				status: selectedOffer.status,
-				assignedToName: selectedOffer.assignedToName || '',
-				equipment: equipmentData,
-			}, {
-				generateBothLanguages: true, // Generate both Arabic and English versions
-				showProductHeaders: true,
-			});
-			toast.success('PDF exported successfully! Both Arabic and English versions downloaded.');
+			toast.success(t('pdfsExportedSuccessfully') || 'PDFs exported successfully!');
 		} catch (error: any) {
 			console.error('Error exporting PDF:', error);
 			toast.error(error.message || 'Failed to export PDF');
@@ -866,7 +811,7 @@ const OffersManagementPage: React.FC = () => {
 							<Button
 								onClick={() => {
 									setStatusFilter('all');
-									setSalesmanFilter('all');
+									setSalesManFilter('all');
 									setPagination(prev => ({ ...prev, page: 1 }));
 								}}
 								variant="outline"
@@ -965,7 +910,7 @@ const OffersManagementPage: React.FC = () => {
 													variant="outline"
 													size="sm"
 													onClick={() => {
-														navigate(`/sales-manager/offers/${offer.id}/edit`);
+														navigate(`/SalesManager/offers/${offer.id}/edit`);
 													}}
 													className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
 												>
@@ -983,7 +928,7 @@ const OffersManagementPage: React.FC = () => {
 														if (response.success && response.data) {
 															setSelectedOffer(response.data);
 															setTimeout(() => {
-																handleSendToSalesman();
+																handleSendToSalesMan();
 															}, 100);
 														}
 													}}
@@ -1426,7 +1371,7 @@ const OffersManagementPage: React.FC = () => {
 									<Button
 										variant="outline"
 										onClick={() => {
-											navigate(`/sales-manager/offers/${selectedOffer.id}/edit`);
+											navigate(`/SalesManager/offers/${selectedOffer.id}/edit`);
 										}}
 										className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900"
 									>
@@ -1439,12 +1384,12 @@ const OffersManagementPage: React.FC = () => {
 									<>
 										<Button
 											variant="default"
-											onClick={handleSendToSalesman}
+											onClick={handleSendToSalesMan}
 											disabled={processingAction !== null}
 											className="bg-blue-600 hover:bg-blue-700 text-white"
 										>
 											<CheckCircle className="h-4 w-4 mr-2" />
-											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesman') || 'Send to Salesman'}
+											{processingAction === 'send' ? t('sending') || 'Sending...' : t('sendToSalesMan') || 'Send to SalesMan'}
 										</Button>
 										<TooltipProvider>
 											<Tooltip>

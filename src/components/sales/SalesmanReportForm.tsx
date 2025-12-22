@@ -6,22 +6,22 @@ import { Label } from '@/components/ui/label';
 import { salesApi } from '@/services/sales/salesApi';
 import toast from 'react-hot-toast';
 import { FileText, Upload, X, Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
-interface SalesmanReportFormProps {
+interface SalesManReportFormProps {
 	dealId: string | number;
 	dealClientName?: string;
 	onSuccess?: () => void;
 	onCancel?: () => void;
 }
 
-const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
+const SalesManReportForm: React.FC<SalesManReportFormProps> = ({
 	dealId,
 	dealClientName,
 	onSuccess,
 	onCancel,
 }) => {
-	const { user } = useAuthStore();
+	const { t } = useTranslation();
 	const [reportText, setReportText] = useState('');
 	const [attachments, setAttachments] = useState<File[]>([]);
 	const [uploading, setUploading] = useState(false);
@@ -40,7 +40,7 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 		e.preventDefault();
 
 		if (!reportText.trim()) {
-			toast.error('Please enter a report text');
+			toast.error(t('pleaseEnterReportText'));
 			return;
 		}
 
@@ -64,23 +64,23 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 				setUploading(false);
 			}
 
-			const response = await salesApi.submitSalesmanReport(
+			const response = await salesApi.submitSalesManReport(
 				dealId,
 				reportText,
 				attachmentsJson
 			);
 
 			if (response.success) {
-				toast.success('Report submitted successfully');
+				toast.success(t('reportSubmittedSuccessfully'));
 				setReportText('');
 				setAttachments([]);
 				onSuccess?.();
 			} else {
-				toast.error(response.message || 'Failed to submit report');
+				toast.error(response.message || t('failedToSubmitReport'));
 			}
 		} catch (error: any) {
 			console.error('Error submitting report:', error);
-			toast.error(error.message || 'Failed to submit report');
+			toast.error(error.message || t('failedToSubmitReport'));
 		} finally {
 			setSubmitting(false);
 			setUploading(false);
@@ -92,41 +92,41 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
 					<FileText className="h-5 w-5" />
-					Submit Report
+					{t('submitReport')}
 				</CardTitle>
 				<CardDescription>
 					{dealClientName
-						? `Submit your report for deal with ${dealClientName}`
-						: 'Submit your report with the offer'}
+						? t('submitReportForDeal').replace('{clientName}', dealClientName)
+						: t('submitReportWithOffer')}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div className="space-y-2">
-						<Label htmlFor="reportText">Report Text *</Label>
+						<Label htmlFor="reportText">{t('reportText')} *</Label>
 						<Textarea
 							id="reportText"
 							value={reportText}
 							onChange={(e) => setReportText(e.target.value)}
-							placeholder="Enter your report details here..."
+							placeholder={t('enterReportDetails')}
 							rows={8}
 							required
 							className="resize-none"
 						/>
 						<p className="text-sm text-muted-foreground">
-							Please provide a detailed report about the offer and client interaction.
+							{t('provideDetailedReport')}
 						</p>
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="attachments">Attachments (Optional)</Label>
+						<Label htmlFor="attachments">{t('attachmentsOptional')}</Label>
 						<div className="flex items-center gap-4">
 							<label
 								htmlFor="file-upload"
 								className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg cursor-pointer hover:bg-accent transition-colors"
 							>
 								<Upload className="h-4 w-4" />
-								<span>Upload Files</span>
+								<span>{t('uploadFiles')}</span>
 								<input
 									id="file-upload"
 									type="file"
@@ -159,24 +159,24 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 							</div>
 						)}
 						<p className="text-sm text-muted-foreground">
-							You can attach images, PDFs, or documents related to the offer.
+							{t('attachFilesDescription')}
 						</p>
 					</div>
 
 					<div className="flex items-center justify-end gap-4">
 						{onCancel && (
 							<Button type="button" variant="outline" onClick={onCancel}>
-								Cancel
+								{t('cancel')}
 							</Button>
 						)}
 						<Button type="submit" disabled={submitting || uploading}>
 							{submitting || uploading ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									{submitting ? 'Submitting...' : 'Uploading...'}
+									{submitting ? t('submitting') : t('uploading')}
 								</>
 							) : (
-								'Submit Report'
+								t('submitReport')
 							)}
 						</Button>
 					</div>
@@ -186,7 +186,7 @@ const SalesmanReportForm: React.FC<SalesmanReportFormProps> = ({
 	);
 };
 
-export default SalesmanReportForm;
+export default SalesManReportForm;
 
 
 

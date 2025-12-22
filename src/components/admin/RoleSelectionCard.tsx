@@ -28,16 +28,11 @@ const RoleSelectionCard: React.FC<RoleSelectionCardProps> = ({
     index,
     onSelect
 }) => {
-    const colors = [
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-        { bg: 'bg-white', border: 'border-2 border-border', icon: 'bg-gradient-to-br from-primary to-primary/80' },
-    ];
-    const colorScheme = colors[index % colors.length];
+    const colorScheme = {
+        bg: 'bg-white',
+        border: 'border-2 border-border',
+        icon: 'bg-gradient-to-br from-primary to-primary/80'
+    };
 
     return (
         <Card

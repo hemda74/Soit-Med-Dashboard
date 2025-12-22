@@ -35,6 +35,7 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
@@ -105,7 +106,7 @@ const ReviewWeeklyPlanModal: React.FC<ReviewWeeklyPlanModalProps> = ({
                             <Textarea
                                 id="managerComment"
                                 {...register('managerComment')}
-                                placeholder="Provide feedback on performance, achievements, areas for improvement..."
+                                placeholder={t('provideFeedbackOnPerformance')}
                                 rows={6}
                                 className={
                                     errors.managerComment

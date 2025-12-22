@@ -21,8 +21,8 @@ export default function RoleGuard({ requiredAnyRoles, children }: RoleGuardProps
         return requiredRolesLower.some(role => userRolesLower.includes(role))
     }
 
-    // SuperAdmin/superadmin can access any route (case-insensitive)
-    if (hasAnyRoleCaseInsensitive(['SuperAdmin', 'superadmin'])) return children
+    // SuperAdmin can access any route (case-insensitive)
+    if (hasAnyRoleCaseInsensitive(['SuperAdmin'])) return children
 
     if (requiredAnyRoles && requiredAnyRoles.length > 0 && !hasAnyRoleCaseInsensitive(requiredAnyRoles)) {
         return <Navigate to="/not-found" replace />

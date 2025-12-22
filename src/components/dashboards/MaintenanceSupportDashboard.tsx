@@ -77,7 +77,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
             completedAt: '2024-01-12T13:20:00',
             equipment: 'Blood Analyzer - Model MNO',
             location: 'Building E, Room 501',
-            technician: 'John Doe'
+            Technician: 'John Doe'
         },
         {
             id: 202,
@@ -88,7 +88,7 @@ const MaintenanceSupportDashboard: React.FC = () => {
             completedAt: '2024-01-11T10:00:00',
             equipment: 'LIS Server - Model PQR',
             location: 'IT Department',
-            technician: 'Jane Smith'
+            Technician: 'Jane Smith'
         }
     ];
 
@@ -375,10 +375,10 @@ const MaintenanceSupportDashboard: React.FC = () => {
                                                             <span className="font-medium">{request.location}</span>
                                                         </div>
                                                     </div>
-                                                    {request.technician && (
+                                                    {request.Technician && (
                                                         <div className="text-sm">
                                                             <span className="text-muted-foreground">Technician: </span>
-                                                            <span className="font-medium">{request.technician}</span>
+                                                            <span className="font-medium">{request.Technician}</span>
                                                         </div>
                                                     )}
                                                 </div>

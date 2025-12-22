@@ -25,15 +25,29 @@ const ChatPage: React.FC = () => {
 		disconnect,
 	} = useChatStore();
 
+	const [userRoles, setUserRoles] = useState<string[]>([]);
+	const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 	const [isAdmin, setIsAdmin] = useState(false);
+	const [isSalesSupport, setIsSalesSupport] = useState(false);
+	const [isMaintenanceSupport, setIsMaintenanceSupport] = useState(false);
 
 	useEffect(() => {
-		// Check if user is admin
-		const adminRoles = ['SuperAdmin', 'Admin', 'SalesManager', 'SalesSupport'];
-		const userIsAdmin = user?.roles.some((role) => adminRoles.includes(role)) || false;
-		setIsAdmin(userIsAdmin);
+		// Get user roles
+		const roles = user?.roles || [];
+		setUserRoles(roles);
 
-		console.log('ChatPage - User:', user?.id, 'Roles:', user?.roles, 'IsAdmin:', userIsAdmin);
+		// Check specific roles
+		const superAdmin = roles.includes('SuperAdmin');
+		const Admin = roles.includes('Admin');
+		const salesSupport = roles.includes('SalesSupport');
+		const maintenanceSupport = roles.includes('MaintenanceSupport');
+
+		setIsSuperAdmin(superAdmin);
+		setIsAdmin(Admin);
+		setIsSalesSupport(salesSupport);
+		setIsMaintenanceSupport(maintenanceSupport);
+
+		console.log('ChatPage - User:', user?.id, 'Roles:', roles);
 
 		// Initialize chat
 		initialize();
@@ -54,6 +68,19 @@ const ChatPage: React.FC = () => {
 		return () => clearInterval(interval);
 	}, []);
 
+	// Monitor connection status and attempt to reconnect if needed
+	useEffect(() => {
+		if (!isConnected && user) {
+			// If disconnected and user is logged in, try to reconnect
+			const reconnectTimer = setTimeout(() => {
+				console.log('Attempting to reconnect to chat...');
+				initialize();
+			}, 3000); // Wait 3 seconds before attempting reconnect
+
+			return () => clearTimeout(reconnectTimer);
+		}
+	}, [isConnected, user]);
+
 	if (loading && (!conversations || conversations.length === 0)) {
 		return (
 			<div className="flex items-center justify-center h-screen bg-background">
@@ -63,7 +90,7 @@ const ChatPage: React.FC = () => {
 						<MessageSquare className="absolute inset-0 m-auto h-6 w-6 text-primary" />
 					</div>
 					<p className="text-muted-foreground text-lg font-medium">
-						{t('chat.loading') || 'Loading chat...'}
+						{t('chatTranslations.loading') || 'Loading chat...'}
 					</p>
 				</div>
 			</div>
@@ -87,7 +114,9 @@ const ChatPage: React.FC = () => {
 						conversations={conversations}
 						currentConversationId={currentConversation?.id}
 						onSelectConversation={(conversation) => setCurrentConversation(conversation)}
-						isAdmin={isAdmin}
+						isAdmin={isAdmin || isSalesSupport || isMaintenanceSupport || isSuperAdmin}
+						isSuperAdmin={isSuperAdmin}
+						userRole={isSuperAdmin ? 'SuperAdmin' : isAdmin ? 'Admin' : isSalesSupport ? 'SalesSupport' : isMaintenanceSupport ? 'MaintenanceSupport' : 'Customer'}
 					/>
 				</div>
 
@@ -104,12 +133,14 @@ const ChatPage: React.FC = () => {
 									</div>
 									<div className="space-y-2">
 										<h3 className="text-xl font-semibold text-foreground">
-											{t('chat.welcome') || 'Welcome to Chat'}
+											{t('chatTranslations.welcome') || 'Welcome to Chat'}
 										</h3>
 										<p className="text-muted-foreground">
-											{isAdmin
-												? (t('chat.selectConversationAdmin') || 'Select a conversation from the sidebar to respond to customer messages')
-												: (t('chat.selectConversation') || 'Select a conversation from the sidebar to start chatting')
+											{isSuperAdmin
+												? (t('chatTranslations.selectConversationSuperAdmin') || 'Select a conversation from the sidebar to view and respond. You can see all chat types.')
+												: (isAdmin || isSalesSupport || isMaintenanceSupport)
+													? (t('chatTranslations.selectConversationAdmin') || 'Select a conversation from the sidebar to respond to customer messages')
+													: (t('chatTranslations.selectConversation') || 'Select a conversation from the sidebar to start chatting')
 											}
 										</p>
 									</div>
@@ -139,7 +170,7 @@ const ChatPage: React.FC = () => {
 					isRTL && "flex-row-reverse"
 				)}>
 					<WifiOff className="h-4 w-4 flex-shrink-0" />
-					<span>{t('chat.disconnected') || 'Disconnected from chat server. Reconnecting...'}</span>
+					<span>{t('chatTranslations.disconnected')}</span>
 				</div>
 			)}
 

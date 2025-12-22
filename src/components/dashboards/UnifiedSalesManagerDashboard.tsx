@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { 
-    Calendar, 
-    History, 
-    TrendingUp, 
-    Target, 
-    FileText, 
-    Users2, 
-    BarChart3, 
+import {
+    Calendar,
+    History,
+    TrendingUp,
+    Target,
+    FileText,
+    Users2,
+    BarChart3,
     DollarSign,
     Handshake,
     Clock
@@ -32,7 +32,7 @@ import { format } from 'date-fns';
 import { Volume2 } from 'lucide-react';
 import { getStaticFileUrl } from '@/utils/apiConfig';
 
-interface SalesmanStatistics {
+interface SalesManStatistics {
     salesmanId: string;
     salesmanName: string;
     clientsCount: number;
@@ -56,7 +56,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    
+
     const {
         getSalesManagerDashboard,
         getWeeklyPlans,
@@ -74,7 +74,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     } = useSalesStore();
 
     // Local state
-    const [salesmenStats, setSalesmenStats] = useState<SalesmanStatistics[]>([]);
+    const [salesmenStats, setSalesmenStats] = useState<SalesManStatistics[]>([]);
     const [salesmenLoading, setSalesmenLoading] = useState(false);
     const [moneyTargets, setMoneyTargets] = useState<any[]>([]);
     const [targetsLoading, setTargetsLoading] = useState(false);
@@ -96,9 +96,9 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const fetchSalesmenStatistics = useCallback(async () => {
         try {
             setSalesmenLoading(true);
-            const response = await salesApi.getAllSalesmanStatistics(currentYear, currentQuarter);
+            const response = await salesApi.getAllSalesManStatistics(currentYear, currentQuarter);
             if (response.success && response.data) {
-                const stats: SalesmanStatistics[] = response.data.map((stat: any) => ({
+                const stats: SalesManStatistics[] = response.data.map((stat: any) => ({
                     salesmanId: stat.salesmanId || stat.id,
                     salesmanName: stat.salesmanName || stat.name || 'Unknown',
                     clientsCount: stat.clientsCount || stat.totalClients || 0,
@@ -129,7 +129,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
             const allTargets: any[] = [];
             for (const salesman of salesmenResponse.data) {
                 try {
-                    const response = await salesApi.getSalesmanTargets(salesman.id, currentYear);
+                    const response = await salesApi.getSalesManTargets(salesman.id, currentYear);
                     if (response.success && response.data) {
                         allTargets.push(...response.data);
                     }
@@ -230,17 +230,17 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     ]);
 
     // Memoized calculations
-    const activePlans = useMemo(() => 
-        weeklyPlans?.filter(plan => 
-            plan.status === 'Approved' || 
-            plan.status === 'Submitted' || 
+    const activePlans = useMemo(() =>
+        weeklyPlans?.filter(plan =>
+            plan.status === 'Approved' ||
+            plan.status === 'Submitted' ||
             plan.status === 'PendingReview' ||
             plan.status === 'PendingApproval'
         ) || [],
         [weeklyPlans]
     );
 
-    const completedPlans = useMemo(() => 
+    const completedPlans = useMemo(() =>
         weeklyPlans?.filter(plan => plan.status === 'Completed') || [],
         [weeklyPlans]
     );
@@ -293,10 +293,10 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
 
     const totalRevenue = useMemo(() => {
         // Use all deals for accurate revenue calculation
-        const successDeals = allDeals.length > 0 
+        const successDeals = allDeals.length > 0
             ? allDeals.filter(d => d.status === 'Success' || d.status === 'Approved')
             : deals.filter(d => d.status === 'Success' || d.status === 'Approved');
-        
+
         return successDeals.reduce((sum, deal) => sum + (deal.dealValue || 0), 0);
     }, [allDeals, deals]);
 
@@ -394,7 +394,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
             {/* Quick Action Cards */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fadeIn">
                 {/* Total Clients Card */}
-                <Link to="/sales-manager/clients" className="block">
+                <Link to="/SalesManager/clients" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -405,17 +405,17 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {clientsLoading || analyticsLoading ? '-' : totalClients.toLocaleString()}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Total Clients</p>
+                                    <p className="text-sm text-muted-foreground">{t('totalClients')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">All Clients</h3>
-                            <p className="text-muted-foreground text-sm">View and manage all team clients</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('allClients')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('viewAndManageAllTeamClients')}</p>
                         </CardContent>
                     </Card>
                 </Link>
 
                 {/* Pending Deals Card */}
-                <Link to="/sales-manager/deal-approvals" className="block">
+                <Link to="/SalesManager/deal-approvals" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -426,17 +426,17 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {dealsLoading ? '-' : pendingDealsCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Pending Deals</p>
+                                    <p className="text-sm text-muted-foreground">{t('pendingDeals')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Deal Approvals</h3>
-                            <p className="text-muted-foreground text-sm">Review and approve pending deals</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('dealApprovals')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('reviewAndApprovePendingDeals')}</p>
                         </CardContent>
                     </Card>
                 </Link>
 
                 {/* Pending Offer Approvals Card */}
-                <Link to="/sales-manager/offer-approvals" className="block">
+                <Link to="/SalesManager/offer-approvals" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -447,11 +447,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {pendingOffersLoading ? '-' : pendingOffersCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Pending Offers</p>
+                                    <p className="text-sm text-muted-foreground">{t('pendingOffers')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Offer Approvals</h3>
-                            <p className="text-muted-foreground text-sm">Review and approve pending offers</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('offerApprovals')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('reviewAndApprovePendingOffers')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -467,16 +467,16 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                 <p className="text-2xl font-bold text-foreground">
                                     {allDealsLoading ? '-' : `EGP ${totalRevenue.toLocaleString()}`}
                                 </p>
-                                <p className="text-sm text-muted-foreground">Total Revenue</p>
+                                <p className="text-sm text-muted-foreground">{t('totalRevenue')}</p>
                             </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">Revenue</h3>
-                        <p className="text-muted-foreground text-sm">Total successful deals revenue</p>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{t('revenue')}</h3>
+                        <p className="text-muted-foreground text-sm">{t('totalSuccessfulDealsRevenue')}</p>
                     </CardContent>
                 </Card>
 
                 {/* Team Performance Card */}
-                <Link to="/sales-manager" className="block">
+                <Link to="/SalesManager" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -487,11 +487,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {analyticsLoading ? '-' : `${teamPerformancePercentage}%`}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Target Met</p>
+                                    <p className="text-sm text-muted-foreground">{t('targetMet')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Team Performance</h3>
-                            <p className="text-muted-foreground text-sm">Monitor team performance metrics</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('teamPerformance')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('monitorTeamPerformanceMetrics')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -508,17 +508,17 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {weeklyPlansLoading ? '-' : activePlans.length}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Active Plans</p>
+                                    <p className="text-sm text-muted-foreground">{t('activePlans')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Weekly Plans</h3>
-                            <p className="text-muted-foreground text-sm">View and manage weekly sales plans</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('weeklyPlans')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('viewAndManageWeeklySalesPlans')}</p>
                         </CardContent>
                     </Card>
                 </Link>
 
                 {/* Sales Targets Card */}
-                <Link to="/sales-manager/targets" className="block">
+                <Link to="/SalesManager/targets" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -529,17 +529,17 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {targetsLoading ? '-' : moneyTargets.length}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Money Targets</p>
+                                    <p className="text-sm text-muted-foreground">{t('moneyTargets')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Sales Targets</h3>
-                            <p className="text-muted-foreground text-sm">Set and track money targets</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('salesTargets')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('setAndTrackMoneyTargets')}</p>
                         </CardContent>
                     </Card>
                 </Link>
 
                 {/* Team Members Card */}
-                <Link to="/admin/users" className="block">
+                <Link to="/Admin/users" className="block">
                     <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between mb-4">
@@ -550,11 +550,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                     <p className="text-2xl font-bold text-foreground">
                                         {salesmenLoading ? '-' : salesmenCount}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Team Members</p>
+                                    <p className="text-sm text-muted-foreground">{t('teamMembers')}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">Team Management</h3>
-                            <p className="text-muted-foreground text-sm">Manage your sales team members</p>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{t('teamManagement')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('manageYourSalesTeamMembers')}</p>
                         </CardContent>
                     </Card>
                 </Link>
@@ -840,11 +840,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                                         </div>
                                                         <span
                                                             className={`px-2 py-1 rounded-full text-xs ${task.priority === 'High'
-                                                                    ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                                                                    : task.priority === 'Medium'
+                                                                ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                                                                : task.priority === 'Medium'
                                                                     ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
                                                                     : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {task.priority}
                                                         </span>
@@ -861,8 +861,8 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                                                                     {progress.voiceDescriptionUrl && (
                                                                         <div className="flex items-center space-x-1 ml-1">
                                                                             <Volume2 className="h-3 w-3" />
-                                                                            <audio 
-                                                                                controls 
+                                                                            <audio
+                                                                                controls
                                                                                 className="h-6 max-w-[200px]"
                                                                                 preload="metadata"
                                                                             >

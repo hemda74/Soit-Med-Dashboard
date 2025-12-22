@@ -24,7 +24,7 @@ interface GovernorateInfo {
     name: string;
     createdAt: string;
     isActive: boolean;
-    engineerCount: number;
+    EngineerCount: number;
 }
 
 interface GenericFormFieldProps {
@@ -50,7 +50,6 @@ interface GenericFormFieldProps {
     imageError?: string;
     onImageSelect?: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveImage?: () => void;
-    onImageAltTextChange?: (value: string) => void;
     showPassword?: boolean;
     onPasswordToggle?: () => void;
     passwordErrors?: string[];
@@ -86,7 +85,6 @@ const GenericFormField: React.FC<GenericFormFieldProps> = memo(({
     imageError,
     onImageSelect,
     onRemoveImage,
-    onImageAltTextChange,
     showPassword = false,
     onPasswordToggle,
     passwordErrors = [],
@@ -246,10 +244,8 @@ const GenericFormField: React.FC<GenericFormFieldProps> = memo(({
                     <ImageUploadField
                         imagePreview={imagePreview || null}
                         imageError={imageError || ''}
-                        imageAltText={value || ''}
                         onImageSelect={onImageSelect || (() => { })}
                         onRemoveImage={onRemoveImage || (() => { })}
-                        onAltTextChange={onImageAltTextChange || (() => { })}
                     />
                 );
 

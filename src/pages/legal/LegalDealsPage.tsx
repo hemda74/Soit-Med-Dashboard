@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { FileText, Building2, DollarSign, Calendar, User, Eye, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Deal {
 	id: string | number;
@@ -25,6 +26,7 @@ interface Deal {
 }
 
 const LegalDealsPage: React.FC = () => {
+	const { t } = useTranslation();
 	const { user } = useAuthStore();
 	const [deals, setDeals] = useState<Deal[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ const LegalDealsPage: React.FC = () => {
 					sentToLegalAt: deal.sentToLegalAt || deal.SentToLegalAt,
 					reportText: deal.reportText || deal.ReportText,
 					reportAttachments: deal.reportAttachments || deal.ReportAttachments,
-					salesmanName: deal.salesmanName || deal.SalesmanName || 'Unknown',
+					salesmanName: deal.salesmanName || deal.SalesManName || 'Unknown',
 				}));
 				setDeals(normalizedDeals);
 			} else {
@@ -62,7 +64,7 @@ const LegalDealsPage: React.FC = () => {
 			}
 		} catch (error: any) {
 			console.error('Failed to load deals:', error);
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 			setDeals([]);
 		} finally {
 			setLoading(false);
@@ -165,7 +167,7 @@ const LegalDealsPage: React.FC = () => {
 													<User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
 												</div>
 												<div className="flex-1 min-w-0">
-													<p className="text-xs font-medium text-muted-foreground mb-1">Salesman</p>
+													<p className="text-xs font-medium text-muted-foreground mb-1">SalesMan</p>
 													<p className="text-sm text-gray-900 dark:text-white">
 														{deal.salesmanName}
 													</p>
@@ -225,7 +227,7 @@ const LegalDealsPage: React.FC = () => {
 									</p>
 								</div>
 								<div>
-									<p className="text-sm font-medium text-muted-foreground">Salesman</p>
+									<p className="text-sm font-medium text-muted-foreground">SalesMan</p>
 									<p className="text-base font-semibold">{selectedDeal.salesmanName}</p>
 								</div>
 								{selectedDeal.sentToLegalAt && (
@@ -240,7 +242,7 @@ const LegalDealsPage: React.FC = () => {
 
 							{selectedDeal.reportText && (
 								<div>
-									<p className="text-sm font-medium text-muted-foreground mb-2">Salesman Report</p>
+									<p className="text-sm font-medium text-muted-foreground mb-2">SalesMan Report</p>
 									<div className="p-4 bg-muted rounded-lg">
 										<p className="text-sm whitespace-pre-wrap">{selectedDeal.reportText}</p>
 									</div>

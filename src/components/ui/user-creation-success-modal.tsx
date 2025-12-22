@@ -80,7 +80,7 @@ IMPORTANT SECURITY NOTICE
 
 For your account security, please change your password immediately after your first login. 
 
-If you have any questions or need assistance, please contact your system administrator.
+If you have any questions or need assistance, please contact your system Administrator.
 
 Best regards,
 Soit-Med Admin Team

@@ -49,7 +49,7 @@ export default defineConfig({
 							return 'sales-dashboard';
 						}
 						if (id.includes('SuperAdmin')) {
-							return 'admin-dashboard';
+							return 'Admin-dashboard';
 						}
 						if (
 							id.includes(
@@ -79,28 +79,28 @@ export default defineConfig({
 			'/products': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://localhost:5117',
+					'http://10.10.9.104:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/images': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://localhost:5117',
+					'http://10.10.9.104:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/offers': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://localhost:5117',
+					'http://10.10.9.104:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/uploads': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://localhost:5117',
+					'http://10.10.9.104:5117',
 				changeOrigin: true,
 				secure: false,
 			},

@@ -66,6 +66,7 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Get current week dates
@@ -178,7 +179,7 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                             <Textarea
                                 id="description"
                                 {...register('description')}
-                                placeholder="Brief description of this week's plan and objectives..."
+                                placeholder={t('briefDescriptionOfWeeksPlan')}
                                 rows={3}
                                 className={
                                     errors.description
@@ -269,11 +270,11 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                                         )}
                                                         className="w-full px-3 py-2 border rounded-lg"
                                                     >
-                                                        <option value="Visit">Visit</option>
-                                                        <option value="FollowUp">Follow Up</option>
-                                                        <option value="Call">Call</option>
-                                                        <option value="Email">Email</option>
-                                                        <option value="Meeting">Meeting</option>
+                                                        <option value="Visit">{t('visit')}</option>
+                                                        <option value="FollowUp">{t('followUp')}</option>
+                                                        <option value="Call">{t('call')}</option>
+                                                        <option value="Email">{t('email')}</option>
+                                                        <option value="Meeting">{t('meeting')}</option>
                                                     </select>
                                                 </div>
                                                 <div>
@@ -302,16 +303,16 @@ const CreateWeeklyPlanModal: React.FC<CreateWeeklyPlanModalProps> = ({
                                                         )}
                                                         className="w-full px-3 py-2 border rounded-lg"
                                                     >
-                                                        <option value="High">High</option>
-                                                        <option value="Medium">Medium</option>
-                                                        <option value="Low">Low</option>
+                                                        <option value="High">{t('high')}</option>
+                                                        <option value="Medium">{t('medium')}</option>
+                                                        <option value="Low">{t('low')}</option>
                                                     </select>
                                                 </div>
                                                 <Textarea
                                                     {...register(
                                                         `tasks.${index}.purpose`
                                                     )}
-                                                    placeholder="Purpose (optional)"
+                                                    placeholder={t('purposeOptional')}
                                                     rows={2}
                                                 />
                                                 {/* Equipment Categories */}

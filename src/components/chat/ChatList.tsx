@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { format, isToday, isYesterday } from 'date-fns';
 import type { ChatConversationResponseDTO } from '@/types/chat.types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Search, MessageSquare, Users } from 'lucide-react';
+import { Search, MessageSquare, Users, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Avatar component with fallback to initials
@@ -30,8 +30,8 @@ const AvatarWithFallback: React.FC<{
 
 	return (
 		<div className={cn("rounded-full flex items-center justify-center overflow-hidden", className)}>
-			<img 
-				src={imageUrl} 
+			<img
+				src={imageUrl}
 				alt={alt}
 				className="h-full w-full object-cover"
 				onError={() => setImageError(true)}
@@ -45,6 +45,8 @@ interface ChatListProps {
 	currentConversationId?: number;
 	onSelectConversation: (conversation: ChatConversationResponseDTO) => void;
 	isAdmin: boolean;
+	isSuperAdmin?: boolean;
+	userRole?: string;
 }
 
 const ChatList: React.FC<ChatListProps> = ({
@@ -52,6 +54,8 @@ const ChatList: React.FC<ChatListProps> = ({
 	currentConversationId,
 	onSelectConversation,
 	isAdmin,
+	isSuperAdmin = false,
+	userRole = 'Customer',
 }) => {
 	const { t, language } = useTranslation();
 	const isRTL = language === 'ar';
@@ -68,7 +72,7 @@ const ChatList: React.FC<ChatListProps> = ({
 		return safeConversations.filter((conv) => {
 			const displayName = isAdmin
 				? (conv.customerName || conv.customerEmail || '')
-				: (conv.adminName || 'Admin');
+				: (conv.AdminName || 'Admin');
 			const email = isAdmin ? (conv.customerEmail || '') : '';
 			const preview = conv.lastMessagePreview || '';
 
@@ -96,7 +100,7 @@ const ChatList: React.FC<ChatListProps> = ({
 		if (isToday(date)) {
 			return format(date, 'HH:mm');
 		} else if (isYesterday(date)) {
-			return t('chat.yesterday') || 'Yesterday';
+			return t('chatMessages.yesterday') || 'Yesterday';
 		} else {
 			return format(date, 'MMM dd');
 		}
@@ -112,7 +116,16 @@ const ChatList: React.FC<ChatListProps> = ({
 				<div className="flex items-center gap-2 mb-3">
 					<MessageSquare className="h-5 w-5 text-primary" />
 					<h2 className="text-lg font-semibold text-foreground">
-						{t('chat.conversations') || 'Conversations'}
+						{isSuperAdmin
+							? (t('chatMessages.allConversations') || 'All Conversations')
+							: isAdmin
+								? (t('chatMessages.supportConversations') || 'Support Chats')
+								: userRole === 'SalesSupport'
+									? (t('chatMessages.salesConversations') || 'Sales Chats')
+									: userRole === 'MaintenanceSupport'
+										? (t('chatMessages.maintenanceConversations') || 'Maintenance Chats')
+										: (t('chatMessages.conversations') || 'Conversations')
+						}
 					</h2>
 					{safeConversations.length > 0 && (
 						<Badge variant="secondary" className="ml-auto">
@@ -130,7 +143,7 @@ const ChatList: React.FC<ChatListProps> = ({
 						)} />
 						<Input
 							type="text"
-							placeholder={t('chat.searchConversations') || 'Search conversations...'}
+							placeholder={t('chatMessages.searchConversations') || 'Search conversations...'}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							className={cn(
@@ -151,12 +164,12 @@ const ChatList: React.FC<ChatListProps> = ({
 							<Users className="h-8 w-8 text-muted-foreground" />
 						</div>
 						<p className="text-muted-foreground font-medium">
-							{t('chat.noConversations') || 'No conversations yet'}
+							{t('chatMessages.noConversations') || 'No conversations yet'}
 						</p>
 						<p className="text-sm text-muted-foreground/70 mt-1">
-							{isAdmin 
-								? (t('chat.waitForCustomer') || 'Wait for customers to start conversations. You can respond to existing conversations.')
-								: (t('chat.startConversation') || 'Start a new conversation to begin chatting')
+							{isAdmin
+								? (t('chatMessages.waitForCustomer') || 'Wait for customers to start conversations. You can respond to existing conversations.')
+								: (t('chatMessages.startConversation') || 'Start a new conversation to begin chatting')
 							}
 						</p>
 					</div>
@@ -164,22 +177,22 @@ const ChatList: React.FC<ChatListProps> = ({
 					<div className="flex flex-col items-center justify-center h-full p-8 text-center">
 						<Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
 						<p className="text-muted-foreground font-medium">
-							{t('chat.noResults') || 'No conversations found'}
+							{t('chatMessages.noResults') || 'No conversations found'}
 						</p>
 						<p className="text-sm text-muted-foreground/70 mt-1">
-							{t('chat.tryDifferentSearch') || 'Try a different search term'}
+							{t('chatMessages.tryDifferentSearch') || 'Try a different search term'}
 						</p>
 					</div>
 				) : (
 					<div className="divide-y divide-border/50">
 						{filteredConversations.map((conversation) => {
 							const isSelected = conversation.id === currentConversationId;
-							// For admin: show customer first name, last name, and image
+							// For Admin: show customer first name, last name, and image
 							const displayName = isAdmin
 								? (conversation.customerFirstName && conversation.customerLastName
 									? `${conversation.customerFirstName} ${conversation.customerLastName}`
 									: conversation.customerName || conversation.customerEmail || 'Customer')
-								: (conversation.adminName || 'Admin');
+								: (conversation.AdminName || 'Admin');
 							const hasUnread = conversation.unreadCount > 0;
 							const customerImage = isAdmin ? conversation.customerImageUrl : undefined;
 							const initials = isAdmin && conversation.customerFirstName && conversation.customerLastName
@@ -213,13 +226,28 @@ const ChatList: React.FC<ChatListProps> = ({
 													avatarColor={getAvatarColor(conversation.id)}
 												/>
 												<div className="flex-1 min-w-0">
-													<div className="flex items-center gap-2">
+													<div className="flex items-center gap-2 flex-wrap">
 														<p className={cn(
 															"font-semibold truncate",
 															hasUnread ? "text-foreground" : "text-foreground/80"
 														)}>
 															{displayName}
 														</p>
+														{/* Show chat type badge for SuperAdmin, Admin, and Support roles */}
+														{isAdmin && conversation.chatTypeName && (
+															<Badge
+																variant="outline"
+																className={cn(
+																	"h-5 px-1.5 text-xs font-medium",
+																	conversation.chatTypeName === 'Support' && "border-blue-500 text-blue-700 dark:text-blue-400",
+																	conversation.chatTypeName === 'Sales' && "border-green-500 text-green-700 dark:text-green-400",
+																	conversation.chatTypeName === 'Maintenance' && "border-orange-500 text-orange-700 dark:text-orange-400"
+																)}
+															>
+																<Tag className="h-3 w-3 mr-1" />
+																{conversation.chatTypeName}
+															</Badge>
+														)}
 														{hasUnread && (
 															<Badge
 																variant="destructive"

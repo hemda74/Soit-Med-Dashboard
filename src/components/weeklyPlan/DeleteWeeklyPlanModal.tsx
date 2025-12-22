@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Trash2, AlertTriangle, X } from 'lucide-react';
 import type { WeeklyPlan } from '@/types/weeklyPlan.types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface DeleteWeeklyPlanModalProps {
     plan: WeeklyPlan;
@@ -21,6 +22,7 @@ const DeleteWeeklyPlanModal: React.FC<DeleteWeeklyPlanModalProps> = ({
     onClose,
     onConfirm,
 }) => {
+    const { t } = useTranslation();
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
@@ -62,7 +64,7 @@ const DeleteWeeklyPlanModal: React.FC<DeleteWeeklyPlanModalProps> = ({
                     </p>
                     <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside mt-2 space-y-1">
                         <li>{plan.tasks?.length || 0} tasks</li>
-                        <li>All associated data</li>
+                        <li>{t('allAssociatedData')}</li>
                     </ul>
                 </div>
 

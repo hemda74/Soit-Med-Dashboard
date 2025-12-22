@@ -50,7 +50,7 @@ export interface LegalEmployeeUserRequest extends BaseUserRequest {
 	departmentId?: number;
 }
 
-export interface SalesmanUserRequest extends BaseUserRequest {
+export interface SalesManUserRequest extends BaseUserRequest {
 	departmentId?: number;
 }
 
@@ -102,7 +102,7 @@ export type RoleSpecificUserRequest =
 	| FinanceEmployeeUserRequest
 	| LegalManagerUserRequest
 	| LegalEmployeeUserRequest
-	| SalesmanUserRequest
+	| SalesManUserRequest
 	| SalesManagerUserRequest
 	| MaintenanceManagerUserRequest
 	| MaintenanceSupportUserRequest
@@ -141,27 +141,27 @@ export interface BaseUserResponse {
 // Role-specific response data
 export interface DoctorUserResponse extends BaseUserResponse {
 	role: 'Doctor';
-	doctorId: number;
+	DoctorId: number;
 	specialty: string;
 	hospitalName: string;
 }
 
 export interface EngineerUserResponse extends BaseUserResponse {
 	role: 'Engineer';
-	engineerId: number;
+	EngineerId: number;
 	specialty: string;
 	governorateNames: string[];
 }
 
 export interface TechnicianUserResponse extends BaseUserResponse {
 	role: 'Technician';
-	technicianId: number;
+	TechnicianId: number;
 	hospitalName: string;
 }
 
 export interface AdminUserResponse extends BaseUserResponse {
 	role: 'Admin';
-	adminId: number;
+	AdminId: number;
 }
 
 export interface FinanceManagerUserResponse extends BaseUserResponse {
@@ -184,8 +184,8 @@ export interface LegalEmployeeUserResponse extends BaseUserResponse {
 	legalEmployeeId: number;
 }
 
-export interface SalesmanUserResponse extends BaseUserResponse {
-	role: 'Salesman';
+export interface SalesManUserResponse extends BaseUserResponse {
+	role: 'SalesMan';
 	salesmanId: number;
 }
 
@@ -256,7 +256,7 @@ export type RoleSpecificUserResponse =
 	| FinanceEmployeeUserResponse
 	| LegalManagerUserResponse
 	| LegalEmployeeUserResponse
-	| SalesmanUserResponse
+	| SalesManUserResponse
 	| SalesManagerUserResponse
 	| MaintenanceManagerUserResponse
 	| MaintenanceSupportUserResponse
@@ -266,21 +266,21 @@ export type RoleSpecificUserResponse =
 
 // Available roles for user creation
 export type RoleSpecificUserRole =
-	| 'doctor'
-	| 'engineer'
-	| 'technician'
-	| 'admin'
-	| 'finance-manager'
-	| 'finance-employee'
-	| 'legal-manager'
-	| 'legal-employee'
-	| 'salesman'
-	| 'sales-manager'
-	| 'maintenance-manager'
-	| 'maintenance-support'
-	| 'sales-support'
-	| 'spare-parts-coordinator'
-	| 'inventory-manager';
+	| 'Doctor'
+	| 'Engineer'
+	| 'Technician'
+	| 'Admin'
+	| 'FinanceManager'
+	| 'FinanceEmployee'
+	| 'LegalManager'
+	| 'LegalEmployee'
+	| 'SalesMan'
+	| 'SalesManager'
+	| 'MaintenanceManager'
+	| 'MaintenanceSupport'
+	| 'SalesSupport'
+	| 'SparePartsCoordinator'
+	| 'InventoryManager';
 
 // Password change request
 export interface ChangePasswordRequest {

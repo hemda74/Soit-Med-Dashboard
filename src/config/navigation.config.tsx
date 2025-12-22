@@ -17,7 +17,7 @@ import {
   Package,
   DollarSign,
   Warehouse,
-  Building2,
+
   MessageCircle,
   UserPlus,
 } from 'lucide-react';
@@ -43,32 +43,26 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   {
     icon: <UserCircleIcon />,
     name: t('allUsers'),
-    path: '/admin/users',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
+    path: '/Admin/users',
+    roles: ['Admin', 'SuperAdmin',] as const,
   },
   {
     icon: <UserCircleIcon />,
     name: t('createUser'),
-    path: '/admin/create-role-user',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: t('createSalesSupport') || 'Create Sales Support',
-    path: '/admin/create-sales-support',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
+    path: '/Admin/create-role-user',
+    roles: ['Admin', 'SuperAdmin'] as const,
   },
   {
     icon: <UserPlus className={ICON_SIZE} />,
     name: t('clientAccountCreation') || 'Client Account Creation',
-    path: '/admin/client-accounts',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin'] as const,
+    path: '/Admin/client-accounts',
+    roles: ['Admin', 'SuperAdmin'] as const,
   },
   // Super Admin specific
   {
     icon: <Clock className={ICON_SIZE} />,
     name: t('pendingDealApprovals'),
-    path: '/super-admin/deal-approvals',
+    path: '/super-Admin/deal-approvals',
     roles: ['SuperAdmin'] as const,
   },
   // Sales section
@@ -82,13 +76,13 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   {
     icon: <Users />,
     name: t('salesManagerDashboard'),
-    path: '/sales-manager',
+    path: '/SalesManager',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
     icon: <Target />,
     name: t('salesTargets'),
-    path: '/sales-manager/targets',
+    path: '/SalesManager/targets',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
@@ -100,37 +94,37 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   {
     icon: <BarChart3 />,
     name: t('reportsReview'),
-    path: '/sales-manager/reports-review',
+    path: '/SalesManager/reports-review',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
     icon: <Handshake />,
     name: t('deals'),
-    path: '/sales-manager/deals',
+    path: '/SalesManager/deals',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
     icon: <Users />,
     name: t('salesClients.title') || 'Sales Clients',
-    path: '/sales-manager/clients',
+    path: '/SalesManager/clients',
     roles: ['SalesManager', 'SalesSupport', 'SuperAdmin'] as const,
   },
   {
     icon: <Clock className={ICON_SIZE} />,
     name: t('pendingApprovals'),
-    path: '/sales-manager/deal-approvals',
+    path: '/SalesManager/deal-approvals',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
     icon: <Clock className={ICON_SIZE} />,
     name: t('pendingOfferApprovals') || 'Pending Offer Approvals',
-    path: '/sales-manager/offer-approvals',
+    path: '/SalesManager/offer-approvals',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   {
     icon: <FileText />,
     name: t('offers'),
-    path: '/sales-manager/offers',
+    path: '/SalesManager/offers',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
   // Shared products catalog
@@ -153,12 +147,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/sales-support/requests',
     roles: ['SalesSupport', 'SuperAdmin'] as const,
   },
-  // Chat section - Admin roles
+  // Chat section - Role-based chat access
   {
     icon: <MessageCircle className={ICON_SIZE} />,
     name: t('chat') || 'Chat',
     path: '/chat',
-    roles: ['Admin', 'admin', 'SuperAdmin', 'superadmin', 'SalesManager', 'SalesSupport'] as const,
+    roles: ['Admin', 'SuperAdmin', 'SalesSupport', 'MaintenanceSupport'] as const,
   },
   // Maintenance section
   {
@@ -183,7 +177,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   {
     icon: <Warehouse className={ICON_SIZE} />,
     name: t('inventoryManagerDashboard'),
-    path: '/inventory-manager',
+    path: '/InventoryManager',
     roles: ['InventoryManager', 'SuperAdmin'] as const,
   },
   // Finance section

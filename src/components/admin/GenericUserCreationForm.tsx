@@ -23,7 +23,7 @@ interface GovernorateInfo {
     name: string;
     createdAt: string;
     isActive: boolean;
-    engineerCount: number;
+    EngineerCount: number;
 }
 
 interface GenericUserCreationFormProps {
@@ -89,7 +89,6 @@ const GenericUserCreationForm: React.FC<GenericUserCreationFormProps> = memo(({
         togglePasswordVisibility,
         handleImageSelect,
         handleRemoveImage,
-        handleImageAltTextChange,
         toggleGovernorateDropdown,
         handleGovernorateToggle,
         removeGovernorate,
@@ -186,7 +185,6 @@ const GenericUserCreationForm: React.FC<GenericUserCreationFormProps> = memo(({
                             imageError={imageError}
                             onImageSelect={handleImageSelect}
                             onRemoveImage={handleRemoveImage}
-                            onImageAltTextChange={handleImageAltTextChange}
                             showPassword={showPassword}
                             onPasswordToggle={togglePasswordVisibility}
                             passwordErrors={passwordErrors}

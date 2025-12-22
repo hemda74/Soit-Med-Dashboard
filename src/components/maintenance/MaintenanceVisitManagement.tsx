@@ -63,8 +63,8 @@ const MaintenanceVisitManagement: React.FC = () => {
 		notes: '',
 	});
 
-	const engineerId = user?.id || '';
-	const { data: visits = [], isLoading } = useVisitsByEngineer(engineerId);
+	const EngineerId = user?.id || '';
+	const { data: visits = [], isLoading } = useVisitsByEngineer(EngineerId);
 	const createMutation = useCreateMaintenanceVisit();
 
 	// Filter visits

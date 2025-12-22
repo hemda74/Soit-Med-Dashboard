@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, BarChart3, TrendingUp, Target, DollarSign, CheckCircle, XCircle, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { SalesmanStatisticsDTO, SalesmanProgressDTO } from '@/types/sales.types';
-import SalesmanCard from './statistics/SalesmanCard';
+import type { SalesManStatisticsDTO, SalesManProgressDTO } from '@/types/sales.types';
+import SalesManCard from './statistics/SalesManCard';
 import ProgressChart from './statistics/ProgressChart';
 import PerformanceChart from './statistics/PerformanceChart';
 import { usePerformance } from '@/hooks/usePerformance';
@@ -17,9 +17,9 @@ const SalesStatisticsPage: React.FC = () => {
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedQuarter, setSelectedQuarter] = useState<number | undefined>(undefined);
     const [activeTab, setActiveTab] = useState<string>('overview');
-    const [statistics, setStatistics] = useState<SalesmanStatisticsDTO[]>([]);
-    const [selectedSalesman, setSelectedSalesman] = useState<SalesmanStatisticsDTO | null>(null);
-    const [progress, setProgress] = useState<SalesmanProgressDTO | null>(null);
+    const [statistics, setStatistics] = useState<SalesManStatisticsDTO[]>([]);
+    const [selectedSalesMan, setSelectedSalesMan] = useState<SalesManStatisticsDTO | null>(null);
+    const [progress, setProgress] = useState<SalesManProgressDTO | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -29,7 +29,7 @@ const SalesStatisticsPage: React.FC = () => {
     const loadAllStatistics = async () => {
         setLoading(true);
         try {
-            const response = await salesApi.getAllSalesmanStatistics(selectedYear, selectedQuarter);
+            const response = await salesApi.getAllSalesManStatistics(selectedYear, selectedQuarter);
             if (response.success && Array.isArray(response.data)) {
                 // Filter to only include salesmen (the API should already return salesmen)
                 // Filter out any entries that don't have a valid salesmanId
@@ -50,9 +50,9 @@ const SalesStatisticsPage: React.FC = () => {
         }
     };
 
-    const loadSalesmanProgress = async (salesmanId: string) => {
+    const loadSalesManProgress = async (salesmanId: string) => {
         try {
-            const response = await salesApi.getSalesmanProgress(salesmanId, selectedYear, selectedQuarter);
+            const response = await salesApi.getSalesManProgress(salesmanId, selectedYear, selectedQuarter);
             if (response.success) {
                 setProgress(response.data);
             } else {
@@ -63,15 +63,15 @@ const SalesStatisticsPage: React.FC = () => {
         }
     };
 
-    const handleSalesmanClick = (salesman: SalesmanStatisticsDTO) => {
-        setSelectedSalesman(salesman);
+    const handleSalesManClick = (salesman: SalesManStatisticsDTO) => {
+        setSelectedSalesMan(salesman);
         setActiveTab('details');
-        loadSalesmanProgress(salesman.salesmanId);
+        loadSalesManProgress(salesman.salesmanId);
     };
 
     const handleBackToOverview = () => {
         setActiveTab('overview');
-        setSelectedSalesman(null);
+        setSelectedSalesMan(null);
         setProgress(null);
     };
 
@@ -127,7 +127,7 @@ const SalesStatisticsPage: React.FC = () => {
                         <BarChart3 className="w-4 h-4" />
                         Overview
                     </TabsTrigger>
-                    <TabsTrigger value="details" disabled={!selectedSalesman} className="flex items-center gap-2">
+                    <TabsTrigger value="details" disabled={!selectedSalesMan} className="flex items-center gap-2">
                         <Target className="w-4 h-4" />
                         Details
                     </TabsTrigger>
@@ -151,10 +151,10 @@ const SalesStatisticsPage: React.FC = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {statistics.map((salesman) => (
-                                <SalesmanCard
+                                <SalesManCard
                                     key={salesman.salesmanId}
                                     salesman={salesman}
-                                    onViewDetails={handleSalesmanClick}
+                                    onViewDetails={handleSalesManClick}
                                 />
                             ))}
                         </div>
@@ -163,7 +163,7 @@ const SalesStatisticsPage: React.FC = () => {
 
                 {/* Details Tab */}
                 <TabsContent value="details" className="space-y-6 mt-6">
-                    {selectedSalesman && progress && !loading ? (
+                    {selectedSalesMan && progress && !loading ? (
                         <div className="space-y-6">
                             {/* Header with Back Button */}
                             <div className="flex items-center justify-between">
@@ -171,7 +171,7 @@ const SalesStatisticsPage: React.FC = () => {
                                     <Button variant="ghost" size="sm" onClick={handleBackToOverview} className="mb-2">
                                         ← Back to Overview
                                     </Button>
-                                    <h2 className="text-2xl font-bold text-foreground">{selectedSalesman.salesmanName}</h2>
+                                    <h2 className="text-2xl font-bold text-foreground">{selectedSalesMan.salesmanName}</h2>
                                     <p className="text-muted-foreground">
                                         Performance details for {selectedYear}{selectedQuarter ? ` Q${selectedQuarter}` : ''}
                                     </p>

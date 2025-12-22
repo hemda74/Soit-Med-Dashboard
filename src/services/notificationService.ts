@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { API_ENDPOINTS } from './shared/endpoints';
 import { getAuthToken } from '@/utils/authUtils';
 import { getApiBaseUrl } from '@/utils/apiConfig';
+import { getTranslation } from '@/utils/translations';
 
 export interface NotificationFilter {
 	roles?: string[];
@@ -463,7 +464,7 @@ class NotificationService {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
-		// Only show to admins and super admins
+		// Only show to Admins and super Admins
 		const userRoles = Array.isArray(currentUser.roles)
 			? currentUser.roles
 			: [];
@@ -499,7 +500,7 @@ class NotificationService {
 		const currentUser = this.getCurrentUser();
 		if (!currentUser) return;
 
-		// Show to the user whose role changed and admins
+		// Show to the user whose role changed and Admins
 		const userRoles = Array.isArray(currentUser.roles)
 			? currentUser.roles
 			: [];
@@ -544,7 +545,7 @@ class NotificationService {
 			userRoles.length > 0 &&
 			userRoles.some((role: any) =>
 				[
-					'Salesman',
+					'SalesMan',
 					'SalesManager',
 					'SuperAdmin',
 				].includes(role)
@@ -560,13 +561,12 @@ class NotificationService {
 			data: plan,
 			timestamp: Date.now(),
 			isRead: false,
-			roles: ['Salesman', 'SalesManager', 'SuperAdmin'],
+			roles: ['SalesMan', 'SalesManager', 'SuperAdmin'],
 		};
 
 		this.addNotification(notification);
-		toast.success('Weekly plan has been updated');
+		toast.success(getTranslation('weeklyPlanUpdated'));
 	}
-
 
 	// Intentionally unused - for future use
 	// @ts-ignore TS6133

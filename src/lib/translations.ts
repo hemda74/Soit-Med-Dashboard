@@ -23,7 +23,7 @@ export const translations = {
 		dashboardNoPermissionMessage:
 			"You don't have permission to view analytics and statistics.",
 		dashboardContactAdmin:
-			'Please contact your administrator if you need access to this information.',
+			'Please contact your Administrator if you need access to this information.',
 		profile: 'Profile',
 		profileDescription: 'Your account information',
 		name: 'Name',
@@ -45,7 +45,7 @@ export const translations = {
 		activeUsers: 'Active Users',
 		inactiveUsers: 'Inactive Users',
 		successRate: 'Success Rate',
-		adminModule: 'Admin Module',
+		AdminModule: 'Admin Module',
 		usersManagement: 'Users Management',
 		usersManagementDescription: 'View and manage all users',
 		usersManagementDetails:
@@ -53,7 +53,7 @@ export const translations = {
 		createUser: 'Create User',
 		createUserDescription: 'Create new users with specific roles',
 		createUserDetails:
-			'Create doctors, engineers, technicians, and other role-specific users.',
+			'Create Doctors, Engineers, Technicians, and other role-specific users.',
 		filters: 'Filters',
 		clearFilters: 'Clear Filters',
 		showFilters: 'Show Filters',
@@ -101,28 +101,6 @@ export const translations = {
 		viewInventory: 'View Inventory',
 		accountingDashboardDescription:
 			'Inspect financial performance, invoicing, and payment follow-ups.',
-
-		// Monthly Activity Chart
-		monthlyActivityOverview: 'Monthly Activity Overview',
-		monthlyActivityDescription:
-			'User activities and system usage patterns',
-		numberOfActivities: 'Number of Activities',
-		activitiesLabel: 'activities',
-		loginsLabel: 'Logins',
-		reportsCreatedLabel: 'Reports Created',
-		dataExportsLabel: 'Data Exports',
-		janShort: 'Jan',
-		febShort: 'Feb',
-		marShort: 'Mar',
-		aprShort: 'Apr',
-		mayShort: 'May',
-		junShort: 'Jun',
-		julShort: 'Jul',
-		augShort: 'Aug',
-		sepShort: 'Sep',
-		octShort: 'Oct',
-		novShort: 'Nov',
-		decShort: 'Dec',
 
 		// Sidebar
 		menu: 'Menu',
@@ -270,8 +248,8 @@ export const translations = {
 			'There was an error creating the user. Please try again.',
 		tryAgain: 'Try Again',
 		accessDenied: 'Access Denied',
-		adminAccessRequired:
-			'You need administrator privileges to create users',
+		AdminAccessRequired:
+			'You need Administrator privileges to create users',
 		goBack: 'Go Back',
 		failedToLoadRoles: 'Failed to load available roles',
 		failedToLoadRoleFields: 'Failed to load role-specific fields',
@@ -315,23 +293,23 @@ export const translations = {
 		createNewUserTitle: 'Create User',
 		selectRoleToCreateUser: 'Select a role to create a new user',
 		createRoleUser: 'Create {role}',
-		doctor: 'Doctor',
-		engineer: 'Engineer',
-		technician: 'Technician',
-		admin: 'Admin',
+		Doctor: 'Doctor',
+		Engineer: 'Engineer',
+		Technician: 'Technician',
+		Admin: 'Admin',
 		financeManager: 'Finance Manager',
 		financeEmployee: 'Finance Employee',
 		legalManager: 'Legal Manager',
 		legalEmployee: 'Legal Employee',
-		salesman: 'Salesman',
+		salesman: 'SalesMan',
 		salesManager: 'Sales Manager',
 		maintenanceManager: 'Maintenance Manager',
 		maintenanceSupport: 'Maintenance Support',
-		doctorDescription:
-			'Medical staff including doctors and technicians',
-		engineerDescription: 'Technical and engineering staff',
-		technicianDescription: 'Medical technicians',
-		adminDescription: 'Administrative and management roles',
+		DoctorDescription:
+			'Medical staff including Doctors and Technicians',
+		EngineerDescription: 'Technical and Engineering staff',
+		TechnicianDescription: 'Medical Technicians',
+		AdminDescription: 'Administrative and management roles',
 		financeManagerDescription:
 			'Financial management and accounting',
 		financeEmployeeDescription:
@@ -374,17 +352,17 @@ export const translations = {
 		passwordsMatch: 'Passwords match',
 		specialty: 'Specialty',
 		enterMedicalSpecialty: 'Enter medical specialty',
-		enterEngineeringSpecialty: 'Enter engineering specialty',
+		enterEngineeringSpecialty: 'Enter Engineering specialty',
 		hospital: 'Hospital',
 		selectHospital: 'Select a hospital',
 		departmentAssignment: 'Department Assignment',
 		departmentWillBeAssigned:
 			'Department will be automatically assigned based on role:',
-		adminDepartment: 'Admin (ID: 1)',
+		AdminDepartment: 'Admin (ID: 1)',
 		medicalDepartment: 'Medical (ID: 2)',
 		selectMedicalDepartment: 'Select Medical Department',
 		salesDepartment: 'Sales (ID: 3)',
-		engineeringDepartment: 'Engineering (ID: 4)',
+		EngineeringDepartment: 'Engineering (ID: 4)',
 		financeDepartment: 'Finance (ID: 5)',
 		legalDepartment: 'Legal (ID: 6)',
 		maintenanceDepartment: 'Maintenance (ID: 7)',
@@ -393,7 +371,7 @@ export const translations = {
 		governoratesSelected: '{count} governorate(s) selected',
 		selectedGovernorates: 'Selected Governorates ({count})',
 		selectAtLeastOneGovernorate:
-			'Please select at least one governorate for the engineer.',
+			'Please select at least one governorate for the Engineer.',
 		creatingUserLoading: 'Creating User...',
 		userCreatedSuccess: 'User Created Successfully',
 		pleaseFixFollowingErrors: 'Please fix the following errors:',
@@ -409,7 +387,7 @@ export const translations = {
 			'Password must contain at least one special character',
 		passwordsDoNotMatchError: 'Passwords do not match',
 		accessDeniedTitle: 'Access Denied',
-		adminAccessRequiredMessage: 'Admin access required',
+		AdminAccessRequiredMessage: 'Admin access required',
 
 		// Image Upload
 		profileImage: 'Profile Image',
@@ -561,7 +539,7 @@ export const translations = {
 		revenueTrendDescription: 'Revenue performance by salesman for',
 		revenueAxisLabel: 'Revenue (EGP)',
 		noRevenueData: 'No revenue data available',
-		totalDealsBySalesman: 'Total Deals by Salesman',
+		totalDealsBySalesMan: 'Total Deals by SalesMan',
 		topPerformersFor: 'Top performers for',
 		noDealsDataAvailable: 'No deals data available',
 		numberOfDeals: 'Number of Deals',
@@ -825,7 +803,7 @@ export const translations = {
 		addEquipment: 'Add Equipment',
 		updateTerms: 'Update Terms',
 		createInstallments: 'Create Installments',
-		sendToSalesman: 'Send to Salesman',
+		sendToSalesMan: 'Send to SalesMan',
 		exportPdf: 'Export PDF',
 		model: 'Model',
 		provider: 'Provider',
@@ -858,16 +836,23 @@ export const translations = {
 		markAsNeedsModification: 'Mark as Needs Modification',
 		markAsUnderReview: 'Mark as Under Review',
 		resumeFromUnderReview: 'Resume to Sent',
-		onlySentOffersCanBeMarkedUnderReview: 'Only sent offers can be marked as under review',
-		offerMarkedAsUnderReview: 'Offer marked as under review successfully',
-		onlyUnderReviewOffersCanBeResumed: 'Only offers under review can be resumed',
-		offerResumedFromUnderReview: 'Offer resumed from under review successfully',
+		onlySentOffersCanBeMarkedUnderReview:
+			'Only sent offers can be marked as under review',
+		offerMarkedAsUnderReview:
+			'Offer marked as under review successfully',
+		onlyUnderReviewOffersCanBeResumed:
+			'Only offers under review can be resumed',
+		offerResumedFromUnderReview:
+			'Offer resumed from under review successfully',
 		underReviewTooltipTitle: 'Under Review',
-		underReviewTooltipDescription: 'Pause the offer for internal review. Does not return to SalesSupport. You can resume it later.',
+		underReviewTooltipDescription:
+			'Pause the offer for internal review. Does not return to SalesSupport. You can resume it later.',
 		needsModificationTooltipTitle: 'Needs Modification',
-		needsModificationTooltipDescription: 'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.',
+		needsModificationTooltipDescription:
+			'Request changes to the offer. Returns to SalesSupport for editing. After edit, offer goes to Draft status.',
 		resumeFromReviewTooltipTitle: 'Resume from Review',
-		resumeFromReviewTooltipDescription: 'Resume the offer from under review back to Sent status. The offer will be available for client response again.',
+		resumeFromReviewTooltipDescription:
+			'Resume the offer from under review back to Sent status. The offer will be available for client response again.',
 		loading: 'Loading...',
 		offerDetails: 'Offer Details',
 		discount: 'Discount',
@@ -956,7 +941,7 @@ export const translations = {
 			'Only managers can set money targets',
 		pleaseEnterValidTargetRevenue:
 			'Please enter a valid target revenue amount',
-		pleaseSelectSalesmanForIndividualTarget:
+		pleaseSelectSalesManForIndividualTarget:
 			'Please select a salesman for individual money target',
 		onlySalesmenCanSetActivityTargets:
 			'Only salesmen can set activity targets',
@@ -972,11 +957,11 @@ export const translations = {
 		targetDeletedSuccessfully: 'Target deleted successfully',
 		failedToDeleteTarget: 'Failed to delete target',
 		loadingSalesmen: 'Loading salesmen...',
-		selectSalesman: 'Select salesman',
+		selectSalesMan: 'Select salesman',
 		noSalesmenAvailable: 'No salesmen available',
 		noSalesmenAvailableMessage:
 			'No salesmen available. Please ensure there are active salesmen in the system.',
-		selectSalesmanForIndividualTarget:
+		selectSalesManForIndividualTarget:
 			'Select a salesman to set an individual money target',
 		pleaseSelectMaintenanceRequest:
 			'Please select a maintenance request',
@@ -1457,9 +1442,103 @@ export const translations = {
 			},
 		},
 		offerCreationPage: {
+			title: 'Create New Offer',
+			titleFromRequest: 'Creating offer from Request #{requestId}',
+			titleStandalone: 'Fill in the details below to create a new offer',
+			loadingRequestDetails: 'Loading request details...',
+			requestInformation: 'Request Information',
+			client: 'Client',
+			requestedBy: 'Requested By',
+			requestedProducts: 'Requested Products',
+			requestDate: 'Request Date',
+			clientInformation: 'Client Information',
+			assignmentAndDetails: 'Assignment & Details',
+			assignToSalesMan: 'Assign To SalesMan',
+			loadingSalesmen: 'Loading salesmen...',
+			noSalesmenFound: 'No salesmen found matching "{query}"',
+			selected: 'Selected:',
+			offerAssignment: 'Offer Assignment',
+			willBeAssignedTo: 'Will be assigned to:',
+			customerRequestNote: 'This offer request was created by the customer, so it will be assigned directly to them.',
+			linkToOfferRequest: 'Link to Offer Request',
+			optional: 'Optional',
+			noRequestStandalone: 'No Request (Standalone Offer)',
+			loadingRequests: 'Loading requests...',
+			noAvailableRequests: 'No available requests',
+			offerLinkedToRequest: 'This offer will be linked to Request #{requestId} for follow-up tracking',
+			productsAndPricing: 'Products & Pricing',
+			productsDescription: 'Products Description',
+			productsDescriptionOptional: 'optional if adding structured products below',
+			totalAmount: 'Total Amount',
+			autoCalculated: 'Auto-calculated',
+			discountAmount: 'Discount Amount',
+			termsAndConditions: 'Terms & Conditions',
+			validUntil: 'Valid Until',
+			addDate: 'Add Date',
+			paymentTerms: 'Payment Terms',
+			addPaymentTerm: 'Add Payment Term',
+			deliveryTerms: 'Delivery Terms',
+			addDeliveryTerm: 'Add Delivery Term',
+			warrantyTerms: 'Warranty Terms',
+			addWarrantyTerm: 'Add Warranty Term',
+			productsStructured: 'Products (Structured)',
+			selectFromCatalog: 'Select from Catalog',
+			addCustomProduct: 'Add Custom Product',
+			cancel: 'Cancel',
+			productName: 'Name',
+			productModel: 'Model',
+			productFactory: 'Factory/Manufacturer',
+			productCountry: 'Country',
+			productYear: 'Year',
+			productPrice: 'Price',
+			productImageUrl: 'Image URL',
+			productProviderLogoUrl: 'Provider Logo URL',
+			productDescription: 'Description',
+			addProduct: 'Add Product',
+			productsAdded: 'Product(s) Added',
+			total: 'Total:',
+			edit: 'Edit',
+			remove: 'Remove',
+			editingProduct: 'Editing Product',
+			save: 'Save',
+			inStock: 'In Stock',
+			requiredField: 'Required field:',
+			pleaseAssignSalesman: 'Please assign to a salesman',
+			error: 'Error:',
+			clientInfoMissing: 'Client information is missing. Please ensure the offer request includes a client.',
+			createOffer: 'Create Offer',
+			creatingOffer: 'Creating Offer...',
+			offerCreatedStatus: 'Offer #{offerId} Created • Status: {status}',
+			offerStatus: 'Offer Status',
+			offerPendingApproval: 'Offer is pending SalesManager approval. Once approved, you can send it to the salesman.',
+			offerApprovedReady: 'Offer has been approved and is ready to send to salesman.',
+			manageYourOffer: 'Manage your offer',
+			sendToSalesMan: 'Send to SalesMan',
+			exportPdf: 'Export PDF',
+			backToDashboard: 'Back to Dashboard',
+			awaitingApproval: 'Awaiting SalesManager approval before you can send this offer.',
+			canSendAfterApproval: 'You can send the offer after SalesManager has approved it.',
+			selectProductFromCatalog: 'Select Product from Catalog',
+			browseAndSelectProducts: 'Browse and select products from your catalog to add to this offer',
+			search: 'Search',
+			filterByCategory: 'Filter by Category',
+			allCategories: 'All Categories',
+			loadingProducts: 'Loading products...',
+			noProductsFound: 'No products found. Add products to catalog first.',
+			close: 'Close',
+			productNameAndPriceRequired: 'Product name and price are required',
+			customProductAdded: 'Custom product added',
+			productUpdated: 'Product updated',
+			productRemoved: 'Product removed',
+			salesManagerApprovalRequired: 'SalesManager must approve the offer before it can be sent to the assigned salesman.',
+			offerCreatedAndSent: 'Offer created and sent',
+			exportFailed: 'Export failed',
+			pdfsExportedSuccessfully: 'PDFs exported successfully! Both Arabic and English versions downloaded.',
 			errors: {
 				loadProducts: 'Failed to load products',
 				searchFailed: 'Search failed',
+				productNameRequired: 'Product name is required',
+				productBasePriceRequired: 'Product base price is required. Please set a base price for this product in the catalog.',
 				productExists: 'Product already added',
 				loadRequestDetails:
 					'Failed to load request details',
@@ -1469,8 +1548,10 @@ export const translations = {
 					'Unauthorized: Please log in again',
 				salesmenLoadFailedPrefix:
 					'Failed to load salesmen:',
-				selectClientAndSalesman:
+				selectSalesMan: 'Please assign to a salesman',
+				selectClientAndSalesMan:
 					'Please select client and salesman',
+				missingClient: 'Client information is missing. Please ensure the offer request includes a client.',
 				missingProducts:
 					'Please add at least one product (from catalog or text description)',
 				invalidTotal:
@@ -1479,8 +1560,10 @@ export const translations = {
 			},
 			success: {
 				productAdded: 'Product added from catalog',
+				productUpdated: 'Product updated',
+				productRemoved: 'Product removed',
 				offerCreated:
-					'Offer created successfully! You can now send it to the salesman or export as PDF.',
+					'Offer created successfully! It is now pending SalesManager approval. Once approved, you can send it to the salesman.',
 			},
 		},
 		common: {
@@ -1491,6 +1574,190 @@ export const translations = {
 			errors: {
 				userIdMissing: 'User ID not found',
 			},
+		},
+
+		// Missing translations for Sales Support Dashboard
+		unauthorizedAccess:
+			'You do not have permission to access this page.',
+		salesManagerApprovalRequired: 'SalesManager approval required',
+		activeRequests: 'Active Requests',
+		latestOfferEvents: 'Latest offer lifecycle events',
+		loadingActivity: 'Loading recent activity...',
+		noRecentActivity: 'No recent activity',
+		activityEmptyState:
+			'Activity will appear as offers and requests are processed',
+		myOffersSnapshot: 'My Offers',
+		myOffersSnapshotDescription:
+			'Monitor your pipeline at a glance',
+		viewMyOffers: 'Go to My Offers',
+		waitingForAction: 'waiting for action',
+		comments: 'Comments',
+		rejectedAt: 'Rejected at',
+		awaitingSalesManagerApproval: 'Awaiting SalesManager approval',
+		generatingPdf: 'Generating PDF...',
+		offerAwaitingApproval:
+			'SalesManager has not approved this offer yet.',
+		offerCannotBeSentYet:
+			'You can send the offer once SalesManager approval is completed.',
+
+		// SalesMan Report Form
+		submitReport: 'Submit Report',
+		submitReportForDeal:
+			'Submit your report for deal with {clientName}',
+		submitReportWithOffer: 'Submit your report with the offer',
+		reportText: 'Report Text',
+		enterReportDetails: 'Enter your report details here...',
+		provideDetailedReport:
+			'Please provide a detailed report about the offer and client interaction.',
+		attachmentsOptional: 'Attachments (Optional)',
+		uploadFiles: 'Upload Files',
+		attachFilesDescription:
+			'You can attach images, PDFs, or documents related to the offer.',
+		pleaseEnterReportText: 'Please enter a report text',
+		reportSubmittedSuccessfully: 'Report submitted successfully',
+		failedToSubmitReport: 'Failed to submit report',
+		submitting: 'Submitting...',
+		uploading: 'Uploading...',
+
+		// Additional Sales Support Dashboard translations
+		offerSentToSalesManSuccessfully:
+			'Offer sent to salesman successfully',
+		failedToSendOfferToSalesMan: 'Failed to send offer to salesman',
+		authenticationRequiredForBackendPdfs:
+			'Authentication required for backend PDFs. Frontend PDFs generated successfully.',
+		allPdfsExportedSuccessfully: 'PDFs exported successfully!',
+		searchOffers: 'Search offers...',
+		pdfExportedSuccessfully:
+			'PDF exported successfully! Both Arabic and English versions downloaded.',
+
+		// Weekly Plans
+		weeklyPlanUpdated: 'Weekly plan has been updated',
+		allPlans: 'All plans',
+		provideFeedbackOnPerformance:
+			'Provide feedback on performance, achievements, areas for improvement...',
+		planTitlePlaceholder: 'Plan title',
+		planDescriptionPlaceholder: 'Plan description...',
+		briefDescriptionOfWeeksPlan:
+			"Brief description of this week's plan and objectives...",
+		purposeOptional: 'Purpose (optional)',
+		enterTaskTitle: 'Enter task title',
+		briefDescription: 'Brief description',
+		voiceDescription: 'Voice Description',
+		allAssociatedData: 'All associated data',
+		followUp: 'Follow Up',
+		meeting: 'Meeting',
+		medium: 'Medium',
+		high: 'High',
+		low: 'Low',
+		totalPlans: 'Total Plans',
+		completionRate: 'Completion Rate',
+		pendingReviews: 'Pending Reviews',
+
+		// Client Details
+		organization: 'Organization',
+		offerHistory: 'Offer History',
+		noOffersFoundForClient: 'No offers found for this client',
+		failedToLoadOfferDetails: 'Failed to load offer details',
+		failedToLoadVisitDetails: 'Failed to load visit details',
+
+		// Unified Sales Manager Dashboard
+		allClients: 'All Clients',
+		pendingDeals: 'Pending Deals',
+		dealApprovals: 'Deal Approvals',
+		pendingOffers: 'Pending Offers',
+		offerApprovals: 'Offer Approvals',
+		activePlans: 'Active Plans',
+
+		// Offer Creation Page
+		typeToSearchSalesMan: 'Type to search salesman...',
+		productName: 'Product name',
+		modelNumber: 'Model number',
+		productDescription: 'Product description...',
+		productDescriptionSpecifications:
+			'Product description, specifications, features...',
+		searchProductsByNameModel:
+			'Search products by name, model, provider...',
+
+		// Deal Reports Page
+		failedToLoadDeals: 'Failed to load deals',
+
+		// Edit Offer Page
+		failedToLoadOffer: 'Failed to load offer',
+		offerUpdatedSuccessfully: 'Offer updated successfully',
+
+		// Deals Management Page
+		failedToLoadDealDetails: 'Failed to load deal details',
+
+		// Legal Deals Page
+		// (uses same failedToLoadDeals)
+
+		// Client Account Creation Page
+		clientAccountMarkedAsCreated:
+			'Client account marked as created',
+
+		// Payment Queries
+		paymentCreatedSuccessfully: 'Payment created successfully',
+		paymentProcessedSuccessfully: 'Payment processed successfully',
+		cashPaymentRecordedSuccessfully:
+			'Cash payment recorded successfully',
+		bankTransferRecordedSuccessfully:
+			'Bank transfer recorded successfully',
+		paymentConfirmedSuccessfully: 'Payment confirmed successfully',
+		paymentRejected: 'Payment rejected',
+
+		// Maintenance Queries
+		maintenanceRequestCreatedSuccessfully:
+			'Maintenance request created successfully',
+		requestAssignedToEngineerSuccessfully:
+			'Request assigned to Engineer successfully',
+		maintenanceVisitCreatedSuccessfully:
+			'Maintenance visit created successfully',
+		sparePartRequestCreatedSuccessfully:
+			'Spare part request created successfully',
+		sparePartPriceSetSuccessfully:
+			'Spare part price set successfully',
+		statusUpdatedSuccessfully: 'Status updated successfully',
+
+		// Additional translations
+		visit: 'Visit',
+		chat: 'Chat',
+
+		// Chat translations (nested)
+		chatTranslations: {
+			disconnected:
+				'Disconnected from chat server. Reconnecting...',
+			loading: 'Loading chat...',
+			welcome: 'Welcome to Chat',
+			selectConversation:
+				'Select a conversation from the sidebar to start chatting',
+			selectConversationAdmin:
+				'Select a conversation from the sidebar to respond to customer messages',
+			selectConversationSuperAdmin:
+				'Select a conversation from the sidebar to view and respond. You can see all chat types.',
+			typeMessage: 'Type a message...',
+			image: {
+				invalidType: 'Please select an image file',
+				tooLarge: 'Image size must be less than 10MB',
+				failedToSend: 'Failed to send image',
+			},
+		},
+		// Chat component translations
+		chatMessages: {
+			today: 'Today',
+			yesterday: 'Yesterday',
+			typing: 'Typing...',
+			noMessages: 'No messages yet',
+			startConversation: 'Start the conversation by sending a message',
+			allConversations: 'All Conversations',
+			supportConversations: 'Support Chats',
+			salesConversations: 'Sales Chats',
+			maintenanceConversations: 'Maintenance Chats',
+			conversations: 'Conversations',
+			searchConversations: 'Search conversations...',
+			noConversations: 'No conversations yet',
+			waitForCustomer: 'Wait for customers to start conversations. You can respond to existing conversations.',
+			noResults: 'No conversations found',
+			tryDifferentSearch: 'Try a different search term',
 		},
 	},
 	ar: {
@@ -1538,7 +1805,7 @@ export const translations = {
 		activeUsers: 'المستخدمون النشطون',
 		inactiveUsers: 'المستخدمون غير النشطين',
 		successRate: 'معدل النجاح',
-		adminModule: 'وحدة الإدارة',
+		AdminModule: 'وحدة الإدارة',
 		usersManagement: 'إدارة المستخدمين',
 		usersManagementDescription: 'عرض وإدارة جميع المستخدمين',
 		usersManagementDetails:
@@ -1595,28 +1862,6 @@ export const translations = {
 		viewInventory: 'عرض المخزون',
 		accountingDashboardDescription:
 			'تفقد الأداء المالي، الفوترة، ومتابعة المدفوعات.',
-
-		// Monthly Activity Chart
-		monthlyActivityOverview: 'نظرة على النشاط الشهري',
-		monthlyActivityDescription:
-			'أنشطة المستخدمين وأنماط استخدام النظام',
-		numberOfActivities: 'عدد الأنشطة',
-		activitiesLabel: 'نشاط',
-		loginsLabel: 'عمليات تسجيل الدخول',
-		reportsCreatedLabel: 'التقارير المنشأة',
-		dataExportsLabel: 'عمليات تصدير البيانات',
-		janShort: 'يناير',
-		febShort: 'فبراير',
-		marShort: 'مارس',
-		aprShort: 'أبريل',
-		mayShort: 'مايو',
-		junShort: 'يونيو',
-		julShort: 'يوليو',
-		augShort: 'أغسطس',
-		sepShort: 'سبتمبر',
-		octShort: 'أكتوبر',
-		novShort: 'نوفمبر',
-		decShort: 'ديسمبر',
 
 		// Sidebar
 		menu: 'القائمة',
@@ -1755,7 +2000,7 @@ export const translations = {
 			'حدث خطأ في إنشاء المستخدم. يرجى المحاولة مرة أخرى.',
 		tryAgain: 'حاول مرة أخرى',
 		accessDenied: 'تم رفض الوصول',
-		adminAccessRequired:
+		AdminAccessRequired:
 			'تحتاج إلى صلاحيات المدير لإنشاء المستخدمين',
 		goBack: 'العودة',
 		failedToLoadRoles: 'فشل في تحميل الأدوار المتاحة',
@@ -1801,10 +2046,10 @@ export const translations = {
 		createNewUserTitle: 'إنشاء مستخدم جديد',
 		selectRoleToCreateUser: 'اختر دوراً لإنشاء مستخدم جديد',
 		createRoleUser: 'إنشاء {role}',
-		doctor: 'طبيب',
-		engineer: 'مهندس',
-		technician: 'فني',
-		admin: 'مدير',
+		Doctor: 'طبيب',
+		Engineer: 'مهندس',
+		Technician: 'فني',
+		Admin: 'مدير',
 		financeManager: 'مدير مالي',
 		financeEmployee: 'موظف مالي',
 		legalManager: 'مدير قانوني',
@@ -1813,10 +2058,10 @@ export const translations = {
 		salesManager: 'مدير مبيعات',
 		maintenanceManager: 'مدير صيانة',
 		maintenanceSupport: 'دعم صيانة',
-		doctorDescription: 'الطاقم الطبي بما في ذلك الأطباء والفنيين',
-		engineerDescription: 'الطاقم التقني والهندسي',
-		technicianDescription: 'الفنيون الطبيون',
-		adminDescription: 'الأدوار الإدارية والإدارية',
+		DoctorDescription: 'الطاقم الطبي بما في ذلك الأطباء والفنيين',
+		EngineerDescription: 'الطاقم التقني والهندسي',
+		TechnicianDescription: 'الفنيون الطبيون',
+		AdminDescription: 'الأدوار الإدارية والإدارية',
 		financeManagerDescription: 'الإدارة المالية والمحاسبة',
 		financeEmployeeDescription: 'موظفو وطاقم القسم المالي',
 		legalManagerDescription: 'الشؤون القانونية والامتثال',
@@ -1862,11 +2107,11 @@ export const translations = {
 		departmentAssignment: 'تعيين القسم',
 		departmentWillBeAssigned:
 			'سيتم تعيين القسم تلقائياً بناءً على الدور:',
-		adminDepartment: 'الإدارة (ID: 1)',
+		AdminDepartment: 'الإدارة (ID: 1)',
 		medicalDepartment: 'الطبي (ID: 2)',
 		selectMedicalDepartment: 'اختر القسم الطبي',
 		salesDepartment: 'المبيعات (ID: 3)',
-		engineeringDepartment: 'الهندسة (ID: 4)',
+		EngineeringDepartment: 'الهندسة (ID: 4)',
 		financeDepartment: 'المالية (ID: 5)',
 		legalDepartment: 'القانوني (ID: 6)',
 		maintenanceDepartment: 'الصيانة (ID: 7)',
@@ -1891,7 +2136,7 @@ export const translations = {
 			'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل',
 		passwordsDoNotMatchError: 'كلمات المرور غير متطابقة',
 		accessDeniedTitle: 'تم رفض الوصول',
-		adminAccessRequiredMessage: 'مطلوب صلاحيات المدير',
+		AdminAccessRequiredMessage: 'مطلوب صلاحيات المدير',
 
 		// Image Upload
 		profileImage: 'صورة الملف الشخصي',
@@ -2110,7 +2355,7 @@ export const translations = {
 			'أداء الإيرادات من قبل مندوبي المبيعات لـ',
 		revenueAxisLabel: 'الإيرادات (جنيه)',
 		noRevenueData: 'لا توجد بيانات إيرادات متاحة',
-		totalDealsBySalesman: 'إجمالي الصفقات حسب المندوب',
+		totalDealsBySalesMan: 'إجمالي الصفقات حسب المندوب',
 		topPerformersFor: 'أفضل المؤدين لـ',
 		noDealsDataAvailable: 'لا توجد بيانات صفقات متاحة',
 		numberOfDeals: 'عدد الصفقات',
@@ -2195,7 +2440,7 @@ export const translations = {
 		addEquipment: 'إضافة معدات',
 		updateTerms: 'تحديث الشروط',
 		createInstallments: 'إنشاء أقساط',
-		sendToSalesman: 'إرسال إلى مندوب المبيعات',
+		sendToSalesMan: 'إرسال إلى مندوب المبيعات',
 		exportPdf: 'تصدير PDF',
 		model: 'النموذج',
 		provider: 'المزود',
@@ -2222,16 +2467,22 @@ export const translations = {
 		markAsNeedsModification: 'وضع علامة يحتاج تعديل',
 		markAsUnderReview: 'وضع تحت المراجعة',
 		resumeFromUnderReview: 'استئناف إلى مرسل',
-		onlySentOffersCanBeMarkedUnderReview: 'يمكن وضع العروض المرسلة فقط تحت المراجعة',
+		onlySentOffersCanBeMarkedUnderReview:
+			'يمكن وضع العروض المرسلة فقط تحت المراجعة',
 		offerMarkedAsUnderReview: 'تم وضع العرض تحت المراجعة بنجاح',
-		onlyUnderReviewOffersCanBeResumed: 'يمكن استئناف العروض تحت المراجعة فقط',
-		offerResumedFromUnderReview: 'تم استئناف العرض من تحت المراجعة بنجاح',
+		onlyUnderReviewOffersCanBeResumed:
+			'يمكن استئناف العروض تحت المراجعة فقط',
+		offerResumedFromUnderReview:
+			'تم استئناف العرض من تحت المراجعة بنجاح',
 		underReviewTooltipTitle: 'قيد المراجعة',
-		underReviewTooltipDescription: 'إيقاف العرض مؤقتاً للمراجعة الداخلية. لا يعود إلى دعم المبيعات. يمكنك استئنافه لاحقاً.',
+		underReviewTooltipDescription:
+			'إيقاف العرض مؤقتاً للمراجعة الداخلية. لا يعود إلى دعم المبيعات. يمكنك استئنافه لاحقاً.',
 		needsModificationTooltipTitle: 'يحتاج تعديل',
-		needsModificationTooltipDescription: 'طلب تعديلات على العرض. يعود إلى دعم المبيعات للتعديل. بعد التعديل، ينتقل العرض إلى حالة المسودة.',
+		needsModificationTooltipDescription:
+			'طلب تعديلات على العرض. يعود إلى دعم المبيعات للتعديل. بعد التعديل، ينتقل العرض إلى حالة المسودة.',
 		resumeFromReviewTooltipTitle: 'استئناف من المراجعة',
-		resumeFromReviewTooltipDescription: 'استئناف العرض من تحت المراجعة إلى حالة المرسل. سيكون العرض متاحاً مرة أخرى لرد العميل.',
+		resumeFromReviewTooltipDescription:
+			'استئناف العرض من تحت المراجعة إلى حالة المرسل. سيكون العرض متاحاً مرة أخرى لرد العميل.',
 		loading: 'جاري التحميل...',
 		offerDetails: 'تفاصيل العرض',
 		discount: 'الخصم',
@@ -2317,7 +2568,7 @@ export const translations = {
 			'يمكن للمديرين فقط تعيين أهداف مالية',
 		pleaseEnterValidTargetRevenue:
 			'يرجى إدخال مبلغ إيرادات مستهدف صالح',
-		pleaseSelectSalesmanForIndividualTarget:
+		pleaseSelectSalesManForIndividualTarget:
 			'يرجى اختيار مندوب مبيعات للهدف الفردي المالي',
 		onlySalesmenCanSetActivityTargets:
 			'يمكن لمندوبي المبيعات فقط تعيين أهداف النشاط',
@@ -2332,11 +2583,11 @@ export const translations = {
 		targetDeletedSuccessfully: 'تم حذف الهدف بنجاح',
 		failedToDeleteTarget: 'فشل حذف الهدف',
 		loadingSalesmen: 'جاري تحميل مندوبي المبيعات...',
-		selectSalesman: 'اختر مندوب مبيعات',
+		selectSalesMan: 'اختر مندوب مبيعات',
 		noSalesmenAvailable: 'لا يوجد مندوبو مبيعات متاحون',
 		noSalesmenAvailableMessage:
 			'لا يوجد مندوبو مبيعات متاحون. يرجى التأكد من وجود مندوبي مبيعات نشطين في النظام.',
-		selectSalesmanForIndividualTarget:
+		selectSalesManForIndividualTarget:
 			'اختر مندوب مبيعات لتعيين هدف مالي فردي',
 		pleaseSelectMaintenanceRequest: 'يرجى اختيار طلب صيانة',
 		totalTargets: 'إجمالي الأهداف',
@@ -2797,9 +3048,103 @@ export const translations = {
 			},
 		},
 		offerCreationPage: {
+			title: 'إنشاء عرض جديد',
+			titleFromRequest: 'إنشاء عرض من الطلب #{requestId}',
+			titleStandalone: 'املأ التفاصيل أدناه لإنشاء عرض جديد',
+			loadingRequestDetails: 'جاري تحميل تفاصيل الطلب...',
+			requestInformation: 'معلومات الطلب',
+			client: 'العميل',
+			requestedBy: 'طلب بواسطة',
+			requestedProducts: 'المنتجات المطلوبة',
+			requestDate: 'تاريخ الطلب',
+			clientInformation: 'معلومات العميل',
+			assignmentAndDetails: 'التعيين والتفاصيل',
+			assignToSalesMan: 'تعيين إلى مندوب المبيعات',
+			loadingSalesmen: 'جاري تحميل مندوبي المبيعات...',
+			noSalesmenFound: 'لم يتم العثور على مندوبي مبيعات يطابقون "{query}"',
+			selected: 'المحدد:',
+			offerAssignment: 'تعيين العرض',
+			willBeAssignedTo: 'سيتم تعيينه إلى:',
+			customerRequestNote: 'تم إنشاء طلب العرض هذا من قبل العميل، لذلك سيتم تعيينه مباشرة لهم.',
+			linkToOfferRequest: 'ربط بطلب العرض',
+			optional: 'اختياري',
+			noRequestStandalone: 'لا يوجد طلب (عرض مستقل)',
+			loadingRequests: 'جاري تحميل الطلبات...',
+			noAvailableRequests: 'لا توجد طلبات متاحة',
+			offerLinkedToRequest: 'سيتم ربط هذا العرض بطلب #{requestId} لمتابعة المتابعة',
+			productsAndPricing: 'المنتجات والأسعار',
+			productsDescription: 'وصف المنتجات',
+			productsDescriptionOptional: 'اختياري إذا كنت تضيف منتجات منظمة أدناه',
+			totalAmount: 'المبلغ الإجمالي',
+			autoCalculated: 'محسوب تلقائيًا',
+			discountAmount: 'مبلغ الخصم',
+			termsAndConditions: 'الشروط والأحكام',
+			validUntil: 'صالح حتى',
+			addDate: 'إضافة تاريخ',
+			paymentTerms: 'شروط الدفع',
+			addPaymentTerm: 'إضافة شرط دفع',
+			deliveryTerms: 'شروط التسليم',
+			addDeliveryTerm: 'إضافة شرط تسليم',
+			warrantyTerms: 'شروط الضمان',
+			addWarrantyTerm: 'إضافة شرط ضمان',
+			productsStructured: 'المنتجات (منظمة)',
+			selectFromCatalog: 'اختر من الكتالوج',
+			addCustomProduct: 'إضافة منتج مخصص',
+			cancel: 'إلغاء',
+			productName: 'الاسم',
+			productModel: 'الموديل',
+			productFactory: 'المصنع/الشركة المصنعة',
+			productCountry: 'البلد',
+			productYear: 'السنة',
+			productPrice: 'السعر',
+			productImageUrl: 'رابط الصورة',
+			productProviderLogoUrl: 'رابط شعار المزود',
+			productDescription: 'الوصف',
+			addProduct: 'إضافة منتج',
+			productsAdded: 'تمت إضافة المنتج/المنتجات',
+			total: 'الإجمالي:',
+			edit: 'تعديل',
+			remove: 'إزالة',
+			editingProduct: 'تعديل المنتج',
+			save: 'حفظ',
+			inStock: 'متوفر',
+			requiredField: 'حقل مطلوب:',
+			pleaseAssignSalesman: 'يرجى تعيين مندوب مبيعات',
+			error: 'خطأ:',
+			clientInfoMissing: 'معلومات العميل مفقودة. يرجى التأكد من أن طلب العرض يتضمن عميلاً.',
+			createOffer: 'إنشاء عرض',
+			creatingOffer: 'جاري إنشاء العرض...',
+			offerCreatedStatus: 'تم إنشاء العرض #{offerId} • الحالة: {status}',
+			offerStatus: 'حالة العرض',
+			offerPendingApproval: 'العرض في انتظار موافقة مدير المبيعات. بمجرد الموافقة، يمكنك إرساله إلى مندوب المبيعات.',
+			offerApprovedReady: 'تمت الموافقة على العرض وهو جاهز للإرسال إلى مندوب المبيعات.',
+			manageYourOffer: 'إدارة عرضك',
+			sendToSalesMan: 'إرسال إلى مندوب المبيعات',
+			exportPdf: 'تصدير PDF',
+			backToDashboard: 'العودة إلى لوحة التحكم',
+			awaitingApproval: 'في انتظار موافقة مدير المبيعات قبل أن تتمكن من إرسال هذا العرض.',
+			canSendAfterApproval: 'يمكنك إرسال العرض بعد أن يوافق مدير المبيعات عليه.',
+			selectProductFromCatalog: 'اختر منتج من الكتالوج',
+			browseAndSelectProducts: 'تصفح واختر المنتجات من كتالوجك لإضافتها إلى هذا العرض',
+			search: 'بحث',
+			filterByCategory: 'تصفية حسب الفئة',
+			allCategories: 'جميع الفئات',
+			loadingProducts: 'جاري تحميل المنتجات...',
+			noProductsFound: 'لم يتم العثور على منتجات. أضف منتجات إلى الكتالوج أولاً.',
+			close: 'إغلاق',
+			productNameAndPriceRequired: 'اسم المنتج والسعر مطلوبان',
+			customProductAdded: 'تمت إضافة المنتج المخصص',
+			productUpdated: 'تم تحديث المنتج',
+			productRemoved: 'تمت إزالة المنتج',
+			salesManagerApprovalRequired: 'يجب أن يوافق مدير المبيعات على العرض قبل إرساله إلى مندوب المبيعات المعين.',
+			offerCreatedAndSent: 'تم إنشاء وإرسال العرض',
+			exportFailed: 'فشل التصدير',
+			pdfsExportedSuccessfully: 'تم تصدير ملفات PDF بنجاح! تم تنزيل النسختين العربية والإنجليزية.',
 			errors: {
 				loadProducts: 'فشل تحميل المنتجات',
 				searchFailed: 'فشل البحث',
+				productNameRequired: 'اسم المنتج مطلوب',
+				productBasePriceRequired: 'سعر المنتج الأساسي مطلوب. يرجى تعيين سعر أساسي لهذا المنتج في الكتالوج.',
 				productExists: 'تمت إضافة المنتج مسبقًا',
 				loadRequestDetails: 'فشل تحميل تفاصيل الطلب',
 				salesmenAccessDenied:
@@ -2808,8 +3153,10 @@ export const translations = {
 					'غير مصرح: يرجى تسجيل الدخول مرة أخرى',
 				salesmenLoadFailedPrefix:
 					'فشل تحميل مندوبي المبيعات:',
-				selectClientAndSalesman:
+				selectSalesMan: 'يرجى تعيين مندوب مبيعات',
+				selectClientAndSalesMan:
 					'يرجى اختيار العميل ومندوب المبيعات',
+				missingClient: 'معلومات العميل مفقودة. يرجى التأكد من أن طلب العرض يتضمن عميلاً.',
 				missingProducts:
 					'يرجى إضافة منتج واحد على الأقل (من الكتالوج أو وصف نصي)',
 				invalidTotal:
@@ -2818,8 +3165,10 @@ export const translations = {
 			},
 			success: {
 				productAdded: 'تمت إضافة المنتج من الكتالوج',
+				productUpdated: 'تم تحديث المنتج',
+				productRemoved: 'تمت إزالة المنتج',
 				offerCreated:
-					'تم إنشاء العرض بنجاح! يمكنك الآن إرساله للمندوب أو تصديره كملف PDF.',
+					'تم إنشاء العرض بنجاح! وهو الآن في انتظار موافقة مدير المبيعات. بمجرد الموافقة، يمكنك إرساله إلى مندوب المبيعات.',
 			},
 		},
 		common: {
@@ -2830,6 +3179,177 @@ export const translations = {
 			errors: {
 				userIdMissing: 'معرف المستخدم غير موجود',
 			},
+		},
+
+		// Missing translations for Sales Support Dashboard
+		unauthorizedAccess: 'ليس لديك صلاحية للوصول إلى هذه الصفحة.',
+		salesManagerApprovalRequired: 'يتطلب موافقة مدير المبيعات',
+		activeRequests: 'الطلبات النشطة',
+		latestOfferEvents: 'أحدث أحداث دورة حياة العروض',
+		loadingActivity: 'جاري تحميل النشاط الأخير...',
+		noRecentActivity: 'لا يوجد نشاط حديث',
+		activityEmptyState: 'سيظهر النشاط عند معالجة العروض والطلبات',
+		myOffersSnapshot: 'عروضي',
+		myOffersSnapshotDescription:
+			'راقب خط الأنابيب الخاص بك في لمحة',
+		viewMyOffers: 'انتقل إلى عروضي',
+		waitingForAction: 'في انتظار الإجراء',
+		comments: 'التعليقات',
+		rejectedAt: 'تم الرفض في',
+		awaitingSalesManagerApproval: 'في انتظار موافقة مدير المبيعات',
+		generatingPdf: 'جاري إنشاء PDF...',
+		offerAwaitingApproval:
+			'لم يوافق مدير المبيعات على هذا العرض بعد.',
+		offerCannotBeSentYet:
+			'يمكنك إرسال العرض بمجرد اكتمال موافقة مدير المبيعات.',
+
+		// SalesMan Report Form
+		submitReport: 'إرسال التقرير',
+		submitReportForDeal: 'إرسال تقريرك للصفقة مع {clientName}',
+		submitReportWithOffer: 'إرسال تقريرك مع العرض',
+		reportText: 'نص التقرير',
+		enterReportDetails: 'أدخل تفاصيل تقريرك هنا...',
+		provideDetailedReport:
+			'يرجى تقديم تقرير مفصل حول العرض وتفاعل العميل.',
+		attachmentsOptional: 'المرفقات (اختياري)',
+		uploadFiles: 'رفع الملفات',
+		attachFilesDescription:
+			'يمكنك إرفاق الصور أو ملفات PDF أو المستندات المتعلقة بالعرض.',
+		pleaseEnterReportText: 'يرجى إدخال نص التقرير',
+		reportSubmittedSuccessfully: 'تم إرسال التقرير بنجاح',
+		failedToSubmitReport: 'فشل إرسال التقرير',
+		submitting: 'جاري الإرسال...',
+		uploading: 'جاري الرفع...',
+
+		// Additional Sales Support Dashboard translations
+		offerSentToSalesManSuccessfully:
+			'تم إرسال العرض إلى مندوب المبيعات بنجاح',
+		failedToSendOfferToSalesMan:
+			'فشل إرسال العرض إلى مندوب المبيعات',
+		authenticationRequiredForBackendPdfs:
+			'المصادقة مطلوبة لملفات PDF من الخادم. تم إنشاء ملفات PDF من الواجهة الأمامية بنجاح.',
+		allPdfsExportedSuccessfully: 'تم تصدير ملفات PDF بنجاح!',
+		searchOffers: 'البحث عن العروض...',
+		pdfExportedSuccessfully:
+			'تم تصدير PDF بنجاح! تم تنزيل النسختين العربية والإنجليزية.',
+
+		// Weekly Plans
+		weeklyPlanUpdated: 'تم تحديث الخطة الأسبوعية',
+		allPlans: 'جميع الخطط',
+		provideFeedbackOnPerformance:
+			'قدم ملاحظات حول الأداء والإنجازات والمناطق التي تحتاج تحسين...',
+		planTitlePlaceholder: 'عنوان الخطة',
+		planDescriptionPlaceholder: 'وصف الخطة...',
+		briefDescriptionOfWeeksPlan:
+			'وصف موجز لخطة هذا الأسبوع والأهداف...',
+		purposeOptional: 'الغرض (اختياري)',
+		enterTaskTitle: 'أدخل عنوان المهمة',
+		briefDescription: 'وصف موجز',
+		voiceDescription: 'الوصف الصوتي',
+		allAssociatedData: 'جميع البيانات المرتبطة',
+		followUp: 'متابعة',
+		meeting: 'اجتماع',
+		medium: 'متوسط',
+		high: 'عالي',
+		low: 'منخفض',
+		totalPlans: 'إجمالي الخطط',
+		completionRate: 'معدل الإنجاز',
+		pendingReviews: 'المراجعات المعلقة',
+
+		// Client Details
+		organization: 'المؤسسة',
+		offerHistory: 'تاريخ العروض',
+		noOffersFoundForClient: 'لم يتم العثور على عروض لهذا العميل',
+		failedToLoadOfferDetails: 'فشل تحميل تفاصيل العرض',
+		failedToLoadVisitDetails: 'فشل تحميل تفاصيل الزيارة',
+
+		// Unified Sales Manager Dashboard
+		allClients: 'جميع العملاء',
+		pendingDeals: 'الصفقات المعلقة',
+		dealApprovals: 'موافقات الصفقات',
+		pendingOffers: 'العروض المعلقة',
+		offerApprovals: 'موافقات العروض',
+		activePlans: 'الخطط النشطة',
+
+		// Offer Creation Page
+		typeToSearchSalesMan: 'اكتب للبحث عن مندوب مبيعات...',
+		productName: 'اسم المنتج',
+		productDescription: 'وصف المنتج...',
+		productDescriptionSpecifications:
+			'وصف المنتج، المواصفات، الميزات...',
+		searchProductsByNameModel:
+			'البحث عن المنتجات بالاسم، الموديل، المورد...',
+
+		// Deal Reports Page
+		failedToLoadDeals: 'فشل تحميل الصفقات',
+
+		// Edit Offer Page
+		failedToLoadOffer: 'فشل تحميل العرض',
+
+		// Deals Management Page
+		// Client Account Creation Page
+		// Payment Queries
+		paymentCreatedSuccessfully: 'تم إنشاء الدفع بنجاح',
+		paymentProcessedSuccessfully: 'تم معالجة الدفع بنجاح',
+		cashPaymentRecordedSuccessfully: 'تم تسجيل الدفع النقدي بنجاح',
+		bankTransferRecordedSuccessfully:
+			'تم تسجيل التحويل البنكي بنجاح',
+		paymentConfirmedSuccessfully: 'تم تأكيد الدفع بنجاح',
+		paymentRejected: 'تم رفض الدفع',
+
+		// Maintenance Queries
+		maintenanceRequestCreatedSuccessfully:
+			'تم إنشاء طلب الصيانة بنجاح',
+		requestAssignedToEngineerSuccessfully:
+			'تم تعيين الطلب للمهندس بنجاح',
+		maintenanceVisitCreatedSuccessfully:
+			'تم إنشاء زيارة الصيانة بنجاح',
+		sparePartRequestCreatedSuccessfully:
+			'تم إنشاء طلب قطع الغيار بنجاح',
+		sparePartPriceSetSuccessfully: 'تم تعيين سعر قطع الغيار بنجاح',
+		statusUpdatedSuccessfully: 'تم تحديث الحالة بنجاح',
+
+		// Additional translations
+		call: 'مكالمة',
+		visit: 'زيارة',
+		chat: 'دردشة',
+
+		// Chat translations (nested)
+		chatTranslations: {
+			disconnected:
+				'انقطع الاتصال بخادم الدردشة. إعادة الاتصال...',
+			loading: 'جاري تحميل الدردشة...',
+			welcome: 'مرحباً بك في الدردشة',
+			selectConversation:
+				'اختر محادثة من الشريط الجانبي لبدء الدردشة',
+			selectConversationAdmin:
+				'اختر محادثة من الشريط الجانبي للرد على رسائل العملاء',
+			selectConversationSuperAdmin:
+				'اختر محادثة من الشريط الجانبي لعرض والرد. يمكنك رؤية جميع أنواع الدردشة.',
+			typeMessage: 'اكتب رسالة...',
+			image: {
+				invalidType: 'يرجى اختيار ملف صورة',
+				tooLarge: 'يجب أن يكون حجم الصورة أقل من 10 ميجابايت',
+				failedToSend: 'فشل إرسال الصورة',
+			},
+		},
+		// Chat component translations
+		chatMessages: {
+			today: 'اليوم',
+			yesterday: 'أمس',
+			typing: 'يكتب...',
+			noMessages: 'لا توجد رسائل بعد',
+			startConversation: 'ابدأ المحادثة بإرسال رسالة',
+			allConversations: 'جميع المحادثات',
+			supportConversations: 'محادثات الدعم',
+			salesConversations: 'محادثات المبيعات',
+			maintenanceConversations: 'محادثات الصيانة',
+			conversations: 'المحادثات',
+			searchConversations: 'البحث في المحادثات...',
+			noConversations: 'لا توجد محادثات بعد',
+			waitForCustomer: 'انتظر العملاء لبدء المحادثات. يمكنك الرد على المحادثات الموجودة.',
+			noResults: 'لم يتم العثور على محادثات',
+			tryDifferentSearch: 'جرب مصطلح بحث مختلف',
 		},
 	},
 };

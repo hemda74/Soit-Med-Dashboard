@@ -68,7 +68,7 @@ interface Deal {
 	};
 }
 
-interface Salesman {
+interface SalesMan {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -93,8 +93,8 @@ const DealsManagementPage: React.FC = () => {
 
 	// Filters
 	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [salesmanFilter, setSalesmanFilter] = useState<string>('all');
-	const [salesmen, setSalesmen] = useState<Salesman[]>([]);
+	const [salesmanFilter, setSalesManFilter] = useState<string>('all');
+	const [salesmen, setSalesmen] = useState<SalesMan[]>([]);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
 	const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -189,7 +189,7 @@ const DealsManagementPage: React.FC = () => {
 		} catch (err: any) {
 			console.error('Failed to load deals:', err);
 			setError(err.message || 'Failed to load deals');
-			toast.error('Failed to load deals');
+			toast.error(t('failedToLoadDeals'));
 		} finally {
 			setLoading(false);
 		}
@@ -207,10 +207,16 @@ const DealsManagementPage: React.FC = () => {
 		const statusConfig: Record<string, { label: string; className: string }> = {
 			PendingManagerApproval: { label: 'Pending Approval', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
 			PendingSuperAdminApproval: { label: 'Pending Super Admin', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
+			AwaitingSalesmenReviewsAndAccountSetup: { label: 'Awaiting Reviews & Setup', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
+			AwaitingClientAccountCreation: { label: 'Awaiting Account Creation', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+			AwaitingSalesManReport: { label: 'Awaiting Report', className: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' },
+			SentToLegal: { label: 'Sent To Legal', className: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
 			Approved: { label: 'Approved', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
 			Success: { label: 'Success', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
 			Failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
 			Rejected: { label: 'Rejected', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+			RejectedByManager: { label: 'Rejected By Manager', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+			RejectedBySuperAdmin: { label: 'Rejected By Super Admin', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
 		};
 
 		const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
@@ -242,7 +248,7 @@ const DealsManagementPage: React.FC = () => {
 			}
 		} catch (err: any) {
 			console.error('Failed to load deal details:', err);
-			toast.error('Failed to load deal details');
+			toast.error(t('failedToLoadDealDetails'));
 		}
 	};
 
@@ -296,7 +302,7 @@ const DealsManagementPage: React.FC = () => {
 								<SelectItem value="Rejected">Rejected</SelectItem>
 							</SelectContent>
 						</Select>
-						<Select value={salesmanFilter} onValueChange={setSalesmanFilter}>
+						<Select value={salesmanFilter} onValueChange={setSalesManFilter}>
 							<SelectTrigger>
 								<SelectValue placeholder="Filter by salesman" />
 							</SelectTrigger>
@@ -382,7 +388,7 @@ const DealsManagementPage: React.FC = () => {
 													</p>
 												</div>
 												<div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3 border border-blue-100 dark:border-blue-900/40">
-													<p className="text-xs text-blue-700 dark:text-blue-300">Salesman</p>
+													<p className="text-xs text-blue-700 dark:text-blue-300">SalesMan</p>
 													<p className="mt-1 font-semibold text-blue-900 dark:text-blue-100">
 														{deal.salesmanName || deal.createdByName || 'Unknown'}
 													</p>
@@ -535,7 +541,7 @@ const DealsManagementPage: React.FC = () => {
 										<div className="mt-1">{getStatusBadge(selectedDeal.status)}</div>
 									</div>
 									<div>
-										<p className="text-sm text-muted-foreground">Salesman</p>
+										<p className="text-sm text-muted-foreground">SalesMan</p>
 										<p className="font-semibold">{selectedDeal.salesmanName || selectedDeal.createdByName || 'Unknown'}</p>
 									</div>
 									<div>

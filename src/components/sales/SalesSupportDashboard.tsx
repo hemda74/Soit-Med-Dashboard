@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { salesApi } from '@/services/sales/salesApi';
 import type { OfferEquipment } from '@/types/sales.types';
-import ClientSearch from './ClientSearch';
-import SalesSupportClientDetails from './SalesSupportClientDetails';
 import OfferRequestForm from './OfferRequestForm';
 import {
 	UserGroupIcon,
@@ -20,7 +18,6 @@ import {
 } from '@heroicons/react/24/outline';
 import {
 	HeadphonesIcon,
-	Users,
 	BarChart3,
 	Activity as ActivityIcon,
 	Clock as ClockOutlineIcon,
@@ -38,48 +35,67 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { downloadOfferPDF } from '@/utils/pdfGenerator';
 import toast from 'react-hot-toast';
 import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig';
 import { usePerformance } from '@/hooks/usePerformance';
 
-type SalesSupportTab = 'overview' | 'my-offers' | 'requests' | 'clients';
-const SALES_SUPPORT_TABS: readonly SalesSupportTab[] = ['overview', 'my-offers', 'requests', 'clients'];
+type SalesSupportTab = 'overview' | 'my-offers' | 'requests';
+const SALES_SUPPORT_TABS: readonly SalesSupportTab[] = ['overview', 'my-offers', 'requests'];
 
 const SalesSupportDashboard: React.FC = () => {
 	usePerformance('SalesSupportDashboard');
-	const { t } = useTranslation();
+	const { t, language } = useTranslation();
+	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const {
 		getAssignedRequests,
 		updateRequestStatus,
 		getMyOffers,
-		searchClients,
-		getOffersByClient,
 		assignedRequests,
 		offers,
 		requestWorkflowsLoading,
-		clientsLoading,
 		offersLoading,
-		clients,
-		clientsError,
 		requestWorkflowsError,
 		offersError,
-		pagination,
-		offersByClient
 	} = useSalesStore();
 
-	const { user } = useAuthStore();
+	const { user, hasRole, isAuthenticated } = useAuthStore();
+
+	// Memoize role checks to prevent unnecessary re-renders
+	const roles = useMemo(() => ({
+		isSuperAdmin: hasRole('SuperAdmin'),
+		isSalesSupport: hasRole('SalesSupport'),
+	}), [hasRole]);
+
+	// Check authorization - redirect if user doesn't have access
+	useEffect(() => {
+		if (!isAuthenticated) {
+			navigate('/login');
+			return;
+		}
+
+		// Allow SuperAdmin and SalesSupport roles
+		if (!roles.isSuperAdmin && !roles.isSalesSupport) {
+			toast.error(t('unauthorizedAccess') || 'You do not have permission to access this page.');
+			navigate('/dashboard');
+			return;
+		}
+	}, [isAuthenticated, roles.isSuperAdmin, roles.isSalesSupport, navigate, t]);
+
+	// Early return if not authorized (prevents rendering before redirect)
+	if (!isAuthenticated || (!roles.isSuperAdmin && !roles.isSalesSupport)) {
+		return null;
+	}
 	const [selectedClient, setSelectedClient] = useState<any>(null);
 	const [selectedRequest, setSelectedRequest] = useState<any>(null);
 	const [selectedOffer, setSelectedOffer] = useState<any>(null);
 	const [offerEquipment, setOfferEquipment] = useState<OfferEquipment[]>([]);
 	const [loadingEquipment, setLoadingEquipment] = useState(false);
+	const [exportingPdf, setExportingPdf] = useState(false);
 	const [equipmentImageUrls, setEquipmentImageUrls] = useState<Record<number, string>>({});
 	const [showOfferForm, setShowOfferForm] = useState(false);
 	const [activeTab, setActiveTab] = useState<SalesSupportTab>('overview');
 	const [searchQuery, setSearchQuery] = useState('');
-	const [currentPage, setCurrentPage] = useState(1);
 	const [recentActivity, setRecentActivity] = useState<any[]>([]);
 	const [activityLoading, setActivityLoading] = useState(false);
 
@@ -147,39 +163,6 @@ const SalesSupportDashboard: React.FC = () => {
 		}
 	}, [searchParams, assignedRequests, setSearchParams]);
 
-	// Handle clientId from URL parameter
-	useEffect(() => {
-		const clientIdFromUrl = searchParams.get('clientId');
-		if (!clientIdFromUrl) return;
-
-		const matchedClient = clients?.find((client: any) => client.id?.toString() === clientIdFromUrl);
-		if (matchedClient) {
-			setSelectedClient(matchedClient);
-			setActiveTab('clients');
-			const params = new URLSearchParams(searchParams);
-			params.delete('clientId');
-			setSearchParams(params, { replace: true });
-			return;
-		}
-
-		if (!clientsLoading) {
-			searchClients({ query: clientIdFromUrl, page: 1, pageSize: 1 });
-		}
-	}, [searchParams, clients, clientsLoading, searchClients, setSearchParams]);
-
-	// Load all clients when clients tab is opened
-	useEffect(() => {
-		if (activeTab === 'clients') {
-			searchClients({ page: currentPage, pageSize: 20 });
-		}
-	}, [activeTab, currentPage, searchClients]);
-
-	// Load client offers when a client is selected
-	useEffect(() => {
-		if (selectedClient?.id) {
-			getOffersByClient(selectedClient.id);
-		}
-	}, [selectedClient, getOffersByClient]);
 
 	// Load equipment images - use direct URLs since static files should be public
 	useEffect(() => {
@@ -258,120 +241,108 @@ const SalesSupportDashboard: React.FC = () => {
 	};
 
 	const canSendSelectedOffer =
-		selectedOffer?.canSendToSalesman ?? selectedOffer?.status === 'Sent';
+		selectedOffer?.canSendToSalesMan ?? selectedOffer?.status === 'Sent';
 	const awaitingSelectedOfferApproval =
 		selectedOffer?.status === 'PendingSalesManagerApproval';
 
-	const handleSendToSalesman = async () => {
+	const handleSendToSalesMan = async () => {
 		if (!selectedOffer) return;
 		if (!canSendSelectedOffer) {
 			toast.error(
 				t('salesManagerApprovalRequired') ||
-					'SalesManager must approve the offer before you can send it to the salesman.'
+				'SalesManager must approve the offer before you can send it to the salesman.'
 			);
 			return;
 		}
 		try {
-			await salesApi.sendOfferToSalesman(selectedOffer.id);
+			await salesApi.sendOfferToSalesMan(selectedOffer.id);
 			// Refresh offer data
 			const { data } = await salesApi.getOffer(selectedOffer.id);
 			if (data) {
 				setSelectedOffer(data);
 			}
-			toast.success('Offer sent to salesman successfully');
+			toast.success(t('offerSentToSalesManSuccessfully'));
 		} catch (error: any) {
-			toast.error(error.message || 'Failed to send offer to salesman');
+			toast.error(error.message || t('failedToSendOfferToSalesMan'));
 		}
 	};
 
 	const handleExportPdf = async () => {
-		if (!selectedOffer) return;
+		if (!selectedOffer || exportingPdf) return;
+
+		setExportingPdf(true);
 		try {
-			// Handle arrays - convert to string for PDF display
-			const formatArray = (arr: string[] | string | undefined): string => {
-				if (!arr) return '';
-				if (Array.isArray(arr)) {
-					return arr.filter(item => item && item.trim()).join('; ');
-				}
-				return String(arr);
-			}
+			// Show loading toast
+			const loadingToast = toast.loading('Generating PDFs (Backend EN/AR)...');
 
-			// Fetch equipment data for PDF
-			let equipmentData: any[] = [];
-			try {
-				const equipmentResponse = await salesApi.getOfferEquipment(selectedOffer.id);
-				if (equipmentResponse.success && equipmentResponse.data) {
-					// VERIFICATION: Log raw API response
-					console.log('=== SALES SUPPORT DASHBOARD: Raw Equipment API Response ===');
-					if (equipmentResponse.data.length > 0) {
-						console.log('First equipment item:', equipmentResponse.data[0]);
-						console.log('All keys:', Object.keys(equipmentResponse.data[0]));
-						// Check specifically for providerImagePath
-						const firstItem = equipmentResponse.data[0] as any;
-						console.log('Provider Image Path Check:', {
-							providerImagePath: firstItem.providerImagePath,
-							ProviderImagePath: firstItem.ProviderImagePath,
-							providerLogoPath: firstItem.providerLogoPath,
-							ProviderLogoPath: firstItem.ProviderLogoPath,
-							hasProviderImagePath: !!firstItem.providerImagePath,
-						});
+			// Generate PDFs from backend API (both EN and AR)
+			// Backend handles all PDF generation logic - frontend just requests and downloads
+			const authState = useAuthStore.getState();
+			const token = authState.user?.token;
+
+			if (!token) {
+				toast.error(t('authenticationRequiredForBackendPdfs'));
+			} else {
+				const apiBaseUrl = getApiBaseUrl();
+				const languages = ['en', 'ar'];
+
+				for (const lang of languages) {
+					try {
+						const response = await fetch(
+							`${apiBaseUrl}/api/Offer/${selectedOffer.id}/pdf?language=${lang}`,
+							{
+								method: 'GET',
+								headers: {
+									'Authorization': `Bearer ${token}`,
+									'Accept': 'application/pdf',
+								},
+							}
+						);
+
+						if (!response.ok) {
+							const errorText = await response.text();
+							console.error(`Backend PDF generation failed for ${lang}:`, {
+								status: response.status,
+								statusText: response.statusText,
+								error: errorText
+							});
+							continue; // Continue with next language if one fails
+						}
+
+						// Get PDF blob
+						const pdfBlob = await response.blob();
+
+						// Check if blob is valid
+						if (!pdfBlob || pdfBlob.size === 0) {
+							console.error(`Received empty PDF file for ${lang}`);
+							continue;
+						}
+
+						// Create download link
+						const url = window.URL.createObjectURL(pdfBlob);
+						const link = document.createElement('a');
+						link.href = url;
+						const langSuffix = lang === 'ar' ? 'AR' : 'EN';
+						link.download = `Offer_${selectedOffer.id}_Backend_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
+						document.body.appendChild(link);
+						link.click();
+						document.body.removeChild(link);
+						window.URL.revokeObjectURL(url);
+					} catch (error: any) {
+						console.error(`Error generating backend PDF for ${lang}:`, error);
+						// Continue with next language
 					}
-					
-					// Normalize equipment data to match PDF generator interface
-					equipmentData = equipmentResponse.data.map((eq: any) => {
-						const mapped = {
-							id: eq.id,
-							name: eq.name || 'N/A',
-							model: eq.model,
-							provider: eq.provider || eq.Provider || eq.manufacturer,
-							country: eq.country || eq.Country,
-							year: eq.year ?? eq.Year,
-							price: eq.price ?? eq.Price ?? eq.totalPrice ?? eq.unitPrice ?? 0,
-							description: eq.description || eq.Description || eq.specifications,
-							inStock: eq.inStock !== undefined ? eq.inStock : (eq.InStock !== undefined ? eq.InStock : true),
-							imagePath: eq.imagePath || eq.ImagePath,
-							providerImagePath: eq.providerImagePath || eq.ProviderImagePath || eq.providerLogoPath || eq.ProviderLogoPath,
-						};
-						
-						// Log providerImagePath status for each item
-						console.log(`[SALES SUPPORT DASHBOARD] Equipment: ${mapped.name}`, {
-							hasProviderImagePath: !!mapped.providerImagePath,
-							providerImagePath: mapped.providerImagePath || 'NOT SET',
-							rawProviderImagePath: eq.providerImagePath,
-							rawProviderImagePathPascal: eq.ProviderImagePath,
-						});
-						
-						return mapped;
-					});
 				}
-			} catch (e) {
-				// Equipment data not available for PDF
 			}
 
-			// Generate PDF from frontend
-			await downloadOfferPDF({
-				id: selectedOffer.id,
-				clientName: selectedOffer.clientName || 'Client',
-				clientType: undefined,
-				clientLocation: undefined,
-				products: selectedOffer.products,
-				totalAmount: selectedOffer.totalAmount,
-				discountAmount: selectedOffer.discountAmount,
-				validUntil: formatArray(selectedOffer.validUntil),
-				paymentTerms: formatArray(selectedOffer.paymentTerms),
-				deliveryTerms: formatArray(selectedOffer.deliveryTerms),
-				warrantyTerms: formatArray(selectedOffer.warrantyTerms),
-				createdAt: selectedOffer.createdAt,
-				status: selectedOffer.status,
-				assignedToName: selectedOffer.assignedToName,
-				equipment: equipmentData,
-			}, {
-				generateBothLanguages: true, // Generate both Arabic and English versions
-				showProductHeaders: true,
-			});
-			toast.success('PDF exported successfully! Both Arabic and English versions downloaded.');
+			// Dismiss loading toast
+			toast.dismiss(loadingToast);
+			toast.success(t('pdfsExportedSuccessfully') || 'PDFs exported successfully!');
 		} catch (error: any) {
-			toast.error(error.message || 'Failed to export PDF');
+			console.error('PDF export error:', error);
+			toast.error(error.message || 'Failed to export PDFs. Please try again.');
+		} finally {
+			setExportingPdf(false);
 		}
 	};
 
@@ -448,7 +419,6 @@ const SalesSupportDashboard: React.FC = () => {
 	const offersDraftCount = offers?.filter((offer) => offer.status === 'Draft')?.length || 0;
 	const activeRequestsCount = assignedRequests?.filter(request => request.status !== 'Completed')?.length || 0;
 	const assignedRequestsTotal = assignedRequests?.length || 0;
-	const totalClientsTracked = clients?.length || 0;
 
 	const getActivityIcon = (type: string) => {
 		switch (type) {
@@ -493,7 +463,7 @@ const SalesSupportDashboard: React.FC = () => {
 				</div>
 
 				{/* Unified Quick Actions */}
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
 					<button
 						type="button"
 						onClick={() => setActiveTab('requests')}
@@ -505,7 +475,7 @@ const SalesSupportDashboard: React.FC = () => {
 							</div>
 							<div className="text-right">
 								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{activeRequestsCount}</p>
-								<p className="text-sm text-gray-500 dark:text-gray-400">{t('activeRequests') || 'Active Requests'}</p>
+								<p className="text-sm text-gray-500 dark:text-gray-400">{t('activeRequests')}</p>
 							</div>
 						</div>
 						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -535,28 +505,6 @@ const SalesSupportDashboard: React.FC = () => {
 						</h3>
 						<p className="text-sm text-gray-600 dark:text-gray-400">
 							{t('salesSupportManagementDescription')}
-						</p>
-					</button>
-
-					<button
-						type="button"
-						onClick={() => setActiveTab('clients')}
-						className="text-left bg-white dark:bg-gray-900 rounded-xl p-6 border-2 border-green-100 dark:border-green-900 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-					>
-						<div className="flex items-center justify-between mb-4">
-							<div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center shadow-md">
-								<Users className="w-6 h-6 text-green-600 dark:text-green-300" />
-							</div>
-							<div className="text-right">
-								<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalClientsTracked}</p>
-								<p className="text-sm text-gray-500 dark:text-gray-400">{t('clients')}</p>
-							</div>
-						</div>
-						<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-							{t('clientSearchTitle')}
-						</h3>
-						<p className="text-sm text-gray-600 dark:text-gray-400">
-							{t('findAndManageClients')}
 						</p>
 					</button>
 				</div>
@@ -635,8 +583,8 @@ const SalesSupportDashboard: React.FC = () => {
 				</div>
 
 				{/* Main Content Tabs */}
-				<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-					<TabsList className="grid w-full grid-cols-3 lg:grid-cols-4 gap-2 bg-white dark:bg-gray-800 shadow-sm">
+				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SalesSupportTab)} className="space-y-6">
+					<TabsList className="grid w-full grid-cols-3 gap-2 bg-white dark:bg-gray-800 shadow-sm">
 						<TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
 							{t('overview')}
 						</TabsTrigger>
@@ -645,9 +593,6 @@ const SalesSupportDashboard: React.FC = () => {
 						</TabsTrigger>
 						<TabsTrigger value="requests" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
 							{t('requests')}
-						</TabsTrigger>
-						<TabsTrigger value="clients" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-							{t('clients')}
 						</TabsTrigger>
 					</TabsList>
 
@@ -854,7 +799,7 @@ const SalesSupportDashboard: React.FC = () => {
 							<Card className="shadow-md">
 								<CardHeader>
 									<CardTitle>{t('pending')} {t('requests')}</CardTitle>
-									<CardDescription>{t('assignedRequests')} waiting for action</CardDescription>
+									<CardDescription>{t('assignedRequests')} {t('waitingForAction')}</CardDescription>
 								</CardHeader>
 								<CardContent>
 									{requestWorkflowsLoading ? (
@@ -915,7 +860,7 @@ const SalesSupportDashboard: React.FC = () => {
 									</div>
 									<div className="w-64">
 										<Input
-											placeholder="Search offers..."
+											placeholder={t('searchOffers')}
 											value={searchQuery}
 											onChange={(e) => setSearchQuery(e.target.value)}
 										/>
@@ -1103,107 +1048,6 @@ const SalesSupportDashboard: React.FC = () => {
 						</Card>
 					</TabsContent>
 
-					{/* Clients Tab */}
-					<TabsContent value="clients" className="space-y-6">
-						<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-							<Card className="lg:col-span-1 shadow-md">
-								<CardHeader>
-									<CardTitle>{t('clientSearchTitle')}</CardTitle>
-									<CardDescription>{t('findAndManageClients')}</CardDescription>
-								</CardHeader>
-								<CardContent>
-									<ClientSearch
-										onClientSelect={setSelectedClient}
-										placeholder="Search by name, phone, or organization..."
-										className="mb-4"
-										showClassificationFilter={true}
-									/>
-									<Separator />
-									<div className="mt-4">
-										<h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">{t('recentClients')}</h3>
-										{clientsLoading ? (
-											<div className="text-center py-4">
-												<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-											</div>
-										) : clientsError ? (
-											<div className="text-center py-4 text-red-500 dark:text-red-400 text-sm">
-												{clientsError}
-											</div>
-										) : clients && clients.length > 0 ? (
-											<>
-												<div className="space-y-2 max-h-96 overflow-y-auto">
-													{clients.slice(0, 10).map((client) => (
-														<div
-															key={client.id}
-															onClick={() => setSelectedClient(client)}
-															className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedClient?.id === client.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:border-blue-400' : 'border-gray-200 dark:border-gray-700'
-																}`}
-														>
-															<div className="font-medium text-gray-900 dark:text-gray-100">{client.name}</div>
-															<div className="text-sm text-gray-500 dark:text-gray-400">
-																{client.organizationName || 'N/A'} {client.classification ? `• ${client.classification}` : ''}
-															</div>
-															{client.phone && (
-																<div className="text-xs text-gray-400 dark:text-gray-500">{client.phone}</div>
-															)}
-														</div>
-													))}
-												</div>
-												{/* Pagination */}
-												{pagination && pagination.totalPages > 1 && (
-													<div className="mt-4 flex items-center justify-between border-t pt-4">
-														<Button
-															variant="outline"
-															size="sm"
-															onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-															disabled={!pagination.hasPreviousPage || clientsLoading}
-														>
-															{t('previous') || 'Previous'}
-														</Button>
-														<span className="text-sm text-gray-600 dark:text-gray-400">
-															{t('page') || 'Page'} {pagination.page} {t('of') || 'of'} {pagination.totalPages}
-														</span>
-														<Button
-															variant="outline"
-															size="sm"
-															onClick={() => setCurrentPage(p => p + 1)}
-															disabled={!pagination.hasNextPage || clientsLoading}
-														>
-															{t('next') || 'Next'}
-														</Button>
-													</div>
-												)}
-											</>
-										) : (
-											<div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-												No clients found
-											</div>
-										)}
-									</div>
-								</CardContent>
-							</Card>
-
-							{/* Client Details - Simplified for Sales Support */}
-							<div className="lg:col-span-2">
-								{selectedClient ? (
-									<SalesSupportClientDetails
-										client={selectedClient}
-										offers={offersByClient[selectedClient.id] || []}
-										offersLoading={offersLoading}
-									/>
-								) : (
-									<Card className="shadow-md">
-										<CardContent className="flex items-center justify-center h-96">
-											<div className="text-center">
-												<UserGroupIcon className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-												<p className="text-gray-500 dark:text-gray-400">{t('selectAClientToViewDetails')}</p>
-											</div>
-										</CardContent>
-									</Card>
-								)}
-							</div>
-						</div>
-					</TabsContent>
 				</Tabs>
 
 				{/* Offer Request Form Modal */}
@@ -1252,59 +1096,59 @@ const SalesSupportDashboard: React.FC = () => {
 
 							<div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
 								{/* Offer Info Section */}
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-										{t('status') || 'Status'}
-									</label>
-									<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
-										{selectedOffer.status}
-									</Badge>
-								</div>
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-										Value
-									</label>
-									<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-										{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
-									</p>
-									{selectedOffer.discountAmount && selectedOffer.discountAmount > 0 && (
-										<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-											{t('discount') || 'Discount'}: EGP {selectedOffer.discountAmount.toLocaleString()}
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+											{t('status') || 'Status'}
+										</label>
+										<Badge className={`${getOfferStatusColor(selectedOffer.status)}`}>
+											{selectedOffer.status}
+										</Badge>
+									</div>
+									<div>
+										<label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+											Value
+										</label>
+										<p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+											{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
 										</p>
-									)}
-								</div>
-							</div>
-
-							{/* Rejection Reason Section */}
-							{selectedOffer.status === 'Rejected' && (selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse) && (
-								<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-									<label className="block text-sm font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
-										<ExclamationTriangleIcon className="h-4 w-4" />
-										{t('rejectionReason') || 'Rejection Reason'}
-									</label>
-									<p className="text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap">
-										{selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse || 'No reason provided'}
-									</p>
-									{selectedOffer.salesManagerComments && (
-										<div className="mt-2 pt-2 border-t border-red-200 dark:border-red-700">
-											<label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">
-												{t('comments') || 'Comments'}
-											</label>
-											<p className="text-sm text-red-800 dark:text-red-200">
-												{selectedOffer.salesManagerComments}
+										{selectedOffer.discountAmount && selectedOffer.discountAmount > 0 && (
+											<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+												{t('discount') || 'Discount'}: EGP {selectedOffer.discountAmount.toLocaleString()}
 											</p>
-										</div>
-									)}
-									{selectedOffer.salesManagerApprovedAt && (
-										<p className="text-xs text-red-600 dark:text-red-400 mt-2">
-											{t('rejectedAt') || 'Rejected at'}: {format(new Date(selectedOffer.salesManagerApprovedAt), 'MMM dd, yyyy HH:mm')}
-										</p>
-									)}
+										)}
+									</div>
 								</div>
-							)}
 
-							<Separator />
+								{/* Rejection Reason Section */}
+								{selectedOffer.status === 'Rejected' && (selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse) && (
+									<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+										<label className="block text-sm font-semibold text-red-700 dark:text-red-300 mb-2 flex items-center gap-2">
+											<ExclamationTriangleIcon className="h-4 w-4" />
+											{t('rejectionReason') || 'Rejection Reason'}
+										</label>
+										<p className="text-sm text-red-900 dark:text-red-100 whitespace-pre-wrap">
+											{selectedOffer.salesManagerRejectionReason || selectedOffer.clientResponse || 'No reason provided'}
+										</p>
+										{selectedOffer.salesManagerComments && (
+											<div className="mt-2 pt-2 border-t border-red-200 dark:border-red-700">
+												<label className="block text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+													{t('comments') || 'Comments'}
+												</label>
+												<p className="text-sm text-red-800 dark:text-red-200">
+													{selectedOffer.salesManagerComments}
+												</p>
+											</div>
+										)}
+										{selectedOffer.salesManagerApprovedAt && (
+											<p className="text-xs text-red-600 dark:text-red-400 mt-2">
+												{t('rejectedAt') || 'Rejected at'}: {format(new Date(selectedOffer.salesManagerApprovedAt), 'MMM dd, yyyy HH:mm')}
+											</p>
+										)}
+									</div>
+								)}
+
+								<Separator />
 
 								{/* Products Section */}
 								<div>
@@ -1639,33 +1483,41 @@ const SalesSupportDashboard: React.FC = () => {
 								<Separator className="my-4" />
 								<div className="flex justify-end gap-3 pt-4">
 									<Button
-										onClick={handleSendToSalesman}
+										onClick={handleSendToSalesMan}
 										disabled={!canSendSelectedOffer}
 										className="bg-blue-600 hover:bg-blue-700 text-white"
 										title={
 											!canSendSelectedOffer
 												? t('awaitingSalesManagerApproval') ||
-												  'Awaiting SalesManager approval'
+												'Awaiting SalesManager approval'
 												: undefined
 										}
 									>
-										{t('sendToSalesman') || 'Send to Salesman'}
+										{t('sendToSalesMan') || 'Send to SalesMan'}
 									</Button>
 									<Button
 										variant="outline"
 										onClick={handleExportPdf}
-										className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
+										disabled={exportingPdf}
+										className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
 									>
-										{t('exportPdf')}
+										{exportingPdf ? (
+											<>
+												<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2 inline-block"></div>
+												{t('generatingPdf') || 'Generating PDF...'}
+											</>
+										) : (
+											t('exportPdf')
+										)}
 									</Button>
 								</div>
 								{!canSendSelectedOffer && (
 									<p className="text-sm text-yellow-600 dark:text-yellow-400 text-right mt-2">
 										{awaitingSelectedOfferApproval
 											? t('offerAwaitingApproval') ||
-											  'SalesManager has not approved this offer yet.'
+											'SalesManager has not approved this offer yet.'
 											: t('offerCannotBeSentYet') ||
-											  'You can send the offer once SalesManager approval is completed.'}
+											'You can send the offer once SalesManager approval is completed.'}
 									</p>
 								)}
 							</div>

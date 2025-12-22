@@ -49,12 +49,16 @@ const SuperAdminDealApprovals: React.FC = React.memo(() => {
 			setLoading(true);
 			const response = await salesApi.getPendingSuperAdminApprovals();
 
-			if (response.success && response.data) {
-				const normalizedDeals = response.data
-					.filter((deal: any) =>
-						deal.status === 'PendingManagerApproval' ||
-						deal.status === 'PendingSuperAdminApproval'
-					)
+			console.log('SuperAdmin approvals response:', response);
+
+			// Handle response - check if data is an array
+			// Backend already filters by status, so we just need to normalize the data
+			if (response && response.success) {
+				const dealsData = Array.isArray(response.data) ? response.data : [];
+
+				console.log('Deals data received:', dealsData.length, 'deals');
+
+				const normalizedDeals = dealsData
 					.map((deal: any) => ({
 						...deal,
 						id: String(deal.id || deal.Id),
@@ -64,19 +68,22 @@ const SuperAdminDealApprovals: React.FC = React.memo(() => {
 						dealDescription: deal.dealDescription || deal.Notes || deal.notes || 'No description available',
 						expectedCloseDate: deal.expectedCloseDate || deal.ExpectedDeliveryDate || deal.expectedDeliveryDate || new Date().toISOString(),
 						clientName: deal.clientName || deal.ClientName || 'Unknown Client',
-						createdBy: deal.createdBy || deal.CreatedBy || deal.salesmanId || deal.SalesmanId || '',
-						createdByName: deal.createdByName || deal.CreatedByName || deal.salesmanName || deal.SalesmanName || 'Unknown',
+						createdBy: deal.createdBy || deal.CreatedBy || deal.salesmanId || deal.SalesManId || '',
+						createdByName: deal.createdByName || deal.CreatedByName || deal.salesmanName || deal.SalesManName || 'Unknown',
 						createdAt: deal.createdAt || deal.CreatedAt || new Date().toISOString(),
 						updatedAt: deal.updatedAt || deal.UpdatedAt || deal.createdAt || deal.CreatedAt || new Date().toISOString(),
 						status: deal.status || deal.Status,
 					}));
 
+				console.log('Normalized deals:', normalizedDeals.length);
 				setPendingDeals(normalizedDeals);
 			} else {
+				console.warn('Response not successful or missing data:', response);
 				setPendingDeals([]);
 			}
 		} catch (error: any) {
 			console.error('Failed to load pending approvals:', error);
+			console.error('Error details:', error?.response || error?.message);
 			toast.error('Failed to load pending approvals');
 			setPendingDeals([]);
 		} finally {
@@ -100,8 +107,8 @@ const SuperAdminDealApprovals: React.FC = React.memo(() => {
 					dealDescription: dealData.dealDescription || dealData.Notes || dealData.notes || 'No description available',
 					expectedCloseDate: dealData.expectedCloseDate || dealData.ExpectedDeliveryDate || dealData.expectedDeliveryDate || new Date().toISOString(),
 					clientName: dealData.clientName || dealData.ClientName || 'Unknown Client',
-					createdBy: dealData.createdBy || dealData.CreatedBy || dealData.salesmanId || dealData.SalesmanId || '',
-					createdByName: dealData.createdByName || dealData.CreatedByName || dealData.salesmanName || dealData.SalesmanName || 'Unknown',
+					createdBy: dealData.createdBy || dealData.CreatedBy || dealData.salesmanId || dealData.SalesManId || '',
+					createdByName: dealData.createdByName || dealData.CreatedByName || dealData.salesmanName || dealData.SalesManName || 'Unknown',
 					createdAt: dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
 					updatedAt: dealData.updatedAt || dealData.UpdatedAt || dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
 					status: dealStatus as 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected',

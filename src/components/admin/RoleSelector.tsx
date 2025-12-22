@@ -17,19 +17,19 @@ const ROLE_CONFIG: Record<UserRole, {
     icon: React.ComponentType<{ className?: string }>;
     color: string;
     description: string;
-    category: 'admin' | 'medical' | 'technical' | 'business' | 'legal' | 'sales';
+    category: 'Admin' | 'medical' | 'technical' | 'business' | 'legal' | 'sales';
 }> = {
     SuperAdmin: {
         icon: Shield,
         color: 'text-red-600',
         description: 'Full system access and control',
-        category: 'admin',
+        category: 'Admin',
     },
     Admin: {
         icon: Users,
         color: 'text-blue-600',
         description: 'Administrative privileges and user management',
-        category: 'admin',
+        category: 'Admin',
     },
     Doctor: {
         icon: Stethoscope,
@@ -49,7 +49,7 @@ const ROLE_CONFIG: Record<UserRole, {
         description: 'Engineering and technical development',
         category: 'technical',
     },
-    Salesman: {
+    SalesMan: {
         icon: TrendingUp,
         color: 'text-cyan-600',
         description: 'Sales and customer relationship management',
@@ -80,11 +80,11 @@ const ROLE_CONFIG: Record<UserRole, {
         category: 'legal',
     },
 
-    admin: {
+    Admin: {
         icon: Users,
         color: 'text-blue-500',
         description: 'Administrative access',
-        category: 'admin',
+        category: 'Admin',
     },
     SalesManager: {
         icon: TrendingUp,
@@ -95,7 +95,7 @@ const ROLE_CONFIG: Record<UserRole, {
 };
 
 const CATEGORY_LABELS = {
-    admin: 'Administration',
+    Admin: 'Administration',
     medical: 'Medical',
     technical: 'Technical',
     business: 'Business',
@@ -109,8 +109,8 @@ export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSe
     const rolesByCategory = availableRoles.reduce((acc, roleObject) => {
         const roleConfig = ROLE_CONFIG[roleObject.name as UserRole];
         if (!roleConfig) {
-            // If role is not in config, add it to admin category as fallback
-            const category = 'admin';
+            // If role is not in config, add it to Admin category as fallback
+            const category = 'Admin';
             if (!acc[category]) {
                 acc[category] = [];
             }
@@ -159,7 +159,7 @@ export function RoleSelector({ availableRoles, onRoleSelect, isLoading }: RoleSe
                                 icon: Users,
                                 color: 'text-gray-600',
                                 description: `Role: ${roleObject.name}`,
-                                category: 'admin' as const
+                                category: 'Admin' as const
                             };
                             const Icon = config.icon;
 

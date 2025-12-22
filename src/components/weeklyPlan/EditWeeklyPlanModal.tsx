@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
     Dialog,
     DialogContent,
@@ -40,6 +41,7 @@ const EditWeeklyPlanModal: React.FC<EditWeeklyPlanModalProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
@@ -113,7 +115,7 @@ const EditWeeklyPlanModal: React.FC<EditWeeklyPlanModalProps> = ({
                             <Textarea
                                 id="description"
                                 {...register('description')}
-                                placeholder="Plan description..."
+                                placeholder={t('planDescriptionPlaceholder')}
                                 rows={5}
                                 className={
                                     errors.description

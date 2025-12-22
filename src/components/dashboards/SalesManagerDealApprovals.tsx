@@ -56,17 +56,17 @@ const SalesManagerDealApprovals: React.FC = () => {
 				const normalizedDeals = response.data.map((deal: any) => {
 					const dealStatus = deal.status || deal.Status || 'PendingManagerApproval';
 					return {
-					...deal,
-					id: String(deal.id || deal.Id),
-					offerId: String(deal.offerId || deal.OfferId || ''),
-					clientId: String(deal.clientId || deal.ClientId || ''),
-					dealValue: deal.dealValue || deal.DealValue || deal.totalValue || deal.TotalValue || 0,
+						...deal,
+						id: String(deal.id || deal.Id),
+						offerId: String(deal.offerId || deal.OfferId || ''),
+						clientId: String(deal.clientId || deal.ClientId || ''),
+						dealValue: deal.dealValue || deal.DealValue || deal.totalValue || deal.TotalValue || 0,
 						dealDescription: deal.dealDescription || deal.Notes || deal.notes || 'No description available',
 						expectedCloseDate: deal.expectedCloseDate || deal.ExpectedDeliveryDate || deal.expectedDeliveryDate || new Date().toISOString(),
-					clientName: deal.clientName || deal.ClientName || 'Unknown Client',
-						createdBy: deal.createdBy || deal.CreatedBy || deal.salesmanId || deal.SalesmanId || '',
-					createdByName: deal.createdByName || deal.CreatedByName || deal.salesmanName || deal.SalesmanName || 'Unknown',
-					createdAt: deal.createdAt || deal.CreatedAt || new Date().toISOString(),
+						clientName: deal.clientName || deal.ClientName || 'Unknown Client',
+						createdBy: deal.createdBy || deal.CreatedBy || deal.salesmanId || deal.SalesManId || '',
+						createdByName: deal.createdByName || deal.CreatedByName || deal.salesmanName || deal.SalesManName || 'Unknown',
+						createdAt: deal.createdAt || deal.CreatedAt || new Date().toISOString(),
 						updatedAt: deal.updatedAt || deal.UpdatedAt || deal.createdAt || deal.CreatedAt || new Date().toISOString(),
 						status: dealStatus as 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected',
 					};
@@ -101,8 +101,8 @@ const SalesManagerDealApprovals: React.FC = () => {
 					dealDescription: dealData.dealDescription || dealData.Notes || dealData.notes || 'No description available',
 					expectedCloseDate: dealData.expectedCloseDate || dealData.ExpectedDeliveryDate || dealData.expectedDeliveryDate || new Date().toISOString(),
 					clientName: dealData.clientName || dealData.ClientName || 'Unknown Client',
-					createdBy: dealData.createdBy || dealData.CreatedBy || dealData.salesmanId || dealData.SalesmanId || '',
-					createdByName: dealData.createdByName || dealData.CreatedByName || dealData.salesmanName || dealData.SalesmanName || 'Unknown',
+					createdBy: dealData.createdBy || dealData.CreatedBy || dealData.salesmanId || dealData.SalesManId || '',
+					createdByName: dealData.createdByName || dealData.CreatedByName || dealData.salesmanName || dealData.SalesManName || 'Unknown',
 					createdAt: dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
 					updatedAt: dealData.updatedAt || dealData.UpdatedAt || dealData.createdAt || dealData.CreatedAt || new Date().toISOString(),
 					status: dealStatus as 'PendingManagerApproval' | 'PendingSuperAdminApproval' | 'Approved' | 'Success' | 'Failed' | 'Rejected',
@@ -148,11 +148,11 @@ const SalesManagerDealApprovals: React.FC = () => {
 						<div>
 							<CardTitle className="flex items-center gap-2 text-2xl">
 								<Clock className="h-6 w-6 text-yellow-600" />
-						Pending Deal Approvals
-					</CardTitle>
+								Pending Deal Approvals
+							</CardTitle>
 							<CardDescription className="mt-2 text-base">
-						{pendingDeals.length} {pendingDeals.length === 1 ? 'deal' : 'deals'} awaiting your approval
-					</CardDescription>
+								{pendingDeals.length} {pendingDeals.length === 1 ? 'deal' : 'deals'} awaiting your approval
+							</CardDescription>
 						</div>
 					</div>
 				</CardHeader>
@@ -257,17 +257,17 @@ const SalesManagerDealApprovals: React.FC = () => {
 													</div>
 												</div>
 											)}
-											</div>
+										</div>
 
 										{/* Action Button */}
-											<Button
-												onClick={() => handleViewDeal(deal.id)}
+										<Button
+											onClick={() => handleViewDeal(deal.id)}
 											className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
 											size="lg"
-											>
-												<Eye className="h-4 w-4 mr-2" />
+										>
+											<Eye className="h-4 w-4 mr-2" />
 											Review & Approve
-											</Button>
+										</Button>
 									</CardContent>
 								</Card>
 							))}
