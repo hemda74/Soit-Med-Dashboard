@@ -182,6 +182,14 @@ export const API_ENDPOINTS = {
 				`/api/Deal/by-SalesMan/${salesmanId}`,
 			COMPLETE: (id: string) => `/api/Deal/${id}/complete`,
 			FAIL: (id: string) => `/api/Deal/${id}/fail`,
+			SUBMIT_FIRST_REVIEW: (id: string) =>
+				`/api/Deal/${id}/submit-first-review`,
+			SUBMIT_SECOND_REVIEW: (id: string) =>
+				`/api/Deal/${id}/submit-second-review`,
+			SET_CREDENTIALS: (id: string) =>
+				`/api/Deal/${id}/set-credentials`,
+			AWAITING_REVIEWS_AND_SETUP:
+				'/api/Deal/awaiting-reviews-and-setup',
 		},
 		// Offers (ENHANCED) - For SalesManager/SuperAdmin only
 		OFFERS: {
