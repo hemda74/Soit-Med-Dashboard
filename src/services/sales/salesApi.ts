@@ -1527,6 +1527,67 @@ class SalesApiService {
 		);
 	}
 
+	/**
+	 * Submit first salesman review
+	 */
+	async submitFirstSalesManReview(
+		dealId: string | number,
+		reviewText: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.SUBMIT_FIRST_REVIEW(String(dealId)),
+			{
+				method: 'POST',
+				body: JSON.stringify({ reviewText }),
+			}
+		);
+	}
+
+	/**
+	 * Submit second salesman review
+	 */
+	async submitSecondSalesManReview(
+		dealId: string | number,
+		reviewText: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.SUBMIT_SECOND_REVIEW(String(dealId)),
+			{
+				method: 'POST',
+				body: JSON.stringify({ reviewText }),
+			}
+		);
+	}
+
+	/**
+	 * Set client credentials (Admin only)
+	 */
+	async setClientCredentials(
+		dealId: string | number,
+		username: string,
+		password: string
+	): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			API_ENDPOINTS.SALES.DEALS.SET_CREDENTIALS(String(dealId)),
+			{
+				method: 'POST',
+				body: JSON.stringify({ username, password }),
+			}
+		);
+	}
+
+	/**
+	 * Get deals awaiting reviews and account setup
+	 */
+	async getDealsAwaitingReviewsAndAccountSetup(): Promise<
+		ApiResponse<any[]>
+	> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			API_ENDPOINTS.SALES.DEALS.AWAITING_REVIEWS_AND_SETUP,
+			{ method: 'GET' }
+		);
+	}
+
 	// ==================== OFFERS ====================
 
 	async createOffer(data: any): Promise<ApiResponse<any>> {

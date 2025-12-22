@@ -207,10 +207,16 @@ const DealsManagementPage: React.FC = () => {
 		const statusConfig: Record<string, { label: string; className: string }> = {
 			PendingManagerApproval: { label: 'Pending Approval', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
 			PendingSuperAdminApproval: { label: 'Pending Super Admin', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' },
+			AwaitingSalesmenReviewsAndAccountSetup: { label: 'Awaiting Reviews & Setup', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
+			AwaitingClientAccountCreation: { label: 'Awaiting Account Creation', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+			AwaitingSalesManReport: { label: 'Awaiting Report', className: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200' },
+			SentToLegal: { label: 'Sent To Legal', className: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200' },
 			Approved: { label: 'Approved', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
 			Success: { label: 'Success', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
 			Failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
 			Rejected: { label: 'Rejected', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+			RejectedByManager: { label: 'Rejected By Manager', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
+			RejectedBySuperAdmin: { label: 'Rejected By Super Admin', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' },
 		};
 
 		const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
