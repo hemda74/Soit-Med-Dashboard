@@ -14,7 +14,7 @@
 export function getApiBaseUrl(): string {
 	// Use environment variable if set, otherwise use development IP
 	// This matches the mobile apps configuration
-	const url = import.meta.env.VITE_API_BASE_URL || 'http://10.10.9.104:5117';
+	const url = import.meta.env.VITE_API_BASE_URL || 'http://10.10.9.108:5117';
 
 	try {
 		new URL(url);
@@ -22,7 +22,7 @@ export function getApiBaseUrl(): string {
 	} catch (error) {
 		console.error('Invalid API base URL format:', url);
 		// Return default if validation fails
-		return 'http://10.10.9.104:5117';
+		return 'http://10.10.9.108:5117';
 	}
 }
 
