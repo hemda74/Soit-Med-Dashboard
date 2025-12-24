@@ -35,15 +35,6 @@ export function getApiBaseUrl(): string {
  */
 export function getStaticFileBaseUrl(): string {
 	try {
-		// In development, use relative URLs to leverage Vite proxy
-		// This avoids CORS issues when frontend and backend are on different ports
-		const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
-		
-		if (isDevelopment) {
-			// Return empty string to use relative URLs (will be proxied by Vite)
-			return '';
-		}
-
 		let baseUrl = getApiBaseUrl();
 
 		// Remove /api suffix if present since static files are served from root
@@ -63,9 +54,7 @@ export function getStaticFileBaseUrl(): string {
 		return baseUrl;
 	} catch (error) {
 		console.error('Error processing static file base URL:', error);
-		// In development, return empty for relative URLs
-		const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
-		return isDevelopment ? '' : 'http://localhost:5117';
+		return 'http://localhost:5117';
 	}
 }
 
