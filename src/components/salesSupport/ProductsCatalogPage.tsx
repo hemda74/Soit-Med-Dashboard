@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { productApi } from '@/services/sales/productApi'
-import type { Product, CreateProductDto, UpdateProductDto } from '@/types/sales.types'
+import { productCategoryApi } from '@/services/sales/productCategoryApi'
+import type { Product, CreateProductDto, UpdateProductDto, ProductCategory } from '@/types/sales.types'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,24 +31,6 @@ import ProviderLogo from '@/components/sales/ProviderLogo'
 import { getStaticFileUrl, getApiBaseUrl } from '@/utils/apiConfig'
 import { useAuthStore } from '@/stores/authStore'
 
-const CATEGORIES = [
-    'X-RAY',
-    'MOBILE X-RAY',
-    'PORTABLE X-RAY',
-    'DIGITAL FLAT PANEL',
-    'MRI',
-    'CT Scanner',
-    'C-ARM',
-    'U-ARM',
-    'DEXA',
-    'RADIOGRAPHIC FLUOROSCOPY',
-    'MAMMOGRAPHY',
-    'ULTRASOUND',
-    'Physiotherapy Line',
-    'Dermatology Line',
-    'IVD Line'
-]
-
 export default function ProductsCatalogPage() {
     usePerformance('ProductsCatalogPage');
     const { t } = useTranslation();
@@ -57,6 +40,7 @@ export default function ProductsCatalogPage() {
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [categories, setCategories] = useState<ProductCategory[]>([])
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('')
@@ -85,6 +69,11 @@ export default function ProductsCatalogPage() {
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false)
     const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null)
     const [editingInventory, setEditingInventory] = useState<{ productId: number; quantity: number } | null>(null)
+
+    // Load categories on mount
+    useEffect(() => {
+        loadCategories()
+    }, [])
 
     // Load products
     useEffect(() => {
@@ -416,13 +405,9 @@ export default function ProductsCatalogPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{t('allCategories')}</SelectItem>
-                                    {CATEGORIES.map((cat) => (
-                                        <SelectItem key={cat} value={cat}>
-                                            {cat === 'X-Ray' ? t('xRay') :
-                                                cat === 'Ultrasound' ? t('ultrasound') :
-                                                    cat === 'CT Scanner' ? t('ctScanner') :
-                                                        cat === 'MRI' ? t('mri') :
-                                                            t('other')}
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.name}>
+                                            {cat.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -652,9 +637,9 @@ export default function ProductsCatalogPage() {
                                         <SelectValue placeholder={t('selectCategory')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {CATEGORIES.map((cat) => (
-                                            <SelectItem key={cat} value={cat}>
-                                                {cat}
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.name}>
+                                                {cat.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

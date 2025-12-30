@@ -1330,7 +1330,7 @@ export const translations = {
 				task: 'Select a task',
 				progressType: 'Select progress type',
 				description:
-					'Describe what happened during this progress...',
+					'Please describe the machines/equipment the client wants an offer for...',
 				date: 'Pick a date',
 				visitResult: 'Select visit result',
 				nextStep: 'Select next step',
@@ -2943,7 +2943,7 @@ export const translations = {
 				client: 'اختر عميلًا',
 				task: 'اختر مهمة',
 				progressType: 'اختر نوع التقدم',
-				description: 'صف ما حدث خلال هذا التقدم...',
+				description: 'يرجى وصف الآلات/المعدات التي يريد العميل عرض أسعار لها...',
 				date: 'اختر تاريخًا',
 				visitResult: 'اختر نتيجة الزيارة',
 				nextStep: 'اختر الخطوة التالية',

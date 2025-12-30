@@ -1,6 +1,6 @@
 // Accounting Dashboard Component
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	usePendingPayments,
 	useConfirmPayment,
@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '@/stores/authStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePerformance } from '@/hooks/usePerformance';
+import { salesApi } from '@/services/sales/salesApi';
 import {
 	CurrencyDollarIcon,
 	ClockIcon,
@@ -52,6 +53,14 @@ const AccountingDashboard: React.FC = () => {
 	const [selectedDate, setSelectedDate] = useState<string>(
 		format(new Date(), 'yyyy-MM-dd')
 	);
+	const [dealStatistics, setDealStatistics] = useState<{
+		totalDeals: number;
+		totalDealValue: number;
+		averageDealValue: number;
+		dealsByStatus: Record<string, number>;
+		dealValueByStatus: Record<string, number>;
+	} | null>(null);
+	const [loadingDealStats, setLoadingDealStats] = useState(false);
 
 	// React Query hooks
 	const { data: pendingPayments = [], isLoading: loadingPending, refetch: refetchPending } =
@@ -59,6 +68,27 @@ const AccountingDashboard: React.FC = () => {
 	const { data: outstandingPayments = [], isLoading: loadingOutstanding } =
 		useOutstandingPayments();
 	const { data: dailyReport, isLoading: loadingReport } = useDailyReport(selectedDate);
+
+	// Fetch deal statistics
+	useEffect(() => {
+		const loadDealStatistics = async () => {
+			setLoadingDealStats(true);
+			try {
+				const response = await salesApi.getDealStatistics();
+				if (response.success && response.data) {
+					setDealStatistics(response.data);
+				} else {
+					console.error('Failed to load deal statistics:', response.message);
+				}
+			} catch (error: any) {
+				console.error('Error loading deal statistics:', error);
+			} finally {
+				setLoadingDealStats(false);
+			}
+		};
+
+		loadDealStatistics();
+	}, []);
 
 	const confirmMutation = useConfirmPayment();
 	const rejectMutation = useRejectPayment();
@@ -160,7 +190,7 @@ const AccountingDashboard: React.FC = () => {
 				</div>
 			</div>
 
-			{/* Statistics Cards */}
+			{/* Payment Statistics Cards */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<Card>
 					<CardContent className="p-6">
@@ -220,6 +250,106 @@ const AccountingDashboard: React.FC = () => {
 					</CardContent>
 				</Card>
 			</div>
+
+			{/* Deal Statistics Section */}
+			<Card>
+				<CardHeader>
+					<CardTitle>Deal Statistics</CardTitle>
+					<CardDescription>Overview of all deals and their values</CardDescription>
+				</CardHeader>
+				<CardContent>
+					{loadingDealStats ? (
+						<div className="text-center py-8">
+							<p className="text-gray-500">Loading deal statistics...</p>
+						</div>
+					) : dealStatistics ? (
+						<div className="space-y-6">
+							{/* Total Deal Statistics */}
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<Card>
+									<CardContent className="p-6">
+										<div className="flex items-center justify-between">
+											<div>
+												<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+													Total Deals
+												</p>
+												<p className="text-2xl font-bold text-purple-600">
+													{dealStatistics.totalDeals.toLocaleString()}
+												</p>
+											</div>
+											<ChartBarIcon className="h-8 w-8 text-purple-600" />
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card>
+									<CardContent className="p-6">
+										<div className="flex items-center justify-between">
+											<div>
+												<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+													Total Deal Value
+												</p>
+												<p className="text-2xl font-bold text-green-600">
+													{dealStatistics.totalDealValue.toLocaleString()} EGP
+												</p>
+											</div>
+											<CurrencyDollarIcon className="h-8 w-8 text-green-600" />
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card>
+									<CardContent className="p-6">
+										<div className="flex items-center justify-between">
+											<div>
+												<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+													Average Deal Value
+												</p>
+												<p className="text-2xl font-bold text-blue-600">
+													{dealStatistics.averageDealValue.toLocaleString()} EGP
+												</p>
+											</div>
+											<ChartBarIcon className="h-8 w-8 text-blue-600" />
+										</div>
+									</CardContent>
+								</Card>
+							</div>
+
+							{/* Deals by Status */}
+							<div>
+								<h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+									Deals by Status
+								</h3>
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+									{Object.entries(dealStatistics.dealsByStatus).map(([status, count]) => (
+										<Card key={status}>
+											<CardContent className="p-4">
+												<div className="flex items-center justify-between">
+													<div className="flex-1">
+														<p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+															{status.replace(/([A-Z])/g, ' $1').trim()}
+														</p>
+														<p className="text-xl font-bold text-gray-900 dark:text-white">
+															{count}
+														</p>
+														<p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">
+															EGP {dealStatistics.dealValueByStatus[status]?.toLocaleString() || '0'}
+														</p>
+													</div>
+												</div>
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							</div>
+						</div>
+					) : (
+						<div className="text-center py-8">
+							<p className="text-gray-500">No deal statistics available</p>
+						</div>
+					)}
+				</CardContent>
+			</Card>
 
 			{/* Main Content Tabs */}
 			<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

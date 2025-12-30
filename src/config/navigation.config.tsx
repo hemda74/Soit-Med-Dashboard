@@ -17,7 +17,7 @@ import {
   Package,
   DollarSign,
   Warehouse,
-
+  Archive,
   MessageCircle,
   UserPlus,
 } from 'lucide-react';
@@ -192,6 +192,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     icon: <FileText className={ICON_SIZE} />,
     name: t('legalDeals') || 'Legal Deals',
     path: '/legal/deals',
+    roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
+  },
+  {
+    icon: <Archive className={ICON_SIZE} />,
+    name: t('legalDealsHistory') || 'Deals History',
+    path: '/legal/deals/history',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
 ] as const;

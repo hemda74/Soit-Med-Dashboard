@@ -1186,7 +1186,9 @@ export interface Product {
 	provider?: string;
 	providerImagePath?: string | null;
 	country?: string;
-	category?: string;
+	category?: string; // Legacy - kept for backward compatibility
+	categoryId?: number; // New: Foreign key to ProductCategory
+	categoryName?: string; // New: Category name from ProductCategory relationship
 	description?: string;
 	imagePath?: string | null;
 	dataSheetPath?: string | null;
@@ -1205,7 +1207,9 @@ export interface CreateProductDto {
 	provider?: string;
 	providerImagePath?: string | null;
 	country?: string;
-	category?: string;
+	category?: string; // Legacy - kept for backward compatibility
+	categoryId?: number; // New: Foreign key to ProductCategory
+	categoryName?: string; // New: Category name from ProductCategory relationship
 	description?: string;
 	year?: number;
 }
@@ -1216,7 +1220,9 @@ export interface UpdateProductDto {
 	provider?: string;
 	providerImagePath?: string | null;
 	country?: string;
-	category?: string;
+	category?: string; // Legacy - kept for backward compatibility
+	categoryId?: number; // New: Foreign key to ProductCategory
+	categoryName?: string; // New: Category name from ProductCategory relationship
 	description?: string;
 	year?: number;
 	inventoryQuantity?: number;
@@ -1273,7 +1279,9 @@ export interface CategoryHierarchy {
 }
 
 export interface ProductSearchParams {
-	category?: string;
+	category?: string; // Legacy - kept for backward compatibility
+	categoryId?: number; // New: Foreign key to ProductCategory
+	categoryName?: string; // New: Category name from ProductCategory relationship
 	inStock?: boolean;
 	searchTerm?: string;
 }

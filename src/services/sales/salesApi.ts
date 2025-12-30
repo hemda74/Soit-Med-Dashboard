@@ -193,15 +193,44 @@ class SalesApiService {
 			});
 
 			if (!response.ok) {
-				const errorData = await response
-					.json()
-					.catch(() => ({}));
+				let errorData: any = {};
+				const contentType = response.headers.get('content-type') || '';
+				
+				try {
+					if (contentType.includes('application/json')) {
+						errorData = await response.json();
+					} else {
+						// Try to get text response for non-JSON errors
+						const textResponse = await response.text();
+						try {
+							// Try to parse as JSON in case it's JSON but wrong content-type
+							errorData = JSON.parse(textResponse);
+						} catch {
+							// If not JSON, use the text as error message
+							errorData = { message: textResponse || `Request failed with status ${response.status}` };
+						}
+					}
+				} catch (parseError) {
+					// If all parsing fails, create a generic error
+					errorData = { message: `Request failed with status ${response.status}` };
+				}
+
 				const error: any = new Error(
 					errorData.message ||
+						errorData.error ||
 						`API request failed with status ${response.status}`
 				);
 				error.status = response.status;
+				error.statusText = response.statusText;
 				error.response = errorData;
+				
+				// Log error for debugging
+				console.error(`[API Error] ${options.method || 'GET'} ${endpoint}`, {
+					status: response.status,
+					statusText: response.statusText,
+					error: errorData
+				});
+				
 				throw error;
 			}
 
@@ -1521,6 +1550,46 @@ class SalesApiService {
 	}
 
 	async getDealsForLegal(): Promise<ApiResponse<any[]>> {
+		return this.makeRequest<ApiResponse<any[]>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/legal`,
+			{ method: 'GET' }
+		);
+	}
+
+	async getTotalDealsCount(): Promise<ApiResponse<{ totalCount: number }>> {
+		return this.makeRequest<ApiResponse<{ totalCount: number }>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/total-count`,
+			{ method: 'GET' }
+		);
+	}
+
+	async getDealStatistics(): Promise<ApiResponse<{
+		totalDeals: number;
+		totalDealValue: number;
+		averageDealValue: number;
+		dealsByStatus: Record<string, number>;
+		dealValueByStatus: Record<string, number>;
+	}>> {
+		return this.makeRequest<ApiResponse<{
+			totalDeals: number;
+			totalDealValue: number;
+			averageDealValue: number;
+			dealsByStatus: Record<string, number>;
+			dealValueByStatus: Record<string, number>;
+		}>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/statistics`,
+			{ method: 'GET' }
+		);
+	}
+
+	async markDealAsLegalReviewed(dealId: number): Promise<ApiResponse<any>> {
+		return this.makeRequest<ApiResponse<any>>(
+			`${API_ENDPOINTS.SALES.DEALS.BASE}/${dealId}/mark-as-reviewed`,
+			{ method: 'POST' }
+		);
+	}
+
+	async getDealsForLegalOld(): Promise<ApiResponse<any[]>> {
 		return this.makeRequest<ApiResponse<any[]>>(
 			`${API_ENDPOINTS.SALES.DEALS.BASE}/legal`,
 			{ method: 'GET' }

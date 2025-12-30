@@ -271,74 +271,48 @@ const SalesSupportDashboard: React.FC = () => {
 		if (!selectedOffer || exportingPdf) return;
 
 		setExportingPdf(true);
-		try {
-			// Show loading toast
-			const loadingToast = toast.loading('Generating PDFs (Backend EN/AR)...');
+		const loadingToast = toast.loading('Generating PDFs...');
 
-			// Generate PDFs from backend API (both EN and AR)
-			// Backend handles all PDF generation logic - frontend just requests and downloads
+		try {
 			const authState = useAuthStore.getState();
 			const token = authState.user?.token;
 
 			if (!token) {
-				toast.error(t('authenticationRequiredForBackendPdfs'));
-			} else {
-				const apiBaseUrl = getApiBaseUrl();
-				const languages = ['en', 'ar'];
-
-				for (const lang of languages) {
-					try {
-						const response = await fetch(
-							`${apiBaseUrl}/api/Offer/${selectedOffer.id}/pdf?language=${lang}`,
-							{
-								method: 'GET',
-								headers: {
-									'Authorization': `Bearer ${token}`,
-									'Accept': 'application/pdf',
-								},
-							}
-						);
-
-						if (!response.ok) {
-							const errorText = await response.text();
-							console.error(`Backend PDF generation failed for ${lang}:`, {
-								status: response.status,
-								statusText: response.statusText,
-								error: errorText
-							});
-							continue; // Continue with next language if one fails
-						}
-
-						// Get PDF blob
-						const pdfBlob = await response.blob();
-
-						// Check if blob is valid
-						if (!pdfBlob || pdfBlob.size === 0) {
-							console.error(`Received empty PDF file for ${lang}`);
-							continue;
-						}
-
-						// Create download link
-						const url = window.URL.createObjectURL(pdfBlob);
-						const link = document.createElement('a');
-						link.href = url;
-						const langSuffix = lang === 'ar' ? 'AR' : 'EN';
-						link.download = `Offer_${selectedOffer.id}_Backend_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
-						document.body.appendChild(link);
-						link.click();
-						document.body.removeChild(link);
-						window.URL.revokeObjectURL(url);
-					} catch (error: any) {
-						console.error(`Error generating backend PDF for ${lang}:`, error);
-						// Continue with next language
-					}
-				}
+				toast.dismiss(loadingToast);
+				toast.error(t('authenticationRequiredForBackendPdfs') || 'Authentication required for PDF export');
+				return;
 			}
 
-			// Dismiss loading toast
+			const { exportOfferPdfs } = await import('@/services/sales/pdfExportService');
+			const result = await exportOfferPdfs({
+				offerId: selectedOffer.id,
+				token,
+				languages: ['en', 'ar'],
+				timeout: 60000,
+			});
+
 			toast.dismiss(loadingToast);
-			toast.success(t('pdfsExportedSuccessfully') || 'PDFs exported successfully!');
+
+			if (result.success && result.downloaded.length > 0) {
+				const successMessage = result.downloaded.length === 2
+					? t('pdfsExportedSuccessfully') || 'PDFs exported successfully!'
+					: `PDF exported successfully (${result.downloaded[0].toUpperCase()})`;
+				toast.success(successMessage);
+			}
+
+			if (result.failed.length > 0) {
+				const failedLanguages = result.failed.map(f => f.language.toUpperCase()).join(', ');
+				const errorMessage = result.downloaded.length > 0
+					? `Some PDFs failed to export: ${failedLanguages}`
+					: `Failed to export PDFs: ${result.failed[0].error}`;
+				toast.error(errorMessage);
+			}
+
+			if (result.downloaded.length === 0 && result.failed.length > 0) {
+				toast.error(result.failed[0].error || 'Failed to export PDFs');
+			}
 		} catch (error: any) {
+			toast.dismiss(loadingToast);
 			console.error('PDF export error:', error);
 			toast.error(error.message || 'Failed to export PDFs. Please try again.');
 		} finally {

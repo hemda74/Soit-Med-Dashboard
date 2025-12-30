@@ -244,69 +244,31 @@ export default function OfferApprovalForm({ offer, onSuccess, onCancel }: OfferA
     const handleExportPdf = async (language: 'en' | 'ar' = 'en') => {
         if (!offer.id || isExportingPdf) return;
 
+        setIsExportingPdf(true);
+        setExportingLanguage(language);
+        const loadingToast = toast.loading(`Generating PDF (${language.toUpperCase()})...`);
+
         try {
-            setIsExportingPdf(true);
-            setExportingLanguage(language);
             const token = user?.token;
 
             if (!token) {
+                toast.dismiss(loadingToast);
                 toast.error('Authentication required for PDF export');
                 return;
             }
 
-            const apiBaseUrl = getApiBaseUrl();
-            const loadingToast = toast.loading(`Generating PDF (${language.toUpperCase()})...`);
+            const { exportOfferPdf } = await import('@/services/sales/pdfExportService');
+            const result = await exportOfferPdf(offer.id, token, language, 60000);
 
-            try {
-                const response = await fetch(
-                    `${apiBaseUrl}/api/Offer/${offer.id}/pdf?language=${language}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/pdf',
-                        },
-                    }
-                );
+            toast.dismiss(loadingToast);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error(`PDF generation failed for ${language}:`, {
-                        status: response.status,
-                        statusText: response.statusText,
-                        error: errorText
-                    });
-                    toast.error(`Failed to generate PDF (${language.toUpperCase()})`);
-                    return;
-                }
-
-                const pdfBlob = await response.blob();
-
-                if (!pdfBlob || pdfBlob.size === 0) {
-                    console.error(`Received empty PDF file for ${language}`);
-                    toast.error(`Received empty PDF file (${language.toUpperCase()})`);
-                    return;
-                }
-
-                // Create download link
-                const url = window.URL.createObjectURL(pdfBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                const langSuffix = language === 'ar' ? 'AR' : 'EN';
-                link.download = `Offer_${offer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-
-                toast.dismiss(loadingToast);
+            if (result.success) {
                 toast.success(`PDF downloaded successfully (${language.toUpperCase()})`);
-            } catch (error: any) {
-                console.error(`Error generating PDF for ${language}:`, error);
-                toast.dismiss(loadingToast);
-                toast.error(`Error generating PDF (${language.toUpperCase()}): ${error.message}`);
+            } else {
+                toast.error(result.error || `Failed to generate PDF (${language.toUpperCase()})`);
             }
         } catch (error: any) {
+            toast.dismiss(loadingToast);
             console.error('Error exporting PDF:', error);
             toast.error(error.message || 'Failed to export PDF');
         } finally {

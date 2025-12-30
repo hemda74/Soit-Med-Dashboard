@@ -36,7 +36,7 @@ const createTaskProgressSchema = (t: (key: string) => string) =>
             errorMap: () => ({ message: t('taskProgressForm.validation.progressDateRequired') }),
         }),
         visitResult: z.enum(['Interested', 'NotInterested']).optional(),
-        nextStep: z.enum(['NeedsOffer', 'NeedsDeal']).optional(),
+        nextStep: z.enum(['NeedsOffer']).optional(),
         followUpDate: z.date().optional(),
         satisfactionRating: z
             .number({
@@ -354,31 +354,30 @@ export default function TaskProgressForm({ onSuccess, onCancel, clientId, taskId
                                     )}
                                 />
 
-                                <FormField
-                                    control={form.control}
-                                    name="nextStep"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>{t('taskProgressForm.fields.nextStep')}</FormLabel>
-                                            <Select onValueChange={field.onChange} value={field.value}>
-                                                <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder={t('taskProgressForm.placeholders.nextStep')} />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    <SelectItem value="NeedsOffer">
-                                                        {t('taskProgressForm.nextSteps.needsOffer')}
-                                                    </SelectItem>
-                                                    <SelectItem value="NeedsDeal">
-                                                        {t('taskProgressForm.nextSteps.needsDeal')}
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                {form.watch('visitResult') === 'Interested' && (
+                                    <FormField
+                                        control={form.control}
+                                        name="nextStep"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('taskProgressForm.fields.nextStep')}</FormLabel>
+                                                <Select onValueChange={field.onChange} value={field.value || 'NeedsOffer'}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder={t('taskProgressForm.placeholders.nextStep')} />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="NeedsOffer">
+                                                            {t('taskProgressForm.nextSteps.needsOffer')}
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
 
                                 <FormField
                                     control={form.control}

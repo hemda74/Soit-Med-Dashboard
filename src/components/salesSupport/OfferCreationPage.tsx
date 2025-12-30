@@ -480,67 +480,52 @@ export default function OfferCreationPage() {
     }
 
     const exportPdf = async () => {
-        if (!offer) return
+        if (!offer) return;
+        
+        const loadingToast = toast.loading('Generating PDFs...');
+        
         try {
-            // Generate PDF from backend (both EN and AR)
             const authState = useAuthStore.getState();
             const token = authState.user?.token;
 
             if (!token) {
+                toast.dismiss(loadingToast);
                 toast.error('Authentication required for PDF export');
                 return;
             }
 
-            const apiBaseUrl = getApiBaseUrl();
-            const languages = ['en', 'ar'];
+            const { exportOfferPdfs } = await import('@/services/sales/pdfExportService');
+            const result = await exportOfferPdfs({
+                offerId: offer.id,
+                token,
+                languages: ['en', 'ar'],
+                timeout: 60000,
+            });
 
-            for (const lang of languages) {
-                try {
-                    const response = await fetch(
-                        `${apiBaseUrl}/api/Offer/${offer.id}/pdf?language=${lang}`,
-                        {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Accept': 'application/pdf',
-                            },
-                        }
-                    );
+            toast.dismiss(loadingToast);
 
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error(`Backend PDF generation failed for ${lang}:`, {
-                            status: response.status,
-                            statusText: response.statusText,
-                            error: errorText
-                        });
-                        continue;
-                    }
-
-                    const pdfBlob = await response.blob();
-
-                    if (!pdfBlob || pdfBlob.size === 0) {
-                        console.error(`Received empty PDF file for ${lang}`);
-                        continue;
-                    }
-
-                    const url = window.URL.createObjectURL(pdfBlob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    const langSuffix = lang === 'ar' ? 'AR' : 'EN';
-                    link.download = `Offer_${offer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                } catch (error: any) {
-                    console.error(`Error generating backend PDF for ${lang}:`, error);
-                }
+            if (result.success && result.downloaded.length > 0) {
+                const successMessage = result.downloaded.length === 2
+                    ? translate('offerCreationPage.pdfsExportedSuccessfully', 'PDFs exported successfully! Both Arabic and English versions downloaded.')
+                    : `PDF exported successfully (${result.downloaded[0].toUpperCase()})`;
+                toast.success(successMessage);
             }
 
-            toast.success(translate('offerCreationPage.pdfsExportedSuccessfully', 'PDFs exported successfully! Both Arabic and English versions downloaded.'))
+            if (result.failed.length > 0) {
+                const failedLanguages = result.failed.map(f => f.language.toUpperCase()).join(', ');
+                const errorMessage = result.downloaded.length > 0
+                    ? `Some PDFs failed to export: ${failedLanguages}`
+                    : result.failed[0].error || translate('offerCreationPage.exportFailed', 'Export failed');
+                toast.error(errorMessage);
+            }
+
+            if (result.downloaded.length === 0 && result.failed.length > 0) {
+                toast.error(result.failed[0].error || translate('offerCreationPage.exportFailed', 'Export failed'));
+            }
         } catch (e: any) {
-            toast.error(e.message || translate('offerCreationPage.exportFailed', 'Export failed'))
+            toast.dismiss(loadingToast);
+            console.error('PDF export error:', e);
+            toast.error(e.message || translate('offerCreationPage.exportFailed', 'Export failed'));
         }
     }
 

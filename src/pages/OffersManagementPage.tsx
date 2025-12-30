@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -342,55 +342,161 @@ const OffersManagementPage: React.FC = () => {
 	// Load offer details when selected
 	const handleViewOffer = async (offer: Offer) => {
 		try {
+			// Reset equipment state and ref when opening a new offer
+			setOfferEquipment([]);
+			setEquipmentImageUrls({});
+			lastLoadedOfferIdRef.current = null;
+			
+			// Set basic offer info immediately for better UX
 			setSelectedOffer(offer);
+
+			console.log(`[OffersManagementPage] Loading full details for offer ${offer.id}`, {
+				userRole: user?.roles?.join(', '),
+				offerId: offer.id,
+				offerStatus: offer.status
+			});
+
 			// Load full offer details
 			const response = await salesApi.getOffer(offer.id.toString());
+			
 			if (response.success && response.data) {
-				setSelectedOffer(response.data);
+				console.log(`[OffersManagementPage] Successfully loaded offer details`, {
+					offerId: response.data.id,
+					hasEquipment: !!response.data.equipment,
+					hasTerms: !!response.data.terms
+				});
+				
+				// Merge the full details with basic offer info - use a single setState to prevent double useEffect trigger
+				const mergedOffer = {
+					...offer,
+					...response.data,
+					// Ensure required fields are preserved
+					id: response.data.id || offer.id,
+					clientName: response.data.clientName || offer.clientName,
+					assignedToName: response.data.assignedToName || offer.assignedToName,
+					createdByName: response.data.createdByName || offer.createdByName,
+					totalAmount: response.data.totalAmount ?? offer.totalAmount,
+					status: response.data.status || offer.status,
+					createdAt: response.data.createdAt || offer.createdAt,
+				};
+				
+				// Single setState to prevent multiple useEffect triggers
+				setSelectedOffer(mergedOffer);
 			} else {
 				// If API call succeeded but no data, keep the basic offer info
-				console.warn('Offer details not available, using basic offer info');
+				console.warn('[OffersManagementPage] Offer details not available, using basic offer info', response);
+				// Keep the basic offer info - already set above
 			}
-		} catch (error) {
-			console.error('Error loading offer details:', error);
-			if (isConnectionError(error)) {
+		} catch (error: any) {
+			console.error('[OffersManagementPage] Error loading offer details:', {
+				error,
+				message: error?.message,
+				status: error?.status,
+				statusText: error?.statusText,
+				offerId: offer.id,
+				userRole: user?.roles?.join(', ')
+			});
+
+			if (error?.status === 403) {
+				toast.error('You do not have permission to view this offer');
+				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
+			} else if (error?.status === 401) {
+				toast.error('Your session has expired. Please login again.');
+				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
+			} else if (error?.status === 404) {
+				toast.error('Offer not found');
+				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
+			} else if (isConnectionError(error)) {
 				toast.error(t('connectionError') || 'Cannot connect to server. Please check your connection and try again.');
+				// Keep the basic offer info so user can still see something
 			} else {
-				toast.error(t('failedToLoadOfferDetails') || 'Failed to load offer details');
+				toast.error(error?.message || t('failedToLoadOfferDetails') || 'Failed to load offer details');
+				// Keep the basic offer info so user can still see something
 			}
-			// Keep the basic offer info so user can still see something
 		}
 	};
+
+	// Track the last loaded offer ID to prevent duplicate calls
+	const lastLoadedOfferIdRef = useRef<number | null>(null);
 
 	// Load offer equipment when an offer is selected
 	useEffect(() => {
 		const loadOfferEquipment = async () => {
-			if (selectedOffer?.id) {
-				setLoadingEquipment(true);
-				try {
-					const response = await salesApi.getOfferEquipment(selectedOffer.id);
-					if (response.data && Array.isArray(response.data)) {
-						setOfferEquipment(response.data);
-					} else {
-						setOfferEquipment([]);
-					}
-				} catch (error) {
-					console.error('Error loading offer equipment:', error);
-					setOfferEquipment([]);
-					// Only show toast for connection errors, not for other errors (to avoid spam)
-					if (isConnectionError(error)) {
-						toast.error(t('connectionError') || 'Cannot connect to server. Equipment details may be unavailable.');
-					}
-				} finally {
-					setLoadingEquipment(false);
-				}
-			} else {
+			const offerId = selectedOffer?.id;
+			
+			// Prevent duplicate calls for the same offer
+			if (!offerId) {
 				setOfferEquipment([]);
+				lastLoadedOfferIdRef.current = null;
+				return;
+			}
+
+			// Skip if already loaded for this offer (don't check loadingEquipment to allow retry on error)
+			if (lastLoadedOfferIdRef.current === offerId) {
+				console.log(`[OffersManagementPage] Skipping duplicate equipment load for offer ${offerId}`);
+				return;
+			}
+
+			// Mark as loading for this offer
+			lastLoadedOfferIdRef.current = offerId;
+			setLoadingEquipment(true);
+			
+			try {
+				console.log(`[OffersManagementPage] Loading equipment for offer ${offerId}`);
+
+				const response = await salesApi.getOfferEquipment(offerId);
+				
+				if (response.success && response.data && Array.isArray(response.data)) {
+					console.log(`[OffersManagementPage] Successfully loaded ${response.data.length} equipment items`);
+					setOfferEquipment(response.data);
+				} else {
+					console.warn('[OffersManagementPage] Equipment response missing data or not an array:', response);
+					setOfferEquipment([]);
+				}
+			} catch (error: any) {
+				console.error('[OffersManagementPage] Error loading offer equipment:', {
+					error,
+					message: error?.message,
+					status: error?.status,
+					statusText: error?.statusText,
+					offerId: offerId,
+				});
+				
+				setOfferEquipment([]);
+				
+				// Show appropriate error message
+				if (error?.status === 403) {
+					toast.error('You do not have permission to view equipment for this offer');
+				} else if (error?.status === 401) {
+					toast.error('Your session has expired. Please login again.');
+				} else if (error?.status === 404) {
+					toast.error('Offer not found');
+				} else if (isConnectionError(error)) {
+					toast.error(t('connectionError') || 'Cannot connect to server. Equipment details may be unavailable.');
+				} else if (error?.message) {
+					// Only show error toast for non-connection errors if it's a clear permission issue
+					if (error.message.includes('permission') || error.message.includes('403') || error.message.includes('Forbidden')) {
+						toast.error('You do not have permission to view equipment for this offer');
+					}
+				}
+			} finally {
+				setLoadingEquipment(false);
 			}
 		};
 
 		loadOfferEquipment();
-	}, [selectedOffer, t]);
+		// Only depend on selectedOffer.id, not the whole object to prevent unnecessary re-renders
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectedOffer?.id, t]);
 
 	// Load equipment images
 	useEffect(() => {
@@ -400,23 +506,29 @@ const OffersManagementPage: React.FC = () => {
 
 				// Try to load images for each equipment
 				for (const equipment of offerEquipment) {
-					let imagePath = equipment.imagePath || (equipment as any).ImagePath || (equipment as any).imagePath;
+					try {
+						let imagePath = equipment.imagePath || (equipment as any).ImagePath || (equipment as any).imagePath;
 
-					// If no image path in equipment data, try to fetch it from API
-					if (!imagePath || imagePath.trim() === '' || imagePath.includes('equipment-placeholder.png')) {
-						try {
-							const imageResponse = await salesApi.getEquipmentImage(selectedOffer.id, equipment.id);
-							if (imageResponse.success && imageResponse.data?.imagePath) {
-								imagePath = imageResponse.data.imagePath;
+						// If no image path in equipment data, try to fetch it from API
+						if (!imagePath || imagePath.trim() === '' || imagePath.includes('equipment-placeholder.png')) {
+							try {
+								const imageResponse = await salesApi.getEquipmentImage(selectedOffer.id, equipment.id);
+								if (imageResponse.success && imageResponse.data?.imagePath) {
+									imagePath = imageResponse.data.imagePath;
+								}
+							} catch (error) {
+								// Silently handle image fetch errors - not critical
+								console.debug(`[OffersManagementPage] Could not load image for equipment ${equipment.id}:`, error);
 							}
-						} catch (error) {
-							// Silently handle image fetch errors
 						}
-					}
 
-					if (imagePath && imagePath.trim() !== '' && !imagePath.includes('equipment-placeholder.png')) {
-						const imageUrl = getStaticFileUrl(imagePath);
-						imageUrls[equipment.id] = imageUrl;
+						if (imagePath && imagePath.trim() !== '' && !imagePath.includes('equipment-placeholder.png')) {
+							const imageUrl = getStaticFileUrl(imagePath);
+							imageUrls[equipment.id] = imageUrl;
+						}
+					} catch (error) {
+						// Silently handle individual equipment image errors
+						console.debug(`[OffersManagementPage] Error processing image for equipment ${equipment.id}:`, error);
 					}
 				}
 				setEquipmentImageUrls(imageUrls);
@@ -442,6 +554,9 @@ const OffersManagementPage: React.FC = () => {
 				toast.success(t('offerSentSuccessfully') || 'Offer sent to salesman successfully');
 				loadOffers();
 				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
 			} else {
 				toast.error(response.message || 'Failed to send offer');
 			}
@@ -467,6 +582,9 @@ const OffersManagementPage: React.FC = () => {
 				toast.success(t('offerMarkedAsUnderReview') || 'Offer marked as under review successfully');
 				loadOffers();
 				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
 			} else {
 				toast.error(response.message || 'Failed to mark offer as under review');
 			}
@@ -492,6 +610,9 @@ const OffersManagementPage: React.FC = () => {
 				toast.success(t('offerResumedFromUnderReview') || 'Offer resumed from under review successfully');
 				loadOffers();
 				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
 			} else {
 				toast.error(response.message || 'Failed to resume offer from under review');
 			}
@@ -526,6 +647,9 @@ const OffersManagementPage: React.FC = () => {
 				toast.success(t('offerMarkedAsNeedsModification') || 'Offer marked as needing modification successfully');
 				loadOffers();
 				setSelectedOffer(null);
+				setOfferEquipment([]);
+				setEquipmentImageUrls({});
+				lastLoadedOfferIdRef.current = null;
 				setShowNeedsModificationModal(false);
 				setNeedsModificationReason('');
 			} else {
@@ -541,65 +665,48 @@ const OffersManagementPage: React.FC = () => {
 
 	const handleExportPdf = async () => {
 		if (!selectedOffer) return;
+		
+		const authState = useAuthStore.getState();
+		const token = authState.user?.token;
+
+		if (!token) {
+			toast.error(t('authenticationRequiredForBackendPdfs') || 'Authentication required for PDF export');
+			return;
+		}
+
+		const loadingToast = toast.loading('Generating PDFs...');
+
 		try {
-			// Generate PDF from backend (both EN and AR)
-			const authState = useAuthStore.getState();
-			const token = authState.user?.token;
+			const { exportOfferPdfs } = await import('@/services/sales/pdfExportService');
+			const result = await exportOfferPdfs({
+				offerId: selectedOffer.id,
+				token,
+				languages: ['en', 'ar'],
+				timeout: 60000, // 60 seconds timeout
+			});
 
-			if (!token) {
-				toast.error(t('authenticationRequiredForBackendPdfs') || 'Authentication required for PDF export');
-				return;
+			toast.dismiss(loadingToast);
+
+			if (result.success && result.downloaded.length > 0) {
+				const successMessage = result.downloaded.length === 2
+					? t('pdfsExportedSuccessfully') || 'PDFs exported successfully!'
+					: `PDF exported successfully (${result.downloaded[0].toUpperCase()})`;
+				toast.success(successMessage);
 			}
 
-			const apiBaseUrl = getApiBaseUrl();
-			const languages = ['en', 'ar'];
-
-			for (const lang of languages) {
-				try {
-					const response = await fetch(
-						`${apiBaseUrl}/api/Offer/${selectedOffer.id}/pdf?language=${lang}`,
-						{
-							method: 'GET',
-							headers: {
-								'Authorization': `Bearer ${token}`,
-								'Accept': 'application/pdf',
-							},
-						}
-					);
-
-					if (!response.ok) {
-						const errorText = await response.text();
-						console.error(`Backend PDF generation failed for ${lang}:`, {
-							status: response.status,
-							statusText: response.statusText,
-							error: errorText
-						});
-						continue;
-					}
-
-					const pdfBlob = await response.blob();
-
-					if (!pdfBlob || pdfBlob.size === 0) {
-						console.error(`Received empty PDF file for ${lang}`);
-						continue;
-					}
-
-					const url = window.URL.createObjectURL(pdfBlob);
-					const link = document.createElement('a');
-					link.href = url;
-					const langSuffix = lang === 'ar' ? 'AR' : 'EN';
-					link.download = `Offer_${selectedOffer.id}_${langSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
-					document.body.appendChild(link);
-					link.click();
-					document.body.removeChild(link);
-					window.URL.revokeObjectURL(url);
-				} catch (error: any) {
-					console.error(`Error generating backend PDF for ${lang}:`, error);
-				}
+			if (result.failed.length > 0) {
+				const failedLanguages = result.failed.map(f => f.language.toUpperCase()).join(', ');
+				const errorMessage = result.downloaded.length > 0
+					? `Some PDFs failed to export: ${failedLanguages}`
+					: `Failed to export PDFs: ${result.failed[0].error}`;
+				toast.error(errorMessage);
 			}
 
-			toast.success(t('pdfsExportedSuccessfully') || 'PDFs exported successfully!');
+			if (result.downloaded.length === 0 && result.failed.length > 0) {
+				toast.error(result.failed[0].error || 'Failed to export PDFs');
+			}
 		} catch (error: any) {
+			toast.dismiss(loadingToast);
 			console.error('Error exporting PDF:', error);
 			toast.error(error.message || 'Failed to export PDF');
 		}
@@ -1037,6 +1144,10 @@ const OffersManagementPage: React.FC = () => {
 									onClick={() => {
 										setSelectedOffer(null);
 										setOfferEquipment([]);
+										setEquipmentImageUrls({});
+										setLoadingEquipment(false);
+										lastLoadedOfferIdRef.current = null;
+										lastLoadedOfferIdRef.current = null;
 									}}
 									variant="destructive"
 									size="sm"
@@ -1063,7 +1174,9 @@ const OffersManagementPage: React.FC = () => {
 										{t('totalAmount')}
 									</label>
 									<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-										{selectedOffer.totalAmount !== undefined ? `EGP ${selectedOffer.totalAmount.toLocaleString()}` : 'N/A'}
+										{selectedOffer.totalAmount !== undefined && selectedOffer.totalAmount !== null 
+											? `EGP ${Number(selectedOffer.totalAmount).toLocaleString()}` 
+											: 'N/A'}
 									</p>
 									{(selectedOffer as any).discountAmount && (selectedOffer as any).discountAmount > 0 && (
 										<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1095,7 +1208,14 @@ const OffersManagementPage: React.FC = () => {
 									)}
 									{(selectedOffer as any).salesManagerApprovedAt && (
 										<p className="text-xs text-red-600 dark:text-red-400 mt-2">
-											{t('rejectedAt') || 'Rejected at'}: {format(new Date((selectedOffer as any).salesManagerApprovedAt), 'MMM dd, yyyy HH:mm')}
+											{t('rejectedAt') || 'Rejected at'}: {(() => {
+												try {
+													const date = new Date((selectedOffer as any).salesManagerApprovedAt);
+													return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, yyyy HH:mm');
+												} catch {
+													return 'N/A';
+												}
+											})()}
 										</p>
 									)}
 								</div>
@@ -1254,9 +1374,16 @@ const OffersManagementPage: React.FC = () => {
 									</div>
 								) : (
 									<div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-										<p className="text-sm text-gray-900 dark:text-gray-100">
-											{(selectedOffer as any).products || 'No equipment details available'}
-										</p>
+										{loadingEquipment ? (
+											<div className="text-center py-4">
+												<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+												<p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{t('loading') || 'Loading...'}</p>
+											</div>
+										) : (
+											<p className="text-sm text-gray-900 dark:text-gray-100">
+												{(selectedOffer as any).products || 'No equipment details available'}
+											</p>
+										)}
 									</div>
 								)}
 							</div>
@@ -1340,13 +1467,36 @@ const OffersManagementPage: React.FC = () => {
 							<div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700 space-y-1">
 								<div className="flex justify-between">
 									<span>
-										<strong>{t('createdAt')}:</strong> {(selectedOffer as any).createdAt ? format(new Date((selectedOffer as any).createdAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
+										<strong>{t('createdAt')}:</strong> {(selectedOffer as any).createdAt 
+											? (() => {
+												try {
+													const date = new Date((selectedOffer as any).createdAt);
+													return isNaN(date.getTime()) ? 'N/A' : format(date, 'MMM dd, yyyy HH:mm');
+												} catch {
+													return 'N/A';
+												}
+											})()
+											: 'N/A'}
 									</span>
 									{(selectedOffer as any).validUntil && (
 										<span>
 											<strong>{t('validUntil')}:</strong> {Array.isArray((selectedOffer as any).validUntil)
-												? (selectedOffer as any).validUntil.map((d: string) => format(new Date(d), 'MMM dd, yyyy')).join(', ')
-												: format(new Date((selectedOffer as any).validUntil), 'MMM dd, yyyy')
+												? (selectedOffer as any).validUntil.map((d: string) => {
+													try {
+														const date = new Date(d);
+														return isNaN(date.getTime()) ? d : format(date, 'MMM dd, yyyy');
+													} catch {
+														return d;
+													}
+												}).join(', ')
+												: (() => {
+													try {
+														const date = new Date((selectedOffer as any).validUntil);
+														return isNaN(date.getTime()) ? (selectedOffer as any).validUntil : format(date, 'MMM dd, yyyy');
+													} catch {
+														return (selectedOffer as any).validUntil;
+													}
+												})()
 											}
 										</span>
 									)}
