@@ -1,4 +1,3 @@
-import { BaseApi } from '../baseApi';
 import { API_ENDPOINTS } from '../shared/endpoints';
 import type {
 	ProductCategory,
@@ -7,8 +6,70 @@ import type {
 	CategoryHierarchy,
 	ApiResponse,
 } from '@/types/sales.types';
+import { getAuthToken } from '@/utils/authUtils';
+import { getApiBaseUrl } from '@/utils/apiConfig';
+import { performanceMonitor } from '@/utils/performance';
 
-class ProductCategoryApi extends BaseApi {
+class ProductCategoryApi {
+	private async makeRequest<T>(
+		endpoint: string,
+		options: RequestInit = {}
+	): Promise<ApiResponse<T>> {
+		return performanceMonitor.measureApiCall(endpoint, async () => {
+			const token = getAuthToken();
+			if (!token) {
+				throw new Error('Authentication required');
+			}
+
+			const baseUrl = getApiBaseUrl();
+			const fullUrl = `${baseUrl}${endpoint}`;
+
+			const headers: HeadersInit = {
+				Authorization: `Bearer ${token}`,
+				...options.headers,
+			};
+
+			const response = await fetch(fullUrl, {
+				...options,
+				headers,
+			});
+
+			const contentType = response.headers.get('content-type');
+			if (contentType && contentType.includes('application/json')) {
+				const data = await response.json();
+
+				if (!response.ok) {
+					return {
+						success: false,
+						message: data.message || 'Request failed',
+						data: null as any,
+					};
+				}
+
+				return {
+					success: true,
+					message: data.message || 'Success',
+					data: data.data || data,
+				};
+			}
+
+			if (!response.ok) {
+				const text = await response.text();
+				return {
+					success: false,
+					message: text || 'Request failed',
+					data: null as any,
+				};
+			}
+
+			return {
+				success: true,
+				message: 'Success',
+				data: null as any,
+			};
+		});
+	}
+
 	/**
 	 * Get all categories (flat list)
 	 */
