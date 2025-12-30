@@ -99,6 +99,17 @@ export default function ProductsCatalogPage() {
         setFilteredProducts(filtered)
     }, [searchTerm, products])
 
+    const loadCategories = async () => {
+        try {
+            const response = await productCategoryApi.getAllCategories()
+            if (response.success && response.data) {
+                setCategories(response.data)
+            }
+        } catch (err) {
+            console.error('Failed to load categories:', err)
+        }
+    }
+
     const loadProducts = async () => {
         setLoading(true)
         setError(null)
