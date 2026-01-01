@@ -7,4 +7,8 @@ export { default as SparePartsCoordinatorDashboard } from './SparePartsCoordinat
 export { default as InventoryManagerDashboard } from './InventoryManagerDashboard';
 export { StatusBadge } from './StatusBadge';
 export { StatusTimeline } from './StatusTimeline';
+export { DispatchBoard } from './DispatchBoard';
+export { ApprovalQueue } from './ApprovalQueue';
+export { WarehouseRequests } from './WarehouseRequests';
+export { PaymentTransactions } from './PaymentTransactions';
 

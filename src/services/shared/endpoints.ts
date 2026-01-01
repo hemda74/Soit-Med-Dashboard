@@ -310,10 +310,22 @@ export const API_ENDPOINTS = {
 		// Maintenance Visits
 		VISIT: {
 			BASE: '/api/MaintenanceVisit',
+			BY_ID: (id: number) => `/api/MaintenanceVisit/${id}`,
 			BY_REQUEST: (requestId: number) =>
 				`/api/MaintenanceVisit/request/${requestId}`,
 			BY_ENGINEER: (EngineerId: string) =>
 				`/api/MaintenanceVisit/Engineer/${EngineerId}`,
+			ASSIGNED: (engineerId: string) =>
+				`/api/MaintenanceVisit/assigned?engineerId=${engineerId}`,
+			DISPATCH: '/api/MaintenanceVisit/dispatch',
+			PENDING_APPROVAL: '/api/MaintenanceVisit/pending-approval',
+			APPROVE: (id: number) => `/api/MaintenanceVisit/${id}/approve`,
+			REJECT: (id: number) => `/api/MaintenanceVisit/${id}/reject`,
+			ASSIGN_ENGINEERS: (id: number) =>
+				`/api/MaintenanceVisit/${id}/assign-engineers`,
+			VERIFY_MACHINE: (id: number) =>
+				`/api/MaintenanceVisit/${id}/verify-machine`,
+			COMPLETE: (id: number) => `/api/MaintenanceVisit/${id}/complete`,
 		},
 		// Maintenance Attachments
 		ATTACHMENT: {
@@ -335,6 +347,7 @@ export const API_ENDPOINTS = {
 				`/api/SparePartRequest/${id}/set-price`,
 			CUSTOMER_APPROVAL: (id: number) =>
 				`/api/SparePartRequest/${id}/customer-approval`,
+			WAREHOUSE_PENDING: '/api/SparePartRequest/warehouse/pending',
 		},
 	},
 

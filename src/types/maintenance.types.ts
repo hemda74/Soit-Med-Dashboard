@@ -20,6 +20,24 @@ export enum MaintenanceVisitOutcome {
 	Completed = 'Completed',
 	NeedsSecondVisit = 'NeedsSecondVisit',
 	NeedsSparePart = 'NeedsSparePart',
+	CannotComplete = 'CannotComplete',
+}
+
+export enum VisitStatus {
+	PendingApproval = 'PendingApproval',
+	Scheduled = 'Scheduled',
+	InProgress = 'InProgress',
+	NeedsSpareParts = 'NeedsSpareParts',
+	Completed = 'Completed',
+	Rescheduled = 'Rescheduled',
+	Cancelled = 'Cancelled',
+}
+
+export enum VisitOrigin {
+	CustomerApp = 'CustomerApp',
+	CallCenter = 'CallCenter',
+	ManualSales = 'ManualSales',
+	AutoContract = 'AutoContract',
 }
 
 export enum SparePartAvailabilityStatus {
@@ -98,9 +116,22 @@ export interface CreateMaintenanceVisitDTO {
 
 export interface MaintenanceVisitResponseDTO {
 	id: number;
+	ticketNumber: string;
 	maintenanceRequestId: number;
+	customerId: string;
+	customerName: string;
+	deviceId: number;
+	deviceName: string;
+	scheduledDate: string;
+	origin: VisitOrigin;
+	status: VisitStatus;
+	parentVisitId?: number;
+	isPaidVisit: boolean;
+	cost?: number;
 	EngineerId: string;
 	EngineerName: string;
+	assignedEngineerIds?: string[];
+	assignedEngineerNames?: string[];
 	qrCode?: string;
 	serialCode?: string;
 	report?: string;
