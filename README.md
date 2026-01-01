@@ -68,6 +68,15 @@ SoitMed Dashboard is a modern web application built with React and TypeScript, p
 - **QR Code Integration**: Equipment identification system
 - **Maintenance History**: Complete maintenance records
 
+### Maintenance Management
+
+- **Approval Queue**: Review and approve pending maintenance visits from sales support
+- **Dispatch Board**: Assign and dispatch maintenance tasks to engineers
+- **Payment Transactions**: Track and manage maintenance payment transactions
+- **Warehouse Requests**: Manage warehouse requests and inventory for maintenance operations
+- **Workflow Management**: Complete workflow for maintenance visit approval and dispatch
+- **Status Tracking**: Real-time status updates for maintenance operations
+
 ## Getting Started
 
 ### Prerequisites
@@ -147,12 +156,20 @@ yarn dev
 Soit-Med-Dashboard/
 ├── src/
 │   ├── components/         # Reusable UI components
+│   │   └── maintenance/   # Maintenance management components
+│   │       ├── ApprovalQueue.tsx
+│   │       ├── DispatchBoard.tsx
+│   │       ├── PaymentTransactions.tsx
+│   │       └── WarehouseRequests.tsx
 │   ├── contexts/            # React contexts (Auth, Notifications)
 │   ├── pages/               # Page components
 │   ├── services/            # API services
+│   │   └── shared/          # Shared services
+│   │       └── endpoints.ts # API endpoint definitions
 │   ├── hooks/               # Custom React hooks
 │   ├── utils/               # Utility functions
 │   └── types/               # TypeScript types
+│       └── maintenance.types.ts # Maintenance type definitions
 ├── public/                  # Static assets
 └── package.json             # Dependencies
 ```
@@ -199,6 +216,7 @@ VITE_API_URL=https://your-backend-url.com
 - `/api/SalesOffer` - Offer management
 - `/api/SalesDeal` - Deal management
 - `/api/Client` - Client management
+- `/api/Maintenance` - Maintenance management (visits, approvals, dispatch, payments, warehouse)
 - `/notificationHub` - SignalR real-time connection
 
 ## Building for Production
@@ -257,6 +275,15 @@ The `dist` folder contains the production build. Deploy to:
 - User management
 - Deal approvals
 - System configuration
+- Maintenance workflow oversight
+
+### Maintenance Manager
+
+- Approve pending maintenance visits
+- Dispatch maintenance tasks
+- Monitor payment transactions
+- Manage warehouse requests
+- Oversee maintenance operations
 
 ## Troubleshooting
 
@@ -298,4 +325,4 @@ This project is licensed under the MIT License.
 
 **Built for comprehensive hospital management**
 
-_Last Updated: November 2025_
+_Last Updated: December 2024_
