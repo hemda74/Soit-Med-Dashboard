@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, FilterIcon, UserGroupIcon, MapPinIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Users, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import type { MaintenanceVisitResponseDTO, VisitStatus } from '@/types/maintenance.types';
@@ -155,7 +155,7 @@ export const DispatchBoard: React.FC = () => {
 			<Card>
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
-						<UserGroupIcon className="h-6 w-6" />
+						<Users className="h-6 w-6" />
 						Dispatch Board
 					</CardTitle>
 					<CardDescription>
