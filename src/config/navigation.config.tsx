@@ -20,6 +20,7 @@ import {
   Archive,
   MessageCircle,
   UserPlus,
+  Building2,
 } from 'lucide-react';
 
 /**
@@ -173,6 +174,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/maintenance/spare-parts',
     roles: ['SparePartsCoordinator', 'InventoryManager', 'SuperAdmin'] as const,
   },
+  {
+    icon: <Building2 className={ICON_SIZE} />,
+    name: t('clientEquipmentVisits') || 'Clients & Equipment',
+    path: '/maintenance/client-equipment-visits',
+    roles: ['MaintenanceSupport', 'MaintenanceManager', 'Engineer', 'SuperAdmin'] as const,
+  },
   // Inventory section
   {
     icon: <Warehouse className={ICON_SIZE} />,
@@ -198,6 +205,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     icon: <Archive className={ICON_SIZE} />,
     name: t('legalDealsHistory') || 'Deals History',
     path: '/legal/deals/history',
+    roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
+  },
+  {
+    icon: <FileText className={ICON_SIZE} />,
+    name: 'Contracts',
+    path: '/contracts',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
 ] as const;

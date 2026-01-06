@@ -3,6 +3,8 @@
  * Reads from environment variables with sensible defaults
  */
 
+import { getAuthToken } from './authUtils';
+
 /**
  * Get the base API URL from environment variables
  * Reads from VITE_API_BASE_URL environment variable
@@ -177,5 +179,89 @@ export function getStaticFileUrl(filePath: string | null | undefined): string {
 		);
 		// Return placeholder on error
 		return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%239ca3af" font-family="Arial" font-size="18" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+	}
+}
+
+/**
+ * Get authenticated file URL as blob URL
+ * This function fetches the file with authentication token and returns a blob URL
+ * Use this for images and files that require authentication
+ * 
+ * @param filePath - The file path from the API
+ * @returns Promise that resolves to a blob URL string
+ */
+export async function getAuthenticatedFileUrl(filePath: string | null | undefined): Promise<string> {
+	// Handle null/undefined/empty string
+	if (!filePath || (typeof filePath === 'string' && filePath.trim() === '')) {
+		return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%239ca3af" font-family="Arial" font-size="18" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+	}
+
+	try {
+		const token = getAuthToken();
+		if (!token) {
+			console.warn('No authentication token available for file request');
+			// For API endpoints, use getApiUrl; for static files, use getStaticFileUrl
+			if (filePath.startsWith('/api/')) {
+				return getApiUrl(filePath);
+			}
+			return getStaticFileUrl(filePath);
+		}
+
+		// Determine if this is an API endpoint or static file
+		let fullUrl: string;
+		if (filePath.startsWith('/api/') || filePath.startsWith('http://') || filePath.startsWith('https://')) {
+			// API endpoint - use getApiUrl
+			if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+				fullUrl = filePath; // Already a full URL
+			} else {
+				fullUrl = getApiUrl(filePath);
+			}
+		} else {
+			// Static file - use getStaticFileUrl
+			fullUrl = getStaticFileUrl(filePath);
+		}
+		
+		// Fetch the file with authentication
+		const response = await fetch(fullUrl, {
+			headers: {
+				'Authorization': `Bearer ${token}`,
+			},
+		});
+
+		if (!response.ok) {
+			console.error('Failed to fetch authenticated file:', response.status, response.statusText, 'URL:', fullUrl);
+			// Fallback based on file path type
+			if (filePath.startsWith('/api/')) {
+				return getApiUrl(filePath);
+			}
+			return getStaticFileUrl(filePath);
+		}
+
+		// Convert response to blob
+		const blob = await response.blob();
+		
+		// Create object URL from blob
+		const blobUrl = URL.createObjectURL(blob);
+		
+		return blobUrl;
+	} catch (error) {
+		console.error('Error fetching authenticated file:', error, 'filePath:', filePath);
+		// Fallback based on file path type
+		if (filePath.startsWith('/api/')) {
+			return getApiUrl(filePath);
+		}
+		return getStaticFileUrl(filePath);
+	}
+}
+
+/**
+ * Revoke a blob URL to free memory
+ * Call this when you're done using the blob URL (e.g., in cleanup)
+ * 
+ * @param blobUrl - The blob URL to revoke
+ */
+export function revokeBlobUrl(blobUrl: string): void {
+	if (blobUrl && blobUrl.startsWith('blob:')) {
+		URL.revokeObjectURL(blobUrl);
 	}
 }

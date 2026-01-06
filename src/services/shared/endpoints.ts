@@ -289,6 +289,14 @@ export const API_ENDPOINTS = {
 		// WEEKLY_PLAN_TASKS has been removed in favor of WEEKLY_PLAN.TASKS
 	},
 
+	// Contract Management
+	CONTRACT: {
+		BASE: '/api/Contract',
+		BY_ID: (id: number) => `/api/Contract/${id}`,
+		DETAILS: (id: number) => `/api/Contract/${id}/details`,
+		SEARCH: '/api/Contract',
+	},
+
 	// Maintenance Module
 	MAINTENANCE: {
 		// Maintenance Requests
