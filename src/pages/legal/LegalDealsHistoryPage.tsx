@@ -235,8 +235,8 @@ const LegalDealsHistoryPage: React.FC = () => {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Legal Deals History</CardTitle>
-					<CardDescription>View and filter all deals in legal workflow</CardDescription>
+					<CardTitle>{t('legalDealsHistoryPageTitle')}</CardTitle>
+					<CardDescription>{t('legalDealsHistoryPageDescription')}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<LoadingSpinner />
@@ -253,7 +253,7 @@ const LegalDealsHistoryPage: React.FC = () => {
 						<div>
 							<CardTitle className="flex items-center gap-2 text-2xl">
 								<Archive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-								Legal Deals History
+								{t('legalDealsHistoryPageTitle')}
 							</CardTitle>
 							<CardDescription className="mt-2 text-base">
 								{filteredDeals.length} of {deals.length} {deals.length === 1 ? 'deal' : 'deals'}

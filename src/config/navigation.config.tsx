@@ -197,19 +197,19 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   // Legal section
   {
     icon: <FileText className={ICON_SIZE} />,
-    name: t('legalDeals') || 'Legal Deals',
+    name: t('legalDeals'),
     path: '/legal/deals',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
   {
     icon: <Archive className={ICON_SIZE} />,
-    name: t('legalDealsHistory') || 'Deals History',
+    name: t('legalDealsHistory'),
     path: '/legal/deals/history',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
   {
     icon: <FileText className={ICON_SIZE} />,
-    name: 'Contracts',
+    name: t('contracts'),
     path: '/contracts',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },

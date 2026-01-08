@@ -885,6 +885,15 @@ export const translations = {
 			'Spare Parts Coordinator Dashboard',
 		inventoryManagerDashboard: 'Inventory Manager Dashboard',
 		accountingDashboard: 'Accounting Dashboard',
+		legalDeals: 'Legal Deals',
+		legalDealsHistory: 'Deals History',
+		contracts: 'Contracts',
+		legalDealsPageTitle: 'Legal Department - Deals',
+		legalDealsPageDescription: 'Review deals sent to legal department',
+		legalDealsHistoryPageTitle: 'Legal Deals History',
+		legalDealsHistoryPageDescription: 'View and filter all deals in legal workflow',
+		contractsPageTitle: 'Contracts',
+		contractsPageDescription: 'View and manage all contracts',
 		manageSparePartRequests:
 			'Manage spare part requests and coordinate with inventory',
 		manageInventoryAndPricing:
@@ -2515,6 +2524,15 @@ export const translations = {
 		sparePartsCoordinatorDashboard: 'لوحة تحكم منسق قطع الغيار',
 		inventoryManagerDashboard: 'لوحة تحكم مدير المخزون',
 		accountingDashboard: 'لوحة تحكم المحاسبة',
+		legalDeals: 'الصفقات القانونية',
+		legalDealsHistory: 'تاريخ الصفقات',
+		contracts: 'العقود',
+		legalDealsPageTitle: 'القسم القانوني - الصفقات',
+		legalDealsPageDescription: 'مراجعة الصفقات المرسلة إلى القسم القانوني',
+		legalDealsHistoryPageTitle: 'تاريخ الصفقات القانونية',
+		legalDealsHistoryPageDescription: 'عرض وتصفية جميع الصفقات في سير العمل القانوني',
+		contractsPageTitle: 'العقود',
+		contractsPageDescription: 'عرض وإدارة جميع العقود',
 		manageSparePartRequests:
 			'إدارة طلبات قطع الغيار والتنسيق مع المخزون',
 		manageInventoryAndPricing:

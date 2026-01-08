@@ -281,8 +281,8 @@ const LegalDealsPage: React.FC = () => {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Legal Department - Deals</CardTitle>
-					<CardDescription>Review deals sent to legal department</CardDescription>
+					<CardTitle>{t('legalDealsPageTitle')}</CardTitle>
+					<CardDescription>{t('legalDealsPageDescription')}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<LoadingSpinner />
@@ -299,7 +299,7 @@ const LegalDealsPage: React.FC = () => {
 						<div>
 							<CardTitle className="flex items-center gap-2 text-2xl">
 								<FileText className="h-6 w-6 text-purple-600" />
-								Legal Department - Deals
+								{t('legalDealsPageTitle')}
 							</CardTitle>
 							<CardDescription className="mt-2 text-base space-y-1">
 								<div>{deals.length} {deals.length === 1 ? 'deal' : 'deals'} in legal workflow</div>
