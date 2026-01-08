@@ -1,30 +1,39 @@
 /**
  * Centralized API configuration utility
  * Reads from environment variables with sensible defaults
+ *
+ * ⚠️ IMPORTANT: This file is auto-synced from shared-config.ts
+ * To update the IP address, edit shared-config.ts and run: node sync-config.js
+ * Or manually update: shared-config.ts (root directory)
  */
 
 import { getAuthToken } from './authUtils';
+
+// Import from shared config (relative path from Web/src/utils to root)
+// Fallback values are synced from shared-config.ts
+const DEV_API_URL = 'http://10.10.9.100:5117'; // Auto-synced from shared-config.ts
 
 /**
  * Get the base API URL from environment variables
  * Reads from VITE_API_BASE_URL environment variable
  * Falls back to development default if not set
  *
+ * Supports both localhost (same device) and network IP (other devices)
+ *
  * @returns The base API URL string
  * @throws {Error} If the URL format is invalid
  */
 export function getApiBaseUrl(): string {
-	// Use environment variable if set, otherwise use development IP
-	// This matches the mobile apps configuration
-	const url = import.meta.env.VITE_API_BASE_URL || 'http://10.10.9.108:5117';
+	// Use environment variable if set, otherwise use development IP from shared config
+	const url = import.meta.env.VITE_API_BASE_URL || DEV_API_URL;
 
 	try {
 		new URL(url);
 		return url;
 	} catch (error) {
 		console.error('Invalid API base URL format:', url);
-		// Return default if validation fails
-		return 'http://10.10.9.108:5117';
+		// Return default if validation fails (from shared config)
+		return DEV_API_URL;
 	}
 }
 
@@ -50,13 +59,15 @@ export function getStaticFileBaseUrl(): string {
 			console.warn(
 				'Empty base URL after processing, using default'
 			);
-			return 'http://localhost:5117';
+			// Fallback to shared config default
+			return DEV_API_URL;
 		}
 
 		return baseUrl;
 	} catch (error) {
 		console.error('Error processing static file base URL:', error);
-		return 'http://localhost:5117';
+		// ⚠️ Keep in sync with API_CONFIG.md - unified API configuration
+		return 'http://10.10.9.100:5117';
 	}
 }
 
@@ -153,12 +164,12 @@ export function getStaticFileUrl(filePath: string | null | undefined): string {
 		// Handle relative paths (e.g., "products/product-1.jpg" or "images/Picture1.jpg")
 		// Remove any leading slashes from relative path
 		const cleanPath = filePath.replace(/^\/+/, '');
-		
+
 		// If baseUrl is empty (development with proxy), return relative URL
 		if (!baseUrl) {
 			return `/${cleanPath}`;
 		}
-		
+
 		const finalUrl = `${baseUrl}/${cleanPath}`;
 
 		// Validate the constructed URL only if it's absolute
@@ -186,20 +197,27 @@ export function getStaticFileUrl(filePath: string | null | undefined): string {
  * Get authenticated file URL as blob URL
  * This function fetches the file with authentication token and returns a blob URL
  * Use this for images and files that require authentication
- * 
+ *
  * @param filePath - The file path from the API
  * @returns Promise that resolves to a blob URL string
  */
-export async function getAuthenticatedFileUrl(filePath: string | null | undefined): Promise<string> {
+export async function getAuthenticatedFileUrl(
+	filePath: string | null | undefined
+): Promise<string> {
 	// Handle null/undefined/empty string
-	if (!filePath || (typeof filePath === 'string' && filePath.trim() === '')) {
+	if (
+		!filePath ||
+		(typeof filePath === 'string' && filePath.trim() === '')
+	) {
 		return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect fill="%23e5e7eb" width="400" height="300"/%3E%3Ctext fill="%239ca3af" font-family="Arial" font-size="18" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 	}
 
 	try {
 		const token = getAuthToken();
 		if (!token) {
-			console.warn('No authentication token available for file request');
+			console.warn(
+				'No authentication token available for file request'
+			);
 			// For API endpoints, use getApiUrl; for static files, use getStaticFileUrl
 			if (filePath.startsWith('/api/')) {
 				return getApiUrl(filePath);
@@ -209,9 +227,16 @@ export async function getAuthenticatedFileUrl(filePath: string | null | undefine
 
 		// Determine if this is an API endpoint or static file
 		let fullUrl: string;
-		if (filePath.startsWith('/api/') || filePath.startsWith('http://') || filePath.startsWith('https://')) {
+		if (
+			filePath.startsWith('/api/') ||
+			filePath.startsWith('http://') ||
+			filePath.startsWith('https://')
+		) {
 			// API endpoint - use getApiUrl
-			if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+			if (
+				filePath.startsWith('http://') ||
+				filePath.startsWith('https://')
+			) {
 				fullUrl = filePath; // Already a full URL
 			} else {
 				fullUrl = getApiUrl(filePath);
@@ -220,16 +245,22 @@ export async function getAuthenticatedFileUrl(filePath: string | null | undefine
 			// Static file - use getStaticFileUrl
 			fullUrl = getStaticFileUrl(filePath);
 		}
-		
+
 		// Fetch the file with authentication
 		const response = await fetch(fullUrl, {
 			headers: {
-				'Authorization': `Bearer ${token}`,
+				Authorization: `Bearer ${token}`,
 			},
 		});
 
 		if (!response.ok) {
-			console.error('Failed to fetch authenticated file:', response.status, response.statusText, 'URL:', fullUrl);
+			console.error(
+				'Failed to fetch authenticated file:',
+				response.status,
+				response.statusText,
+				'URL:',
+				fullUrl
+			);
 			// Fallback based on file path type
 			if (filePath.startsWith('/api/')) {
 				return getApiUrl(filePath);
@@ -239,13 +270,18 @@ export async function getAuthenticatedFileUrl(filePath: string | null | undefine
 
 		// Convert response to blob
 		const blob = await response.blob();
-		
+
 		// Create object URL from blob
 		const blobUrl = URL.createObjectURL(blob);
-		
+
 		return blobUrl;
 	} catch (error) {
-		console.error('Error fetching authenticated file:', error, 'filePath:', filePath);
+		console.error(
+			'Error fetching authenticated file:',
+			error,
+			'filePath:',
+			filePath
+		);
 		// Fallback based on file path type
 		if (filePath.startsWith('/api/')) {
 			return getApiUrl(filePath);
@@ -257,7 +293,7 @@ export async function getAuthenticatedFileUrl(filePath: string | null | undefine
 /**
  * Revoke a blob URL to free memory
  * Call this when you're done using the blob URL (e.g., in cleanup)
- * 
+ *
  * @param blobUrl - The blob URL to revoke
  */
 export function revokeBlobUrl(blobUrl: string): void {

@@ -75,32 +75,33 @@ export default defineConfig({
 		port: 5173,
 		proxy: {
 			// Proxy static file requests to backend to avoid CORS issues
-			// Uses VITE_API_BASE_URL from .env file, falls back to localhost
+			// Uses VITE_API_BASE_URL from .env file, falls back to unified config
+			// ⚠️ Keep this in sync with API_CONFIG.md and other app configs
 			'/products': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.108:5117',
+					'http://10.10.9.100:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/images': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.108:5117',
+					'http://10.10.9.100:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/offers': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.108:5117',
+					'http://10.10.9.100:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/uploads': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.108:5117',
+					'http://10.10.9.100:5117',
 				changeOrigin: true,
 				secure: false,
 			},

@@ -224,7 +224,9 @@ const LegalDealsHistoryPage: React.FC = () => {
 		if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
 			return filePath;
 		}
-		const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117';
+		// Use environment variable or fallback to shared config default
+		// To update: edit shared-config.ts and run sync-config.js
+		const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://10.10.9.100:5117';
 		const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
 		return `${API_BASE_URL}${cleanPath}`;
 	};
