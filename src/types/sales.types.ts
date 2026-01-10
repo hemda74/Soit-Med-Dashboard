@@ -27,6 +27,12 @@ export interface Client {
 	lastInteractionDate?: string;
 	conversionRate?: number;
 	interestedEquipmentCategories?: string[]; // Equipment categories the client is interested in
+	// Client category differentiation - Potential vs Existing
+	hasEquipment?: boolean; // True if client has equipment, contracts, or deals
+	clientCategory?: 'Potential' | 'Existing'; // "Potential" = no equipment, "Existing" = has equipment/contracts
+	contractCount?: number; // Number of contracts the client has
+	dealCount?: number; // Number of deals the client has
+	legacyCustomerId?: number; // Legacy customer ID from TBS system
 }
 
 export interface CreateClientDto {
@@ -54,6 +60,7 @@ export interface ClientSearchFilters {
 	city?: string;
 	governorateId?: number;
 	equipmentCategories?: string[]; // Filter by multiple equipment categories (e.g., ["Mobile X Ray", "Ultrasound"])
+	clientCategory?: 'Potential' | 'Existing'; // Filter by client category (Potential = no equipment, Existing = has equipment/contracts)
 	createdFrom?: string;
 	createdTo?: string;
 	sortBy?: string;

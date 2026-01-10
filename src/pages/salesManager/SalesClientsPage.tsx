@@ -47,6 +47,7 @@ const SalesClientsPage: React.FC = () => {
 	const [city, setCity] = useState<string>('');
 	const [governorateId, setGovernorateId] = useState<string>('all');
 	const [equipmentCategories, setEquipmentCategories] = useState<string[]>([]);
+	const [clientCategory, setClientCategory] = useState<string>('all');
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(20);
 	const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -60,7 +61,7 @@ const SalesClientsPage: React.FC = () => {
 	// Reset page when filters change
 	useEffect(() => {
 		setPage(1);
-	}, [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories.length]);
+	}, [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories.length, clientCategory]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -165,9 +166,10 @@ const SalesClientsPage: React.FC = () => {
 		city: debouncedCity || undefined,
 		governorateId: governorateId && governorateId !== 'all' ? Number(governorateId) : undefined,
 		equipmentCategories: equipmentCategories.length > 0 ? equipmentCategories : undefined,
+		clientCategory: clientCategory && clientCategory !== 'all' ? (clientCategory as 'Potential' | 'Existing') : undefined,
 		page,
 		pageSize,
-	}), [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories, page, pageSize]);
+	}), [debouncedSearchTerm, classification, assignedSalesManId, debouncedCity, governorateId, equipmentCategories, clientCategory, page, pageSize]);
 
 	// Fetch clients
 	const {
@@ -329,6 +331,33 @@ const SalesClientsPage: React.FC = () => {
 								<SelectItem value="B">B</SelectItem>
 								<SelectItem value="C">C</SelectItem>
 								<SelectItem value="D">D</SelectItem>
+							</SelectContent>
+						</Select>
+
+						{/* Client Category Filter */}
+						<Select
+							value={clientCategory}
+							onValueChange={setClientCategory}
+						>
+							<SelectTrigger>
+								<SelectValue
+									placeholder={
+										t('salesClients.allCategories') ||
+										'All Categories'
+									}
+								/>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="all">
+									{t('salesClients.allCategories') ||
+										'All Categories'}
+								</SelectItem>
+								<SelectItem value="Potential">
+									{t('salesClients.potentialClient') || 'Potential Clients'}
+								</SelectItem>
+								<SelectItem value="Existing">
+									{t('salesClients.existingClient') || 'Existing Clients'}
+								</SelectItem>
 							</SelectContent>
 						</Select>
 
@@ -557,6 +586,10 @@ const SalesClientsPage: React.FC = () => {
 													'Classification'}
 											</TableHead>
 											<TableHead className={headerAlignmentClass}>
+												{t('salesClients.clientCategory') ||
+													'Category'}
+											</TableHead>
+											<TableHead className={headerAlignmentClass}>
 												{t('salesClients.city') || 'City'}
 											</TableHead>
 											<TableHead className={headerAlignmentClass}>
@@ -615,6 +648,18 @@ const SalesClientsPage: React.FC = () => {
 															-
 														</span>
 													)}
+												</TableCell>
+												<TableCell>
+													<Badge
+														variant={client.clientCategory === 'Existing' ? 'default' : 'secondary'}
+														className={client.clientCategory === 'Existing'
+															? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+															: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}
+													>
+														{client.clientCategory === 'Existing'
+															? (t('salesClients.existingClient') || 'Existing')
+															: (t('salesClients.potentialClient') || 'Potential')}
+													</Badge>
 												</TableCell>
 												<TableCell>
 													{client.city ? (
@@ -677,7 +722,7 @@ const SalesClientsPage: React.FC = () => {
 			{/* Client Details Modal */}
 			{showClientDetails && selectedClientId && (
 				<div
-					className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+					className="fixed inset-0 left-[16rem] bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
 					onClick={() => {
 						setShowClientDetails(false);
 						setSelectedClientId(null);

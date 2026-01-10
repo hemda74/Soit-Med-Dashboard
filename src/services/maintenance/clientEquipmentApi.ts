@@ -16,6 +16,12 @@ export interface Client {
 	governorate?: string;
 	status?: string;
 	priority?: string;
+	// Client category differentiation - Potential vs Existing
+	hasEquipment?: boolean;
+	clientCategory?: 'Potential' | 'Existing';
+	contractCount?: number;
+	dealCount?: number;
+	legacyCustomerId?: number;
 }
 
 export interface Equipment {
@@ -86,13 +92,17 @@ export interface VisitsResponse {
 // API Functions
 export const clientEquipmentApi = {
 	/**
-	 * Get all clients with pagination
+	 * Get all clients with pagination and optional search
 	 */
-	async getAllClients(pageNumber: number = 1, pageSize: number = 25): Promise<PaginatedClientsResponse> {
+	async getAllClients(pageNumber: number = 1, pageSize: number = 25, searchTerm?: string): Promise<PaginatedClientsResponse> {
 		const token = getAuthToken();
 		try {
+			let url = `/Client/all?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+			if (searchTerm && searchTerm.trim()) {
+				url += `&searchTerm=${encodeURIComponent(searchTerm.trim())}`;
+			}
 			const response = await apiRequest<ApiResponse<PaginatedClientsResponse>>(
-				`/Client/all?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+				url,
 				{
 					method: 'GET',
 				},
