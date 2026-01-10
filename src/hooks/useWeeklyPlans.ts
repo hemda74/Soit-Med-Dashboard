@@ -140,36 +140,70 @@ export function useWeeklyPlans(): UseWeeklyPlansReturn {
 						filters
 					);
 
-				if (response.success && response.data) {
-					// Handle new API response format: { plans: [], pagination: {} }
-					const plans = response.data.plans || [];
-					const pagination =
-						response.data.pagination || {};
+				console.log('Weekly plans API response:', response);
 
-					const currentPage =
-						pagination.page || 1;
-					const totalPages =
-						pagination.totalPages || 0;
+				if (response.success && response.data) {
+					// Handle multiple possible API response formats
+					let plans: any[] = [];
+					let paginationData: any = {};
+
+					// Check if response.data is the plans array directly
+					if (Array.isArray(response.data)) {
+						plans = response.data;
+						// Use default pagination for array response
+						paginationData = {
+							page: 1,
+							pageSize: 20,
+							totalPages: 1,
+							totalCount: response.data.length,
+						};
+					} 
+					// Check if response.data.data exists (nested structure from backend)
+					else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+						const nestedData = (response.data as any).data;
+						if (Array.isArray(nestedData)) {
+							plans = nestedData;
+							paginationData = {
+								page: (response.data as any).page || 1,
+								pageSize: (response.data as any).pageSize || 20,
+								totalPages: (response.data as any).totalPages || 1,
+								totalCount: (response.data as any).totalCount || nestedData.length,
+							};
+						}
+					}
+					// Check if response.data has plans property (nested structure)
+					else if (response.data && typeof response.data === 'object' && 'plans' in response.data) {
+						plans = (response.data as any).plans || [];
+						paginationData = (response.data as any).pagination || {};
+					}
+					// Fallback: treat data as single plan
+					else if (response.data) {
+						plans = [response.data];
+						paginationData = {
+							page: 1,
+							pageSize: 20,
+							totalPages: 1,
+							totalCount: 1,
+						};
+					}
+
+					const currentPage = paginationData.page || 1;
+					const totalPages = paginationData.totalPages || 0;
+
+					console.log('Processed plans:', plans.length, 'items');
 
 					setState((prev) => ({
 						...prev,
 						plans: plans,
 						pagination: {
 							page: currentPage,
-							pageSize:
-								pagination.pageSize ||
-								20,
+							pageSize: paginationData.pageSize || 20,
 							totalPages: totalPages,
-							hasNextPage:
-								currentPage <
-								totalPages,
-							hasPreviousPage:
-								currentPage > 1,
-							totalCount:
-								pagination.totalCount ||
-								0,
+							hasNextPage: currentPage < totalPages,
+							hasPreviousPage: currentPage > 1,
+							totalCount: paginationData.totalCount || plans.length,
 						},
-						filters: filters, // Use the actual filters that were sent to the API
+						filters: filters,
 					}));
 				} else {
 					throw new Error(
