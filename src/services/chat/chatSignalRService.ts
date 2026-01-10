@@ -134,7 +134,7 @@ class ChatSignalRService {
 						return 30000;
 					},
 				})
-				.configureLogging(signalR.LogLevel.Information)
+				.configureLogging(signalR.LogLevel.None)
 				.build();
 
 			this.setupEventHandlers();
