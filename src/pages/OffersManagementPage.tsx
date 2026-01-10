@@ -346,7 +346,7 @@ const OffersManagementPage: React.FC = () => {
 			setOfferEquipment([]);
 			setEquipmentImageUrls({});
 			lastLoadedOfferIdRef.current = null;
-			
+
 			// Set basic offer info immediately for better UX
 			setSelectedOffer(offer);
 
@@ -358,14 +358,14 @@ const OffersManagementPage: React.FC = () => {
 
 			// Load full offer details
 			const response = await salesApi.getOffer(offer.id.toString());
-			
+
 			if (response.success && response.data) {
 				console.log(`[OffersManagementPage] Successfully loaded offer details`, {
 					offerId: response.data.id,
 					hasEquipment: !!response.data.equipment,
 					hasTerms: !!response.data.terms
 				});
-				
+
 				// Merge the full details with basic offer info - use a single setState to prevent double useEffect trigger
 				const mergedOffer = {
 					...offer,
@@ -379,7 +379,7 @@ const OffersManagementPage: React.FC = () => {
 					status: response.data.status || offer.status,
 					createdAt: response.data.createdAt || offer.createdAt,
 				};
-				
+
 				// Single setState to prevent multiple useEffect triggers
 				setSelectedOffer(mergedOffer);
 			} else {
@@ -432,7 +432,7 @@ const OffersManagementPage: React.FC = () => {
 	useEffect(() => {
 		const loadOfferEquipment = async () => {
 			const offerId = selectedOffer?.id;
-			
+
 			// Prevent duplicate calls for the same offer
 			if (!offerId) {
 				setOfferEquipment([]);
@@ -449,12 +449,12 @@ const OffersManagementPage: React.FC = () => {
 			// Mark as loading for this offer
 			lastLoadedOfferIdRef.current = offerId;
 			setLoadingEquipment(true);
-			
+
 			try {
 				console.log(`[OffersManagementPage] Loading equipment for offer ${offerId}`);
 
 				const response = await salesApi.getOfferEquipment(offerId);
-				
+
 				if (response.success && response.data && Array.isArray(response.data)) {
 					console.log(`[OffersManagementPage] Successfully loaded ${response.data.length} equipment items`);
 					setOfferEquipment(response.data);
@@ -470,9 +470,9 @@ const OffersManagementPage: React.FC = () => {
 					statusText: error?.statusText,
 					offerId: offerId,
 				});
-				
+
 				setOfferEquipment([]);
-				
+
 				// Show appropriate error message
 				if (error?.status === 403) {
 					toast.error('You do not have permission to view equipment for this offer');
@@ -665,7 +665,7 @@ const OffersManagementPage: React.FC = () => {
 
 	const handleExportPdf = async () => {
 		if (!selectedOffer) return;
-		
+
 		const authState = useAuthStore.getState();
 		const token = authState.user?.token;
 
@@ -1128,7 +1128,7 @@ const OffersManagementPage: React.FC = () => {
 
 			{/* Offer Details Modal */}
 			{selectedOffer && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+				<div className="fixed inset-0 left-[16rem] bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
 					<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl shadow-2xl my-8">
 						<div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800">
 							<div className="flex justify-between items-start">
@@ -1174,8 +1174,8 @@ const OffersManagementPage: React.FC = () => {
 										{t('totalAmount')}
 									</label>
 									<p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-										{selectedOffer.totalAmount !== undefined && selectedOffer.totalAmount !== null 
-											? `EGP ${Number(selectedOffer.totalAmount).toLocaleString()}` 
+										{selectedOffer.totalAmount !== undefined && selectedOffer.totalAmount !== null
+											? `EGP ${Number(selectedOffer.totalAmount).toLocaleString()}`
 											: 'N/A'}
 									</p>
 									{(selectedOffer as any).discountAmount && (selectedOffer as any).discountAmount > 0 && (
@@ -1467,7 +1467,7 @@ const OffersManagementPage: React.FC = () => {
 							<div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t dark:border-gray-700 space-y-1">
 								<div className="flex justify-between">
 									<span>
-										<strong>{t('createdAt')}:</strong> {(selectedOffer as any).createdAt 
+										<strong>{t('createdAt')}:</strong> {(selectedOffer as any).createdAt
 											? (() => {
 												try {
 													const date = new Date((selectedOffer as any).createdAt);
@@ -1704,7 +1704,7 @@ const OffersManagementPage: React.FC = () => {
 
 			{/* Needs Modification Modal */}
 			{showNeedsModificationModal && selectedOffer && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+				<div className="fixed inset-0 left-[16rem] bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
 					<div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md shadow-2xl">
 						<div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
 							<div className="flex justify-between items-center">

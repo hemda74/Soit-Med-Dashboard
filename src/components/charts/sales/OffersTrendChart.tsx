@@ -154,7 +154,7 @@ export default function OffersTrendChart({ data, year, quarter, className }: Off
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="bar" height={300} />
+						<Chart key={`offers-${year}-${quarter}-${data.length}`} options={options} series={series} type="bar" height={300} />
 					</div>
 				)}
 			</CardContent>

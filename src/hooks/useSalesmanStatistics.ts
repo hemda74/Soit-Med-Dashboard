@@ -75,19 +75,18 @@ export const useAllSalesManStatistics = (year: number, quarter?: number) => {
 			if (response.success && Array.isArray(response.data)) {
 				// Some backends return statistics for every system user.
 				// Keep only entries that contain a valid salesmanId (string) to match SalesMan users.
-				return response.data.filter(
-					(
-						stat:
-							| SalesManStatisticsDTO
-							| null
-							| undefined
-					) =>
-						!!stat?.salesmanId &&
-						typeof stat.salesmanId ===
-							'string' &&
-						stat.salesmanId.trim().length >
-							0
-				);
+				// Handle different casing from API (salesmanId, salesManId, SalesManId)
+				return response.data
+					.filter((stat: any) => {
+						if (!stat) return false;
+						const id = stat.salesmanId || stat.salesManId || stat.SalesManId;
+						return id && typeof id === 'string' && id.trim().length > 0;
+					})
+					.map((stat: any) => ({
+						...stat,
+						salesmanId: stat.salesmanId || stat.salesManId || stat.SalesManId,
+						salesmanName: stat.salesmanName || stat.salesManName || stat.SalesManName,
+					}));
 			}
 			throw new Error(
 				response.message || 'Failed to fetch statistics'

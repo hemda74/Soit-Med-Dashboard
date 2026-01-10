@@ -6,6 +6,16 @@ import './index.css'
 import App from './App.tsx'
 import { initWebVitals, onRenderCallback } from './utils/performance'
 
+// Suppress React DevTools message
+const originalLog = console.log;
+console.log = function(...args: any[]) {
+	const message = args.join(' ');
+	if (message.includes('Download the React DevTools')) {
+		return;
+	}
+	originalLog.apply(console, args);
+};
+
 // Initialize Web Vitals monitoring
 initWebVitals()
 

@@ -97,8 +97,14 @@ export default function SalesAnalyticsPage() {
 			const response = await salesApi.getAllSalesManStatistics(selectedYear, selectedQuarter);
 			if (response.success && Array.isArray(response.data)) {
 				const salesmanStats = response.data.filter((stat: any) => {
-					return stat && stat.salesmanId && typeof stat.salesmanId === 'string';
-				});
+					if (!stat) return false;
+					const id = stat.salesmanId || stat.salesManId || stat.SalesManId;
+					return id && typeof id === 'string' && id.trim().length > 0;
+				}).map((stat: any) => ({
+					...stat,
+					salesmanId: stat.salesmanId || stat.salesManId || stat.SalesManId,
+					salesmanName: stat.salesmanName || stat.salesManName || stat.SalesManName,
+				}));
 				setStatistics(salesmanStats);
 			} else {
 				toast.error(response.message || t('failedToLoadStatistics'));

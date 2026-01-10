@@ -55,7 +55,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <UserPlus className={ICON_SIZE} />,
-    name: t('clientAccountCreation') || 'Client Account Creation',
+    name: t('clientAccountCreation'),
     path: '/Admin/client-accounts',
     roles: ['Admin', 'SuperAdmin'] as const,
   },
@@ -88,7 +88,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <BarChart3 />,
-    name: t('salesAnalytics') || 'Sales Analytics',
+    name: t('salesAnalytics'),
     path: '/sales-analytics',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
@@ -106,7 +106,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <Users />,
-    name: t('salesClients.title') || 'Sales Clients',
+    name: t('salesClients.title'),
     path: '/SalesManager/clients',
     roles: ['SalesManager', 'SalesSupport', 'SuperAdmin'] as const,
   },
@@ -118,7 +118,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <Clock className={ICON_SIZE} />,
-    name: t('pendingOfferApprovals') || 'Pending Offer Approvals',
+    name: t('pendingOfferApprovals'),
     path: '/SalesManager/offer-approvals',
     roles: ['SalesManager', 'SuperAdmin'] as const,
   },
@@ -151,7 +151,7 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   // Chat section - Role-based chat access
   {
     icon: <MessageCircle className={ICON_SIZE} />,
-    name: t('chat') || 'Chat',
+    name: t('chat'),
     path: '/chat',
     roles: ['Admin', 'SuperAdmin', 'SalesSupport', 'MaintenanceSupport'] as const,
   },
@@ -176,9 +176,9 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   },
   {
     icon: <Building2 className={ICON_SIZE} />,
-    name: t('clientEquipmentVisits') || 'Clients & Equipment',
+    name: t('clientEquipmentVisits'),
     path: '/maintenance/client-equipment-visits',
-    roles: ['MaintenanceSupport', 'MaintenanceManager', 'Engineer', 'SuperAdmin'] as const,
+    roles: ['MaintenanceSupport', 'MaintenanceManager', 'SuperAdmin'] as const,
   },
   // Inventory section
   {
@@ -197,19 +197,19 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
   // Legal section
   {
     icon: <FileText className={ICON_SIZE} />,
-    name: t('legalDeals') || 'Legal Deals',
+    name: t('legalDeals'),
     path: '/legal/deals',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
   {
     icon: <Archive className={ICON_SIZE} />,
-    name: t('legalDealsHistory') || 'Deals History',
+    name: t('legalDealsHistory'),
     path: '/legal/deals/history',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },
   {
     icon: <FileText className={ICON_SIZE} />,
-    name: 'Contracts',
+    name: t('contracts'),
     path: '/contracts',
     roles: ['LegalManager', 'LegalEmployee', 'SuperAdmin'] as const,
   },

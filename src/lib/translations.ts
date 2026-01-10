@@ -742,6 +742,15 @@ export const translations = {
 		weeklyPlansReview: 'Weekly Plans Review',
 		pendingApprovals: 'Pending Approvals',
 		pendingDealApprovals: 'Pending Deal Approvals',
+		pendingOfferApprovals: 'Pending Offer Approvals',
+
+		// Admin specific
+		clientAccountCreation: 'Client Account Creation',
+
+		// Legal specific
+		legalDeals: 'Legal Deals',
+		legalDealsHistory: 'Deals History',
+		contracts: 'Contracts',
 
 		// Sales Support specific
 		offerCreation: 'Offer Creation',
@@ -1872,6 +1881,7 @@ export const translations = {
 		settings: 'الإعدادات',
 		users: 'المستخدمون',
 		allUsers: 'جميع المستخدمين',
+		notifications: 'الإشعارات',
 		charts: 'الرسوم البيانية',
 		lineChart: 'رسم بياني خطي',
 		barChart: 'رسم بياني عمودي',
@@ -2302,6 +2312,15 @@ export const translations = {
 		weeklyPlansReview: 'مراجعة الخطط الأسبوعية',
 		pendingApprovals: 'الموافقات المعلقة',
 		pendingDealApprovals: 'موافقات الصفقات المعلقة',
+		pendingOfferApprovals: 'موافقات العروض المعلقة',
+
+		// Admin specific
+		clientAccountCreation: 'إنشاء حسابات العملاء',
+
+		// Legal specific
+		legalDeals: 'الصفقات القانونية',
+		legalDealsHistory: 'سجل الصفقات',
+		contracts: 'العقود',
 
 		// Sales Support specific
 		offerCreation: 'إنشاء العروض',
