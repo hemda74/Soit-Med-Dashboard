@@ -109,6 +109,34 @@ export type PaginatedContractResponse = {
 	hasNextPage: boolean;
 };
 
+// Customer Machines Types (matching Media API format)
+export type CustomerMachinesMediaFile = {
+	fileName: string;
+	fileUrl: string;
+	fileType?: string;
+	isImage: boolean;
+	isPdf: boolean;
+};
+
+export type CustomerMachine = {
+	machineId: number;
+	serialNumber?: string;
+	modelName?: string;
+	modelNameEn?: string;
+	itemCode?: string;
+	visitCount: number;
+	mediaFiles: CustomerMachinesMediaFile[];
+};
+
+export type CustomerMachinesResponse = {
+	customerId: number;
+	customerName: string;
+	customerAddress?: string;
+	customerPhone?: string;
+	machineCount: number;
+	machines: CustomerMachine[];
+};
+
 class ContractApiService {
 	private async makeRequest<T>(
 		endpoint: string,
@@ -275,6 +303,21 @@ class ContractApiService {
 			message: response.message || 'Contract details retrieved successfully',
 			data: response.data,
 		};
+	}
+
+	/**
+	 * Get all machines for a customer
+	 * Replaces Media API endpoint: GET /api/Contracts/customers/{customerId}/machines
+	 */
+	async getCustomerMachines(customerId: number): Promise<CustomerMachinesResponse> {
+		const response = await this.makeRequest<CustomerMachinesResponse>(
+			API_ENDPOINTS.CONTRACT.CUSTOMER_MACHINES(customerId),
+			{
+				method: 'GET',
+			}
+		);
+
+		return response;
 	}
 }
 

@@ -295,6 +295,7 @@ export const API_ENDPOINTS = {
 		BY_ID: (id: number) => `/api/Contract/${id}`,
 		DETAILS: (id: number) => `/api/Contract/${id}/details`,
 		SEARCH: '/api/Contract',
+		CUSTOMER_MACHINES: (customerId: number) => `/api/Contract/customers/${customerId}/machines`,
 	},
 
 	// Maintenance Module
