@@ -103,13 +103,13 @@ export interface ApiResponseEnhanced<T> {
 
 // Enhanced Maintenance API Service
 class EnhancedMaintenanceApi {
-  private baseUrl = '/api/EnhancedMaintenance';
+  private baseUrl = '/EnhancedMaintenance';
 
   // Customer Management
   async getCustomerEquipmentVisits(customerId: string, includeLegacy = true): Promise<CustomerEquipmentVisits> {
     try {
       const token = getAuthToken();
-      const response = await apiRequest<ApiResponseEnhanced<CustomerEquipmentVisits>>(
+      const response = await apiRequest<any>(
         `${this.baseUrl}/customer/${customerId}/equipment-visits?includeLegacy=${includeLegacy}`,
         {
           method: 'GET',
@@ -119,7 +119,42 @@ class EnhancedMaintenanceApi {
           },
         }
       );
-      return response.data!;
+
+      // Transform the response to match our expected format
+      const transformedData: CustomerEquipmentVisits = {
+        customer: response.data?.customer ? {
+          id: response.data.customer.id?.toString() || '',
+          name: response.data.customer.name || '',
+          phone: response.data.customer.phone || '',
+          email: response.data.customer.email || '',
+          address: response.data.customer.address || '',
+          source: response.data.customer.source || 'New'
+        } : undefined,
+        equipment: response.data?.equipment?.map((item: any) => ({
+          id: item.id?.toString() || '',
+          model: item.model || '',
+          serialNumber: item.serialNumber || '',
+          status: item.status || '',
+          location: item.location || '',
+          customerId: item.customerId?.toString() || '',
+          source: item.source || 'New'
+        })) || [],
+        visits: response.data?.visits?.map((item: any) => ({
+          id: item.id?.toString() || '',
+          visitDate: item.visitDate || '',
+          scheduledDate: item.scheduledDate || '',
+          status: item.status || '',
+          engineerName: item.engineerName || '',
+          report: item.report || '',
+          actionsTaken: item.actionsTaken || '',
+          partsUsed: item.partsUsed || '',
+          serviceFee: item.serviceFee,
+          outcome: item.outcome || '',
+          source: item.source || 'New'
+        })) || []
+      };
+
+      return transformedData;
     } catch (error) {
       console.error('Error fetching customer equipment visits:', error);
       throw error;
@@ -136,7 +171,7 @@ class EnhancedMaintenanceApi {
         includeLegacy: criteria.includeLegacy.toString(),
       });
 
-      const response = await apiRequest<ApiResponseEnhanced<PagedResponse<EnhancedCustomer>>>(
+      const response = await apiRequest<any>(
         `${this.baseUrl}/customers/search?${params}`,
         {
           method: 'GET',
@@ -146,7 +181,26 @@ class EnhancedMaintenanceApi {
           },
         }
       );
-      return response.data!;
+
+      // Transform the response to match our expected format
+      const transformedData: PagedResponse<EnhancedCustomer> = {
+        items: response.data?.items?.map((customer: any) => ({
+          id: customer.id?.toString() || '',
+          name: customer.name || '',
+          phone: customer.phone || '',
+          email: customer.email || '',
+          address: customer.address || '',
+          source: customer.source || 'New'
+        })) || [],
+        totalCount: response.data?.totalCount || 0,
+        pageNumber: response.data?.pageNumber || criteria.pageNumber,
+        pageSize: response.data?.pageSize || criteria.pageSize,
+        totalPages: Math.ceil((response.data?.totalCount || 0) / criteria.pageSize),
+        hasPreviousPage: (response.data?.pageNumber || criteria.pageNumber) > 1,
+        hasNextPage: (response.data?.pageNumber || criteria.pageNumber) < Math.ceil((response.data?.totalCount || 0) / criteria.pageSize)
+      };
+
+      return transformedData;
     } catch (error) {
       console.error('Error searching customers:', error);
       throw error;
@@ -157,7 +211,7 @@ class EnhancedMaintenanceApi {
   async getEquipmentVisits(equipmentIdentifier: string, includeLegacy = true): Promise<EquipmentVisits> {
     try {
       const token = getAuthToken();
-      const response = await apiRequest<ApiResponseEnhanced<EquipmentVisits>>(
+      const response = await apiRequest<any>(
         `${this.baseUrl}/equipment/${equipmentIdentifier}/visits?includeLegacy=${includeLegacy}`,
         {
           method: 'GET',
@@ -167,7 +221,34 @@ class EnhancedMaintenanceApi {
           },
         }
       );
-      return response.data!;
+
+      // Transform the response to match our expected format
+      const transformedData: EquipmentVisits = {
+        equipment: response.data?.equipment ? {
+          id: response.data.equipment.id?.toString() || '',
+          model: response.data.equipment.model || '',
+          serialNumber: response.data.equipment.serialNumber || '',
+          status: response.data.equipment.status || '',
+          location: response.data.equipment.location || '',
+          customerId: response.data.equipment.customerId?.toString() || '',
+          source: response.data.equipment.source || 'New'
+        } : undefined,
+        visits: response.data?.visits?.map((item: any) => ({
+          id: item.id?.toString() || '',
+          visitDate: item.visitDate || '',
+          scheduledDate: item.scheduledDate || '',
+          status: item.status || '',
+          engineerName: item.engineerName || '',
+          report: item.report || '',
+          actionsTaken: item.actionsTaken || '',
+          partsUsed: item.partsUsed || '',
+          serviceFee: item.serviceFee,
+          outcome: item.outcome || '',
+          source: item.source || 'New'
+        })) || []
+      };
+
+      return transformedData;
     } catch (error) {
       console.error('Error fetching equipment visits:', error);
       throw error;
@@ -178,7 +259,7 @@ class EnhancedMaintenanceApi {
   async completeVisit(request: CompleteVisitRequest): Promise<VisitCompletionResponse> {
     try {
       const token = getAuthToken();
-      const response = await apiRequest<ApiResponseEnhanced<VisitCompletionResponse>>(
+      const response = await apiRequest<any>(
         `${this.baseUrl}/visits/complete`,
         {
           method: 'POST',
@@ -189,7 +270,16 @@ class EnhancedMaintenanceApi {
           body: JSON.stringify(request),
         }
       );
-      return response.data!;
+
+      const transformedData: VisitCompletionResponse = {
+        success: response.data?.success || false,
+        visitId: response.data?.visitId || request.visitId,
+        completionDate: response.data?.completionDate,
+        status: response.data?.status || 'Unknown',
+        message: response.data?.message || 'Visit completion processed'
+      };
+
+      return transformedData;
     } catch (error) {
       console.error('Error completing visit:', error);
       throw error;

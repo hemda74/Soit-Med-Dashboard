@@ -10,7 +10,6 @@ import ResetPassword from '@/pages/ResetPassword'
 import NotFound from '@/pages/NotFound'
 import Dashboard from '@/components/Dashboard'
 import UserProfile from '@/components/UserProfile'
-import RoleSpecificUserCreation from '@/components/Admin/RoleSpecificUserCreation'
 import UsersList from '@/components/UsersList'
 import LoadingScreen from '@/components/LoadingScreen'
 import ReportsScreen from '@/components/finance/ReportsScreen'
@@ -37,8 +36,10 @@ import SuperAdminDealApprovalsPage from '@/pages/superAdmin/SuperAdminDealApprov
 import LegalDealsPage from '@/pages/legal/LegalDealsPage'
 import LegalDealsHistoryPage from '@/pages/legal/LegalDealsHistoryPage'
 import ContractsPage from '@/pages/contracts/ContractsPage'
-import ClientAccountCreationPage from '@/pages/Admin/ClientAccountCreationPage'
-import ClientEquipmentVisitsPage from '@/pages/ClientEquipmentVisitsPage'
+import ClientAccountCreationPage from '@/pages/admin/ClientAccountCreationPage'
+import EnhancedClientEquipmentVisitsPage from '@/pages/EnhancedClientEquipmentVisitsPage'
+import MaintenanceDashboardUI from '@/pages/MaintenanceDashboardUI'
+import ClientEquipmentDetails from '@/pages/ClientEquipmentDetails'
 import {
   MaintenanceSupportDashboard,
   MaintenanceRequestDetails,
@@ -52,6 +53,7 @@ import { PaymentDetailsView } from '@/components/payment';
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useEffect } from 'react'
 import { PerformanceMonitor } from '@/components/PerformanceMonitor'
+import RoleSpecificUserCreation from './components/admin/RoleSpecificUserCreation'
 
 function App() {
   const { isAuthenticated, isAuthorizedToAccess, logout, user } = useAuthStore()
@@ -116,7 +118,9 @@ function App() {
                 <Route path="maintenance/requests/:id" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><MaintenanceRequestDetails /></RoleGuard>} />
                 <Route path="maintenance/visits" element={<RoleGuard requiredAnyRoles={["Engineer", "MaintenanceManager", "SuperAdmin"]}><MaintenanceVisitManagement /></RoleGuard>} />
                 <Route path="maintenance/spare-parts" element={<RoleGuard requiredAnyRoles={["SparePartsCoordinator", "InventoryManager", "Doctor", "HospitalAdmin", "SuperAdmin"]}><SparePartRequestManagement /></RoleGuard>} />
-                <Route path="maintenance/client-equipment-visits" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><ClientEquipmentVisitsPage /></RoleGuard>} />
+                <Route path="maintenance/client-equipment-visits" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><EnhancedClientEquipmentVisitsPage /></RoleGuard>} />
+                <Route path="maintenance-dashboard-ui" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><MaintenanceDashboardUI /></RoleGuard>} />
+                <Route path="client/:customerId/equipment" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><ClientEquipmentDetails /></RoleGuard>} />
                 <Route path="spare-parts-coordinator" element={<RoleGuard requiredAnyRoles={["SparePartsCoordinator", "SuperAdmin"]}><SparePartsCoordinatorDashboard /></RoleGuard>} />
                 <Route path="InventoryManager" element={<RoleGuard requiredAnyRoles={["InventoryManager", "SuperAdmin"]}><InventoryManagerDashboard /></RoleGuard>} />
                 <Route path="accounting" element={<RoleGuard requiredAnyRoles={["FinanceManager", "FinanceEmployee", "SuperAdmin"]}><AccountingDashboard /></RoleGuard>} />
