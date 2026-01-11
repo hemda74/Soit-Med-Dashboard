@@ -298,8 +298,8 @@ const ContractsPage: React.FC = () => {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Contracts</CardTitle>
-					<CardDescription>View and manage all contracts</CardDescription>
+					<CardTitle>{t('contractsPageTitle')}</CardTitle>
+					<CardDescription>{t('contractsPageDescription')}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<LoadingSpinner />
@@ -316,7 +316,7 @@ const ContractsPage: React.FC = () => {
 						<div>
 							<CardTitle className="flex items-center gap-2 text-2xl">
 								<FileText className="h-6 w-6 text-purple-600" />
-								Contracts
+								{t('contractsPageTitle')}
 							</CardTitle>
 							<CardDescription className="mt-2 text-base space-y-1">
 								<div>{totalCount.toLocaleString()} {totalCount === 1 ? 'contract' : 'contracts'} total</div>
