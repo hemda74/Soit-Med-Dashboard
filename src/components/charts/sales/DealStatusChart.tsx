@@ -91,7 +91,7 @@ export default function DealStatusChart({ data, year, quarter, className }: Deal
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="donut" height={300} />
+						<Chart key={`dealstatus-${year}-${quarter}-${data.length}`} options={options} series={series} type="donut" height={300} />
 					</div>
 				)}
 			</CardContent>

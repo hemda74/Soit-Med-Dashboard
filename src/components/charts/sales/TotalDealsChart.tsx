@@ -12,7 +12,7 @@ interface TotalDealsChartProps {
 }
 
 export default function TotalDealsChart({ data, year, quarter, className }: TotalDealsChartProps) {
-	const { t, language } = useTranslation();
+	const { t } = useTranslation();
 
 	// Calculate total deals per salesman
 	const dealsData = data.map((stat) => ({
@@ -142,7 +142,7 @@ export default function TotalDealsChart({ data, year, quarter, className }: Tota
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="bar" height={300} />
+						<Chart key={`deals-${year}-${quarter}-${data.length}`} options={options} series={series} type="bar" height={300} />
 					</div>
 				)}
 			</CardContent>

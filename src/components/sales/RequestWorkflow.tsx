@@ -311,8 +311,8 @@ const RequestWorkflow: React.FC = () => {
 						<button
 							onClick={() => setActiveTab('my-requests')}
 							className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'my-requests'
-									? 'border-blue-500 text-blue-600'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								? 'border-blue-500 text-blue-600'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 						>
 							My Requests ({myRequests.length})
@@ -320,8 +320,8 @@ const RequestWorkflow: React.FC = () => {
 						<button
 							onClick={() => setActiveTab('assigned-requests')}
 							className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'assigned-requests'
-									? 'border-blue-500 text-blue-600'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								? 'border-blue-500 text-blue-600'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 						>
 							Assigned to Me ({assignedRequests.length})
@@ -329,8 +329,8 @@ const RequestWorkflow: React.FC = () => {
 						<button
 							onClick={() => setActiveTab('create')}
 							className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'create'
-									? 'border-blue-500 text-blue-600'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								? 'border-blue-500 text-blue-600'
+								: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 						>
 							Create Request
@@ -501,7 +501,7 @@ const RequestWorkflow: React.FC = () => {
 
 			{/* Status Update Modal */}
 			{showStatusModal && selectedRequest && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+				<div className="fixed inset-0 left-[16rem] bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
 					<div className="bg-white rounded-lg w-full max-w-md">
 						<div className="px-6 py-4 border-b border-gray-200">
 							<h3 className="text-lg font-semibold text-gray-900">

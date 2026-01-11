@@ -40,7 +40,7 @@ class SignalRService {
 			}
 
 			// Build SignalR URL - uses VITE_SIGNALR_URL or falls back to VITE_API_BASE_URL
-			// Format: http://localhost:5117/notificationHub or http://10.10.9.100:5117/notificationHub
+			// Format: http://localhost:5117/notificationHub or http://192.168.1.8:5117/notificationHub
 			const baseUrl =
 				import.meta.env.VITE_SIGNALR_URL ||
 				getApiBaseUrl();
@@ -78,7 +78,7 @@ class SignalRService {
 						return 30000;
 					},
 				})
-				.configureLogging(LogLevel.Information)
+				.configureLogging(LogLevel.None)
 				.build();
 
 			// Set up event handlers

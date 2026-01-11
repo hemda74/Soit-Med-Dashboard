@@ -42,6 +42,7 @@ export interface WeeklyPlanTask {
 	id: number;
 	weeklyPlanId: number;
 	title: string;
+	description?: string;
 	taskType?: string; // Visit, FollowUp
 	clientId?: number;
 	clientName?: string;
@@ -54,6 +55,8 @@ export interface WeeklyPlanTask {
 	notes?: string; // Description
 	priority?: string; // High, Medium, Low
 	status?: string; // Planned, InProgress, Completed, Cancelled
+	isCompleted?: boolean; // Boolean flag from API
+	displayOrder?: number;
 	progressCount?: number;
 	isActive?: boolean;
 	createdAt?: string;
@@ -124,12 +127,14 @@ export interface EmployeeInfo {
 export interface WeeklyPlan {
 	id: number;
 	employeeId: string;
+	employeeName?: string; // Employee name from API
 	employee?: EmployeeInfo | null; // Only populated for SalesManager/SuperAdmin
 	weekStartDate: string; // Format: ISO 8601
 	weekEndDate: string; // Format: ISO 8601
 	title: string;
 	description: string;
 	isActive: boolean;
+	rating?: number | null; // Manager rating
 	managerComment: string | null;
 	managerReviewedAt: string | null;
 	// New view tracking fields
@@ -139,6 +144,10 @@ export interface WeeklyPlan {
 	createdAt: string;
 	updatedAt: string;
 	tasks: WeeklyPlanTask[];
+	dailyProgresses?: any[]; // Daily progress records
+	totalTasks?: number; // Computed by backend
+	completedTasks?: number; // Computed by backend
+	completionPercentage?: number; // Computed by backend
 	// Computed field for convenience (calculated from managerReviewedAt)
 	hasManagerReview?: boolean; // true if managerReviewedAt is not null
 }

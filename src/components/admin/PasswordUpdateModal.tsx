@@ -109,7 +109,7 @@ export function PasswordUpdateModal({ isOpen, onClose, user }: PasswordUpdateMod
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 left-[16rem] bg-black/50 flex items-center justify-center z-50 p-4">
                 <Card className="w-full max-w-md shadow-lg animate-in fade-in-0 zoom-in-95 duration-200">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                         <CardTitle className="text-xl font-semibold flex items-center gap-2">

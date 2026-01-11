@@ -113,7 +113,7 @@ This is an automated message from Soit-Med Admin Panel`;
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 left-[16rem] bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
             <Card className="w-full max-w-md mx-auto bg-white shadow-xl">
                 <CardHeader className="text-center pb-4">
                     <div className="flex justify-center mb-4">

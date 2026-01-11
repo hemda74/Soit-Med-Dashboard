@@ -271,7 +271,7 @@ const LegalDealsPage: React.FC = () => {
 		// Files are stored in wwwroot, so we can access them via the base URL
 		// Use environment variable or fallback to shared config default
 		// To update: edit shared-config.ts and run sync-config.js
-		const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://10.10.9.100:5117';
+		const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.8:5117';
 		// Remove leading slash if present, then add it back
 		const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
 		return `${API_BASE_URL}${cleanPath}`;

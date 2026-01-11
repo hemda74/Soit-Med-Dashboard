@@ -57,13 +57,13 @@ const AppSidebar: React.FC = () => {
     return filtered;
   }, [navConfig, user]);
 
-  // Check if a path is currently active
-  const isActive = useCallback(
-    (path: string) => isPathActive(location.pathname, path),
-    [location.pathname]
-  );
+  // // Check if a path is currently active
+  // const isActive = useCallback(
+  //   (path: string) => isPathActive(location.pathname, path),
+  //   [location.pathname]
+  // );
 
-  // Render menu items list
+  // Render menu items list - include location.pathname in deps to ensure re-render on route change
   const renderMenuItems = useCallback(
     (items: NavItem[]) => (
       <ul className="flex flex-col gap-4">
@@ -71,14 +71,14 @@ const AppSidebar: React.FC = () => {
           <li key={`${nav.path}-${nav.name}`}>
             <MenuItem
               nav={nav}
-              active={isActive(nav.path)}
+              active={isPathActive(location.pathname, nav.path)}
               rtl={isRTL}
             />
           </li>
         ))}
       </ul>
     ),
-    [isActive, isRTL]
+    [location.pathname, isRTL]
   );
 
   return (

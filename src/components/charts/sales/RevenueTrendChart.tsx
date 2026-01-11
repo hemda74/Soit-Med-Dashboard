@@ -147,7 +147,7 @@ export default function RevenueTrendChart({ data, year, quarter, className }: Re
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="area" height={300} />
+						<Chart key={`revenue-${year}-${quarter}-${data.length}`} options={options} series={series} type="area" height={300} />
 					</div>
 				)}
 			</CardContent>

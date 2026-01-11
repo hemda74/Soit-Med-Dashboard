@@ -42,7 +42,7 @@ export function SuccessModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 left-[16rem] bg-black/50 flex items-center justify-center z-[60] p-4">
             <Card className="w-full max-w-md shadow-lg animate-in fade-in-0 zoom-in-95 duration-200">
                 <CardHeader className="flex flex-row items-center space-y-0 pb-4">
                     <div className="flex items-center space-x-2">

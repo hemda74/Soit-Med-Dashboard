@@ -19,7 +19,6 @@ import {
     Users,
     CheckCircle2,
     Clock,
-    TrendingUp,
     FileText,
 } from 'lucide-react';
 import { LoadingSpinner, EmptyState, ErrorDisplay } from '@/components/shared';
@@ -115,9 +114,21 @@ export const WeeklyPlansScreen: React.FC = () => {
     const statistics = useMemo(() => {
         const totalPlans = pagination.totalCount || plans.length;
         const completedTasks = plans.reduce((acc, plan) => {
-            return acc + (plan.tasks?.filter(t => t.status === 'Completed').length || 0);
+            // Use completedTasks from API if available, otherwise calculate
+            if (plan.completedTasks !== undefined) {
+                return acc + plan.completedTasks;
+            }
+            // Fallback: calculate from tasks array
+            return acc + (plan.tasks?.filter(t =>
+                t.isCompleted === true || t.status === 'Completed'
+            ).length || 0);
         }, 0);
         const totalTasks = plans.reduce((acc, plan) => {
+            // Use totalTasks from API if available, otherwise calculate
+            if (plan.totalTasks !== undefined) {
+                return acc + plan.totalTasks;
+            }
+            // Fallback: calculate from tasks array
             return acc + (plan.tasks?.length || 0);
         }, 0);
         // Calculate hasManagerReview based on managerReviewedAt (real data from backend)
@@ -439,15 +450,25 @@ export const WeeklyPlansScreen: React.FC = () => {
                         {/* Enhanced Plan Cards Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {plans.map((plan) => {
-                                const totalTasks = plan.tasks?.length || 0;
-                                // Check completion: status === 'Completed' OR has progress records
-                                const completedTasks = plan.tasks?.filter(t => {
+                                console.log('Rendering plan:', plan.id, 'API data:', {
+                                    totalTasks: plan.totalTasks,
+                                    completedTasks: plan.completedTasks,
+                                    completionPercentage: plan.completionPercentage,
+                                    tasksArray: plan.tasks
+                                });
+
+                                // Use API-calculated values if available, otherwise calculate
+                                const totalTasks = plan.totalTasks ?? plan.tasks?.length ?? 0;
+                                const completedTasks = plan.completedTasks ?? plan.tasks?.filter(t => {
+                                    // Check isCompleted property (from API)
+                                    if (t.isCompleted === true) return true;
+                                    // Fallback: check status property
                                     if (t.status === 'Completed') return true;
                                     // Fallback: tasks with progress are considered completed
                                     if ((t.progressCount && t.progressCount > 0) || (t.progresses && t.progresses.length > 0)) return true;
                                     return false;
-                                }).length || 0;
-                                const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                }).length ?? 0;
+                                const progressPercentage = plan.completionPercentage ?? (totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0);
                                 const isComplete = progressPercentage === 100;
                                 // Pending Review: plan has no manager review yet (managerReviewedAt is null) and user can review
                                 const isPendingReview = !plan.managerReviewedAt && canReview;
@@ -456,10 +477,10 @@ export const WeeklyPlansScreen: React.FC = () => {
                                     <Card
                                         key={plan.id}
                                         className={`hover:shadow-xl transition-all duration-300 border-l-4 ${isComplete
-                                                ? 'border-l-green-500 dark:border-l-green-400'
-                                                : isPendingReview
-                                                    ? 'border-l-yellow-500 dark:border-l-yellow-400'
-                                                    : 'border-l-indigo-500 dark:border-l-indigo-400'
+                                            ? 'border-l-green-500 dark:border-l-green-400'
+                                            : isPendingReview
+                                                ? 'border-l-yellow-500 dark:border-l-yellow-400'
+                                                : 'border-l-indigo-500 dark:border-l-indigo-400'
                                             }`}
                                     >
                                         <CardContent className="p-6">
@@ -516,15 +537,18 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                         <div>
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Week</p>
                                                             <p className="font-medium text-gray-900 dark:text-white">
-                                                                {format(
-                                                                    new Date(plan.weekStartDate),
-                                                                    'MMM dd'
-                                                                )}{' '}
-                                                                -{' '}
-                                                                {format(
-                                                                    new Date(plan.weekEndDate),
-                                                                    'MMM dd'
-                                                                )}
+                                                                {(() => {
+                                                                    try {
+                                                                        const startDate = new Date(plan.weekStartDate);
+                                                                        const endDate = new Date(plan.weekEndDate);
+                                                                        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                                                                            return 'Invalid dates';
+                                                                        }
+                                                                        return `${format(startDate, 'MMM dd')} - ${format(endDate, 'MMM dd')}`;
+                                                                    } catch (error) {
+                                                                        return 'Invalid dates';
+                                                                    }
+                                                                })()}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -546,8 +570,8 @@ export const WeeklyPlansScreen: React.FC = () => {
                                                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
                                                         <div
                                                             className={`h-3 rounded-full transition-all duration-500 ${isComplete
-                                                                    ? 'bg-gradient-to-r from-green-500 to-green-600'
-                                                                    : 'bg-gradient-to-r from-indigo-500 to-indigo-600'
+                                                                ? 'bg-gradient-to-r from-green-500 to-green-600'
+                                                                : 'bg-gradient-to-r from-indigo-500 to-indigo-600'
                                                                 }`}
                                                             style={{
                                                                 width: `${progressPercentage}%`,

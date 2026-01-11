@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MessageSquare, X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ReviewWeeklyPlanDto, WeeklyPlan } from '@/types/weeklyPlan.types';
 
 const reviewPlanSchema = z.object({

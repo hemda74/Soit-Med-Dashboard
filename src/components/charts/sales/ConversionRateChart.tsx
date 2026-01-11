@@ -146,7 +146,7 @@ export default function ConversionRateChart({ data, year, quarter, className }: 
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="line" height={300} />
+						<Chart key={`conversion-${year}-${quarter}-${data.length}`} options={options} series={series} type="line" height={300} />
 					</div>
 				)}
 			</CardContent>

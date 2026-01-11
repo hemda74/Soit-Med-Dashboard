@@ -154,7 +154,7 @@ export default function VisitsTrendChart({ data, year, quarter, className }: Vis
 					</div>
 				) : (
 					<div className="w-full">
-						<Chart options={options} series={series} type="bar" height={300} />
+						<Chart key={`visits-${year}-${quarter}-${data.length}`} options={options} series={series} type="bar" height={300} />
 					</div>
 				)}
 			</CardContent>
