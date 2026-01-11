@@ -11,7 +11,7 @@ import { getAuthToken } from './authUtils';
 
 // Import from shared config (relative path from Web/src/utils to root)
 // Fallback values are synced from shared-config.ts
-const DEV_API_URL = 'http://192.168.1.8:5117'; // Auto-synced from shared-config.ts
+const DEV_API_URL = 'http://10.10.9.100:5117'; // Auto-synced from shared-config.ts
 
 /**
  * Get the base API URL from environment variables
@@ -67,7 +67,7 @@ export function getStaticFileBaseUrl(): string {
 	} catch (error) {
 		console.error('Error processing static file base URL:', error);
 		// ⚠️ Keep in sync with API_CONFIG.md - unified API configuration
-		return 'http://192.168.1.8:5117';
+		return 'http://10.10.9.100:5117';
 	}
 }
 

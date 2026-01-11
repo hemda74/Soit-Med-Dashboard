@@ -278,6 +278,8 @@ class SalesApiService {
 				);
 			});
 		}
+		if (filters.clientCategory)
+			queryParams.append('clientCategory', filters.clientCategory);
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
 		if (filters.createdTo)
@@ -427,6 +429,8 @@ class SalesApiService {
 				);
 			});
 		}
+		if (filters.clientCategory)
+			queryParams.append('clientCategory', filters.clientCategory);
 		if (filters.createdFrom)
 			queryParams.append('createdFrom', filters.createdFrom);
 		if (filters.createdTo)
