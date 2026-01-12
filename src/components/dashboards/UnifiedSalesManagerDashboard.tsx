@@ -1,14 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
     Calendar,
-    History,
     TrendingUp,
     Target,
-    FileText,
     Users2,
-    BarChart3,
     DollarSign,
-    Handshake,
     Clock
 } from 'lucide-react';
 import {
@@ -16,7 +12,7 @@ import {
     UserGroupIcon,
     HandRaisedIcon as HandshakeIconOutline
 } from '@heroicons/react/24/outline';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useSalesStore } from '@/stores/salesStore';
 import { useAuthStore } from '@/stores/authStore';
 import { salesApi } from '@/services/sales/salesApi';
@@ -43,18 +39,9 @@ interface SalesManStatistics {
     revenue?: number;
 }
 
-interface TeamPerformance {
-    salesmanName: string;
-    clientsCount: number;
-    visitsCount: number;
-    successRate: number;
-    lastActivity?: string;
-}
-
 const UnifiedSalesManagerDashboard: React.FC = () => {
     usePerformance('UnifiedSalesManagerDashboard');
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const { user } = useAuthStore();
 
     const {
@@ -76,8 +63,6 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     // Local state
     const [salesmenStats, setSalesmenStats] = useState<SalesManStatistics[]>([]);
     const [salesmenLoading, setSalesmenLoading] = useState(false);
-    const [moneyTargets, setMoneyTargets] = useState<any[]>([]);
-    const [targetsLoading, setTargetsLoading] = useState(false);
     const [totalClientsCount, setTotalClientsCount] = useState<number>(0);
     const [clientsLoading, setClientsLoading] = useState(false);
     const [allDeals, setAllDeals] = useState<Deal[]>([]);
@@ -87,10 +72,12 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
     const [showDealApproval, setShowDealApproval] = useState(false);
     const [activeTab, setActiveTab] = useState('team');
-    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-    const [currentQuarter, setCurrentQuarter] = useState(Math.floor((new Date().getMonth()) / 3) + 1);
+    const [currentYear] = useState<number>(new Date().getFullYear());
+    const [currentQuarter] = useState<number>(Math.ceil((new Date().getMonth() + 1) / 3));
     const [pendingOffersCount, setPendingOffersCount] = useState<number>(0);
     const [pendingOffersLoading, setPendingOffersLoading] = useState(false);
+    const [moneyTargets, setMoneyTargets] = useState<any[]>([]);
+    const [targetsLoading, setTargetsLoading] = useState(false);
 
     // Fetch all salesmen statistics
     const fetchSalesmenStatistics = useCallback(async () => {
@@ -133,7 +120,7 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                     if (response.success && response.data) {
                         allTargets.push(...response.data);
                     }
-                } catch (error) {
+                } catch {
                     // Continue if one fails
                 }
             }
@@ -143,14 +130,14 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
                 if (teamResponse.success && teamResponse.data) {
                     allTargets.push(teamResponse.data);
                 }
-            } catch (error) {
+            } catch {
                 // Team target might not exist
             }
 
             const moneyTargetsList = allTargets.filter((target: any) => target.targetType === 1);
             setMoneyTargets(moneyTargetsList);
-        } catch (error) {
-            console.error('Failed to fetch money targets:', error);
+        } catch {
+            console.error('Failed to fetch money targets:');
         } finally {
             setTargetsLoading(false);
         }
@@ -233,17 +220,11 @@ const UnifiedSalesManagerDashboard: React.FC = () => {
     const activePlans = useMemo(() =>
         weeklyPlans?.filter(plan =>
             plan.status === 'Approved' ||
-            plan.status === 'Submitted' ||
-            plan.status === 'PendingReview' ||
-            plan.status === 'PendingApproval'
+            plan.status === 'Submitted'
         ) || [],
         [weeklyPlans]
     );
 
-    const completedPlans = useMemo(() =>
-        weeklyPlans?.filter(plan => plan.status === 'Completed') || [],
-        [weeklyPlans]
-    );
 
     const teamPerformancePercentage = useMemo(() => {
         if (!salesDashboard?.overview?.teamPerformance) {
