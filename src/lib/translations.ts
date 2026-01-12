@@ -894,9 +894,7 @@ export const translations = {
 			'Spare Parts Coordinator Dashboard',
 		inventoryManagerDashboard: 'Inventory Manager Dashboard',
 		accountingDashboard: 'Accounting Dashboard',
-		legalDeals: 'Legal Deals',
-		legalDealsHistory: 'Deals History',
-		contracts: 'Contracts',
+	
 		legalDealsPageTitle: 'Legal Department - Deals',
 		legalDealsPageDescription: 'Review deals sent to legal department',
 		legalDealsHistoryPageTitle: 'Legal Deals History',
@@ -2543,9 +2541,7 @@ export const translations = {
 		sparePartsCoordinatorDashboard: 'لوحة تحكم منسق قطع الغيار',
 		inventoryManagerDashboard: 'لوحة تحكم مدير المخزون',
 		accountingDashboard: 'لوحة تحكم المحاسبة',
-		legalDeals: 'الصفقات القانونية',
-		legalDealsHistory: 'تاريخ الصفقات',
-		contracts: 'العقود',
+		
 		legalDealsPageTitle: 'القسم القانوني - الصفقات',
 		legalDealsPageDescription: 'مراجعة الصفقات المرسلة إلى القسم القانوني',
 		legalDealsHistoryPageTitle: 'تاريخ الصفقات القانونية',
