@@ -80,28 +80,28 @@ export default defineConfig({
 			'/products': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.104:5117',
+					'http://10.10.9.102:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/images': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.104:5117',
+					'http://10.10.9.102:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/offers': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.104:5117',
+					'http://10.10.9.102:5117',
 				changeOrigin: true,
 				secure: false,
 			},
 			'/uploads': {
 				target:
 					process.env.VITE_API_BASE_URL ||
-					'http://10.10.9.104:5117',
+					'http://10.10.9.102:5117',
 				changeOrigin: true,
 				secure: false,
 			},
