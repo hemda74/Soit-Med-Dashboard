@@ -54,6 +54,7 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import { useEffect } from 'react'
 import { PerformanceMonitor } from '@/components/PerformanceMonitor'
 import RoleSpecificUserCreation from './components/admin/RoleSpecificUserCreation'
+import SecurityDashboard from './pages/SecurityDashboard'
 
 function App() {
   const { isAuthenticated, isAuthorizedToAccess, logout, user } = useAuthStore()
@@ -113,6 +114,7 @@ function App() {
                 <Route path="Admin/create-role-user" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><RoleSpecificUserCreation /></RoleGuard>} />
                 <Route path="Admin/users" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><UsersList /></RoleGuard>} />
                 <Route path="Admin/client-accounts" element={<RoleGuard requiredAnyRoles={["Admin", "SuperAdmin"]}><ClientAccountCreationPage /></RoleGuard>} />
+                <Route path="Admin/security" element={<RoleGuard requiredAnyRoles={["SuperAdmin", "Admin"]}><SecurityDashboard /></RoleGuard>} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="maintenance-support" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "SuperAdmin"]}><MaintenanceSupportDashboard /></RoleGuard>} />
                 <Route path="maintenance/requests/:id" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><MaintenanceRequestDetails /></RoleGuard>} />
