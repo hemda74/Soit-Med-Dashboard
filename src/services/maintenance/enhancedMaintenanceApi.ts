@@ -134,6 +134,38 @@ export interface ApiResponseEnhanced<T> {
   errors: string[];
 }
 
+export interface MachineHistory {
+  machineId: number;
+  serialNumber: string;
+  model: string;
+  installationDate?: string;
+  warrantyStatus: string;
+  currentClient?: {
+    clientId: number;
+    name: string;
+    address: string;
+    phone?: string;
+    email?: string;
+  };
+  visitsHistory: Array<{
+    visitId: number;
+    visitDate: string;
+    visitType: string;
+    technicianName: string;
+    description?: string;
+    status: string;
+    partsUsed?: string;
+    visitValue?: number;
+    mediaFiles: Array<{
+      fileName: string;
+      filePath: string;
+      fileType: string;
+      fileSize: number;
+    }>;
+  }>;
+  totalVisits: number;
+}
+
 // Enhanced Maintenance API Service
 class EnhancedMaintenanceApi {
   private baseUrl = '/EnhancedMaintenance';
@@ -470,6 +502,35 @@ class EnhancedMaintenanceApi {
       return transformedData;
     } catch (error) {
       console.error('Error searching visits:', error);
+      throw error;
+    }
+  }
+
+  // Machine History - From Legacy MediaApi
+  async getMachineHistory(machineId: number): Promise<MachineHistory> {
+    try {
+      const token = getAuthToken();
+      const response = await apiRequest<any>(
+        `${this.baseUrl}/machines/${machineId}/history`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data || {
+        machineId,
+        serialNumber: 'N/A',
+        model: 'Unknown',
+        warrantyStatus: 'Unknown',
+        visitsHistory: [],
+        totalVisits: 0
+      };
+    } catch (error) {
+      console.error('Error fetching machine history:', error);
       throw error;
     }
   }

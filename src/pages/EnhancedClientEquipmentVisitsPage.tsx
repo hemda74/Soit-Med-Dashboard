@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { enhancedMaintenanceApi, type EnhancedCustomer, type EnhancedEquipment, type EnhancedVisit, type CustomerEquipmentVisits, type CompleteVisitRequest } from '@/services/maintenance/enhancedMaintenanceApi';
+import { enhancedMaintenanceApi, type EnhancedCustomer, type EnhancedEquipment, type EnhancedVisit, type CompleteVisitRequest } from '@/services/maintenance/enhancedMaintenanceApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +42,6 @@ import {
     Loader2,
     Eye,
     FileText,
-    TrendingUp,
     Database,
     RefreshCw,
 } from 'lucide-react';
@@ -50,9 +49,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import VisitDetailsSlideOver from '@/components/maintenance/VisitDetailsSlideOver';
 
 const EnhancedClientEquipmentVisitsPage: React.FC = () => {
-    const { t, language } = useTranslation();
+    const { language } = useTranslation();
     const isRTL = language === 'ar';
 
     // State management
@@ -61,11 +61,11 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
     const [selectedVisit, setSelectedVisit] = useState<EnhancedVisit | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [includeLegacy, setIncludeLegacy] = useState(true);
-    const [pageNumber, setPageNumber] = useState(1);
+    const [pageNumber] = useState(1);
     const [pageSize] = useState(20);
     const [showCompleteVisitDialog, setShowCompleteVisitDialog] = useState(false);
-    const [showStatsDialog, setShowStatsDialog] = useState(false);
     const [showVisitDetailsDialog, setShowVisitDetailsDialog] = useState(false);
+    const [showVisitSlideOver, setShowVisitSlideOver] = useState(false);
 
     // Form state for visit completion
     const [visitCompletionForm, setVisitCompletionForm] = useState<CompleteVisitRequest>({
@@ -126,7 +126,7 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
     // Complete visit mutation
     const completeVisitMutation = useMutation({
         mutationFn: (request: CompleteVisitRequest) => enhancedMaintenanceApi.completeVisit(request),
-        onSuccess: (response) => {
+        onSuccess: () => {
             toast.success(isRTL ? 'تم إكمال الزيارة بنجاح' : 'Visit completed successfully');
             setShowCompleteVisitDialog(false);
             setSelectedVisit(null);
@@ -193,19 +193,6 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
         };
 
         completeVisitMutation.mutate(request);
-    };
-
-    const resetForm = () => {
-        setVisitCompletionForm({
-            visitId: '',
-            source: 'New',
-            report: '',
-            actionsTaken: '',
-            partsUsed: '',
-            serviceFee: undefined,
-            outcome: 'Completed',
-            notes: '',
-        });
     };
 
     return (
@@ -447,15 +434,7 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                     <span>{isRTL ? 'سجل الزيارات' : 'Visit History'}</span>
                                     <Badge variant="outline">{customerData?.visits?.length || 0}</Badge>
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowStatsDialog(true)}
-                                    className="flex items-center space-x-1"
-                                >
-                                    <TrendingUp className="h-4 w-4" />
-                                    <span>{isRTL ? 'الإحصائيات' : 'Stats'}</span>
-                                </Button>
+                                {/* Statistics button removed - feature not implemented yet */}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -469,11 +448,14 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                         <div
                                             key={`${visit.source}-${visit.id}`}
                                             className={cn(
-                                                'p-3 border rounded-lg cursor-pointer transition-colors',
+                                                'p-4 border rounded-lg cursor-pointer transition-colors',
                                                 selectedVisit?.id === visit.id && 'border-primary bg-primary/10',
                                                 'hover:border-primary/50'
                                             )}
-                                            onClick={() => setSelectedVisit(visit)}
+                                            onClick={() => {
+                                                setSelectedVisit(visit);
+                                                setShowVisitSlideOver(true);
+                                            }}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div>
@@ -564,7 +546,14 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {equipmentData.visits?.map((visit) => (
-                                            <TableRow key={`${visit.source}-${visit.id}`} className="cursor-pointer hover:bg-muted/50">
+                                            <TableRow
+                                                key={`${visit.source}-${visit.id}`}
+                                                className="cursor-pointer hover:bg-muted/50"
+                                                onClick={() => {
+                                                    setSelectedVisit(visit);
+                                                    setShowVisitSlideOver(true);
+                                                }}
+                                            >
                                                 <TableCell className="font-medium">
                                                     {format(new Date(visit.visitDate), 'MMM dd, yyyy')}
                                                 </TableCell>
@@ -591,7 +580,8 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setSelectedVisit(visit);
                                                                 setShowCompleteVisitDialog(true);
                                                             }}
@@ -607,10 +597,8 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                                             size="sm"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log('Eye icon clicked for visit:', visit);
                                                                 setSelectedVisit(visit);
-                                                                setShowVisitDetailsDialog(true);
-                                                                console.log('Dialog state set to true');
+                                                                setShowVisitSlideOver(true);
                                                             }}
                                                             title={isRTL ? 'عرض تفاصيل الزيارة' : 'View visit details'}
                                                             className="hover:bg-blue-50 border-blue-200"
@@ -854,7 +842,18 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                     </div>
                 )
             }
-        </div >
+
+            {/* Visit Details Slide Over */}
+            <VisitDetailsSlideOver
+                visit={selectedVisit}
+                isOpen={showVisitSlideOver}
+                onClose={() => {
+                    setShowVisitSlideOver(false);
+                    setSelectedVisit(null);
+                }}
+                isRTL={isRTL}
+            />
+        </div>
     );
 };
 

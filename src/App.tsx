@@ -18,7 +18,6 @@ import SalesStatisticsPage from '@/components/sales/SalesStatisticsPage'
 import SalesAnalyticsPage from '@/components/sales/SalesAnalyticsPage'
 import RoleGuard from '@/components/shared/RoleGuard'
 import SalesTargetsPage from '@/components/sales/SalesTargetsPage'
-import ManagerReportsReviewPage from '@/components/sales/ManagerReportsReviewPage'
 import OfferCreationPage from '@/components/salesSupport/OfferCreationPage'
 import RequestsInboxPage from '@/components/salesSupport/RequestsInboxPage'
 import ProductsCatalogPage from '@/components/salesSupport/ProductsCatalogPage'
@@ -40,6 +39,8 @@ import ClientAccountCreationPage from '@/pages/admin/ClientAccountCreationPage'
 import EnhancedClientEquipmentVisitsPage from '@/pages/EnhancedClientEquipmentVisitsPage'
 import MaintenanceDashboardUI from '@/pages/MaintenanceDashboardUI'
 import ClientEquipmentDetails from '@/pages/ClientEquipmentDetails'
+import ContractViewerPage from '@/pages/ContractViewerPage'
+import VisitDetailsPage from '@/pages/VisitDetailsPage'
 import {
   MaintenanceSupportDashboard,
   MaintenanceRequestDetails,
@@ -92,7 +93,6 @@ function App() {
                 <Route path="reports" element={<ReportsScreen />} />
                 <Route path="SalesManager" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><UnifiedSalesManagerDashboard /></RoleGuard>} />
                 <Route path="SalesManager/targets" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><SalesTargetsPage /></RoleGuard>} />
-                <Route path="SalesManager/reports-review" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><ManagerReportsReviewPage /></RoleGuard>} />
                 <Route path="SalesManager/deals" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><DealsManagementPage /></RoleGuard>} />
                 <Route path="SalesManager/deal-approvals" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><DealApprovalsPage /></RoleGuard>} />
                 <Route path="SalesManager/offer-approvals" element={<RoleGuard requiredAnyRoles={["SalesManager", "SuperAdmin"]}><OfferApprovalsPage /></RoleGuard>} />
@@ -121,8 +121,10 @@ function App() {
                 <Route path="maintenance/visits" element={<RoleGuard requiredAnyRoles={["Engineer", "MaintenanceManager", "SuperAdmin"]}><MaintenanceVisitManagement /></RoleGuard>} />
                 <Route path="maintenance/spare-parts" element={<RoleGuard requiredAnyRoles={["SparePartsCoordinator", "InventoryManager", "Doctor", "HospitalAdmin", "SuperAdmin"]}><SparePartRequestManagement /></RoleGuard>} />
                 <Route path="maintenance/client-equipment-visits" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><EnhancedClientEquipmentVisitsPage /></RoleGuard>} />
+                <Route path="maintenance/contract-viewer" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><ContractViewerPage /></RoleGuard>} />
                 <Route path="maintenance-dashboard-ui" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><MaintenanceDashboardUI /></RoleGuard>} />
                 <Route path="client/:customerId/equipment" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><ClientEquipmentDetails /></RoleGuard>} />
+                <Route path="client/:customerId/visit/:visitId" element={<RoleGuard requiredAnyRoles={["MaintenanceSupport", "MaintenanceManager", "Engineer", "SuperAdmin"]}><VisitDetailsPage /></RoleGuard>} />
                 <Route path="spare-parts-coordinator" element={<RoleGuard requiredAnyRoles={["SparePartsCoordinator", "SuperAdmin"]}><SparePartsCoordinatorDashboard /></RoleGuard>} />
                 <Route path="InventoryManager" element={<RoleGuard requiredAnyRoles={["InventoryManager", "SuperAdmin"]}><InventoryManagerDashboard /></RoleGuard>} />
                 <Route path="accounting" element={<RoleGuard requiredAnyRoles={["FinanceManager", "FinanceEmployee", "SuperAdmin"]}><AccountingDashboard /></RoleGuard>} />

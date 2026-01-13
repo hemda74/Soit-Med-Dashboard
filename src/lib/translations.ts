@@ -738,7 +738,6 @@ export const translations = {
 		},
 
 		// Sales Manager specific
-		reportsReview: 'Reports Review',
 		weeklyPlansReview: 'Weekly Plans Review',
 		pendingApprovals: 'Pending Approvals',
 		pendingDealApprovals: 'Pending Deal Approvals',
@@ -2333,7 +2332,6 @@ export const translations = {
 		},
 
 		// Sales Manager specific
-		reportsReview: 'مراجعة التقارير',
 		weeklyPlansReview: 'مراجعة الخطط الأسبوعية',
 		pendingApprovals: 'الموافقات المعلقة',
 		pendingDealApprovals: 'موافقات الصفقات المعلقة',

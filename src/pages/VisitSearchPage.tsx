@@ -192,7 +192,7 @@ const VisitSearchPage: React.FC = () => {
                                 type="number"
                                 placeholder="Enter technician ID"
                                 value={criteria.technicianId || ''}
-                                onChange={(e) => setCriteria({ ...criteria, technicianId: e.target.value ? parseInt(e.target.value) : undefined })}
+                                onChange={(e) => setCriteria({ ...criteria, technicianId: e.target.value || undefined })}
                             />
                         </div>
 
