@@ -84,6 +84,39 @@ export interface CustomerSearchCriteria {
   includeLegacy: boolean;
 }
 
+export interface VisitSearchCriteria {
+  dateFrom?: string;
+  dateTo?: string;
+  technicianId?: string;
+  governorate?: string;
+  status?: string;
+  machineSerial?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface VisitSearchItem {
+  visitId: number;
+  visitDate: string;
+  clientName: string;
+  machineModel: string;
+  machineSerial: string;
+  technicianName: string;
+  visitType: string;
+  status: string;
+  governorate: string;
+  description: string;
+  visitValue?: number;
+}
+
+export interface VisitSearchResponse {
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  data: VisitSearchItem[];
+}
+
 export interface PagedResponse<T> {
   items: T[];
   totalCount: number;
@@ -385,6 +418,60 @@ class EnhancedMaintenanceApi {
 
     const response = await this.getCustomerVisitStats(customerId, startDateStr, endDate);
     return response || null;
+  }
+
+  // Visit Search
+  async searchVisits(criteria: VisitSearchCriteria): Promise<VisitSearchResponse> {
+    try {
+      const token = getAuthToken();
+      const params = new URLSearchParams({
+        page: criteria.page.toString(),
+        pageSize: criteria.pageSize.toString(),
+      });
+
+      if (criteria.dateFrom) params.append('startDate', criteria.dateFrom);
+      if (criteria.dateTo) params.append('endDate', criteria.dateTo);
+      if (criteria.technicianId) params.append('technicianId', criteria.technicianId);
+      if (criteria.governorate) params.append('governorate', criteria.governorate);
+      if (criteria.status) params.append('status', criteria.status);
+      if (criteria.machineSerial) params.append('machineSerial', criteria.machineSerial);
+
+      const response = await apiRequest<any>(
+        `${this.baseUrl}/visits/search?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const transformedData: VisitSearchResponse = {
+        totalCount: response.data?.totalCount || 0,
+        pageNumber: response.data?.pageNumber || criteria.page,
+        pageSize: response.data?.pageSize || criteria.pageSize,
+        totalPages: response.data?.totalPages || 0,
+        data: response.data?.data?.map((visit: any) => ({
+          visitId: visit.visitId || 0,
+          visitDate: visit.visitDate || '',
+          clientName: visit.clientName || '',
+          machineModel: visit.machineModel || '',
+          machineSerial: visit.machineSerial || '',
+          technicianName: visit.technicianName || '',
+          visitType: visit.visitType || '',
+          status: visit.status || '',
+          governorate: visit.governorate || '',
+          description: visit.description || '',
+          visitValue: visit.visitValue,
+        })) || [],
+      };
+
+      return transformedData;
+    } catch (error) {
+      console.error('Error searching visits:', error);
+      throw error;
+    }
   }
 }
 

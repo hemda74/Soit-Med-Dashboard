@@ -11,16 +11,13 @@ export type UserRole =
 	| 'SalesSupport'
 	| 'MaintenanceSupport'
 	| 'MaintenanceManager'
+	| 'Engineer'
 	| 'SparePartsCoordinator'
 	| 'InventoryManager'
 	| 'FinanceManager'
 	| 'FinanceEmployee'
 	| 'LegalManager'
-	| 'LegalEmployee'
-	| 'MaintenanceManager'
-	| 'MaintenanceSupport'
-	| 'SparePartsCoordinator'
-	| 'InventoryManager';
+	| 'LegalEmployee';
 
 /**
  * Navigation item configuration

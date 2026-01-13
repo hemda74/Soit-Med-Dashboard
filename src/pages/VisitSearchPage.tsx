@@ -20,7 +20,7 @@ import {
     DollarSign
 } from 'lucide-react';
 import { enhancedMaintenanceApi } from '@/services/maintenance/enhancedMaintenanceApi';
-import type { VisitSearchCriteria, VisitSearchResponse } from '@/services/maintenance/enhancedMaintenanceApi';
+import type { VisitSearchCriteria, VisitSearchResponse, VisitSearchItem } from '@/services/maintenance/enhancedMaintenanceApi';
 import toast from 'react-hot-toast';
 const VisitSearchPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
@@ -115,7 +115,7 @@ const VisitSearchPage: React.FC = () => {
         }
 
         const headers = ['Visit ID', 'Date', 'Client', 'Machine', 'Serial', 'Technician', 'Type', 'Status', 'Governorate', 'Value'];
-        const rows = searchResults.data.map(visit => [
+        const rows = searchResults.data.map((visit: VisitSearchItem) => [
             visit.visitId,
             new Date(visit.visitDate).toLocaleDateString(),
             visit.clientName,
@@ -318,7 +318,7 @@ const VisitSearchPage: React.FC = () => {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {searchResults.data.map((visit) => (
+                                            {searchResults.data.map((visit: VisitSearchItem) => (
                                                 <TableRow key={visit.visitId}>
                                                     <TableCell className="font-medium">#{visit.visitId}</TableCell>
                                                     <TableCell>

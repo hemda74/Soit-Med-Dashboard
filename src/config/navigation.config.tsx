@@ -180,6 +180,12 @@ export const createNavigationConfig = (t: (key: string) => string): readonly Nav
     path: '/maintenance/client-equipment-visits',
     roles: ['MaintenanceSupport', 'MaintenanceManager', 'SuperAdmin'] as const,
   },
+  {
+    icon: <BarChart3 className={ICON_SIZE} />,
+    name: t('maintenanceDashboard'),
+    path: '/maintenance-dashboard-ui',
+    roles: ['MaintenanceSupport', 'MaintenanceManager', 'Engineer', 'SuperAdmin'] as const,
+  },
   // Inventory section
   {
     icon: <Warehouse className={ICON_SIZE} />,
