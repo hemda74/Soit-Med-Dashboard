@@ -6,10 +6,9 @@ import { LoadingSpinner, EmptyState } from '@/components/shared';
 import { salesApi } from '@/services/sales/salesApi';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
-import { 
-	FileText, Building2, DollarSign, Calendar, User, Eye, 
-	Package, FileCheck, CreditCard, Truck, Shield, Clock,
-	Image, ExternalLink, Archive, Filter, Search, X, ArrowLeft
+import {
+	FileText, Building2, DollarSign, Calendar, User, Eye,
+	Image, ExternalLink, Archive, Filter, Search, X, ArrowLeft, Clock
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuthStore } from '@/stores/authStore';
@@ -153,6 +152,16 @@ const LegalDealsHistoryPage: React.FC = () => {
 			sentToLegal: deals.filter(d => d.status === 'SentToLegal').length,
 			returnedToSalesman: deals.filter(d => d.status === 'ReturnedToSalesman').length,
 			legalReviewed: deals.filter(d => d.status === 'LegalReviewed').length,
+			pendingManagerApproval: deals.filter(d => d.status === 'PendingManagerApproval').length,
+			rejectedByManager: deals.filter(d => d.status === 'RejectedByManager').length,
+			pendingSuperAdminApproval: deals.filter(d => d.status === 'PendingSuperAdminApproval').length,
+			rejectedBySuperAdmin: deals.filter(d => d.status === 'RejectedBySuperAdmin').length,
+			approved: deals.filter(d => d.status === 'Approved').length,
+			awaitingClientAccountCreation: deals.filter(d => d.status === 'AwaitingClientAccountCreation').length,
+			awaitingSalesManReport: deals.filter(d => d.status === 'AwaitingSalesManReport').length,
+			awaitingSalesmenReviewsAndAccountSetup: deals.filter(d => d.status === 'AwaitingSalesmenReviewsAndAccountSetup').length,
+			success: deals.filter(d => d.status === 'Success').length,
+			failed: deals.filter(d => d.status === 'Failed').length,
 			totalValue: deals.reduce((sum, d) => sum + (d.dealValue || 0), 0),
 			sentToLegalValue: deals.filter(d => d.status === 'SentToLegal').reduce((sum, d) => sum + (d.dealValue || 0), 0),
 			returnedToSalesmanValue: deals.filter(d => d.status === 'ReturnedToSalesman').reduce((sum, d) => sum + (d.dealValue || 0), 0),
@@ -178,6 +187,26 @@ const LegalDealsHistoryPage: React.FC = () => {
 				return <Badge className="bg-orange-100 text-orange-800 border-orange-300 border dark:bg-orange-900 dark:text-orange-200 dark:border-orange-700">Returned to Salesman</Badge>;
 			case 'LegalReviewed':
 				return <Badge className="bg-green-100 text-green-800 border-green-300 border dark:bg-green-900 dark:text-green-200 dark:border-green-700">Reviewed & Archived</Badge>;
+			case 'PendingManagerApproval':
+				return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 border dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700">Pending Manager Approval</Badge>;
+			case 'RejectedByManager':
+				return <Badge className="bg-red-100 text-red-800 border-red-300 border dark:bg-red-900 dark:text-red-200 dark:border-red-700">Rejected by Manager</Badge>;
+			case 'PendingSuperAdminApproval':
+				return <Badge className="bg-blue-100 text-blue-800 border-blue-300 border dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700">Pending SuperAdmin Approval</Badge>;
+			case 'RejectedBySuperAdmin':
+				return <Badge className="bg-red-100 text-red-800 border-red-300 border dark:bg-red-900 dark:text-red-200 dark:border-red-700">Rejected by SuperAdmin</Badge>;
+			case 'Approved':
+				return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700">Approved</Badge>;
+			case 'AwaitingClientAccountCreation':
+				return <Badge className="bg-cyan-100 text-cyan-800 border-cyan-300 border dark:bg-cyan-900 dark:text-cyan-200 dark:border-cyan-700">Awaiting Client Account Creation</Badge>;
+			case 'AwaitingSalesManReport':
+				return <Badge className="bg-indigo-100 text-indigo-800 border-indigo-300 border dark:bg-indigo-900 dark:text-indigo-200 dark:border-indigo-700">Awaiting SalesMan Report</Badge>;
+			case 'AwaitingSalesmenReviewsAndAccountSetup':
+				return <Badge className="bg-violet-100 text-violet-800 border-violet-300 border dark:bg-violet-900 dark:text-violet-200 dark:border-violet-700">Awaiting Salesmen Reviews & Account Setup</Badge>;
+			case 'Success':
+				return <Badge className="bg-green-100 text-green-800 border-green-300 border dark:bg-green-900 dark:text-green-200 dark:border-green-700">Success</Badge>;
+			case 'Failed':
+				return <Badge className="bg-red-100 text-red-800 border-red-300 border dark:bg-red-900 dark:text-red-200 dark:border-red-700">Failed</Badge>;
 			default:
 				return <Badge className="bg-gray-100 text-gray-800 border-gray-300 border dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">{status}</Badge>;
 		}
@@ -401,6 +430,16 @@ const LegalDealsHistoryPage: React.FC = () => {
 										<SelectItem value="SentToLegal">Sent to Legal</SelectItem>
 										<SelectItem value="ReturnedToSalesman">Returned to Salesman</SelectItem>
 										<SelectItem value="LegalReviewed">Reviewed & Archived</SelectItem>
+										<SelectItem value="PendingManagerApproval">Pending Manager Approval</SelectItem>
+										<SelectItem value="RejectedByManager">Rejected by Manager</SelectItem>
+										<SelectItem value="PendingSuperAdminApproval">Pending SuperAdmin Approval</SelectItem>
+										<SelectItem value="RejectedBySuperAdmin">Rejected by SuperAdmin</SelectItem>
+										<SelectItem value="Approved">Approved</SelectItem>
+										<SelectItem value="AwaitingClientAccountCreation">Awaiting Client Account Creation</SelectItem>
+										<SelectItem value="AwaitingSalesManReport">Awaiting SalesMan Report</SelectItem>
+										<SelectItem value="AwaitingSalesmenReviewsAndAccountSetup">Awaiting Salesmen Reviews & Account Setup</SelectItem>
+										<SelectItem value="Success">Success</SelectItem>
+										<SelectItem value="Failed">Failed</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -436,7 +475,7 @@ const LegalDealsHistoryPage: React.FC = () => {
 					{filteredDeals.length === 0 ? (
 						<EmptyState
 							title="No Deals Found"
-							description={deals.length === 0 
+							description={deals.length === 0
 								? "No deals have been sent to the legal department yet."
 								: "No deals match the current filters. Try adjusting your search criteria."
 							}
