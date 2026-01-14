@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
-import { loginUser, getCurrentUser, decodeToken } from '../services/authApi';
+import { loginUser, getCurrentUser } from '../services/authApi';
 import type { AuthUser } from '../types/auth.types';
 import toast from 'react-hot-toast';
 import { useAppStore } from './appStore';
@@ -17,18 +17,12 @@ interface AuthState {
 	isAuthenticated: boolean;
 	loginAttempts: number;
 	lastLoginAttempt: number | null;
-	sessionExpiry: number | null;
 	rememberMe: boolean;
 
 	// Actions
 	login: (userName: string, password: string) => Promise<void>;
 	fetchUserData: () => Promise<void>;
 	logout: () => void;
-
-	// Session management
-	checkTokenExpiry: () => boolean;
-	refreshToken: () => Promise<void>;
-	extendSession: () => void;
 
 	// Security features
 	incrementLoginAttempts: () => void;
@@ -54,7 +48,6 @@ export const useAuthStore = create<AuthState>()(
 				isAuthenticated: false,
 				loginAttempts: 0,
 				lastLoginAttempt: null,
-				sessionExpiry: null,
 				rememberMe: false,
 
 				login: async (
@@ -90,20 +83,6 @@ export const useAuthStore = create<AuthState>()(
 								setLoading
 							);
 
-						// Calculate session expiry
-						const decoded = decodeToken(
-							response.token
-						);
-						const sessionExpiry =
-							decoded?.exp
-								? decoded.exp *
-								  1000
-								: Date.now() +
-								  24 *
-										60 *
-										60 *
-										1000;
-
 						const user: User = {
 							...userData,
 							token: response.token,
@@ -112,9 +91,7 @@ export const useAuthStore = create<AuthState>()(
 						// Ensure roles is always an array
 						if (
 							!user.roles ||
-							!Array.isArray(
-								user.roles
-							)
+							!Array.isArray(user.roles)
 						) {
 							user.roles = [];
 						}
@@ -143,7 +120,6 @@ export const useAuthStore = create<AuthState>()(
 						set({
 							user,
 							isAuthenticated: true,
-							sessionExpiry,
 							loginAttempts: 0,
 							lastLoginAttempt: null,
 						});
@@ -217,37 +193,6 @@ export const useAuthStore = create<AuthState>()(
 						user: null,
 						isAuthenticated: false,
 					});
-				},
-
-				// Session management
-				checkTokenExpiry: () => {
-					const { sessionExpiry } = get();
-					if (!sessionExpiry) return false;
-					return Date.now() > sessionExpiry;
-				},
-
-				refreshToken: async () => {
-					const { user } = get();
-					if (!user?.token) return;
-
-					try {
-						// This would call a refresh token endpoint
-						// For now, we'll just extend the current session
-						get().extendSession();
-					} catch (error) {
-						console.error(
-							'Token refresh failed:',
-							error
-						);
-						get().logout();
-					}
-				},
-
-				extendSession: () => {
-					const newExpiry =
-						Date.now() +
-						24 * 60 * 60 * 1000; // 24 hours
-					set({ sessionExpiry: newExpiry });
 				},
 
 				// Security features
@@ -383,7 +328,6 @@ export const useAuthStore = create<AuthState>()(
 				partialize: (state) => ({
 					user: state.user,
 					isAuthenticated: state.isAuthenticated,
-					sessionExpiry: state.sessionExpiry,
 					rememberMe: state.rememberMe,
 				}),
 			}
