@@ -10,10 +10,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useNotificationStore } from '@/stores/notificationStore';
 import PasswordField from './PasswordField';
 import ImageUploadField from './ImageUploadField';
-import HospitalSelector from './HospitalSelector';
 import GovernorateSelector from './GovernorateSelector';
 import MedicalDepartmentSelector from './MedicalDepartmentSelector';
-import type { RoleSpecificUserRole, HospitalInfo } from '@/types/roleSpecificUser.types';
+import type { RoleSpecificUserRole } from '@/types/roleSpecificUser.types';
 import type { FormData } from '@/hooks/useUserCreationForm';
 
 interface GovernorateInfo {
@@ -40,8 +39,10 @@ interface UserCreationFormProps {
     selectedRole: RoleSpecificUserRole;
     roleConfig: RoleConfig;
     formData: FormData;
-    hospitals: HospitalInfo[];
     governorates: GovernorateInfo[];
+    clients?: any[];
+    selectedClientIds?: string[];
+    onClientToggle?: (clientId: string) => void;
     errors: string[];
     passwordErrors: string[];
     showPassword: boolean;
@@ -58,7 +59,6 @@ interface UserCreationFormProps {
     onImageSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveImage: () => void;
     onImageAltTextChange: (value: string) => void;
-    onHospitalSelect: (hospitalId: string) => void;
     onGovernorateToggle: (governorateId: number) => void;
     onRemoveGovernorate: (governorateId: number) => void;
     onClearAllGovernorates: () => void;
@@ -73,8 +73,10 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
     selectedRole,
     roleConfig,
     formData,
-    hospitals,
     governorates,
+    clients = [],
+    selectedClientIds = [],
+    onClientToggle,
     errors,
     passwordErrors,
     showPassword,
@@ -90,7 +92,6 @@ const UserCreationForm: React.FC<UserCreationFormProps> = ({
     onConfirmPasswordToggle,
     onImageSelect,
     onRemoveImage,
-    onHospitalSelect,
     onGovernorateToggle,
     onRemoveGovernorate,
     onClearAllGovernorates,
@@ -499,6 +500,58 @@ This is an automated message from Soit-Med Admin Panel`;
                             </div>
                         </div>
 
+                        {/* Client Access Selection for Doctor and Technician */}
+                        {(selectedRole === 'Doctor' || selectedRole === 'Technician') && clients && clients.length > 0 && onClientToggle && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 pb-3 border-b">
+                                    <h2 className="text-lg font-semibold">Client Access Assignment</h2>
+                                </div>
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium flex items-center gap-2">
+                                        <UserPlus className="w-4 h-4" />
+                                        Assign Client Access (Optional)
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Select which clients this {selectedRole.toLowerCase()} can manage. You can also assign clients later.
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-4 bg-muted/30 rounded-lg border">
+                                        {clients.map((client) => (
+                                            <div
+                                                key={client.id}
+                                                onClick={() => onClientToggle(client.id)}
+                                                className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedClientIds?.includes(client.id)
+                                                    ? 'border-primary bg-primary/10'
+                                                    : 'border-border bg-background hover:border-primary/50'
+                                                    }`}
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <div className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center ${selectedClientIds?.includes(client.id)
+                                                        ? 'border-primary bg-primary'
+                                                        : 'border-muted-foreground'
+                                                        }`}>
+                                                        {selectedClientIds?.includes(client.id) && (
+                                                            <Check className="w-3 h-3 text-primary-foreground" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm truncate">{client.name}</p>
+                                                        {client.type && (
+                                                            <p className="text-xs text-muted-foreground">{client.type}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {selectedClientIds && selectedClientIds.length > 0 && (
+                                        <p className="text-sm text-primary font-medium">
+                                            {selectedClientIds.length} client{selectedClientIds.length !== 1 ? 's' : ''} selected
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Role-Specific Information Section */}
                         {(roleConfig.requiresHospital || selectedRole === 'engineer' || selectedRole === 'Technician' || selectedRole === 'SalesManager' || selectedRole === 'MaintenanceManager' || selectedRole === 'MaintenanceSupport' || selectedRole === 'SparePartsCoordinator' || selectedRole === 'InventoryManager') && (
                             <div className="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -506,14 +559,6 @@ This is an automated message from Soit-Med Admin Panel`;
                                     <h2 className="text-lg font-semibold">Role-Specific Information</h2>
                                 </div>
                                 <p className="text-sm text-muted-foreground -mt-2"></p>
-
-                                {roleConfig.requiresHospital && (
-                                    <HospitalSelector
-                                        hospitals={hospitals}
-                                        selectedHospitalId={formData.hospitalId || ''}
-                                        onHospitalSelect={onHospitalSelect}
-                                    />
-                                )}
 
                                 {selectedRole === 'Technician' && roleConfig.requiresMedicalDepartment && (
                                     <MedicalDepartmentSelector

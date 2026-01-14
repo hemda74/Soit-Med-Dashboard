@@ -7,6 +7,8 @@ import { useAppStore } from '@/stores/appStore';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import clientAccessService from '@/services/clientAccessService';
+import axios from 'axios';
 import {
     createDoctor,
     createEngineer,
@@ -23,13 +25,11 @@ import {
     createSalesSupport,
     createSparePartsCoordinator,
     createInventoryManager,
-    getHospitals,
     getGovernorates,
     validateForm,
 } from '@/services';
 import type {
     RoleSpecificUserRole,
-    HospitalInfo,
 } from '@/types/roleSpecificUser.types';
 import UserCreationForm from './UserCreationForm';
 import { useUserCreationForm } from '@/hooks/useUserCreationForm';
@@ -74,8 +74,8 @@ const RoleSpecificUserCreation: React.FC = () => {
         Doctor: {
             name: t('Doctor'),
             description: t('DoctorDescription'),
-            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty', 'hospitalId'],
-            requiresHospital: true,
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'specialty'],
+            requiresHospital: false,
             requiresDepartment: false,
             autoDepartmentId: 2,
         },
@@ -91,8 +91,8 @@ const RoleSpecificUserCreation: React.FC = () => {
         Technician: {
             name: t('Technician'),
             description: t('TechnicianDescription'),
-            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'hospitalId', 'department'],
-            requiresHospital: true,
+            fields: ['email', 'password', 'confirmPassword', 'firstName', 'lastName', 'department'],
+            requiresHospital: false,
             requiresDepartment: false,
             requiresMedicalDepartment: true,
             autoDepartmentId: 2,
@@ -203,9 +203,13 @@ const RoleSpecificUserCreation: React.FC = () => {
     };
 
     const [selectedRole, setSelectedRole] = useState<RoleSpecificUserRole | null>(null);
-    const [hospitals, setHospitals] = useState<HospitalInfo[]>([]);
     const [governorates, setGovernorates] = useState<GovernorateInfo[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    // Client linking state
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+    const [createdUserId, setCreatedUserId] = useState<string | null>(null);
 
     // Use the custom hook for form management
     const {
@@ -232,7 +236,6 @@ const RoleSpecificUserCreation: React.FC = () => {
         handleInputChange,
         handleGovernorateToggle,
         removeGovernorate,
-        handleHospitalSelect,
         resetForm,
     } = useUserCreationForm();
 
@@ -254,30 +257,42 @@ const RoleSpecificUserCreation: React.FC = () => {
         if (!user?.token) return;
         try {
             setLoading(true);
-            const [hospitalsData, governoratesData] = await Promise.all([
-                getHospitals(user.token),
+            const [governoratesData, clientsData] = await Promise.all([
                 getGovernorates(user.token),
+                fetchClients(),
             ]);
 
-            setHospitals(hospitalsData);
             setGovernorates(governoratesData);
+            setClients(clientsData);
         } catch (err: any) {
             console.error('Error loading reference data:', err);
-            
+
             // Handle 403 Forbidden errors specifically
             if (err?.status === 403 || err?.message?.includes('403') || err?.message?.includes('Forbidden')) {
                 errorNotification(
                     'Access Denied',
-                    'You do not have permission to access hospitals and governorates. Please contact your Administrator if you need this access.'
+                    'You do not have permission to access governorates. Please contact your Administrator if you need this access.'
                 );
                 // Set empty arrays so the form can still be used (just without reference data)
-                setHospitals([]);
                 setGovernorates([]);
             } else {
                 errorNotification('Error', 'Failed to load reference data. Please try again later.');
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchClients = async () => {
+        try {
+            const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5117/api';
+            const response = await axios.get(`${API_BASE_URL}/Client`, {
+                headers: { Authorization: `Bearer ${user?.token}` }
+            });
+            return response.data.data || response.data || [];
+        } catch (err) {
+            console.error('Error loading clients:', err);
+            return [];
         }
     };
 
@@ -336,7 +351,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(formData.dateOfBirth && { dateOfBirth: formData.dateOfBirth }),
                 // Auto-assign department ID for all roles (as number)
                 departmentId: getDepartmentIdForRole(selectedRole),
-                ...(config.requiresHospital && formData.hospitalId && { hospitalId: formData.hospitalId }),
                 ...(selectedRole === 'Doctor' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'Engineer' && formData.specialty && { specialty: formData.specialty }),
                 ...(selectedRole === 'Engineer' && formData.governorateIds && formData.governorateIds.length > 0 && { governorateIds: formData.governorateIds }),
@@ -356,9 +370,11 @@ const RoleSpecificUserCreation: React.FC = () => {
                 ...(autoImageAltText && { imageAltText: autoImageAltText }),
             };
 
+            let createdUserResponse: any;
+
             switch (selectedRole) {
                 case 'Doctor':
-                    await createDoctor(userData as any, user.token);
+                    createdUserResponse = await createDoctor(userData as any, user.token);
                     break;
                 case 'Engineer':
                     await createEngineer(userData as any, user.token);
@@ -404,6 +420,19 @@ const RoleSpecificUserCreation: React.FC = () => {
                     break;
                 default:
                     throw new Error('Invalid role selected');
+            }
+
+            // Link clients to the newly created user (for Doctor and Technician roles)
+            if ((selectedRole === 'Doctor' || selectedRole === 'Technician') && selectedClientIds.length > 0 && createdUserResponse) {
+                const userId = createdUserResponse.userId || createdUserResponse.data?.userId;
+                if (userId) {
+                    setCreatedUserId(userId);
+                    await linkClientsToUser(userId);
+                } else {
+                    console.warn('No userId returned from user creation, cannot link clients');
+                }
+            } else if ((selectedRole === 'Doctor' || selectedRole === 'Technician') && selectedClientIds.length === 0) {
+                console.warn('No clients selected for Doctor/Technician. User created without client access.');
             }
 
             setShowSuccessModal(true);
@@ -486,7 +515,33 @@ const RoleSpecificUserCreation: React.FC = () => {
         setShowSuccessModal(false);
         // Reset form and go back to role selection
         setSelectedRole(null);
+        setSelectedClientIds([]);
+        setCreatedUserId(null);
         resetForm();
+    };
+
+    const linkClientsToUser = async (userId: string) => {
+        try {
+            const linkPromises = selectedClientIds.map(clientId =>
+                clientAccessService.linkUserToClient({
+                    userId,
+                    clientId,
+                    role: 'Manager' // Default role for doctors/technicians
+                })
+            );
+            await Promise.all(linkPromises);
+        } catch (err) {
+            console.error('Error linking clients:', err);
+            errorNotification('Warning', 'User created but some clients could not be linked');
+        }
+    };
+
+    const handleClientToggle = (clientId: string) => {
+        setSelectedClientIds(prev =>
+            prev.includes(clientId)
+                ? prev.filter(id => id !== clientId)
+                : [...prev, clientId]
+        );
     };
 
     if (!canCreateUsers) {
@@ -630,8 +685,10 @@ const RoleSpecificUserCreation: React.FC = () => {
                             selectedRole={selectedRole}
                             roleConfig={ROLE_CONFIG[selectedRole]}
                             formData={formData}
-                            hospitals={hospitals}
                             governorates={governorates}
+                            clients={clients}
+                            selectedClientIds={selectedClientIds}
+                            onClientToggle={handleClientToggle}
                             errors={errors}
                             passwordErrors={passwordErrors}
                             showPassword={showPassword}
@@ -648,7 +705,6 @@ const RoleSpecificUserCreation: React.FC = () => {
                             onImageSelect={handleImageSelect}
                             onRemoveImage={handleRemoveImage}
                             onImageAltTextChange={handleImageAltTextChange}
-                            onHospitalSelect={handleHospitalSelect}
                             onGovernorateToggle={handleGovernorateToggle}
                             onRemoveGovernorate={removeGovernorate}
                             onClearAllGovernorates={handleClearAllGovernorates}
