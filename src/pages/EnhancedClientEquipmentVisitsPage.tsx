@@ -44,6 +44,8 @@ import {
     FileText,
     Database,
     RefreshCw,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { format } from 'date-fns';
@@ -54,6 +56,7 @@ import VisitDetailsSlideOver from '@/components/maintenance/VisitDetailsSlideOve
 const EnhancedClientEquipmentVisitsPage: React.FC = () => {
     const { language } = useTranslation();
     const isRTL = language === 'ar';
+    const equipmentVisitsRef = React.useRef<HTMLDivElement>(null);
 
     // State management
     const [selectedCustomer, setSelectedCustomer] = useState<EnhancedCustomer | null>(null);
@@ -61,8 +64,8 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
     const [selectedVisit, setSelectedVisit] = useState<EnhancedVisit | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [includeLegacy, setIncludeLegacy] = useState(true);
-    const [pageNumber] = useState(1);
-    const [pageSize] = useState(20);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
     const [showCompleteVisitDialog, setShowCompleteVisitDialog] = useState(false);
     const [showVisitDetailsDialog, setShowVisitDetailsDialog] = useState(false);
     const [showVisitSlideOver, setShowVisitSlideOver] = useState(false);
@@ -108,7 +111,12 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
         queryKey: ['customer-equipment-visits', selectedCustomer?.id, includeLegacy],
         queryFn: async () => {
             if (!selectedCustomer) return null;
-            return await enhancedMaintenanceApi.getCustomerEquipmentVisits(selectedCustomer.id, includeLegacy);
+            console.log('🔍 Fetching equipment for customer:', selectedCustomer.id, 'includeLegacy:', includeLegacy);
+            const result = await enhancedMaintenanceApi.getCustomerEquipmentVisits(selectedCustomer.id, includeLegacy);
+            console.log('📦 Equipment data received:', result);
+            console.log('📦 Equipment count:', result?.equipment?.length || 0);
+            console.log('📦 Visits count:', result?.visits?.length || 0);
+            return result;
         },
         enabled: !!selectedCustomer,
     });
@@ -356,6 +364,40 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+
+                            {/* Pagination Controls */}
+                            {customersData && customersData.totalPages > 1 && (
+                                <div className="mt-4 flex items-center justify-between border-t pt-4">
+                                    <div className="text-sm text-muted-foreground">
+                                        {isRTL ? 'عرض' : 'Showing'} {((pageNumber - 1) * pageSize) + 1} {isRTL ? 'إلى' : 'to'}{' '}
+                                        {Math.min(pageNumber * pageSize, customersData.totalCount)} {isRTL ? 'من' : 'of'}{' '}
+                                        {customersData.totalCount} {isRTL ? 'عميل' : 'customers'}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPageNumber(prev => prev - 1)}
+                                            disabled={!customersData.hasPreviousPage}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            {isRTL ? 'السابق' : 'Previous'}
+                                        </Button>
+                                        <span className="text-sm text-muted-foreground">
+                                            {isRTL ? 'صفحة' : 'Page'} {pageNumber} {isRTL ? 'من' : 'of'} {customersData.totalPages}
+                                        </span>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPageNumber(prev => prev + 1)}
+                                            disabled={!customersData.hasNextPage}
+                                        >
+                                            {isRTL ? 'التالي' : 'Next'}
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
@@ -378,9 +420,29 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                 <div className="flex items-center justify-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin" />
                                 </div>
+                            ) : !customerData?.equipment || customerData.equipment.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Wrench className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                                    <p className="text-muted-foreground mb-2">
+                                        {isRTL ? 'لا توجد معدات لهذا العميل' : 'No equipment found for this customer'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isRTL ? 'معرف العميل:' : 'Customer ID:'} {selectedCustomer?.id} |
+                                        {isRTL ? ' المصدر:' : ' Source:'} {selectedCustomer?.source}
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => refetchCustomerData()}
+                                        className="mt-4"
+                                    >
+                                        <RefreshCw className="h-4 w-4 mr-2" />
+                                        {isRTL ? 'إعادة المحاولة' : 'Retry'}
+                                    </Button>
+                                </div>
                             ) : (
                                 <div className="space-y-2">
-                                    {customerData?.equipment?.map((equipment) => (
+                                    {customerData.equipment.map((equipment) => (
                                         <div
                                             key={`${equipment.source}-${equipment.id}`}
                                             className={cn(
@@ -394,9 +456,15 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
                                                 <div className="flex-1">
                                                     <div className="font-medium text-lg flex items-center space-x-2">
                                                         <span>{equipment.model}</span>
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {isRTL ? 'انقر لعرض الزيارات' : 'Click to view visits'}
-                                                        </Badge>
+                                                        {selectedEquipment?.id === equipment.id ? (
+                                                            <Badge className="text-xs bg-primary text-primary-foreground">
+                                                                {isRTL ? '✓ محدد' : '✓ Selected'}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-xs animate-pulse">
+                                                                {isRTL ? '👆 انقر لعرض الزيارات' : '👆 Click to view visits'}
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                     <div className="text-sm text-muted-foreground">
                                                         {isRTL ? 'الرقم التسلسلي:' : 'Serial:'} {equipment.serialNumber}
