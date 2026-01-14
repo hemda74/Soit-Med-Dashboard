@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +17,11 @@ import {
     RefreshCw,
     CheckCircle,
     Clock,
-    XCircle
+    XCircle,
+    Eye
 } from 'lucide-react';
 import { enhancedMaintenanceApi } from '@/services/maintenance/enhancedMaintenanceApi';
+import VisitDetailsSlideOver from '@/components/maintenance/VisitDetailsSlideOver';
 import type {
     EnhancedCustomer,
     EnhancedEquipment,
@@ -34,6 +37,9 @@ const ClientEquipmentDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('equipment');
+    const [selectedEquipment, setSelectedEquipment] = useState<EnhancedEquipment | null>(null);
+    const [selectedVisit, setSelectedVisit] = useState<EnhancedVisit | null>(null);
+    const [showVisitSlideOver, setShowVisitSlideOver] = useState(false);
 
     useEffect(() => {
         if (customerId) {
@@ -97,6 +103,13 @@ const ClientEquipmentDetails: React.FC = () => {
                 return <Clock className="w-4 h-4 text-gray-600" />;
         }
     };
+
+    // Fetch equipment visits when equipment is selected
+    const { data: equipmentData } = useQuery({
+        queryKey: ['equipment-visits', selectedEquipment?.id],
+        queryFn: () => enhancedMaintenanceApi.getEquipmentVisits(selectedEquipment!.id, true),
+        enabled: !!selectedEquipment,
+    });
 
     if (loading) {
         return (
@@ -225,8 +238,20 @@ const ClientEquipmentDetails: React.FC = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {customerEquipment.map((equipment) => (
-                                            <TableRow key={equipment.id}>
-                                                <TableCell className="font-medium">{equipment.model}</TableCell>
+                                            <TableRow
+                                                key={equipment.id}
+                                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                onClick={() => {
+                                                    setSelectedEquipment(equipment);
+                                                    setActiveTab('visits');
+                                                }}
+                                            >
+                                                <TableCell className="font-medium">
+                                                    <div className="flex items-center gap-2">
+                                                        <Eye className="w-4 h-4 text-primary" />
+                                                        {equipment.model}
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell>{equipment.serialNumber || 'N/A'}</TableCell>
                                                 <TableCell>{getStatusBadge(equipment.status)}</TableCell>
                                                 <TableCell>{equipment.location || 'N/A'}</TableCell>
@@ -248,12 +273,30 @@ const ClientEquipmentDetails: React.FC = () => {
                 <TabsContent value="visits">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Visit History</CardTitle>
+                            <CardTitle>
+                                {selectedEquipment
+                                    ? `Visits for ${selectedEquipment.model} (${selectedEquipment.serialNumber})`
+                                    : 'All Customer Visits'
+                                }
+                            </CardTitle>
+                            {selectedEquipment && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedEquipment(null)}
+                                    className="mt-2"
+                                >
+                                    Show All Visits
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent>
-                            {customerVisits.length === 0 ? (
+                            {(selectedEquipment ? equipmentData?.visits : customerVisits)?.length === 0 ? (
                                 <p className="text-muted-foreground text-center py-8">
-                                    No visits found for this customer.
+                                    {selectedEquipment
+                                        ? 'No visits found for this equipment.'
+                                        : 'No visits found for this customer.'
+                                    }
                                 </p>
                             ) : (
                                 <Table>
@@ -269,8 +312,15 @@ const ClientEquipmentDetails: React.FC = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {customerVisits.map((visit) => (
-                                            <TableRow key={visit.id}>
+                                        {(selectedEquipment ? equipmentData?.visits : customerVisits)?.map((visit) => (
+                                            <TableRow
+                                                key={visit.id}
+                                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                                onClick={() => {
+                                                    setSelectedVisit(visit);
+                                                    setShowVisitSlideOver(true);
+                                                }}
+                                            >
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
                                                         <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -307,6 +357,17 @@ const ClientEquipmentDetails: React.FC = () => {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* Visit Details Slide Over */}
+            <VisitDetailsSlideOver
+                visit={selectedVisit}
+                isOpen={showVisitSlideOver}
+                onClose={() => {
+                    setShowVisitSlideOver(false);
+                    setSelectedVisit(null);
+                }}
+                isRTL={false}
+            />
         </div>
     );
 };
