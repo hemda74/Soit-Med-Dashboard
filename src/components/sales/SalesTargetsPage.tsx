@@ -256,7 +256,18 @@ export default function SalesTargetsPage() {
             fetchTargets()
         } catch (error: any) {
             console.error('Failed to save target:', error)
-            toast.error(error.message || t('failedToSaveTarget'))
+
+            // Handle specific error cases
+            if (error.message && error.message.includes('already exists')) {
+                const targetTypeAr = targetCategory === 'money' ? 'مالي' : 'نشاط';
+                const periodAr = periodType === 'quarterly' ? `الربع ${selectedQuarter}` : 'سنوي';
+                const scopeAr = targetScope === 'team' ? 'الفريق' : 'الموظف';
+                toast.error(`يوجد بالفعل هدف ${targetTypeAr} لـ ${scopeAr} للفترة ${periodAr} من عام ${selectedYear}. يرجى تعديل الهدف الموجود أو اختيار فترة أخرى.`);
+            } else if (error.message) {
+                toast.error(error.message);
+            } else {
+                toast.error(t('failedToSaveTarget'));
+            }
         } finally {
             setLoading(false)
         }
