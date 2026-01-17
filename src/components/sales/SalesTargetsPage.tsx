@@ -633,7 +633,7 @@ export default function SalesTargetsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label>{t('period')}</Label>
-                                <Select value={periodType} onValueChange={(value: 'quarterly' | 'yearly') => setPeriodType(value)} disabled={!!editingTarget}>
+                                <Select value={periodType} onValueChange={(value: 'quarterly' | 'yearly') => setPeriodType(value)}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="quarterly">{t('quarterly')}</SelectItem>
@@ -643,10 +643,10 @@ export default function SalesTargetsPage() {
                             </div>
                             <div>
                                 <Label>{t('year')}</Label>
-                                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))} disabled={!!editingTarget}>
+                                <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                        {[2024, 2025, 2026].map((year) => (
+                                        {[2024, 2025, 2026, 2027].map((year) => (
                                             <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -660,7 +660,7 @@ export default function SalesTargetsPage() {
                                 <Select
                                     value={selectedSalesMan}
                                     onValueChange={setSelectedSalesMan}
-                                    disabled={!!editingTarget || (targetCategory === 'activity' && isSalesMan) || loadingSalesmen}
+                                    disabled={(targetCategory === 'activity' && isSalesMan) || loadingSalesmen}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder={loadingSalesmen ? t('loadingSalesmen') : t('selectSalesMan')} />
@@ -679,7 +679,7 @@ export default function SalesTargetsPage() {
                                         )}
                                     </SelectContent>
                                 </Select>
-                                {targetCategory === 'money' && (
+                                {targetCategory === 'money' && !editingTarget && (
                                     <p className="text-sm text-muted-foreground mt-1">
                                         {salesmen.length === 0
                                             ? t('noSalesmenAvailableMessage')
@@ -696,7 +696,7 @@ export default function SalesTargetsPage() {
                         {periodType === 'quarterly' && (
                             <div>
                                 <Label>{t('quarter')}</Label>
-                                <Select value={selectedQuarter.toString()} onValueChange={(value) => setSelectedQuarter(parseInt(value))} disabled={!!editingTarget}>
+                                <Select value={selectedQuarter.toString()} onValueChange={(value) => setSelectedQuarter(parseInt(value))}>
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {[1, 2, 3, 4].map((q) => (

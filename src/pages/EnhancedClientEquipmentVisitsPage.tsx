@@ -56,7 +56,6 @@ import VisitDetailsSlideOver from '@/components/maintenance/VisitDetailsSlideOve
 const EnhancedClientEquipmentVisitsPage: React.FC = () => {
     const { language } = useTranslation();
     const isRTL = language === 'ar';
-    const equipmentVisitsRef = React.useRef<HTMLDivElement>(null);
 
     // State management
     const [selectedCustomer, setSelectedCustomer] = useState<EnhancedCustomer | null>(null);
@@ -205,50 +204,6 @@ const EnhancedClientEquipmentVisitsPage: React.FC = () => {
 
     return (
         <div className={cn('space-y-6 p-6', isRTL && 'rtl')}>
-            {/* Instructions Banner */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                        <div className="bg-blue-100 rounded-full p-2">
-                            <Wrench className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-blue-900">
-                                {isRTL ? 'كيفية عرض زيارات المعدات' : 'How to View Machine Visits'}
-                            </h3>
-                            <p className="text-sm text-blue-700">
-                                {isRTL
-                                    ? '1. ابحث عن عميل واختره من الجدول ↓ 2. انقر على أي جهاز في قائمة المعدات 👆 3. ستظهر زيارات الجهاز في الأسفل'
-                                    : '1. Search and select a customer from the table ↓ 2. Click on any machine in the equipment list 👆 3. Machine visits will appear below'
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Real Data Banner */}
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-                <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                        <div className="bg-green-100 rounded-full p-2">
-                            <Database className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-green-900">
-                                {isRTL ? 'بيانات حقيقية من قاعدة البيانات' : 'Real Data from Database'}
-                            </h3>
-                            <p className="text-sm text-green-700">
-                                {isRTL
-                                    ? 'متصل الآن بقاعدة البيانات الفعلية مع بيانات من نظام التراث والنظام الجديد'
-                                    : 'Now connected to real database with data from both legacy and new systems'
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">
